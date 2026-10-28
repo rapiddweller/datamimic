@@ -32,6 +32,7 @@ def _task(generator: NativeGenerator, mode: str) -> KeyTask:
     task._statement = KeyStatement(KeyModel(name="native", generator="NativeGenerator"), None)
     task._mode = mode
     task._generator = generator
+    task._generator_expression = "NativeGenerator"
     task._pagination = None
     return task
 

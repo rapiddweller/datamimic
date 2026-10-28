@@ -11,7 +11,7 @@ import logging
 import random
 import string
 from decimal import Decimal
-from typing import Protocol, runtime_checkable
+from typing import Protocol, get_args, runtime_checkable
 
 from datamimic_ce.domains.api import (
     BaseDomainGenerator,
@@ -22,12 +22,14 @@ from datamimic_ce.domains.api import (
     iter_generator_types,
 )
 from datamimic_ce.engine.dsl.api import (
+    ATTR_GENERATOR,
     DATA_TYPE_BINARY,
     DATA_TYPE_BOOL,
     DATA_TYPE_DECIMAL,
     DATA_TYPE_FLOAT,
     DATA_TYPE_INT,
     DATA_TYPE_STRING,
+    EL_KEY,
     NumberDistribution,
     Statement,
 )
@@ -35,7 +37,14 @@ from datamimic_ce.engine.io.api import DataSourcePagination
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.tasks.values.construction.global_increment import GlobalIncrementGenerator
 from datamimic_ce.engine.runtime.tasks.values.construction.sequence_table import SequenceTableGenerator
-from datamimic_ce.errors import DomainError, IssueCode, UserErrorBase, generator_config_error, is_user_error
+from datamimic_ce.errors import (
+    DescriptorLocation,
+    DomainError,
+    IssueCode,
+    UserErrorBase,
+    generator_config_error,
+    is_user_error,
+)
 from datamimic_ce.randomness import RandomSource
 
 logger = logging.getLogger("DATAMIMIC")
@@ -362,6 +371,57 @@ class GeneratorUtil:
                 element_name=stmt.name,
                 error=type(e).__name__,
             ) from e
+
+    def attribute_call(self, generator: str, arguments: dict[str, str], key_name: str) -> str:
+        """Render <key generator="G" min="1" max="9"> as the call G(min=1, max=9), so the attribute form and the
+        call form build the same generator from the same seed. The constructor signature decides what G takes."""
+        location = DescriptorLocation(EL_KEY, attribute=ATTR_GENERATOR)
+        try:
+            expression: ast.expr | None = ast.parse(generator.strip(), mode="eval").body
+        except SyntaxError:
+            expression = None
+        if isinstance(expression, ast.Call):
+            raise generator_config_error(
+                code=IssueCode.GENERATOR_ARGUMENTS_IN_TWO_FORMS, element_name=key_name, location=location
+            )
+        cls = self._class_dict.get(expression.id) if isinstance(expression, ast.Name) else None
+        if cls is None:
+            # Only a built-in class has a signature to check against; an unknown name is descriptor text, so the
+            # message names the role, as create_generator does.
+            raise generator_config_error(
+                code=IssueCode.GENERATOR_CREATE_FAILED,
+                class_name="generator",
+                element_name=key_name,
+                error=NameError.__name__,
+                location=location,
+            )
+        parameters = inspect.signature(cls, eval_str=True).parameters
+        rendered: list[str] = []
+        for name, text in arguments.items():
+            parameter = parameters.get(name)
+            if parameter is None:
+                raise generator_config_error(
+                    code=IssueCode.GENERATOR_ARGUMENT_UNKNOWN,
+                    element_name=key_name,
+                    class_name=cls.__name__,
+                    attribute=name,
+                    location=DescriptorLocation(EL_KEY, attribute=name),
+                )
+            # A text parameter (DateTimeGenerator min) takes the attribute as written; the call form quotes it.
+            if str in (get_args(parameter.annotation) or (parameter.annotation,)):
+                rendered.append(f"{name}={text!r}")
+                continue
+            try:
+                rendered.append(f"{name}={ast.literal_eval(text)!r}")
+            except (ValueError, SyntaxError) as error:
+                raise generator_config_error(
+                    code=IssueCode.GENERATOR_CREATE_FAILED,
+                    class_name=cls.__name__,
+                    element_name=key_name,
+                    error=type(error).__name__,
+                    location=DescriptorLocation(EL_KEY, attribute=name),
+                ) from None
+        return f"{cls.__name__}({', '.join(rendered)})"
 
     @staticmethod
     def _parse_sequence_kwarg(generator_str: str) -> str | None:

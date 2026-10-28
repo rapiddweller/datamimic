@@ -110,6 +110,31 @@ comma-separated part is a plain ASCII name (letters, digits, underscore) and no 
 keyword. One name alone, a space, a quote or `True` in the list keeps the error. The one parser is
 `parse_literal_values`; EE must read the same form before such a descriptor is EE-ready.
 
+### Generator arguments as key attributes (#456)
+
+A `<key>` passes `min`, `max` and `granularity` to its generator:
+`<key name="age" generator="IntegerGenerator" min="18" max="65"/>` builds
+`IntegerGenerator(min=18, max=65)`. The call form stays valid, and both forms give the same rows
+for the same `rngSeed` (`tests_ce/scenarios/s26_key_generator_attributes`). Before, the model
+refused `min`/`max`/`granularity` next to `generator=` (`DM214`, `DM218`).
+
+- The constructor signature decides what a generator takes. `IntegerGenerator` takes `min`/`max`,
+  `FloatGenerator` also `granularity`, `DateTimeGenerator` takes its text bounds as written
+  (`min="2026-01-01 00:00:00"`). A numeric parameter reads the attribute as a Python literal.
+- `distribution=` next to `generator=` is refused (`DM218`); write it in the call.
+  `granularity` alone still needs `min` or `max` (`DM214`). `<variable>` has no such attributes
+  (`DM103`); use the call form there.
+
+| Code | Name | When |
+|---|---|---|
+| `I438` | `GENERATOR_ARGUMENT_UNKNOWN` | the generator has no parameter of the attribute's name, for example `IncrementGenerator` with `min=` |
+| `I439` | `GENERATOR_ARGUMENTS_IN_TWO_FORMS` | `generator=` is a call (also `IntegerGenerator()`) and the key has `min=`, `max=` or `granularity=` |
+
+A bound that is not a literal, or an unknown generator name with these attributes, gives `I436`
+(`GENERATOR_CREATE_FAILED`). The messages name the key, the generator class and the attribute,
+never the value. These are runtime refusals: `datamimic run` reports them, and Build reports them
+as `child_execution` with `ce_error.issue_code` (tested). Lint does not report them.
+
 ## Public contract
 
 Persist XML as the executable project. `DmJsonDocumentV1` is an in-memory agent

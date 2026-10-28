@@ -1,0 +1,12 @@
+{
+  "version": "5.0",
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "members"}, "count": 25},
+    {"kind": "unique", "subject": {"kind": "product", "product": "members"}, "field": "member_id"},
+    {"kind": "range", "subject": {"kind": "product", "product": "members"}, "field": "age", "min": 18, "max": 65},
+    {"kind": "range", "subject": {"kind": "product", "product": "members"}, "field": "rank", "min": 0, "max": 3},
+    {"kind": "range", "subject": {"kind": "product", "product": "members"}, "field": "level", "min": 1, "max": 5},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "members"}, "field": "score", "values": [0.0, 0.25, 0.5, 0.75, 1.0]},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "members"}, "condition": "'2026-01-01' <= joined <= '2026-01-31'"}
+  ]
+}

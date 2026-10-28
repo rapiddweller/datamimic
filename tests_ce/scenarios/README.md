@@ -22,6 +22,7 @@ The id starts with `s`, a two-digit number and a short name, for example `s02_pa
 | `proves` | A list of short sentences. Each sentence is a fact the scenario shows. |
 | `products` | Product name to expected row count of a normal run. |
 | `negatives` | A list of `{"name": "<name>", "patch": {"file": "<path>", "old": "<text>", "new": "<text>"}, "diagnostic": "<code>", "expected": "<text>"}`. The patch replaces one text in one file of a copy of the project. The old text must occur exactly once. The file must stay inside the copy. `expected` is optional. Use it when one code covers several rules (for example `row_condition`): it is the `expected` text of the diagnostic, which names the rule. |
+| `equivalents` | Optional. A list of `{"name": "<name>", "patch": {...}}` with the same patch rules. Each patch writes one part of the project in a second spelling that must mean the same. |
 
 A negative `diagnostic` is a code that Build reports, for example `exact_count` or `DM315`.
 Build must reject the variant, and the code must be in the list of diagnostics.
@@ -39,6 +40,9 @@ For each scenario directory the test:
 4. Runs it a second time and checks that the rows are identical.
 
 For each negative the test copies the project, applies the patch to the copy, Builds it, and checks the rejection and the code.
+
+For each equivalent the test applies the patch to a copy, checks that Build is `ready`, and runs the project and the copy.
+The two runs must give identical rows.
 
 ## Add a scenario
 

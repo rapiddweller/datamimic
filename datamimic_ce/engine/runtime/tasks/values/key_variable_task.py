@@ -75,6 +75,8 @@ class KeyVariableTask(Task):
             self._element_tag = EL_ELEMENT
         self._statement = statement
         self._generator: WeightedDataSource | None = None
+        # generator= with its argument attributes folded into the call; every construction path reads it.
+        self._generator_expression: str | None = None
         self._pagination = pagination
         self._converter_list = create_converter_list(ctx, statement.converter)
 
@@ -129,15 +131,17 @@ class KeyVariableTask(Task):
             # A literal <key generator="..."> is bound to <setup rngSeed> inside create_generator
             # (a seeded rng is injected), so it replays deterministically; the single-process policy
             # keeps that reproducible across machines. Without a seed it stays wall-clock random.
+            # Outside the try below: a refused argument attribute must not wait for the lazy retry.
+            self._generator_expression = self._generator_call(ctx, self._statement.generator)
             # Try to init generator with or without args.
             try:
                 self._generator = GeneratorUtil(ctx).create_generator(
-                    self._statement.generator,
+                    self._generator_expression,
                     self._statement,
                     self._pagination,
                     # full_name alone collides when same-named keys sit in different <condition>
                     # branches with different generators - include the generator expression.
-                    key=f"{self._statement.full_name}|{self._statement.generator}",
+                    key=f"{self._statement.full_name}|{self._generator_expression}",
                 )
                 self._mode = self._GENERATOR_MODE
             # If init generator failed while creating task, try to lazy-init in the first task execution
@@ -186,6 +190,20 @@ class KeyVariableTask(Task):
             raise task_config_error(
                 code=IssueCode.TASK_GENERATION_MODE_UNKNOWN, element_tag=self._element_tag, name=self._statement.name
             )
+
+    def _generator_call(self, ctx: SetupContext, generator: str) -> str:
+        """``<key generator="IntegerGenerator" min="1" max="9"/>`` -> ``IntegerGenerator(min=1, max=9)``: the
+        attribute form is the call form, so both give the same data for one seed."""
+        stmt = self._statement
+        if not isinstance(stmt, KeyStatement):
+            return generator
+        # The range attributes share their names with the generator parameters they set.
+        attributes = (("min", stmt.min), ("max", stmt.max), ("granularity", stmt.granularity))
+        arguments = {name: value for name, value in attributes if value is not None}
+        if not arguments:
+            return generator
+        util = GeneratorUtil(ctx)
+        return util.attribute_call(generator, arguments, stmt.name)
 
     def _range_generator(self) -> str | None:
         """Native range attributes on a typed <key> -> the matching literal generator string, so a field reads
@@ -293,24 +311,24 @@ class KeyVariableTask(Task):
             # Try to init generator again in first task execution
             self._generator = (
                 GeneratorUtil(ctx).create_generator(
-                    self._statement.generator,
+                    self._generator_expression,
                     self.statement,
                     self._pagination,
-                    key=f"{self._statement.full_name}|{self._statement.generator}",
+                    key=f"{self._statement.full_name}|{self._generator_expression}",
                 )
-                if self._statement.generator is not None
+                if self._generator_expression is not None
                 else None
             )
             # Switch mode to GENERATE_MODE for next task execution
             self._mode = self._GENERATOR_MODE
             value = self._generator.generate() if self._generator is not None else None
         elif self._mode == self._GENERATOR_MODE:
-            if self._statement.generator is not None and self._generator is None:
+            if self._generator_expression is not None and self._generator is None:
                 self._generator = GeneratorUtil(ctx).create_generator(
-                    self._statement.generator,
+                    self._generator_expression,
                     self.statement,
                     self._pagination,
-                    key=f"{self._statement.full_name}|{self._statement.generator}",
+                    key=f"{self._statement.full_name}|{self._generator_expression}",
                 )
             if self._generator is None:
                 value = None

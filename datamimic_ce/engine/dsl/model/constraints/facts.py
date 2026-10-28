@@ -387,18 +387,18 @@ KEY_DISTRIBUTION_REQUIRES_RANGE = Requires(
     frozenset((ATTR_MIN, ATTR_MAX)),
     message="'distribution' on a <key> needs a range - add min= and/or max=",
 )
-# Range attributes shape only a numeric type= draw (key_variable_task._range_generator), and every other
-# value source wins over that draw, so anywhere else they were silently ignored.
+# Range attributes shape a numeric type= draw (key_variable_task._range_generator) or are the arguments of
+# generator= (key_variable_task._generator_call); every other value source would silently ignore them.
 _KEY_RANGE_ATTRS = (ATTR_MIN, ATTR_MAX, ATTR_GRANULARITY)
+_KEY_RANGE_SOURCES = frozenset((ATTR_TYPE, ATTR_GENERATOR))
 _KEY_RANGE_MESSAGE = (
-    "'min', 'max' and 'granularity' on a <key> apply only when type= is its only value source: write "
-    'type="int" min="1" max="9" alone, or pass the bounds in the generator call, '
-    'generator="IntegerGenerator(min=1, max=9)"'
+    "'min', 'max' and 'granularity' on a <key> apply to type= or generator= only: write "
+    'type="int" min="1" max="9", or generator="IntegerGenerator" min="1" max="9"'
 )
 KEY_RANGE_CONSTRAINTS: tuple[Constraint, ...] = (
-    *(Requires(attr, frozenset((ATTR_TYPE,)), message=_KEY_RANGE_MESSAGE) for attr in _KEY_RANGE_ATTRS),
+    *(Requires(attr, _KEY_RANGE_SOURCES, message=_KEY_RANGE_MESSAGE) for attr in _KEY_RANGE_ATTRS),
     *(
-        Forbids(attr, KEY_GENERATION_REQUIRED.attrs - {ATTR_TYPE}, message=_KEY_RANGE_MESSAGE)
+        Forbids(attr, KEY_GENERATION_REQUIRED.attrs - _KEY_RANGE_SOURCES, message=_KEY_RANGE_MESSAGE)
         for attr in _KEY_RANGE_ATTRS
     ),
     *(
@@ -420,6 +420,13 @@ KEY_RANGE_CONSTRAINTS: tuple[Constraint, ...] = (
         ATTR_GRANULARITY,
         frozenset((ATTR_MIN, ATTR_MAX)),
         message="'granularity' on a <key> needs a range - add min= and/or max=",
+    ),
+    # generator= takes min/max/granularity only; a distribution attribute next to it would be silently ignored.
+    Forbids(
+        ATTR_DISTRIBUTION,
+        frozenset((ATTR_GENERATOR,)),
+        message="'distribution' on a <key> shapes a type= range; with generator= write it in the call: "
+        'generator="IntegerGenerator(min=1, max=9, distribution=NumberDistribution.CUMULATED)"',
     ),
 )
 KEY_DISTRIBUTION_NUMERIC_TYPE = AllowedValuesWhen(

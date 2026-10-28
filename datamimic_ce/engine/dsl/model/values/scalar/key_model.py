@@ -78,19 +78,21 @@ class KeyModel(BaseModel):
     min: str | None = Field(
         None,
         description='Minimum value for a numeric range key (type="int"/"float"/"decimal"); combine '
-        "with max and optionally granularity/distribution to shape an IntegerGenerator/FloatGenerator.",
+        "with max and optionally granularity/distribution to shape an IntegerGenerator/FloatGenerator. "
+        'With generator= it is the generator\'s min argument: generator="IntegerGenerator" min="18" max="65".',
         examples=["0", "18"],
     )
     max: str | None = Field(
         None,
         description='Maximum value for a numeric range key (type="int"/"float"/"decimal"); combine '
-        "with min and optionally granularity/distribution to shape an IntegerGenerator/FloatGenerator.",
+        "with min and optionally granularity/distribution to shape an IntegerGenerator/FloatGenerator. "
+        "With generator= it is the generator's max argument.",
         examples=["99", "1000"],
     )
     granularity: str | None = Field(
         None,
         description='Step width of the numeric grid for a type="float"/"decimal" range key (e.g. '
-        '0.5); ignored for type="int".',
+        '0.5); ignored for type="int". With generator= it is the generator\'s granularity argument.',
         examples=["0.1", "0.5"],
     )
     # NumberDistribution for numeric range keys (type=int/float/decimal with min/max),
@@ -168,8 +170,10 @@ class KeyModel(BaseModel):
     generator: str | None = Field(
         None,
         description="Predefined generator constructor used to produce the key's value; validated "
-        "against the generator registry. Parameters go inside the call, not into attributes: "
-        'generator="IntegerGenerator(min=1, max=9)".',
+        "against the generator registry. Write parameters in the call, "
+        'generator="IntegerGenerator(min=1, max=9)", or write min, max and granularity as attributes of '
+        'the key, generator="IntegerGenerator" min="1" max="9", when the generator takes them. Both '
+        "forms give the same data; one key uses one form.",
         examples=["IncrementGenerator", "DateTimeGenerator(random=True)"],
     )
     constant: str | None = Field(
