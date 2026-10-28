@@ -50,4 +50,11 @@
         <key name="function_id" script="this.function_id"/>
         <key name="person_id" script="this.person_id"/>
     </generate>
+    <!-- The rule parameters and the search counters, read back from the store. -->
+    <generate name="export_policy" source="mem" sourceEntity="policy" distribution="ordered" target="JSON" targetEntity="policy">
+        <key name="policy_id" script="this.policy_id"/>
+    </generate>
+    <generate name="export_assignment" source="mem" sourceEntity="assignment" distribution="ordered" target="JSON" targetEntity="assignment">
+        <key name="assignment_id" script="this.assignment_id"/>
+    </generate>
 </setup>

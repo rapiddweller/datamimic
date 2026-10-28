@@ -9,7 +9,11 @@
     {"product": "plan_check", "field": "position_id", "role": {"kind": "foreign_key", "parent_product": "suitability", "parent_field": "position_id"}},
     {"product": "seat_check", "field": "seat_id", "role": {"kind": "foreign_key", "parent_product": "plan", "parent_field": "seat_id"}},
     {"product": "plan", "field": "seat_id", "role": {"kind": "identifier"}},
-    {"product": "staffing", "field": "seat_id", "role": {"kind": "foreign_key", "parent_product": "plan", "parent_field": "seat_id"}}
+    {"product": "staffing", "field": "seat_id", "role": {"kind": "foreign_key", "parent_product": "plan", "parent_field": "seat_id"}},
+    {"product": "assignment", "field": "assignment_id", "role": {"kind": "identifier"}},
+    {"product": "export_assignment", "field": "assignment_id", "role": {"kind": "foreign_key", "parent_product": "assignment", "parent_field": "assignment_id"}},
+    {"product": "policy", "field": "policy_id", "role": {"kind": "identifier"}},
+    {"product": "export_policy", "field": "policy_id", "role": {"kind": "foreign_key", "parent_product": "policy", "parent_field": "policy_id"}}
   ],
   "expectations": [
     {"kind": "exact_count", "subject": {"kind": "product", "product": "positions"}, "count": 60},

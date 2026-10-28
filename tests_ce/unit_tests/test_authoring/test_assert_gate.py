@@ -416,8 +416,8 @@ def test_datamimic_run_stops_with_exit_one_only_when_an_assert_fails(
     assert CliRunner().invoke(app, ["run", "datamimic.xml"]).exit_code == exit_code
 
 
-def test_an_assert_in_the_first_product_still_lists_every_check_it_could_not_evaluate(tmp_path: Path) -> None:
-    # S12 r4_above_maximum: the assert guards the first product, so the run stops before any capture.
+def test_an_assert_in_step_10_still_lists_every_check_it_could_not_evaluate(tmp_path: Path) -> None:
+    # S12 r4_above_maximum: only the policy product completes before the assert in positions stops the run.
     s12 = _PROJECT.parent / "s12_personnel_approvals"
     [patch] = [
         item["patch"]
@@ -433,8 +433,8 @@ def test_an_assert_in_the_first_product_still_lists_every_check_it_could_not_eva
 
     assert isinstance(result, RejectedBuild)
     assert _codes(result) == ["assert_failed", "not_executed"]
-    assert result.evidence == ()
-    assert len(_not_evaluated(result)) == 72
+    assert [product.name for product in result.evidence] == ["policy"]
+    assert len(_not_evaluated(result)) == 77
 
 
 def test_the_learning_reference_says_when_to_use_an_assert_or_an_expectation(tmp_path: Path) -> None:

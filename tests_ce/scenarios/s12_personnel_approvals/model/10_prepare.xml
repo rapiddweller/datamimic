@@ -1,10 +1,20 @@
 <setup>
-    <!-- Prepare: resolve each demanded position to its approval, its company (the approval's addressee) and its date. -->
+    <!-- Prepare: type the rule parameters once; resolve each demanded position to its approval, its company (the approval's addressee) and its date. -->
+    <generate name="policy" count="1" target="mem">
+        <!-- A missing parameter or a count that is not a whole number stops the run. -->
+        <key name="policy_id" script="1"/>
+        <key name="base_license" script="base_license"/>
+        <key name="active_status" script="active_status"/>
+        <key name="max_seats" script="int(max_seats)"/>
+        <key name="search_budget" script="int(search_budget)"/>
+        <array name="exclusive_approvals" script="[item.strip() for item in exclusive_approvals.split(',') if item.strip()]"/>
+        <nestedKey name="required_qualification" script="{'INS': required_qualification_INS, 'OPR': required_qualification_OPR, 'PLN': required_qualification_PLN, 'SUP': required_qualification_SUP}"/>
+    </generate>
     <generate name="positions" source="data/entity/demand.json" distribution="ordered" target="mem">
         <variable name="versions" source="data/entity/approval_versions.json" storage="data" distribution="ordered"/>
         <variable name="approvals" source="data/entity/approvals.json" storage="data" distribution="ordered"/>
-        <variable name="policy_row" source="conf/policy.json" storage="value" distribution="ordered"/>
-        <variable name="policy" script="read_policy(policy_row)"/>
+        <variable name="policy_rows" source="mem" sourceEntity="policy" storage="data" distribution="ordered"/>
+        <variable name="policy" script="read_policy(policy_rows[0])"/>
         <variable name="version" script="{row.version_id: row for row in versions}[this.version_id]"/>
         <variable name="approval" script="{row.approval_id: row for row in approvals}[version.approval_id]"/>
         <key name="position_id" script="this.position_id"/>

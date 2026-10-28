@@ -4,9 +4,9 @@
 
 """The staffing rules that need more than one row: person suitability and the seat search.
 
-Each step reads the policy through ``read_policy``. The model calls two functions with prepared rows and the
-policy; none reads a file: ``suitable_people`` (R1 to R3, once per position) and ``assign_seats`` (R4 to R6, once
-per run). The output check of step 90 is XML.
+Steps 10 to 30 read the ``policy`` product of step 10 through ``read_policy``. The model calls two functions with
+prepared rows and the policy; none reads a file: ``suitable_people`` (R1 to R3, once per position) and
+``assign_seats`` (R4 to R6, once per run). The output check of step 90 is XML.
 """
 
 from collections import Counter
@@ -82,25 +82,13 @@ class Assignment:
 
 
 def read_policy(row: Row) -> Policy:
-    """Check the type of each rule parameter: a text where a list of ids belongs would still match by substring."""
-    for name in ("base_license", "active_status"):
-        if not isinstance(row[name], str):
-            raise TypeError(f"policy {name} must be a text")
-    for name in ("max_seats", "search_budget"):
-        if not isinstance(row[name], int) or isinstance(row[name], bool):
-            raise TypeError(f"policy {name} must be an integer")
-    exclusive = row["exclusive_approvals"]
-    if not isinstance(exclusive, list) or not all(isinstance(item, str) for item in exclusive):
-        raise TypeError("policy exclusive_approvals must be a list of approval ids")
-    required = dict(row["required_qualification"])
-    if not all(isinstance(item, str) for item in required.values()):
-        raise TypeError("policy required_qualification must map function ids to qualification ids")
+    """Make the typed policy from the one ``policy`` row; step 10 types each parameter of conf/policy.properties."""
     return Policy(
         base_license=row["base_license"],
         active_status=row["active_status"],
-        required_qualification=required,
+        required_qualification=dict(row["required_qualification"]),
         max_seats=row["max_seats"],
-        exclusive_approvals=tuple(exclusive),
+        exclusive_approvals=tuple(row["exclusive_approvals"]),
         search_budget=row["search_budget"],
     )
 
