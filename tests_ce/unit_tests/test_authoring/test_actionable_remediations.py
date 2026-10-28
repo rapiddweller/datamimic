@@ -105,15 +105,26 @@ def test_two_foreign_keys_on_one_identifier_say_to_keep_one(tmp_path: Path) -> N
     assert diagnostic.remediation == _MORE_CONSUMER_FK + ": keep only the one that reads the memstore back."
 
 
-def test_a_memstore_target_nobody_reads_names_the_readback(tmp_path: Path) -> None:
+# A file exporter elsewhere makes DM407 require a target on the pasted readback too.
+@pytest.mark.parametrize(
+    "other", ["", '<generate name="report" count="1" target="JSON"><key name="id" constant="1"/></generate>']
+)
+def test_the_readback_that_an_unread_memstore_target_advertises_builds_ready(tmp_path: Path, other: str) -> None:
+    # A scenario negative cannot paste text from a diagnostic, so this test proves the advertised copy route works.
     xml = (
         '<setup rngSeed="1"><memstore id="store"/>'
         '<generate name="parents" count="2" target="store"><key name="id" generator="IncrementGenerator"/>'
-        "</generate></setup>"
+        f"</generate>{other}</setup>"
     )
-    diagnostic = _first_error(build_project(tmp_path, xml))
-    assert diagnostic.remediation != _GENERIC
-    assert "source=<memstore id>" in diagnostic.remediation
+    (tmp_path / "unread").mkdir()
+    remediation = _first_error(build_project(tmp_path / "unread", xml)).remediation
+    assert remediation != _GENERIC
+    match = re.search(r'<generate name="parents_copy".*?</generate>', remediation)
+    assert match is not None, remediation
+    (tmp_path / "pasted").mkdir()
+    pasted = xml.replace("</setup>", match.group().replace("<key>", "id") + "</setup>")
+    result = build_project(tmp_path / "pasted", pasted, product_roles=_filled(remediation))
+    assert result.outcome == "ready", result.diagnostics
 
 
 def test_an_undeclared_expectation_field_names_the_missing_key(tmp_path: Path) -> None:

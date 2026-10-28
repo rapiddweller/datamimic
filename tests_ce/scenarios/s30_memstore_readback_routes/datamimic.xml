@@ -1,0 +1,21 @@
+<setup rngSeed="30">
+    <memstore id="mem"/>
+    <!-- A copy of every row: the readback is a later generate, and the role pair proves each row once. -->
+    <generate name="teams" count="3" target="mem">
+        <key name="team_id" generator="IncrementGenerator"/>
+        <key name="founded" script="datetime.date(2026, 1, team_id).isoformat()"/>
+    </generate>
+    <generate name="team_copy" source="mem" sourceEntity="teams" distribution="ordered">
+        <key name="team_id" script="this.team_id"/>
+    </generate>
+    <generate name="people" count="4">
+        <key name="person_id" generator="IncrementGenerator"/>
+        <!-- A lookup in a data file needs no memstore: the whole file is one list in each row. -->
+        <variable name="tiers" source="data/entity/tiers.ent.csv" storage="data" distribution="ordered"/>
+        <key name="tier" script="{row.person_id: row.tier for row in tiers}.get(str(person_id), 'NONE')"/>
+        <!-- A subset of the rows: a nested generate with a braces count, so acceptance sets max_count. -->
+        <generate name="badges" count="{1 if person_id % 2 == 1 else 0}">
+            <key name="person_id" script="parent.person_id"/>
+        </generate>
+    </generate>
+</setup>

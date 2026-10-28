@@ -458,7 +458,6 @@ class CountDigitsOrScript(Rule):
                     type(self),
                     element,
                     evidence=f"count='{count}', runtime parser returned: {err}",
-                    fix_context='Examples: count="100" or count="{customers * 3}".',
                 )
 
 

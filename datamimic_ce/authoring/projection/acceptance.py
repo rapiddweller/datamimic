@@ -472,6 +472,34 @@ def _derive_field(
         derive(RangeExpectation(subject=subject, field=name, minimum=lower, maximum=upper), path)
 
 
+def _readback_roles(producer: str, consumer: str) -> tuple[str, str]:
+    """The product_roles pair of one readback; product names are structural names, so the templates carry them."""
+    producer_name, consumer_name = json.dumps(producer), json.dumps(consumer)
+    return (
+        f'{{"product": {producer_name}, "field": "<key>", "role": {{"kind": "identifier"}}}}',
+        f'{{"product": {consumer_name}, "field": "<field holding the key>", "role": {{"kind": "foreign_key", '
+        f'"parent_product": {producer_name}, "parent_field": "<key>"}}}}',
+    )
+
+
+def _unread_memstore_remediation(producer: _Product, store: str) -> str:
+    """Agents write a memstore for a subset or a lookup; the first rejection names the route for each need."""
+    name = producer.product.name
+    copy = f"{name}_copy"
+    producer_role, consumer_role = _readback_roles(name, copy)
+    entity = _memstore_entity(producer.node, name)
+    return (
+        f'Nothing reads "{name}" back as a product: a <variable source="{store}"> read is not a readback. '
+        f'{MEMSTORE_READBACK_ONCE} For that subset route, also remove target="{store}". A lookup in a data file: '
+        f'remove the <memstore> and the generate that writes target="{store}", and read the file with '
+        '<variable name="rows" source="<file>" storage="data" distribution="ordered"/>. A copy of every row: '
+        f'after {name} add <generate name="{copy}" source="{store}" sourceEntity="{entity}" distribution="ordered" '
+        'target="ConsoleExporter"><key name="<key>" script="this.<key>"/></generate> and the '
+        f"product_roles {producer_role} and {consumer_role}. "
+        "Full project: datamimic authoring reference --topic examples --name memstore."
+    )
+
+
 def _readbacks(
     request: BuildRequestV5, entries: tuple[_Product, ...], documents: tuple[DmJsonDocumentV1, ...]
 ) -> tuple[AcceptanceReadbackV1, ...]:
@@ -542,13 +570,7 @@ def _readbacks(
             role for role in named if isinstance(role.role, ForeignKeyRole) and role.role.parent_field in identifiers
         ]
         if len(identifiers) != 1 or len(candidates) != 1:
-            # Product names are structural names, so the role templates carry them.
-            producer_name, consumer_name = json.dumps(producer.product.name), json.dumps(consumer.product.name)
-            producer_role = f'{{"product": {producer_name}, "field": "<key>", "role": {{"kind": "identifier"}}}}'
-            consumer_role = (
-                f'{{"product": {consumer_name}, "field": "<field holding the key>", "role": {{"kind": "foreign_key", '
-                f'"parent_product": {producer_name}, "parent_field": "<key>"}}}}'
-            )
+            producer_role, consumer_role = _readback_roles(producer.product.name, consumer.product.name)
             if len(identifiers) > 1:
                 remediation = (
                     "Memstore readback checks one identifier role per producer: declare only the identifier that the "
@@ -594,10 +616,6 @@ def _readbacks(
                 _reject(
                     "A memstore target requires a declared consumer readback.",
                     producer.path + ("properties", "target"),
-                    remediation=(
-                        "Read the product back in a later generate (source=<memstore id>, type=<this product>) and "
-                        "declare its identifier/foreign-key role pair; a product nothing reads back needs a file "
-                        "target instead of the memstore."
-                    ),
+                    remediation=_unread_memstore_remediation(producer, store),
                 )
     return tuple(result)
