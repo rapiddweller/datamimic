@@ -1,11 +1,11 @@
 <setup rngSeed="21">
-    <include uri="data/audit.properties"/>
-    <generate name="items" source="data/items.json" distribution="ordered">
+    <include uri="conf/audit.properties"/>
+    <generate name="items" source="data/entity/items.json" distribution="ordered">
         <key name="sku" script="this.sku"/>
         <key name="qty" script="this.qty"/>
     </generate>
     <generate name="lines" count="4">
-        <variable name="item" source="data/items.json" distribution="ordered"/>
+        <variable name="item" source="data/entity/items.json" distribution="ordered"/>
         <key name="line_no" generator="IncrementGenerator"/>
         <key name="qty" script="item.qty"/>
         <assert condition="this.qty &lt;= 4" message="A line holds at most 4 items"/>
@@ -16,5 +16,5 @@
             <assert condition="this.part_no &lt;= 2" message="A line has at most 2 parts"/>
         </generate>
     </generate>
-    <include uri="model/stock.xml"/>
+    <include uri="model/10_stock.xml"/>
 </setup>

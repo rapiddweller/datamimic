@@ -1,19 +1,19 @@
 <setup>
-    <!-- Validate output: check the plan without the search and without step 2, before the export reads it.
-         R1 to R3 for each seat, from the raw rows and the step-1 positions: a defect in step 2 cannot hide here. -->
+    <!-- Validate output: check the plan without the search and without step 20, before the export reads it.
+         R1 to R3 for each seat, from the raw rows and the step-10 positions: a defect in step 20 cannot hide here. -->
     <generate name="seat_check" source="mem" sourceEntity="plan" distribution="ordered" target="JSON">
         <variable name="positions" source="mem" sourceEntity="positions" storage="data" distribution="ordered"/>
-        <variable name="employments" source="data/employments.json" storage="data" distribution="ordered"/>
-        <variable name="person_licenses" source="data/person_licenses.json" storage="data" distribution="ordered"/>
-        <variable name="person_qualifications" source="data/person_qualifications.json" storage="data" distribution="ordered"/>
-        <variable name="policy" source="data/policy.json" storage="value" distribution="ordered"/>
+        <variable name="employments" source="data/entity/employments.json" storage="data" distribution="ordered"/>
+        <variable name="person_licenses" source="data/entity/person_licenses.json" storage="data" distribution="ordered"/>
+        <variable name="person_qualifications" source="data/entity/person_qualifications.json" storage="data" distribution="ordered"/>
+        <variable name="policy" source="conf/policy.json" storage="value" distribution="ordered"/>
         <variable name="position" script="{(row.version_id, row.function_id): row for row in positions}[(this.version_id, this.function_id)]"/>
         <key name="seat_id" script="this.seat_id"/>
         <key name="r1_employed" script="any(row.person_id == this.person_id and row.company_id == position.company_id and row.function_id == this.function_id for row in employments)"/>
         <key name="r2_licensed" script="any(row.person_id == this.person_id and row.license_type == policy.base_license and row.status == policy.active_status and row.expires_on is not None and row.expires_on &gt;= position.valid_on for row in person_licenses)"/>
         <key name="r3_qualified" script="any(row.person_id == this.person_id and row.qualification_id == policy.required_qualification[this.function_id] for row in person_qualifications)"/>
     </generate>
-    <!-- R4 to R6 for each position: they need every seat that a person holds. Build needs a reader of step 2 rows. -->
+    <!-- R4 to R6 for each position: they need every seat that a person holds. Build needs a reader of step 20 rows. -->
     <generate name="plan_check" source="mem" sourceEntity="suitability" distribution="ordered" target="JSON">
         <variable name="plan" source="mem" sourceEntity="plan" storage="data" distribution="ordered"/>
         <variable name="positions" source="mem" sourceEntity="positions" storage="data" distribution="ordered"/>

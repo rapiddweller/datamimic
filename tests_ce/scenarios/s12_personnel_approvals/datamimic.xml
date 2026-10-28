@@ -2,9 +2,14 @@
     <!-- Staff every seat of every approval version under the rules R1 to R6; README.md explains each step. -->
     <memstore id="mem"/>
     <execute uri="lib/staffing.scr.py"/>
-    <include uri="model/1_prepare.xml"/>
-    <include uri="model/2_suitability.xml"/>
-    <include uri="model/3_assign.xml"/>
-    <include uri="model/4_validate_output.xml"/>
-    <include uri="model/5_export.xml"/>
+    <!-- 10 prepare: resolve each demanded position; the R4 maximum stops the run -->
+    <include uri="model/10_prepare.xml"/>
+    <!-- 20 suitability: decide R1 to R3 for every person and position -->
+    <include uri="model/20_suitability.xml"/>
+    <!-- 30 assign: one search fills every seat under R4 to R6 and records each decision -->
+    <include uri="model/30_assign.xml"/>
+    <!-- 90 validate output: check the plan again, without the search -->
+    <include uri="delivery/90_validate_output.xml"/>
+    <!-- 91 export: write the eleven target tables to CSV -->
+    <include uri="delivery/91_export.xml"/>
 </setup>

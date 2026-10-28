@@ -4,11 +4,18 @@
     <memstore id="mem"/>
     <execute uri="lib/certificates.scr.py"/>
     <execute uri="lib/roster_search.scr.py"/>
-    <include uri="model/1_prepare.xml"/>
-    <include uri="model/2_validate_input.xml"/>
-    <include uri="model/3_suitability.xml"/>
-    <include uri="model/4_assign.xml"/>
-    <include uri="model/5_validate_output.xml"/>
-    <include uri="model/6_cleanup.xml"/>
-    <include uri="model/7_export.xml"/>
+    <!-- 10 prepare: read each data file, type each column, make one slot for each demand row and plan day -->
+    <include uri="model/10_prepare.xml"/>
+    <!-- 20 suitability: decide for each person and plan day which shift types the person may work (RS1, RS6) -->
+    <include uri="model/20_suitability.xml"/>
+    <!-- 30 assign: search for one complete roster (RS2 to RS5) and keep the evidence of each decision -->
+    <include uri="model/30_assign.xml"/>
+    <!-- 90 validate input: measure the leave and certification periods -->
+    <include uri="delivery/90_validate_input.xml"/>
+    <!-- 91 validate output: measure the complete roster against every rule again, from the data -->
+    <include uri="delivery/91_validate_output.xml"/>
+    <!-- 92 cleanup: nothing to delete -->
+    <include uri="delivery/92_cleanup.xml"/>
+    <!-- 93 export: read each product back from the store and write it to CSV -->
+    <include uri="delivery/93_export.xml"/>
 </setup>
