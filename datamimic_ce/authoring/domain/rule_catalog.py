@@ -14,6 +14,8 @@ from dataclasses import dataclass
 from enum import StrEnum
 from types import MappingProxyType
 
+from datamimic_ce.errors import GUIDANCE_LOOKUP_POINTER
+
 
 class RuleSeverity(StrEnum):
     """Canonical severity vocabulary for public authoring rules."""
@@ -230,7 +232,7 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         RuleSeverity.ERROR,
         "Selector lacks resolvable count",
         "selector without a count is only cardinality-safe for a declared database client.",
-        "Add count bounds or use a declared database/mongodb source.",
+        f"Add count bounds or use a declared database/mongodb source. {GUIDANCE_LOOKUP_POINTER}",
         "GenerateTask and VariableTask database selector contract.",
         '<generate name="g" source="db" selector="select *"/>',
         '<generate name="g" source="data/entity/rows.ent.csv" selector="all"/>',
@@ -529,7 +531,7 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         "A nested child generate is not embedded in its parent's export. A document without a file exporter "
         "is an in-memory model and is not checked.",
         "Add a file or memstore target to the product, or model the rows as a nestedKey list field of the "
-        "parent. This delivery rule must pass before Build is ready.",
+        f"parent. This delivery rule must pass before Build is ready. {GUIDANCE_LOOKUP_POINTER}",
         "DM JSON product targets, bounded Build policy and runtime export contract.",
         '<setup><generate name="customers" count="4" target="JSON"><key name="id" generator="IncrementGenerator"/>'
         '<generate name="accounts" count="2" target="JSON"><key name="customer_id" script="parent.id"/>'

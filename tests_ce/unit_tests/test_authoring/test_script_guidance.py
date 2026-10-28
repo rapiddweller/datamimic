@@ -14,8 +14,15 @@ import pytest
 
 from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, RejectedBuild
+from datamimic_ce.authoring.domain.rule_catalog import authoring_rule_definition
+from datamimic_ce.authoring.domain.script_semantics import LibraryRefusal, LibraryRefusalReason
 from datamimic_ce.engine.runtime.scripting.expression_globals import SCRIPT_BUILTINS, UNOFFERED_BUILTINS
-from datamimic_ce.errors import GUIDANCE_FILE_LOOKUP, GUIDANCE_SCRIPT_BUILTIN, GUIDANCE_WHERE_SCOPE
+from datamimic_ce.errors import (
+    GUIDANCE_FILE_LOOKUP,
+    GUIDANCE_LOOKUP_POINTER,
+    GUIDANCE_SCRIPT_BUILTIN,
+    GUIDANCE_WHERE_SCOPE,
+)
 
 _SCENARIO = Path(__file__).parents[2] / "scenarios" / "s31_file_lookup"
 _LOOKUP = '<variable name="branch" script="{b.branch_id: b for b in branches}.get(branch_id)"/>'
@@ -77,3 +84,12 @@ def test_where_on_a_value_element_points_to_the_lookup(tmp_path: Path, element: 
     )["DM103"]
 
     assert remediation.endswith(f"where= keeps rows of a <generate> or <iterate> file source. {GUIDANCE_FILE_LOOKUP}")
+
+
+def test_the_refusals_of_other_join_attempts_point_to_the_lookup() -> None:
+    """Python-only: static catalog text. Agents reached DM211 (a selector), DM407 (a nested generate) and the
+    <execute> file-builtin refusal while they tried to join a second file (campaign b3, e07)."""
+    for rule_id in ("DM211", "DM407"):
+        assert authoring_rule_definition(rule_id).fix_hint.endswith(GUIDANCE_LOOKUP_POINTER), rule_id
+    refusal = LibraryRefusal(LibraryRefusalReason.FILE_OR_DYNAMIC_CODE_BUILTIN, line=1)
+    assert refusal.remediation().endswith(GUIDANCE_LOOKUP_POINTER)

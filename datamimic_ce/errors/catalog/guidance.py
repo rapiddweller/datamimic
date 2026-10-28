@@ -25,7 +25,10 @@ FILE_LOOKUP_PATTERN = (
     '<variable name="branch" script="{b.branch_id: b for b in branches}.get(branch_id)"/>. '
     "branch is None when no row has the key: branch.city if branch else 'UNKNOWN'."
 )
-GUIDANCE_FILE_LOOKUP = f"{FILE_LOOKUP_PATTERN} Read datamimic authoring reference --topic learning --name lookup."
+_LOOKUP_REFERENCE = "datamimic authoring reference --topic learning --name lookup"
+GUIDANCE_FILE_LOOKUP = f"{FILE_LOOKUP_PATTERN} Read {_LOOKUP_REFERENCE}."
+# Refusals of a join attempt that is not a script or where= mistake only point to the lookup (campaign b3, e07).
+GUIDANCE_LOOKUP_POINTER = f"To look up a row of another file by a key, read {_LOOKUP_REFERENCE}."
 # where= reads one row, so the generic hint (parent.name, root.name) sends a lookup to a dead end (campaign b3, e07).
 GUIDANCE_WHERE_SCOPE = (
     "where= reads only the current file row: its columns bare or as this.<column>, and the expression functions; "
