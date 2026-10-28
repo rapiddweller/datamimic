@@ -7,6 +7,7 @@ import pytest
 from pydantic import ValidationError
 
 from datamimic_ce.authoring import create_authoring_application
+from datamimic_ce.authoring.domain.common import MAX_AUTHORING_MAX_COUNT
 from datamimic_ce.authoring.domain.requests import PROJECT_ACCEPTANCE_PATH, PROJECT_ENTRY_PATH
 from tests_ce.authoring_project import write_project
 
@@ -179,7 +180,7 @@ def test_discriminator_diagnostics_do_not_echo_secrets(tmp_path: Path) -> None:
     "patch",
     [
         {"max_count": 0},
-        {"max_count": 1001},
+        {"max_count": MAX_AUTHORING_MAX_COUNT + 1},
         {"max_count": True},
         {"max_count": "3"},
         {"timeout_seconds": 0},

@@ -17,6 +17,7 @@ from typer.testing import CliRunner
 
 from datamimic_ce.authoring.adapters.bounded_executor import CeBoundedExecutor
 from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
+from datamimic_ce.authoring.domain.common import MAX_AUTHORING_MAX_COUNT
 from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest
 from datamimic_ce.interfaces.cli import app
 from tests_ce.authoring_project import write_project
@@ -172,4 +173,4 @@ def test_bounded_option_violation_names_the_option(tmp_path: Path) -> None:
     descriptor.write_text("<setup/>", encoding="utf-8")
     result = CliRunner().invoke(app, ["authoring", "dry-run", str(descriptor), "--max-count", "5000"])
     assert result.exit_code == 1
-    assert "max_count: Input should be less than or equal to 1000" in result.output
+    assert f"max_count: Input should be less than or equal to {MAX_AUTHORING_MAX_COUNT}" in result.output

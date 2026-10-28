@@ -250,13 +250,13 @@ fallback would hide a failure in the decision evidence. A failing script must st
 - The libraries import the module `datetime`, because a library name hides a script global of the same name (F3, #423).
 - No shift in the data crosses midnight. With an evening shift from 20:00 for 8 hours, every rule check holds, but
   Build rejects the project: the rest edge on 2026-03-07 and the S03 `RS5` pin depend on the 18:00 evening.
-- Build captures at most 1000 rows. See [Size](#size).
+- Build captures at most 2000 rows. See [Size](#size).
 
 ## Size
 
 The brief asks for about 300 rows and 20 to 30 columns. The ten tables (nine data files and the roster) hold 135 rows
 and 34 columns: 28 in the data files and 6 in the roster. That is 4 columns above the brief. Every column has a
 reader, so the project keeps them.
-The rows stay below the brief, because Build captures at most 1000 rows, and this project uses 822 of them. One more
+The rows stay below the brief. Build captures at most 2000 rows, and this project uses 822 of them. One more
 person adds about 18 captured rows (candidates, checks and export readbacks). A second week doubles the slots, the
-candidates and the roster, and goes above the limit.
+candidates and the roster.

@@ -75,7 +75,7 @@ and `acceptance/build.json`:
    needed. Build replays every seeded model; `"deterministic_replay": true` also
    requires the replay and fails an unseeded model.
    Omit `max_count`: with literal counts Build derives the limit from the declared
-   total (at most 1000). A source with a literal count and a memstore readback of a
+   total (at most 2000). A source with a literal count and a memstore readback of a
    literal producer count too. Set it only for a file source without count, a script
    count or a count range (`minCount`/`maxCount`); it limits the rows of all products
    together.

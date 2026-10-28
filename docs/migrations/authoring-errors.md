@@ -41,7 +41,7 @@ CE before this change and EE reject `null`. When the field is omitted, Build der
 the limit from the declared total: literal counts, the literal count of a source, and
 the producer rows of a memstore readback whose producer has a literal count and
 no source; a nested literal count multiplies the bound of its parent (at least 10,
-at most 1000). Every `<condition>` branch counts in full,
+at most 2000). Every `<condition>` branch counts in full,
 so the limit can be higher than a run. A product
 without such a bound (a file source without count, a script count, a count range)
 keeps the limit 10. An explicit `max_count` below the declared total is refused

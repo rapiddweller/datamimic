@@ -10,7 +10,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, ValidatorFunctionWrapHandler, WrapValidator
 
-MAX_AUTHORING_MAX_COUNT = 1000
+MAX_AUTHORING_MAX_COUNT = 2000
 
 PositiveStrictInt = Annotated[StrictInt, Field(gt=0)]
 NonNegativeStrictInt = Annotated[StrictInt, Field(ge=0)]
