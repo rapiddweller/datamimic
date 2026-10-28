@@ -8,9 +8,11 @@
     "a <generate source=\"*.ent.csv\"> copies every column of every row as text",
     "the drawn values come from the file: another file content fails the closed set",
     "distribution=\"ordered\" on a .wgt.csv, a <generate> over a headerless .wgt.csv and a <key> over an .ent.csv are refused",
-    "a comma separator on a pipe file and more rows than the file holds are rejected"
+    "a comma separator on a pipe file and more rows than the file holds are rejected",
+    "the rule-catalog file forms run: a cyclic variable wraps after the last row, a variable with type=\"row\" reads rows, and a list nestedKey with cyclic and count reads rows",
+    "a variable without cyclic, a nestedKey over a CSV file without type=\"list\" and a cyclic nestedKey without a count are rejected"
   ],
-  "products": {"people": 3, "copies": 3},
+  "products": {"people": 3, "copies": 3, "catalog_forms": 4},
   "negatives": [
     {"name": "the_values_come_from_the_file", "diagnostic": "allowed_values",
      "patch": {"file": "data/weighting/functions.wgt.csv", "old": "OPERATOR|80", "new": "DRIVER|80"}},
@@ -25,6 +27,12 @@
     {"name": "comma_separator_on_a_pipe_file", "diagnostic": "child_execution",
      "patch": {"file": "datamimic.xml", "old": "<variable name=\"row\" source=\"data/entity/people.ent.csv\" distribution=\"ordered\"/>", "new": "<variable name=\"row\" source=\"data/entity/people.ent.csv\" distribution=\"ordered\" separator=\",\"/>"}},
     {"name": "more_rows_than_the_file", "diagnostic": "validation",
-     "patch": {"file": "datamimic.xml", "old": "<generate name=\"people\" count=\"3\">", "new": "<generate name=\"people\" count=\"4\">"}}
+     "patch": {"file": "datamimic.xml", "old": "<generate name=\"people\" count=\"3\">", "new": "<generate name=\"people\" count=\"4\">"}},
+    {"name": "variable_without_cyclic_exhausts", "diagnostic": "validation",
+     "patch": {"file": "datamimic.xml", "old": "distribution=\"ordered\" cyclic=\"true\"/>\n        <key name=\"cycled_id\"", "new": "distribution=\"ordered\"/>\n        <key name=\"cycled_id\""}},
+    {"name": "nested_key_reads_csv_only_as_list", "diagnostic": "DM402",
+     "patch": {"file": "datamimic.xml", "old": "<nestedKey name=\"team\" type=\"list\" source=", "new": "<nestedKey name=\"team\" source="}},
+    {"name": "cyclic_nested_key_needs_a_count", "diagnostic": "descriptor",
+     "patch": {"file": "datamimic.xml", "old": "cyclic=\"true\" count=\"2\"/>", "new": "cyclic=\"true\"/>"}}
   ]
 }

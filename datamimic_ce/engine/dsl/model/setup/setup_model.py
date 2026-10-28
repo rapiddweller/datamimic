@@ -33,8 +33,8 @@ class SetupModel(BaseModel):
         None,
         alias=ATTR_DEFAULT_SEPARATOR,
         description="Default field separator for delimited (e.g. CSV) sources/exports when a "
-        "statement doesn't set its own separator=.",
-        examples=[",", ";", "|"],
+        "statement doesn't set its own separator= (default '|'). Project data files use the pipe, so leave it out.",
+        examples=["|", ";", ","],
     )
     default_dataset: str | None = Field(
         None,

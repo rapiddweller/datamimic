@@ -8,6 +8,9 @@
     {"kind": "allowed_values", "subject": {"kind": "product", "product": "people"}, "field": "second_function", "values": ["OPERATOR", "INSPECTOR", "PLANNER"]},
     {"kind": "allowed_values", "subject": {"kind": "product", "product": "people"}, "field": "tier", "values": ["GOLD", "SILVER"]},
     {"kind": "range", "subject": {"kind": "product", "product": "people"}, "field": "discount", "min": 5, "max": 10},
-    {"kind": "exact_count", "subject": {"kind": "product", "product": "copies"}, "count": 3}
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "copies"}, "count": 3},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "catalog_forms"}, "count": 4},
+    {"kind": "range", "subject": {"kind": "product", "product": "catalog_forms"}, "field": "cycled_id", "min": 1, "max": 3},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "catalog_forms"}, "field": "typed_name", "values": ["Ana", "Jörg", "Chen"]}
   ]
 }

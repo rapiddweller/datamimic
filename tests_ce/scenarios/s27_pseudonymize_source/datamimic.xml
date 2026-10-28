@@ -1,0 +1,16 @@
+<setup rngSeed="42">
+  <generate name="customers" source="data/entity/customers.ent.csv" target="CSV" distribution="ordered">
+    <!-- rngSeed makes seeded runs produce the same pseudonyms; remove it for a new
+         mapping per run. distribution="ordered" keeps source row N mapped to the
+         same pseudonym. -->
+    <variable name="p"   entity="Person"      dataset="DE" />
+    <variable name="acc" entity="BankAccount" dataset="DE" />
+
+    <key name="customer_id" script="customer_id" />
+    <key name="first_name" script="p.given_name" />
+    <key name="last_name"  script="p.family_name" />
+    <key name="email"      script="p.email" />
+    <key name="iban"       script="acc.iban" />
+    <key name="birth_date" script="p.birthdate" />
+  </generate>
+</setup>

@@ -17,4 +17,13 @@
     </generate>
     <!-- A generate source copies every column of every row, as text, in file order. -->
     <generate name="copies" source="data/entity/people.ent.csv" distribution="ordered"/>
+    <!-- The rule-catalog file forms: a cyclic variable wraps after the last row, a row variable takes type=,
+         and a cyclic list nestedKey with a count reads rows; a nestedKey reads a CSV file only in list mode. -->
+    <generate name="catalog_forms" count="4">
+        <variable name="cycled" source="data/entity/people.ent.csv" distribution="ordered" cyclic="true"/>
+        <key name="cycled_id" script="int(cycled.person_id)"/>
+        <variable name="typed_row" source="data/entity/people.ent.csv" type="row" distribution="ordered" cyclic="true"/>
+        <key name="typed_name" script="typed_row.name"/>
+        <nestedKey name="team" type="list" source="data/entity/people.ent.csv" cyclic="true" count="2"/>
+    </generate>
 </setup>

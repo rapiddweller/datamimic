@@ -90,7 +90,7 @@ class NestedKeyModel(BaseModel):
     separator: str | None = Field(
         None,
         description="Field separator used when reading a CSV source; defaults to the descriptor-wide separator.",
-        examples=[",", ";", "|"],
+        examples=["|", ";", ","],
     )
     condition: str | None = Field(
         None,
