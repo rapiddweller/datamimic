@@ -1,0 +1,7 @@
+<setup>
+    <generate name="nested_draws" source="mem" sourceEntity="second_draws" distribution="ordered">
+        <key name="draw_id" script="this.draw_id"/>
+        <key name="nested_draw" type="int" min="0" max="999999999"/>
+        <key name="distinct_draws" script="len({entry_draw, second_draw, nested_draw})"/>
+    </generate>
+</setup>

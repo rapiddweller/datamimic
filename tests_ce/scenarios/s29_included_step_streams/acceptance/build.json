@@ -1,0 +1,24 @@
+{
+  "version": "5.0",
+  "max_count": 20,
+  "verification": {"deterministic_replay": true},
+  "product_roles": [
+    {"product": "entry_draws", "field": "draw_id", "role": {"kind": "identifier"}},
+    {"product": "first_draws", "field": "draw_id", "role": {"kind": "identifier"}},
+    {"product": "first_draws", "field": "draw_id", "role": {"kind": "foreign_key", "parent_product": "entry_draws", "parent_field": "draw_id"}},
+    {"product": "second_draws", "field": "draw_id", "role": {"kind": "identifier"}},
+    {"product": "second_draws", "field": "draw_id", "role": {"kind": "foreign_key", "parent_product": "entry_draws", "parent_field": "draw_id"}},
+    {"product": "nested_draws", "field": "draw_id", "role": {"kind": "foreign_key", "parent_product": "second_draws", "parent_field": "draw_id"}},
+    {"product": "stream_check", "field": "draw_id", "role": {"kind": "foreign_key", "parent_product": "first_draws", "parent_field": "draw_id"}}
+  ],
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "entry_draws"}, "count": 4},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "first_draws"}, "count": 4},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "second_draws"}, "count": 4},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "nested_draws"}, "count": 4},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "stream_check"}, "count": 4},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "nested_draws"}, "field": "distinct_draws", "values": [3]},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "stream_check"}, "field": "distinct_draws", "values": [3]},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "stream_check"}, "field": "distinct_labels", "values": [2]}
+  ]
+}

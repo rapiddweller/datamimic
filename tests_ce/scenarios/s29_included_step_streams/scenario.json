@@ -1,0 +1,30 @@
+{
+  "title": "Each included step draws from its own seeded stream (#463)",
+  "proves": [
+    "two included steps, the entry and a nested step draw different values and fake names for one rngSeed",
+    "a second run with the same seed gives the same rows",
+    "the order of two independent steps does not change their rows; the step key is the step path, not its position (an entry <execute> library keeps one run-wide stream and follows the call order)",
+    "./model/10_first.xml and model/10_first.xml are the same step",
+    "the rows do not depend on the project directory: each equivalent runs the project and the variant in two directories",
+    "rngSeed on an included step has no effect: the entry seed governs the run",
+    "numProcess on a seeded step generate keeps the rows: a seeded generate runs single-process",
+    "the check fails when a step repeats the draws of another stream"
+  ],
+  "products": {"entry_draws": 4, "first_draws": 4, "second_draws": 4, "nested_draws": 4, "stream_check": 4},
+  "equivalents": [
+    {"name": "steps_in_the_other_order",
+     "patch": {"file": "datamimic.xml", "old": "<!-- 10 first: one draw and one fake name for each entry row -->\n    <include uri=\"model/10_first.xml\"/>\n    <!-- 20 second: the same for each entry row; its nested step 30 draws again -->\n    <include uri=\"model/20_second.xml\"/>", "new": "<!-- 20 second: the same for each entry row; its nested step 30 draws again -->\n    <include uri=\"model/20_second.xml\"/>\n    <!-- 10 first: one draw and one fake name for each entry row -->\n    <include uri=\"model/10_first.xml\"/>"}},
+    {"name": "step_path_with_dot_segment",
+     "patch": {"file": "datamimic.xml", "old": "<include uri=\"model/10_first.xml\"/>", "new": "<include uri=\"./model/10_first.xml\"/>"}},
+    {"name": "step_rng_seed_is_ignored",
+     "patch": {"file": "model/10_first.xml", "old": "<setup>", "new": "<setup rngSeed=\"99\">"}},
+    {"name": "seeded_step_with_num_process",
+     "patch": {"file": "model/10_first.xml", "old": "distribution=\"ordered\" target=\"mem\">", "new": "distribution=\"ordered\" target=\"mem\" numProcess=\"2\">"}}
+  ],
+  "negatives": [
+    {"name": "step_repeats_the_entry_draws", "diagnostic": "allowed_values",
+     "patch": {"file": "model/20_second.xml", "old": "<key name=\"second_draw\" type=\"int\" min=\"0\" max=\"999999999\"/>", "new": "<key name=\"second_draw\" script=\"entry_draw\"/>"}},
+    {"name": "replay_needs_the_seed", "diagnostic": "validation",
+     "patch": {"file": "datamimic.xml", "old": "<setup rngSeed=\"29\">", "new": "<setup>"}}
+  ]
+}

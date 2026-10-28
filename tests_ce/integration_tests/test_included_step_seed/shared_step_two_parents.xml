@@ -1,0 +1,4 @@
+<setup rngSeed="7">
+    <include uri="steps/left.xml"/>
+    <include uri="steps/right.xml"/>
+</setup>

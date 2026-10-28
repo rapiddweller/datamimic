@@ -1,0 +1,5 @@
+<setup rngSeed="7">
+    <execute uri="lib/context_draws.scr.py"/>
+    <include uri="steps/context_first.xml"/>
+    <include uri="steps/context_second.xml"/>
+</setup>

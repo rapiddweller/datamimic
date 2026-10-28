@@ -136,15 +136,16 @@ class SetupTask:
             raise first_error
 
     @staticmethod
-    def execute_include(setup_stmt: SetupStatement, parent_context: SetupContext) -> None:
+    def execute_include(setup_stmt: SetupStatement, parent_context: SetupContext, uri: str) -> None:
         """
         Execute include in <setup>
         :param setup_stmt:
         :param parent_context:
+        :param uri: the step path as the <include> resolves it
         :return:
         """
         # Use copy of parent_context as child_context
-        root_context = SetupTask._copy_include_context(parent_context)
+        root_context = SetupTask._copy_include_context(parent_context, uri)
 
         # Update root_context with attributes defined in sub-setup statement
         root_context.update_with_stmt(setup_stmt)
@@ -152,7 +153,7 @@ class SetupTask:
         SetupTask.execute_statements(setup_stmt, root_context)
 
     @staticmethod
-    def _copy_include_context(parent_context: SetupContext) -> SetupContext:
+    def _copy_include_context(parent_context: SetupContext, uri: str) -> SetupContext:
         descriptor_clients = tuple(
             (token, client, config)
             for token, (client_ref, config) in enumerate(parent_context._descriptor_client_history)
@@ -173,6 +174,7 @@ class SetupTask:
             if id(client) not in descriptor_ids:
                 memo[id(client)] = client
         child = copy.deepcopy(parent_context, memo)
+        child.enter_step(uri, parent_context)
         token_map: dict[int, int] = {}
         for token, _client, config in descriptor_clients:
             clone = clone_by_token[token]

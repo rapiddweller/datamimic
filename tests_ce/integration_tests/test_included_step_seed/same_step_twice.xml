@@ -1,0 +1,4 @@
+<setup rngSeed="7">
+    <include uri="steps/batch.xml"/>
+    <include uri="steps/batch.xml"/>
+</setup>

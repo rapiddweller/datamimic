@@ -72,7 +72,7 @@ class IncludeTask(CommonSubTask):
         elif uri.endswith(".xml"):
             sub_setup_stmt = _parse_included_descriptor(ctx, uri)
             with descriptor_scope(uri):
-                SetupTask.execute_include(setup_stmt=sub_setup_stmt, parent_context=ctx)
+                SetupTask.execute_include(setup_stmt=sub_setup_stmt, parent_context=ctx, uri=uri)
         else:
             raise include_error(code=IssueCode.INCLUDE_UNSUPPORTED_FILE_TYPE, uri=uri)
 
@@ -90,7 +90,7 @@ class IncludeTask(CommonSubTask):
             sub_setup_stmt = _parse_included_descriptor(root_ctx, uri)
             with descriptor_scope(uri):
                 # Use copy of parent_context as child_context
-                copied_root_context = SetupTask._copy_include_context(root_ctx)
+                copied_root_context = SetupTask._copy_include_context(root_ctx, uri)
                 # The step runs once per row of the enclosing <generate>: clear and drop refuse to run there.
                 copied_root_context.within_generate = True
 

@@ -1,0 +1,14 @@
+<setup rngSeed="29">
+    <!-- Each included step draws from its own stream. The seed and the step path decide it (#463). -->
+    <memstore id="mem"/>
+    <generate name="entry_draws" count="4" target="mem">
+        <key name="draw_id" generator="IncrementGenerator"/>
+        <key name="entry_draw" type="int" min="0" max="999999999"/>
+    </generate>
+    <!-- 10 first: one draw and one fake name for each entry row -->
+    <include uri="model/10_first.xml"/>
+    <!-- 20 second: the same for each entry row; its nested step 30 draws again -->
+    <include uri="model/20_second.xml"/>
+    <!-- 90 compare: no two streams give the same value in one row -->
+    <include uri="model/90_compare.xml"/>
+</setup>

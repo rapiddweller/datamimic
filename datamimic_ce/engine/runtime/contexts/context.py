@@ -7,6 +7,7 @@
 from __future__ import annotations  # Enable forward declarations
 
 import copy
+import posixpath
 import random
 import secrets
 import weakref
@@ -244,6 +245,7 @@ class SetupContext(Context):
         included_statement_transformer: StatementTransformer | None = None,
         profile_loader: Callable[[Path, str], dict[str, str]] | None = None,
         total_row_limit: int | None = None,
+        step_key: str | None = None,
     ) -> None:
         # SetupContext is always its root_context
         super().__init__(self)
@@ -305,11 +307,29 @@ class SetupContext(Context):
         self.included_statement_transformer = included_statement_transformer
         self.profile_loader = profile_loader
         self._total_row_budget = TotalRowBudget(total_row_limit) if total_row_limit is not None else None
-        # Generator stream root: variables/keys without their own seed fork a reproducible child RNG from it.
-        self._root_rng: Random | None = Random(self._run_seed.value) if self._run_seed.seeded else None
+        # How often this context ran each included step, so that a repeated include gets its own stream.
+        self._step_runs: dict[str, int] = {}
+        self._enter_stream(step_key)
+        self._seeded_faker: Faker | None = None
+
+    def _enter_stream(self, step_key: str | None) -> None:
+        """Start the generator stream root: variables/keys without their own seed fork a reproducible child RNG
+        from it. The entry keeps ``Random(rngSeed)``; an included step keys its stream from the seed and its
+        step key, so two steps differ and a replay agrees (#463)."""
+        self._step_key = step_key
+        seed = self._run_seed.value if step_key is None else self._run_seed.int_for(f"include|{step_key}")
+        self._root_rng: Random | None = Random(seed) if self._run_seed.seeded else None
         # Cached call-time rng — populated lazily on first ``.rng`` access.
         self._call_rng: RandomSource | None = None
-        self._seeded_faker: Faker | None = None
+
+    def enter_step(self, uri: str, parent: SetupContext) -> None:
+        """Make this copy of ``parent`` the context of the included step ``uri``. The step key is the parent's
+        key, the step path (relative to the project root in CE) and how often ``parent`` ran it before; it
+        does not change when other steps move or the project moves to another directory."""
+        path = posixpath.normpath(uri)
+        run = parent._step_runs.get(path, 0)
+        parent._step_runs[path] = run + 1
+        self._enter_stream(f"{parent._step_key or ''}/{path}#{run}")
 
     def derive_seeded_rng(self) -> Random | None:
         """Fork a reproducible child RNG from the model-wide root seed.
@@ -382,6 +402,7 @@ class SetupContext(Context):
             included_statement_transformer=self.included_statement_transformer,
             profile_loader=self.profile_loader,
             total_row_limit=self._total_row_budget.limit if self._total_row_budget is not None else None,
+            step_key=self._step_key,
         )
         memo[id(self)] = copied
         copied._pending_client_configs = copy.deepcopy(self._pending_client_configs, memo)
