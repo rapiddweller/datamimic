@@ -75,9 +75,8 @@ Separation rules:
 2. Parameters and connections live in `conf/` and the entry; `model/` files never declare clients.
 3. `model/` writes only to the memstore. `delivery/` reads it and is the only place that writes to
    files, databases or brokers, so a target can change without touching business logic.
-   A delivery step is named after its activity. Two exceptions put a step that is not an export
-   in `delivery/`: a check step that writes its check products (before the cleanup and the exports), and a cleanup
-   step that deletes the rows of an earlier run (after the checks, before the exports).
+   Name a delivery step after its activity, for example `delivery/91_export.xml`. One exception: a check step
+   that writes its check products is a delivery step. Number it before the other delivery steps.
 4. Logic that spans tables is a named function in `lib/`. All inputs are passed in from the model,
    so the function does not read state; it returns its decisions and fails loudly when a rule
    cannot be met.
