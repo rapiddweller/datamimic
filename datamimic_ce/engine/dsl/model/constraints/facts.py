@@ -49,8 +49,10 @@ from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import (
     ATTR_INTERVAL,
     ATTR_MAX,
     ATTR_MAX_COUNT,
+    ATTR_MAX_LENGTH,
     ATTR_MIN,
     ATTR_MIN_COUNT,
+    ATTR_MIN_LENGTH,
     ATTR_OFFSET,
     ATTR_OUT_DATE_FORMAT,
     ATTR_PATTERN,
@@ -395,6 +397,12 @@ _KEY_RANGE_MESSAGE = (
     "'min', 'max' and 'granularity' on a <key> apply to type= or generator= only: write "
     'type="int" min="1" max="9", or generator="IntegerGenerator" min="1" max="9"'
 )
+# Length attributes shape a type="string"/"binary" draw or are the min_len/max_len arguments of generator= (#459).
+_KEY_LENGTH_ATTRS = (ATTR_MIN_LENGTH, ATTR_MAX_LENGTH)
+_KEY_LENGTH_MESSAGE = (
+    "'minLength' and 'maxLength' on a <key> apply to type= or generator= only: write "
+    'type="string" minLength="1" maxLength="9", or generator="StringGenerator" minLength="1" maxLength="9"'
+)
 KEY_RANGE_CONSTRAINTS: tuple[Constraint, ...] = (
     *(Requires(attr, _KEY_RANGE_SOURCES, message=_KEY_RANGE_MESSAGE) for attr in _KEY_RANGE_ATTRS),
     *(
@@ -431,6 +439,22 @@ KEY_RANGE_CONSTRAINTS: tuple[Constraint, ...] = (
         frozenset((ATTR_GENERATOR,)),
         message="'distribution' on a <key> shapes a type= range; with generator= write it in the call: "
         'generator="IntegerGenerator(min=1, max=9, distribution=NumberDistribution.CUMULATED)"',
+    ),
+    *(Requires(attr, _KEY_RANGE_SOURCES, message=_KEY_LENGTH_MESSAGE) for attr in _KEY_LENGTH_ATTRS),
+    *(
+        Forbids(attr, KEY_GENERATION_REQUIRED.attrs - _KEY_RANGE_SOURCES, message=_KEY_LENGTH_MESSAGE)
+        for attr in _KEY_LENGTH_ATTRS
+    ),
+    *(
+        AllowedValuesWhen(
+            ATTR_TYPE,
+            frozenset((DATA_TYPE_STRING, DATA_TYPE_BINARY)),
+            attr,
+            unless=frozenset((ATTR_GENERATOR,)),
+            message=f"'{attr}' on a <key> without generator= requires type='string' or 'binary', "
+            "not '{actual_value}'",
+        )
+        for attr in _KEY_LENGTH_ATTRS
     ),
 )
 KEY_DISTRIBUTION_NUMERIC_TYPE = AllowedValuesWhen(

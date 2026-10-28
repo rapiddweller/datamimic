@@ -15,6 +15,11 @@ import numpy
 
 from datamimic_ce.domains.api import StringGenerator, from_epoch_utc, to_epoch_utc
 from datamimic_ce.engine.dsl.api import (
+    ATTR_GRANULARITY,
+    ATTR_MAX,
+    ATTR_MAX_LENGTH,
+    ATTR_MIN,
+    ATTR_MIN_LENGTH,
     DATA_TYPE_BINARY,
     DATA_TYPE_BOOL,
     DATA_TYPE_DECIMAL,
@@ -48,6 +53,12 @@ from datamimic_ce.errors import (
     is_user_error,
     task_config_error,
 )
+
+
+def _length_arguments(stmt: KeyStatement) -> tuple[tuple[str, str, str | None], ...]:
+    """minLength/maxLength are the min_len/max_len parameters of StringGenerator and BinaryGenerator, in the
+    type= form and in the generator= attribute form."""
+    return ((ATTR_MIN_LENGTH, "min_len", stmt.min_length), (ATTR_MAX_LENGTH, "max_len", stmt.max_length))
 
 
 class KeyVariableTask(Task):
@@ -197,9 +208,14 @@ class KeyVariableTask(Task):
         stmt = self._statement
         if not isinstance(stmt, KeyStatement):
             return generator
-        # The range attributes share their names with the generator parameters they set.
-        attributes = (("min", stmt.min), ("max", stmt.max), ("granularity", stmt.granularity))
-        arguments = {name: value for name, value in attributes if value is not None}
+        # (attribute, generator parameter, text): the range attributes share their names with the parameters.
+        attributes = (
+            (ATTR_MIN, "min", stmt.min),
+            (ATTR_MAX, "max", stmt.max),
+            (ATTR_GRANULARITY, "granularity", stmt.granularity),
+            *_length_arguments(stmt),
+        )
+        arguments = [(attribute, parameter, text) for attribute, parameter, text in attributes if text is not None]
         if not arguments:
             return generator
         util = GeneratorUtil(ctx)
@@ -213,17 +229,14 @@ class KeyVariableTask(Task):
         stmt = self._statement
         if not isinstance(stmt, KeyStatement):
             return None
-        if stmt.type == DATA_TYPE_STRING and (stmt.min_length is not None or stmt.max_length is not None):
-            lens = (("min_len", stmt.min_length), ("max_len", stmt.max_length))
-            return f"StringGenerator({', '.join(f'{k}={v}' for k, v in lens if v is not None)})"
+        lens = [f"{parameter}={text}" for _, parameter, text in _length_arguments(stmt) if text is not None]
+        if stmt.type == DATA_TYPE_STRING and lens:
+            return f"StringGenerator({', '.join(lens)})"
         if stmt.type == DATA_TYPE_BINARY:
             # bare type="binary" also routes here (default 1..16 bytes), so it gets seeding + caching
-            args = [
-                f"{k}={v}" for k, v in (("min_len", stmt.min_length), ("max_len", stmt.max_length)) if v is not None
-            ]
             if stmt.mime_type is not None:
-                args.append(f"mime_type='{stmt.mime_type}'")
-            return f"BinaryGenerator({', '.join(args)})"
+                lens.append(f"mime_type='{stmt.mime_type}'")
+            return f"BinaryGenerator({', '.join(lens)})"
         if stmt.min is None and stmt.max is None:
             return None
         if stmt.type == DATA_TYPE_INT:

@@ -372,9 +372,10 @@ class GeneratorUtil:
                 error=type(e).__name__,
             ) from e
 
-    def attribute_call(self, generator: str, arguments: dict[str, str], key_name: str) -> str:
+    def attribute_call(self, generator: str, arguments: list[tuple[str, str, str]], key_name: str) -> str:
         """Render <key generator="G" min="1" max="9"> as the call G(min=1, max=9), so the attribute form and the
-        call form build the same generator from the same seed. The constructor signature decides what G takes."""
+        call form build the same generator from the same seed. Each argument is (attribute, parameter, text);
+        the constructor signature decides what G takes. Diagnostics name the attribute as written."""
         location = DescriptorLocation(EL_KEY, attribute=ATTR_GENERATOR)
         try:
             expression: ast.expr | None = ast.parse(generator.strip(), mode="eval").body
@@ -397,15 +398,15 @@ class GeneratorUtil:
             )
         parameters = inspect.signature(cls, eval_str=True).parameters
         rendered: list[str] = []
-        for name, text in arguments.items():
+        for attribute, name, text in arguments:
             parameter = parameters.get(name)
             if parameter is None:
                 raise generator_config_error(
                     code=IssueCode.GENERATOR_ARGUMENT_UNKNOWN,
                     element_name=key_name,
                     class_name=cls.__name__,
-                    attribute=name,
-                    location=DescriptorLocation(EL_KEY, attribute=name),
+                    attribute=attribute,
+                    location=DescriptorLocation(EL_KEY, attribute=attribute),
                 )
             # A text parameter (DateTimeGenerator min) takes the attribute as written; the call form quotes it.
             if str in (get_args(parameter.annotation) or (parameter.annotation,)):
@@ -419,7 +420,7 @@ class GeneratorUtil:
                     class_name=cls.__name__,
                     element_name=key_name,
                     error=type(error).__name__,
-                    location=DescriptorLocation(EL_KEY, attribute=name),
+                    location=DescriptorLocation(EL_KEY, attribute=attribute),
                 ) from None
         return f"{cls.__name__}({', '.join(rendered)})"
 
