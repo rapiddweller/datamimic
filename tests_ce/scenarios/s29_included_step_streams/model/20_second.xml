@@ -1,0 +1,8 @@
+<setup>
+    <generate name="second_draws" source="mem" sourceEntity="entry_draws" distribution="ordered" target="mem">
+        <key name="draw_id" script="this.draw_id"/>
+        <key name="second_draw" type="int" min="0" max="999999999"/>
+        <key name="second_label" script="fake.name()"/>
+    </generate>
+    <include uri="model/30_nested.xml"/>
+</setup>

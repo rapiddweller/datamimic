@@ -1,0 +1,10 @@
+<setup rngSeed="8">
+    <generate name="before_steps" count="3">
+        <key name="draw" type="int" min="0" max="999999999"/>
+    </generate>
+    <include uri="steps/first.xml"/>
+    <include uri="steps/second.xml"/>
+    <generate name="after_steps" count="3">
+        <key name="draw" type="int" min="0" max="999999999"/>
+    </generate>
+</setup>

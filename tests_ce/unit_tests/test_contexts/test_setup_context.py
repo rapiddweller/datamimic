@@ -169,9 +169,9 @@ def test_setup_context_deepcopy_isolates_domain_identifier_state() -> None:
 def test_include_context_shares_run_identifier_state() -> None:
     context = _context()
     registry = context.domain_identifier_registry
-    child = SetupTask._copy_include_context(context)
-    sibling = SetupTask._copy_include_context(context)
-    nested = SetupTask._copy_include_context(child)
+    child = SetupTask._copy_include_context(context, "child.xml")
+    sibling = SetupTask._copy_include_context(context, "sibling.xml")
+    nested = SetupTask._copy_include_context(child, "nested.xml")
 
     for included in (child, sibling, nested):
         assert included.domain_identifier_registry is registry

@@ -1,0 +1,5 @@
+<setup>
+    <generate name="batch" count="3">
+        <key name="draw" type="int" min="0" max="999999999"/>
+    </generate>
+</setup>

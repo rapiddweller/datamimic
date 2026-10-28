@@ -1,0 +1,5 @@
+<setup>
+    <generate name="round_draws" count="2">
+        <key name="draw" type="int" min="0" max="999999999"/>
+    </generate>
+</setup>
