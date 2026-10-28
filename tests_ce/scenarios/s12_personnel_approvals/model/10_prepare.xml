@@ -1,5 +1,5 @@
 <setup>
-    <!-- Prepare: type the rule parameters once; resolve each demanded position to its approval, its company (the approval's addressee) and its date. -->
+    <!-- Prepare: type the rule parameters and each data file once; resolve each demanded position to its approval, its company (the approval's addressee) and its date. -->
     <generate name="policy" count="1" target="mem">
         <!-- A missing parameter or a count that is not a whole number stops the run. -->
         <key name="policy_id" script="1"/>
@@ -10,9 +10,56 @@
         <array name="exclusive_approvals" script="[item.strip() for item in exclusive_approvals.split(',') if item.strip()]"/>
         <nestedKey name="required_qualification" script="{'INS': required_qualification_INS, 'OPR': required_qualification_OPR, 'PLN': required_qualification_PLN, 'SUP': required_qualification_SUP}"/>
     </generate>
-    <generate name="positions" source="data/entity/demand.json" distribution="ordered" target="mem">
-        <variable name="versions" source="data/entity/approval_versions.json" storage="data" distribution="ordered"/>
-        <variable name="approvals" source="data/entity/approvals.json" storage="data" distribution="ordered"/>
+    <!-- A CSV cell is text: person_id becomes a number, an empty expires_on a missing value. Dates stay ISO text. -->
+    <generate name="companies" source="data/entity/companies.ent.csv" distribution="ordered" target="mem">
+        <key name="company_id" script="this.company_id"/>
+        <key name="company_name" script="this.company_name"/>
+    </generate>
+    <generate name="people" source="data/entity/people.ent.csv" distribution="ordered" target="mem">
+        <key name="person_id" script="int(this.person_id)"/>
+        <key name="full_name" script="this.full_name"/>
+    </generate>
+    <generate name="functions" source="data/entity/functions.ent.csv" distribution="ordered" target="mem">
+        <key name="function_id" script="this.function_id"/>
+        <key name="function_name" script="this.function_name"/>
+    </generate>
+    <generate name="employments" source="data/entity/employments.ent.csv" distribution="ordered" target="mem">
+        <key name="employment_id" script="this.employment_id"/>
+        <key name="person_id" script="int(this.person_id)"/>
+        <key name="company_id" script="this.company_id"/>
+        <key name="function_id" script="this.function_id"/>
+    </generate>
+    <generate name="licenses" source="data/entity/licenses.ent.csv" distribution="ordered" target="mem">
+        <key name="license_type" script="this.license_type"/>
+    </generate>
+    <generate name="person_licenses" source="data/entity/person_licenses.ent.csv" distribution="ordered" target="mem">
+        <key name="person_license_id" script="this.person_license_id"/>
+        <key name="person_id" script="int(this.person_id)"/>
+        <key name="license_type" script="this.license_type"/>
+        <key name="status" script="this.status"/>
+        <key name="expires_on" script="None if this.expires_on == '' else this.expires_on"/>
+    </generate>
+    <generate name="qualifications" source="data/entity/qualifications.ent.csv" distribution="ordered" target="mem">
+        <key name="qualification_id" script="this.qualification_id"/>
+        <key name="qualification_name" script="this.qualification_name"/>
+    </generate>
+    <generate name="person_qualifications" source="data/entity/person_qualifications.ent.csv" distribution="ordered" target="mem">
+        <key name="person_qualification_id" script="this.person_qualification_id"/>
+        <key name="person_id" script="int(this.person_id)"/>
+        <key name="qualification_id" script="this.qualification_id"/>
+    </generate>
+    <generate name="approvals" source="data/entity/approvals.ent.csv" distribution="ordered" target="mem">
+        <key name="approval_id" script="this.approval_id"/>
+        <key name="company_id" script="this.company_id"/>
+    </generate>
+    <generate name="approval_versions" source="data/entity/approval_versions.ent.csv" distribution="ordered" target="mem">
+        <key name="version_id" script="this.version_id"/>
+        <key name="approval_id" script="this.approval_id"/>
+        <key name="valid_on" script="this.valid_on"/>
+    </generate>
+    <generate name="positions" source="data/entity/demand.ent.csv" distribution="ordered" target="mem">
+        <variable name="versions" source="mem" sourceEntity="approval_versions" storage="data" distribution="ordered"/>
+        <variable name="approvals" source="mem" sourceEntity="approvals" storage="data" distribution="ordered"/>
         <variable name="policy_rows" source="mem" sourceEntity="policy" storage="data" distribution="ordered"/>
         <variable name="policy" script="read_policy(policy_rows[0])"/>
         <variable name="version" script="{row.version_id: row for row in versions}[this.version_id]"/>
@@ -20,7 +67,7 @@
         <key name="position_id" script="this.position_id"/>
         <key name="version_id" script="this.version_id"/>
         <key name="function_id" script="this.function_id"/>
-        <key name="seats" script="this.seats"/>
+        <key name="seats" script="int(this.seats)"/>
         <key name="approval_id" script="approval.approval_id"/>
         <key name="company_id" script="approval.company_id"/>
         <key name="valid_on" script="version.valid_on"/>

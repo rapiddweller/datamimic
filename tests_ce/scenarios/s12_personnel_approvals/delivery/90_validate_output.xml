@@ -1,11 +1,11 @@
 <setup>
     <!-- Validate output: check the plan without the search and without step 20, before the export reads it.
-         R1 to R3 for each seat, from the raw rows and the step-10 positions: a defect in step 20 cannot hide here. -->
+         R1 to R3 for each seat, from the step-10 tables and positions: a defect in step 20 cannot hide here. -->
     <generate name="seat_check" source="mem" sourceEntity="plan" distribution="ordered" target="JSON">
         <variable name="positions" source="mem" sourceEntity="positions" storage="data" distribution="ordered"/>
-        <variable name="employments" source="data/entity/employments.json" storage="data" distribution="ordered"/>
-        <variable name="person_licenses" source="data/entity/person_licenses.json" storage="data" distribution="ordered"/>
-        <variable name="person_qualifications" source="data/entity/person_qualifications.json" storage="data" distribution="ordered"/>
+        <variable name="employments" source="mem" sourceEntity="employments" storage="data" distribution="ordered"/>
+        <variable name="person_licenses" source="mem" sourceEntity="person_licenses" storage="data" distribution="ordered"/>
+        <variable name="person_qualifications" source="mem" sourceEntity="person_qualifications" storage="data" distribution="ordered"/>
         <variable name="policy_rows" source="mem" sourceEntity="policy" storage="data" distribution="ordered"/>
         <variable name="policy" script="policy_rows[0]"/>
         <variable name="position" script="{(row.version_id, row.function_id): row for row in positions}[(this.version_id, this.function_id)]"/>

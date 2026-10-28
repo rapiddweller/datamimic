@@ -4,7 +4,7 @@
         <variable name="positions" source="mem" sourceEntity="suitability" storage="data" distribution="ordered"/>
         <variable name="policy_rows" source="mem" sourceEntity="policy" storage="data" distribution="ordered"/>
         <variable name="policy" script="read_policy(policy_rows[0])"/>
-        <variable name="people" source="data/entity/people.json" storage="data" distribution="ordered"/>
+        <variable name="people" source="mem" sourceEntity="people" storage="data" distribution="ordered"/>
         <variable name="result" script="assign_seats(positions, policy)"/>
         <key name="assignment_id" script="1"/>
         <key name="outcome" script="result.outcome"/>
@@ -19,7 +19,7 @@
             <key name="person_id" script="this.person_id"/>
         </generate>
         <!-- One row per rejection of the search (skip, dead end, undo, short), with the person's name; the plan holds the choices. -->
-        <generate name="trace" script="result.decisions" count="{len(result.decisions)}" distribution="ordered" target="JSON">
+        <generate name="trace" script="result.decisions" count="{len(result.decisions)}" distribution="ordered" target="mem">
             <key name="position_id" script="this.position_id"/>
             <key name="seat_id" script="this.seat_id"/>
             <key name="person_id" script="this.person_id"/>
@@ -27,6 +27,7 @@
             <key name="action" script="this.action"/>
             <key name="rule" script="this.rule"/>
             <key name="reason" script="this.reason"/>
+            <key name="decision_no" generator="IncrementGenerator"/>
         </generate>
     </generate>
 </setup>

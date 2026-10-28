@@ -3,7 +3,7 @@
     <include uri="conf/policy.properties"/>
     <memstore id="mem"/>
     <execute uri="lib/staffing.scr.py"/>
-    <!-- 10 prepare: type the rule parameters, resolve each demanded position; the R4 maximum stops the run -->
+    <!-- 10 prepare: type the rule parameters and the data files, resolve each demanded position; the R4 maximum stops the run -->
     <include uri="model/10_prepare.xml"/>
     <!-- 20 suitability: decide R1 to R3 for every person and position -->
     <include uri="model/20_suitability.xml"/>
@@ -11,6 +11,6 @@
     <include uri="model/30_assign.xml"/>
     <!-- 90 validate output: check the plan again, without the search -->
     <include uri="delivery/90_validate_output.xml"/>
-    <!-- 91 export: write the eleven target tables to CSV, the policy and the search counters to JSON -->
+    <!-- 91 export: read each product back; write the eleven target tables to CSV, the policy, the counters and the trace to JSON -->
     <include uri="delivery/91_export.xml"/>
 </setup>
