@@ -7,7 +7,7 @@
     "StringGenerator takes minLength= and maxLength= as its min_len and max_len arguments (#459)",
     "each attribute form gives the same rows as the call form for the same seed",
     "an attribute the generator does not take is refused with I438, an attribute next to a call with I439",
-    "distribution=, a value source other than type= or generator=, and <variable> keep their earlier refusals"
+    "distribution= and a value source other than type= or generator= keep their earlier refusals; <variable> is s27"
   ],
   "products": {"members": 25},
   "equivalents": [
@@ -80,8 +80,6 @@
     {"name": "distribution_next_to_generator", "diagnostic": "DM218",
      "patch": {"file": "datamimic.xml", "old": "min=\"1\" max=\"5\"", "new": "min=\"1\" max=\"5\" distribution=\"cumulated\""}},
     {"name": "bounds_next_to_another_value_source", "diagnostic": "DM218",
-     "patch": {"file": "datamimic.xml", "old": "generator=\"IntegerGenerator\" max=\"3\"", "new": "values=\"0, 1, 2, 3\" max=\"3\""}},
-    {"name": "variable_keeps_the_call_form", "diagnostic": "DM103",
-     "patch": {"file": "datamimic.xml", "old": "<key name=\"member_id\"", "new": "<variable name=\"bonus\" generator=\"IntegerGenerator\" min=\"1\" max=\"2\"/>\n        <key name=\"member_id\""}}
+     "patch": {"file": "datamimic.xml", "old": "generator=\"IntegerGenerator\" max=\"3\"", "new": "values=\"0, 1, 2, 3\" max=\"3\""}}
   ]
 }

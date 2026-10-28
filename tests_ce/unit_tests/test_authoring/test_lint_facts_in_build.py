@@ -77,7 +77,7 @@ def test_an_unsupported_element_in_the_entry_is_named(tmp_path: Path) -> None:
 
 
 _CALL_FORM = 'generator="IntegerGenerator(min=1, max=9)"'
-# A <key> takes the bounds of its generator as attributes (#456); a <variable> keeps the call form.
+# A <key> (#456) and a <variable> (#460) take the bounds of their generator as attributes.
 _ATTRIBUTE_FORM = 'generator="IntegerGenerator" min="1" max="9"'
 
 
@@ -91,16 +91,16 @@ _ATTRIBUTE_FORM = 'generator="IntegerGenerator" min="1" max="9"'
             id="key-script",
         ),
         pytest.param(
-            '<variable name="lp" generator="IntegerGenerator" min="100" max="900"/><key name="v" script="lp"/>',
-            "DM103",
-            _CALL_FORM,
-            id="variable",
+            '<variable name="lp" type="int" min="100" max="900"/><key name="v" script="lp"/>',
+            "DM214",
+            _ATTRIBUTE_FORM,
+            id="variable-type",
         ),
         pytest.param(
-            '<variable name="ratio" generator="FloatGenerator" min="0.5" max="1.0"/><key name="v" script="ratio"/>',
-            "DM103",
-            _CALL_FORM,
-            id="variable-float",
+            '<variable name="ratio" script="0.5" min="0.5" max="1.0"/><key name="v" script="ratio"/>',
+            "DM214",
+            _ATTRIBUTE_FORM,
+            id="variable-script",
         ),
     ],
 )
@@ -116,7 +116,8 @@ def test_bounds_written_as_attributes_beside_a_generator_name_the_working_form(
 
 
 def test_a_bound_value_beside_a_generator_never_reaches_the_remediation(tmp_path: Path) -> None:
-    result = _rejected(tmp_path, '<variable name="v" generator="IntegerGenerator" min="12345" max="67890"/>')
+    # IncrementGenerator takes no min or max, so the bounded run refuses the variable attributes (I438).
+    result = _rejected(tmp_path, '<variable name="v" generator="IncrementGenerator" min="12345" max="67890"/>')
 
     texts = [text for item in result.diagnostics for text in (item.message, str(item.remediation))]
     assert texts and not any("12345" in text or "67890" in text for text in texts)
@@ -142,12 +143,14 @@ def test_the_generator_attribute_description_shows_the_call_form(tmp_path: Path,
     assert _CALL_FORM in generator.description
 
 
-def test_the_key_generator_description_shows_the_attribute_form(tmp_path: Path) -> None:
-    """Capability output reads the key model, so it teaches the attribute form of #456; no DSL descriptor shows it."""
+@pytest.mark.parametrize("element", ["key", "variable"])
+def test_the_generator_description_shows_the_attribute_form(tmp_path: Path, element: str) -> None:
+    """Capability output reads the element model, so it teaches the attribute form of #456 and #460; no DSL
+    descriptor shows it."""
     from datamimic_ce.authoring import create_authoring_application
     from datamimic_ce.authoring.domain.capabilities import CapabilityDomain
 
-    result = create_authoring_application(tmp_path).capability(CapabilityDomain.ELEMENT, "key")
+    result = create_authoring_application(tmp_path).capability(CapabilityDomain.ELEMENT, element)
     [generator] = [item for item in result.capability.attributes if item.name == "generator"]
 
     assert _ATTRIBUTE_FORM in generator.description

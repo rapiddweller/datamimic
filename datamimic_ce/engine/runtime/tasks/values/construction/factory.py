@@ -29,7 +29,6 @@ from datamimic_ce.engine.dsl.api import (
     DATA_TYPE_FLOAT,
     DATA_TYPE_INT,
     DATA_TYPE_STRING,
-    EL_KEY,
     NumberDistribution,
     Statement,
 )
@@ -372,18 +371,23 @@ class GeneratorUtil:
                 error=type(e).__name__,
             ) from e
 
-    def attribute_call(self, generator: str, arguments: list[tuple[str, str, str]], key_name: str) -> str:
+    def attribute_call(
+        self, generator: str, arguments: list[tuple[str, str, str]], element_tag: str, element_name: str
+    ) -> str:
         """Render <key generator="G" min="1" max="9"> as the call G(min=1, max=9), so the attribute form and the
         call form build the same generator from the same seed. Each argument is (attribute, parameter, text);
         the constructor signature decides what G takes. Diagnostics name the attribute as written."""
-        location = DescriptorLocation(EL_KEY, attribute=ATTR_GENERATOR)
+        location = DescriptorLocation(element_tag, attribute=ATTR_GENERATOR)
         try:
             expression: ast.expr | None = ast.parse(generator.strip(), mode="eval").body
         except SyntaxError:
             expression = None
         if isinstance(expression, ast.Call):
             raise generator_config_error(
-                code=IssueCode.GENERATOR_ARGUMENTS_IN_TWO_FORMS, element_name=key_name, location=location
+                code=IssueCode.GENERATOR_ARGUMENTS_IN_TWO_FORMS,
+                element_tag=element_tag,
+                element_name=element_name,
+                location=location,
             )
         cls = self._class_dict.get(expression.id) if isinstance(expression, ast.Name) else None
         if cls is None:
@@ -392,7 +396,7 @@ class GeneratorUtil:
             raise generator_config_error(
                 code=IssueCode.GENERATOR_CREATE_FAILED,
                 class_name="generator",
-                element_name=key_name,
+                element_name=element_name,
                 error=NameError.__name__,
                 location=location,
             )
@@ -403,10 +407,11 @@ class GeneratorUtil:
             if parameter is None:
                 raise generator_config_error(
                     code=IssueCode.GENERATOR_ARGUMENT_UNKNOWN,
-                    element_name=key_name,
+                    element_tag=element_tag,
+                    element_name=element_name,
                     class_name=cls.__name__,
                     attribute=attribute,
-                    location=DescriptorLocation(EL_KEY, attribute=attribute),
+                    location=DescriptorLocation(element_tag, attribute=attribute),
                 )
             # A text parameter (DateTimeGenerator min) takes the attribute as written; the call form quotes it.
             if str in (get_args(parameter.annotation) or (parameter.annotation,)):
@@ -418,9 +423,9 @@ class GeneratorUtil:
                 raise generator_config_error(
                     code=IssueCode.GENERATOR_CREATE_FAILED,
                     class_name=cls.__name__,
-                    element_name=key_name,
+                    element_name=element_name,
                     error=type(error).__name__,
-                    location=DescriptorLocation(EL_KEY, attribute=attribute),
+                    location=DescriptorLocation(element_tag, attribute=attribute),
                 ) from None
         return f"{cls.__name__}({', '.join(rendered)})"
 

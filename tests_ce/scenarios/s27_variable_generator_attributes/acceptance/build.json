@@ -1,0 +1,13 @@
+{
+  "version": "5.0",
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "bookings"}, "count": 25},
+    {"kind": "unique", "subject": {"kind": "product", "product": "bookings"}, "field": "booking_id"},
+    {"kind": "range", "subject": {"kind": "product", "product": "bookings"}, "field": "nights", "min": 1, "max": 14},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "bookings"}, "field": "rate", "values": [50.0, 75.0, 100.0]},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "bookings"}, "condition": "'2026-03-01' <= arrival <= '2026-03-31'"},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "bookings"}, "condition": "len(ref) == 6"},
+    {"kind": "fixed_value", "subject": {"kind": "product", "product": "bookings"}, "field": "limit", "value": 7},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "bookings"}, "condition": "1 <= room['@floor'] <= 9"}
+  ]
+}

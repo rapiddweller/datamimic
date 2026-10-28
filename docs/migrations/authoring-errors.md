@@ -110,7 +110,7 @@ comma-separated part is a plain ASCII name (letters, digits, underscore) and no 
 keyword. One name alone, a space, a quote or `True` in the list keeps the error. The one parser is
 `parse_literal_values`; EE must read the same form before such a descriptor is EE-ready.
 
-### Generator arguments as key attributes (#456)
+### Generator arguments as attributes (#456, #458, #459, #460)
 
 A `<key>` passes `min`, `max` and `granularity` to its generator:
 `<key name="age" generator="IntegerGenerator" min="18" max="65"/>` builds
@@ -122,17 +122,28 @@ refused `min`/`max`/`granularity` next to `generator=` (`DM214`, `DM218`).
   `FloatGenerator` also `granularity`, `DateTimeGenerator` takes its text bounds as written
   (`min="2026-01-01 00:00:00"`). A numeric parameter reads the attribute as a Python literal.
 - `distribution=` next to `generator=` is refused (`DM218`); write it in the call.
-  `granularity` alone still needs `min` or `max` (`DM214`). `<variable>` has no such attributes
-  (`DM103`); use the call form there.
+  `granularity` alone still needs `min` or `max` (`DM214`).
+- `type=` next to the attribute form casts the drawn value. The numeric `type=` gates of `min`,
+  `max` and `granularity` (`DM220`) do not apply when `generator=` is present (#458):
+  `<key type="string" generator="DateTimeGenerator" min="2026-02-01 00:00:00" .../>` is valid.
+- `minLength` and `maxLength` are the `min_len` and `max_len` arguments, as in the
+  `type="string"` form (#459): `generator="StringGenerator" minLength="8" maxLength="12"` builds
+  `StringGenerator(min_len=8, max_len=12)`. Before, Build was ready and ignored the lengths.
+  `minLength`/`maxLength` now need `type=` or `generator=`, refuse the other value sources
+  (`DM218`), and without `generator=` need `type="string"` or `"binary"` (`DM220`).
+- `<variable>` and `<element>` take the same five attributes (#460,
+  `tests_ce/scenarios/s27_variable_generator_attributes`). On `<variable>` each needs
+  `generator=` (`DM214`): a variable has no `type=` range. Before, `<variable>` refused them
+  (`DM103`), and `<element generator=... min= max=>` was Build ready and ignored the bounds.
 
 | Code | Name | When |
 |---|---|---|
 | `I438` | `GENERATOR_ARGUMENT_UNKNOWN` | the generator has no parameter of the attribute's name, for example `IncrementGenerator` with `min=` |
-| `I439` | `GENERATOR_ARGUMENTS_IN_TWO_FORMS` | `generator=` is a call (also `IntegerGenerator()`) and the key has `min=`, `max=` or `granularity=` |
+| `I439` | `GENERATOR_ARGUMENTS_IN_TWO_FORMS` | `generator=` is a call (also `IntegerGenerator()`) and the element has `min=`, `max=`, `granularity=`, `minLength=` or `maxLength=` |
 
 A bound that is not a literal, or an unknown generator name with these attributes, gives `I436`
-(`GENERATOR_CREATE_FAILED`). The messages name the key, the generator class and the attribute,
-never the value. These are runtime refusals: `datamimic run` reports them, and Build reports them
+(`GENERATOR_CREATE_FAILED`). The messages name the element tag (`<key>`, `<variable>`,
+`<element>`), the element name, the generator class and the attribute as written, never the value. These are runtime refusals: `datamimic run` reports them, and Build reports them
 as `child_execution` with `ce_error.issue_code` (tested). Lint does not report them.
 
 ## Public contract

@@ -1,0 +1,18 @@
+<setup rngSeed="46001">
+    <variable name="cap" generator="IntegerGenerator" min="7" max="7"/>
+    <generate name="bookings" count="25">
+        <variable name="stay" generator="IntegerGenerator" min="1" max="14"/>
+        <variable name="price" generator="FloatGenerator" min="50" max="100" granularity="25"/>
+        <variable name="arrive" generator="DateTimeGenerator" min="2026-03-01 00:00:00" max="2026-03-31 23:59:59"/>
+        <variable name="token" generator="StringGenerator" minLength="6" maxLength="6"/>
+        <key name="booking_id" generator="IncrementGenerator"/>
+        <key name="nights" script="stay"/>
+        <key name="rate" script="price"/>
+        <key name="arrival" script="arrive" converter="DateFormat('%Y-%m-%d')"/>
+        <key name="ref" script="token"/>
+        <key name="limit" script="cap"/>
+        <key name="room" type="string" constant="R">
+            <element name="floor" generator="IntegerGenerator" min="1" max="9"/>
+        </key>
+    </generate>
+</setup>

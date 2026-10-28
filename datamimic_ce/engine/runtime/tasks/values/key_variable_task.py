@@ -55,7 +55,9 @@ from datamimic_ce.errors import (
 )
 
 
-def _length_arguments(stmt: KeyStatement) -> tuple[tuple[str, str, str | None], ...]:
+def _length_arguments(
+    stmt: KeyStatement | VariableStatement | ElementStatement,
+) -> tuple[tuple[str, str, str | None], ...]:
     """minLength/maxLength are the min_len/max_len parameters of StringGenerator and BinaryGenerator, in the
     type= form and in the generator= attribute form."""
     return ((ATTR_MIN_LENGTH, "min_len", stmt.min_length), (ATTR_MAX_LENGTH, "max_len", stmt.max_length))
@@ -204,10 +206,8 @@ class KeyVariableTask(Task):
 
     def _generator_call(self, ctx: SetupContext, generator: str) -> str:
         """``<key generator="IntegerGenerator" min="1" max="9"/>`` -> ``IntegerGenerator(min=1, max=9)``: the
-        attribute form is the call form, so both give the same data for one seed."""
+        attribute form is the call form, so both give the same data for one seed. <variable> and <element> too."""
         stmt = self._statement
-        if not isinstance(stmt, KeyStatement):
-            return generator
         # (attribute, generator parameter, text): the range attributes share their names with the parameters.
         attributes = (
             (ATTR_MIN, "min", stmt.min),
@@ -219,7 +219,7 @@ class KeyVariableTask(Task):
         if not arguments:
             return generator
         util = GeneratorUtil(ctx)
-        return util.attribute_call(generator, arguments, stmt.name)
+        return util.attribute_call(generator, arguments, self._element_tag, stmt.name)
 
     def _range_generator(self) -> str | None:
         """Native range attributes on a typed <key> -> the matching literal generator string, so a field reads

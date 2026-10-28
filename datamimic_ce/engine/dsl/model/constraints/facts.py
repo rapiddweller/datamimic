@@ -517,6 +517,22 @@ VARIABLE_GENERATION_EXCLUSIVE = MutuallyExclusive(
         )
     )
 )
+# A <variable> has no type= range draw: its argument attributes are the arguments of generator= only (#460).
+_VARIABLE_ARGUMENT_MESSAGE = (
+    "'min', 'max', 'granularity', 'minLength' and 'maxLength' on a <variable> are generator arguments: write "
+    'generator="IntegerGenerator" min="1" max="9"'
+)
+VARIABLE_GENERATOR_ARGUMENT_CONSTRAINTS: tuple[Constraint, ...] = (
+    *(
+        Requires(attr, frozenset((ATTR_GENERATOR,)), message=_VARIABLE_ARGUMENT_MESSAGE)
+        for attr in (*_KEY_RANGE_ATTRS, *_KEY_LENGTH_ATTRS)
+    ),
+    Requires(
+        ATTR_GRANULARITY,
+        frozenset((ATTR_MIN, ATTR_MAX)),
+        message="'granularity' on a <variable> needs a range - add min= and/or max=",
+    ),
+)
 VARIABLE_STORAGE_VALUES = ValidValues(ATTR_STORAGE, ("value", "data", "iterator"))
 ITERATION_SELECTOR_REQUIRES_SOURCE = Requires(
     "iterationSelector",
@@ -655,6 +671,7 @@ _VARIABLE_RULES: tuple[Constraint, ...] = (
     VARIABLE_STORAGE_VALUES,
     ITERATION_SELECTOR_REQUIRES_SOURCE,
     SOURCE_DISTRIBUTION_VALUES,
+    *VARIABLE_GENERATOR_ARGUMENT_CONSTRAINTS,
 )
 _NESTED_KEY_RULES: tuple[Constraint, ...] = (
     COUNT_XOR_MIN,
