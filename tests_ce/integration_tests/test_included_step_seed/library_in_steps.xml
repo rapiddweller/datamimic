@@ -1,0 +1,4 @@
+<setup rngSeed="7">
+    <include uri="steps/library_first.xml"/>
+    <include uri="steps/library_second.xml"/>
+</setup>

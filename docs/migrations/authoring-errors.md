@@ -159,20 +159,25 @@ A nested step key starts with the key of its parent step.
   same rows. Their steps draw nothing from the step stream.
 - Changed: every seeded draw in an included step, also in a step that an `<include>` inside a `<generate>` runs
   once per row. This includes random keys, `fake.*` and `random.*` in expressions, entity variables, `values=`
-  and weighted picks, and the row order of a source read with the default `distribution="random"`.
+  and weighted picks, the row order of a source read with the default `distribution="random"`, a library that
+  the step itself loads with `<execute>`, and a library generator that takes `context`.
 - Not changed: a function of an `<execute>` library that the entry loads. It keeps one stream for the run, and
-  each step that calls it continues that stream.
+  each step that calls it continues that stream. To draw it from the step stream, execute the library inside
+  the step.
 - Draws on the step stream do not change when other steps move, when a step is added before it, or when the
   project moves to another directory. Entry library functions are the exception: their values follow the call
   order. `./model/a.xml` and `model/a.xml` are the same step. A step that runs twice gets two streams; when the
   two runs swap their places, their rows swap too.
+- The step key is the include text, not the file. Renaming a step file, or changing the case of its path,
+  changes its rows. Backslashes are not normalized: `model\a.xml` and `model/a.xml` are two steps. Portable
+  projects use `/`.
 - The Hash converter key and other `RunSeed` keys do not change: equal input hashes equal in every step.
 - `rngSeed` on an included `<setup>` still has no effect. Unseeded runs do not change.
 
 Re-capture golden files of seeded projects that draw random values in an included step. The Build replay and the
 second run in `tests_ce/scenarios` stay identical. Cases: `tests_ce/scenarios/s29_included_step_streams` (Build) and
 `tests_ce/integration_tests/test_included_step_seed` (an include inside a `<generate>` and a step that runs twice,
-which Build refuses).
+which Build refuses, and the library cases).
 
 ## Public contract
 

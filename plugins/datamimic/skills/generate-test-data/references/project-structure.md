@@ -50,6 +50,10 @@ Leave out folders the task does not need. Keep the entry at `datamimic.xml`.
 Product names are unique across all files. Includes are literal setup-level paths
 inside the project. Build reads the entry with all its steps, so expectations and
 `product_roles` may name products of any step.
+With `rngSeed`, each included step draws from its own stream, keyed by the seed
+and the include path: reordering steps keeps their rows; renaming a step file
+changes them. A library that the entry executes keeps one stream for the run;
+execute it inside a step to draw from the step stream.
 
 ## Finish
 

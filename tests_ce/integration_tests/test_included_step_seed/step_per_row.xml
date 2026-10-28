@@ -1,5 +1,5 @@
 <setup rngSeed="7">
-    <generate name="rounds" count="3">
+    <generate name="rounds" count="3" pageSize="1">
         <key name="draw" type="int" min="0" max="999999999"/>
         <include uri="steps/round.xml"/>
     </generate>

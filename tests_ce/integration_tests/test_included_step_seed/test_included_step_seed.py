@@ -47,14 +47,18 @@ def test_unseeded_steps_differ_between_runs() -> None:
 
 
 @pytest.mark.parametrize(
-    ("filename", "product", "count"),
+    ("filename", "count"),
     [
-        ("same_step_twice.xml", "batch", 6),
-        ("step_per_row.xml", "round_draws", 6),
-        ("shared_step_two_parents.xml", "shared", 6),
+        ("same_step_twice.xml", 6),
+        ("step_per_row.xml", 9),  # pageSize="1": the run counter of the step survives the pages
+        ("shared_step_two_parents.xml", 6),
+        # A library generator gets a deep copy of the step context, which must keep the step stream.
+        ("context_generator_steps.xml", 6),
+        ("library_in_steps.xml", 6),  # a library executed inside a step draws from the step stream
     ],
 )
-def test_each_run_of_a_step_draws_its_own_values_and_replays(filename: str, product: str, count: int) -> None:
+def test_each_run_of_a_step_draws_its_own_values_and_replays(filename: str, count: int) -> None:
     draws = _draws(filename)
-    assert len(set(draws[product])) == count == len(draws[product])
+    values = [value for rows in draws.values() for value in rows]
+    assert len(set(values)) == count == len(values)
     assert _draws(filename) == draws

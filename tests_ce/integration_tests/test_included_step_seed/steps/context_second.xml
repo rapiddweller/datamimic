@@ -1,0 +1,5 @@
+<setup>
+    <generate name="context_second" count="3">
+        <key name="draw" generator="ContextDraws(context=context)"/>
+    </generate>
+</setup>

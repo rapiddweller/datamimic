@@ -1,0 +1,6 @@
+<setup>
+    <execute uri="lib/step_draws.scr.py"/>
+    <generate name="library_first" count="3">
+        <key name="draw" script="pick()"/>
+    </generate>
+</setup>
