@@ -7,6 +7,8 @@
     {"kind": "range", "subject": {"kind": "product", "product": "members"}, "field": "rank", "min": 0, "max": 3},
     {"kind": "range", "subject": {"kind": "product", "product": "members"}, "field": "level", "min": 1, "max": 5},
     {"kind": "allowed_values", "subject": {"kind": "product", "product": "members"}, "field": "score", "values": [0.0, 0.25, 0.5, 0.75, 1.0]},
-    {"kind": "row_condition", "subject": {"kind": "product", "product": "members"}, "condition": "'2026-01-01' <= joined <= '2026-01-31'"}
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "members"}, "condition": "'2026-01-01' <= joined <= '2026-01-31'"},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "members"}, "condition": "'2026-02-01' <= stamp <= '2026-02-28 23:59:59'"},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "members"}, "field": "share", "values": ["0.0", "0.5", "1.0"]}
   ]
 }

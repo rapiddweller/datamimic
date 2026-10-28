@@ -167,7 +167,7 @@ def _valid_values_error(values: Mapping[str, object], fact: ValidValues) -> str 
 def _allowed_values_error(values: Mapping[str, object], fact: AllowedValuesWhen) -> str | None:
     if not _constraint_gate_open(values, fact.when_attr, fact.when_true):
         return None
-    if fact.attr not in values:
+    if fact.attr not in values or any(attr in values for attr in fact.unless):
         return None
     attr_value = values[fact.attr]
     allowed_set = resolved_allowed(fact)

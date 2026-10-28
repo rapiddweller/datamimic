@@ -160,6 +160,7 @@ class AllowedValuesWhen:
     Presence-based check: when_attr is present -> attr must be in allowed (if attr is present).
     Truthiness-based check: when_true=True gates on _attr_true(when_attr) -> attr must be in allowed.
     Absent attr is always fine (the constraint only applies when both conditions are true).
+    ``unless`` names escape attributes, as on RequiresWhenValue: when one is present, the fact does not apply.
 
     Example: unique=true pins distribution to 'random' — when unique is true and distribution
     is present, distribution must be 'random'. Missing distribution is fine (defaults to random).
@@ -169,6 +170,7 @@ class AllowedValuesWhen:
     allowed: frozenset[str] | tuple[str, ...] | Callable[[], set[str]]
     when_attr: str
     when_true: bool = False
+    unless: frozenset[str] = frozenset()
     message: str | None = None
     lint_only: bool = False
 

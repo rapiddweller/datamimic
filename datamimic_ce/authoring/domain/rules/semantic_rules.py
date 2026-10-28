@@ -317,7 +317,7 @@ def _allowed_values_diag(
         fact.when_true and _attr_true(gate_value)
     )
     value = element.get(fact.attr)
-    if not should_check or value is None:
+    if not should_check or value is None or any(attr in element.attrib for attr in fact.unless):
         return None
     allowed = resolved_allowed(fact)
     if value in allowed:

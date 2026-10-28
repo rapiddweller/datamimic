@@ -108,6 +108,7 @@ def _serialized_constraint_fields(fact: Constraint) -> JsonSchemaValue:
             "allowed": sorted(resolved_allowed(fact)),
             "when_attr": fact.when_attr,
             "when_true": fact.when_true,
+            "unless": sorted(fact.unless),
         }
     raise TypeError(f"Unknown constraint type: {type(fact)}")
 

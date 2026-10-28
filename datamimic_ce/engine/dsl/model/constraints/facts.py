@@ -401,12 +401,15 @@ KEY_RANGE_CONSTRAINTS: tuple[Constraint, ...] = (
         Forbids(attr, KEY_GENERATION_REQUIRED.attrs - _KEY_RANGE_SOURCES, message=_KEY_RANGE_MESSAGE)
         for attr in _KEY_RANGE_ATTRS
     ),
+    # The numeric type gates shape the type= draw only; next to generator= the type casts the drawn value (#458).
     *(
         AllowedValuesWhen(
             ATTR_TYPE,
             frozenset((DATA_TYPE_INT, DATA_TYPE_FLOAT, DATA_TYPE_DECIMAL)),
             attr,
-            message=f"'{attr}' on a <key> requires type='int', 'float', or 'decimal', not '{{actual_value}}'",
+            unless=frozenset((ATTR_GENERATOR,)),
+            message=f"'{attr}' on a <key> without generator= requires type='int', 'float', or 'decimal', "
+            "not '{actual_value}'",
         )
         for attr in (ATTR_MIN, ATTR_MAX)
     ),
@@ -414,7 +417,8 @@ KEY_RANGE_CONSTRAINTS: tuple[Constraint, ...] = (
         ATTR_TYPE,
         frozenset((DATA_TYPE_FLOAT, DATA_TYPE_DECIMAL)),
         ATTR_GRANULARITY,
-        message="'granularity' on a <key> requires type='float' or 'decimal', not '{actual_value}'",
+        unless=frozenset((ATTR_GENERATOR,)),
+        message="'granularity' on a <key> without generator= requires type='float' or 'decimal', not '{actual_value}'",
     ),
     Requires(
         ATTR_GRANULARITY,
