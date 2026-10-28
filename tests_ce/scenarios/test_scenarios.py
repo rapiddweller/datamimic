@@ -147,7 +147,7 @@ _ENTITY = "an *.ent.csv file must sit in data/entity/ or data/fixtures/"
 _SEPARATOR = 'separator="," overrides the default pipe separator'
 _PARAMETERS = "a *.properties file must sit in conf/"
 _DATA_FOLDER = "a file in data/ must sit in data/entity/, data/weighting/ or data/fixtures/"
-_STEP = "a step must be model/<nn>_<activity>.xml, or delivery/<nn>_<target>.xml with nn 90 to 99"
+_STEP = "a step must be model/<nn>_<activity>.xml, or delivery/<nn>_<activity>.xml with nn 90 to 99"
 _STEP_NAME = {("model",): re.compile(r"\d\d_"), ("delivery",): re.compile(r"9\d_")}
 
 

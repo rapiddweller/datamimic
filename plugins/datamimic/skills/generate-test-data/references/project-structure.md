@@ -8,7 +8,7 @@ review the files; Build proves them.
 ├── datamimic.xml                entry: process comment, seed, clients, memstore, lib loading, ordered includes
 ├── conf/base.properties         parameters; <env>.env.properties for connection settings
 ├── model/<nn>_<activity>.xml    generation, one activity per file: 10, 20, 30 …
-├── delivery/<nn>_<target>.xml   export, insert or upsert into targets: 90+; the only writers
+├── delivery/<nn>_<activity>.xml export, insert or upsert into targets: 90+; the only writers (rule 3)
 ├── data/
 │   ├── entity/*.ent.csv         business data and code lists
 │   ├── weighting/*.wgt.csv      distributions
@@ -35,7 +35,13 @@ Leave out folders the task does not need. Keep the entry at `datamimic.xml`.
    EE ignores the declaration (warning W005) and always provides `mem`, so only
    this id runs in both editions.
 3. `model/` steps write only to the memstore. `delivery/` steps read it and are the
-   only ones that write to files, databases or brokers.
+   only ones that write to files, databases or brokers. Name a delivery step after
+   its activity, for example `delivery/90_validate_output.xml`. Two exceptions put
+   a step that is not an export in `delivery/`:
+   - A check step that writes its check products is a delivery step. Number it
+     before the cleanup and the exports, so that it checks the complete output.
+   - A cleanup step that deletes the rows of an earlier run is a delivery step.
+     Number it after the checks and before the exports.
 4. Logic that spans tables is a named function in `lib/`. The model passes every
    input in; the function returns its decisions and fails loudly when a rule cannot
    be met.
