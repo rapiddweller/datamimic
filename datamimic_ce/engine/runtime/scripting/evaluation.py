@@ -17,6 +17,7 @@ from datamimic_ce.engine.runtime.scripting.expression_globals import (
     row_expression_globals,
 )
 from datamimic_ce.errors import (
+    GUIDANCE_WHERE_SCOPE,
     DescriptorLocation,
     DomainError,
     IssueCode,
@@ -349,6 +350,16 @@ class WhereCondition:
         try:
             result = evaluate_python(self._where, self._globals, names, diagnostic_expression=ATTR_WHERE)
         except UserErrorBase as error:
+            cause = error.__cause__
+            if error.issue_code is IssueCode.TASK_EXPRESSION_EVAL_FAILED and isinstance(
+                cause, NameError | AttributeError
+            ):
+                raise task_config_error(
+                    code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
+                    expr=ATTR_WHERE,
+                    error=f"{_lookup_failure(cause, _written_nodes(self._where))}: {GUIDANCE_WHERE_SCOPE}",
+                    location=self._location,
+                ) from cause
             if error.location is None:
                 error.location = self._location
             raise

@@ -19,6 +19,7 @@ from datamimic_ce.authoring.domain.xml_diagnostics import Diagnostic
 from datamimic_ce.engine.dsl.api import (
     ATTR_GENERATOR,
     ATTR_SOURCE,
+    ATTR_WHERE,
     DATA_TYPE_DICT,
     DATA_TYPE_LIST,
     EL_COMMENT,
@@ -31,12 +32,15 @@ from datamimic_ce.engine.dsl.api import (
     ValidValues,
     resolved_values,
 )
+from datamimic_ce.errors import GUIDANCE_FILE_LOOKUP
 
 _DATE_TYPE_GUESSES = {"datetime", "date", "timestamp", "time"}
 # <key>, <id>, <element> and <variable> take min and max as generator arguments (#456, #460); others take the call.
 _GENERATOR_PARAMETERS = 'Pass generator parameters in the call: generator="IntegerGenerator(min=1, max=9)".'
 # The generator parameters that agents write as attributes; another unknown attribute keeps the valid list.
 _GENERATOR_BOUNDS = frozenset(("min", "max", "granularity"))
+# Agents write where= on a value element to look up a row of a second file (campaign b3, e07).
+_WHERE_ON_VALUE = f"where= keeps rows of a <generate> or <iterate> file source. {GUIDANCE_FILE_LOOKUP}"
 
 
 def _key_id_data_types(ctx: LintContext) -> frozenset[str]:
@@ -152,6 +156,8 @@ class UnknownAttribute(Rule):
                     hint = (
                         "Remove the namespace prefix; DATAMIMIC attributes have no namespace."
                         if attr_name != str(attr)
+                        else _WHERE_ON_VALUE
+                        if attr_name == ATTR_WHERE and tag in (EL_VARIABLE, EL_NESTED_KEY)
                         else f"Did you mean '{suggestion[0]}'?"
                         if suggestion
                         else _GENERATOR_PARAMETERS

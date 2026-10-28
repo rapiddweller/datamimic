@@ -17,6 +17,7 @@ from datamimic_ce.errors.catalog.guidance import (
     GUIDANCE_OUT_DATE_FORMAT,
     GUIDANCE_SCRIPT_BUILTIN,
     GUIDANCE_VALID_LOCALE,
+    GUIDANCE_WHERE_SCOPE,
 )
 from datamimic_ce.errors.catalog.include_errors import ISSUES as _INCLUDE_ERRORS
 from datamimic_ce.errors.catalog.operation_errors import ISSUES as _OPERATION_ERRORS
@@ -96,5 +97,6 @@ __all__ = [
     "GUIDANCE_IN_DATE_FORMAT",
     "GUIDANCE_OUT_DATE_FORMAT",
     "GUIDANCE_SCRIPT_BUILTIN",
+    "GUIDANCE_WHERE_SCOPE",
     "GUIDANCE_VALID_LOCALE",
 ]

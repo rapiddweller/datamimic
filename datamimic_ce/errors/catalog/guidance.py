@@ -26,6 +26,12 @@ FILE_LOOKUP_PATTERN = (
     "branch is None when no row has the key: branch.city if branch else 'UNKNOWN'."
 )
 GUIDANCE_FILE_LOOKUP = f"{FILE_LOOKUP_PATTERN} Read datamimic authoring reference --topic learning --name lookup."
+# where= reads one row, so the generic hint (parent.name, root.name) sends a lookup to a dead end (campaign b3, e07).
+GUIDANCE_WHERE_SCOPE = (
+    "where= reads only the current file row: its columns bare or as this.<column>, and the expression functions; "
+    "parent., root., a <variable> and a setup name do not exist there. A row of another file with the key of the "
+    f"current record is a lookup, not a filter. {GUIDANCE_FILE_LOOKUP}"
+)
 # Build shows no engine message, so this names the replacements of the builtins agents reach for (campaign b3, e07).
 GUIDANCE_SCRIPT_BUILTIN = (
     "Write next(...) as ([x for x in rows if ...] or [None])[0] and isinstance(x, str) as type(x) is str. "

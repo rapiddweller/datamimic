@@ -15,7 +15,7 @@ import pytest
 from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, RejectedBuild
 from datamimic_ce.engine.runtime.scripting.expression_globals import SCRIPT_BUILTINS, UNOFFERED_BUILTINS
-from datamimic_ce.errors import GUIDANCE_SCRIPT_BUILTIN
+from datamimic_ce.errors import GUIDANCE_FILE_LOOKUP, GUIDANCE_SCRIPT_BUILTIN, GUIDANCE_WHERE_SCOPE
 
 _SCENARIO = Path(__file__).parents[2] / "scenarios" / "s31_file_lookup"
 _LOOKUP = '<variable name="branch" script="{b.branch_id: b for b in branches}.get(branch_id)"/>'
@@ -50,3 +50,30 @@ def test_build_gives_the_builtin_replacements_and_the_lookup(tmp_path: Path, scr
 def test_the_builtin_guidance_names_only_what_scripts_lack_and_offer() -> None:
     assert {"next", "isinstance", "open"} <= UNOFFERED_BUILTINS
     assert "type" in SCRIPT_BUILTINS and "type(x) is str" in GUIDANCE_SCRIPT_BUILTIN
+
+
+def test_build_says_where_reads_one_row_and_gives_the_lookup(tmp_path: Path) -> None:
+    remediation = _remediations(
+        tmp_path,
+        'columns="account_id, branch_id">',
+        'columns="account_id, branch_id" where="branch_id != parent.closed_branch">',
+    )["child_execution"]
+
+    assert remediation == GUIDANCE_WHERE_SCOPE and GUIDANCE_FILE_LOOKUP in remediation
+
+
+def test_build_keeps_the_scope_hint_for_a_key_script(tmp_path: Path) -> None:
+    remediation = _remediations(tmp_path, "script=\"branch.city if branch else 'UNKNOWN'\"", 'script="parent.city"')[
+        "child_execution"
+    ]
+
+    assert remediation != GUIDANCE_WHERE_SCOPE and "parent.name" in remediation
+
+
+@pytest.mark.parametrize("element", ["variable", "nestedKey"])
+def test_where_on_a_value_element_points_to_the_lookup(tmp_path: Path, element: str) -> None:
+    remediation = _remediations(
+        tmp_path, _LOOKUP, f'<{element} name="branch" source="data/entity/branches.ent.csv" where="branch_id == x"/>'
+    )["DM103"]
+
+    assert remediation.endswith(f"where= keeps rows of a <generate> or <iterate> file source. {GUIDANCE_FILE_LOOKUP}")

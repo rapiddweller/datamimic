@@ -36,6 +36,7 @@ from datamimic_ce.errors.catalog import (
     GUIDANCE_COUNT_SCOPE,
     GUIDANCE_FILE_LOOKUP,
     GUIDANCE_SCRIPT_BUILTIN,
+    GUIDANCE_WHERE_SCOPE,
 )
 from datamimic_ce.errors.codes import DomainErrorCode, ErrorCode, IssueCode
 from datamimic_ce.errors.context import DescriptorLocation
@@ -74,6 +75,7 @@ __all__ = [
     "GUIDANCE_COUNT_SCOPE",
     "GUIDANCE_FILE_LOOKUP",
     "GUIDANCE_SCRIPT_BUILTIN",
+    "GUIDANCE_WHERE_SCOPE",
     "DomainError",
     "DomainErrorCode",
     "ClientConfigError",

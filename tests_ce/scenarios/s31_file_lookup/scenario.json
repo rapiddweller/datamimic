@@ -8,7 +8,8 @@
     "the lookup variables and an unlisted source column are not output fields",
     "a list comprehension spells the same lookup, and the order of the second file does not change the result",
     "the lookup table in a <nestedKey> is an output field, a key of another type finds no row, a missing default fails the run, and <variable> has no where=",
-    "a script can use the builtins that scripts offer (str), and open() and next() fail with I956, which names the builtin"
+    "a script can use the builtins that scripts offer (str), and open() and next() fail with I956, which names the builtin",
+    "where= reads only the current file row: a where= that reads parent. fails with I832 and the where= guidance"
   ],
   "products": {"account_view": 6},
   "equivalents": [
@@ -43,6 +44,10 @@
     {"name": "next_is_no_script_builtin", "diagnostic": "child_execution", "issue": "I956",
      "run_error": "uses the Python builtin 'next', which scripts do not offer",
      "patch": {"file": "datamimic.xml", "old": "script=\"{b.branch_id: b for b in branches}.get(branch_id)\"",
-               "new": "script=\"next((b for b in branches if b.branch_id == branch_id), None)\""}}
+               "new": "script=\"next((b for b in branches if b.branch_id == branch_id), None)\""}},
+    {"name": "where_reads_only_the_current_row", "diagnostic": "child_execution", "issue": "I832",
+     "run_error": "where= reads only the current file row",
+     "patch": {"file": "datamimic.xml", "old": "columns=\"account_id, branch_id\">",
+               "new": "columns=\"account_id, branch_id\" where=\"branch_id != parent.closed_branch\">"}}
   ]
 }
