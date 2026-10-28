@@ -361,8 +361,9 @@ ISSUES: list[IssueDefinition] = [
         resolution=(
             "Build derives max_count only when every product has a literal count or reads a memstore back from a "
             'literal producer. Otherwise add "max_count": <the rows of all products together> at the top level '
-            'of acceptance/build.json, beside "expectations" (authoring run takes --max-count). A higher value '
-            "is safe, up to the Build ceiling. Or reduce the rows."
+            'of acceptance/build.json, beside "expectations" (authoring run and dry-run take --max-count). A higher '
+            'value is safe, up to the Build ceiling: if you do not know the total, set "max_count": 2000. Or reduce '
+            "the rows."
         ),
     ),
     IssueDefinition(

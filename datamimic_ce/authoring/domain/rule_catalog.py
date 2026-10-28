@@ -240,11 +240,11 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         RuleSeverity.ERROR,
         "Invalid count expression",
         "count must be an integer literal or a supported script expression.",
-        'Write digits, count="20", or a Python expression in braces, count="{1 if n == 1 else 0}"; an expression '
+        'Write digits, count="20", or a Python expression in braces, count="{2 + 1}"; an expression '
         'without braces is invalid. A braces count stops Build from deriving max_count: also set "max_count" to '
-        "the rows of all products together at the top level of acceptance/build.json.",
+        "the rows of all products together (or 2000) at the top level of acceptance/build.json.",
         "ModelUtil count parser contract.",
-        '<generate name="g" count="{1 if n == 1 else 0}"/>',
+        '<generate name="g" count="{2 + 1}"/>',
         '<generate name="g" count="1 if n == 1 else 0"/>',
     ),
     _rule_definition(
@@ -418,8 +418,7 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         RuleSeverity.ERROR,
         "Interpolation token in Python",
         "Double-underscore interpolation tokens are invalid inside Python expressions.",
-        'Write script="row.value", not script="__row__.value": the __name__ form belongs only in string= and '
-        "pattern=, never in script, condition or where.",
+        "Use the bare Python variable name in script, condition or where.",
         "Expression evaluator and string interpolation contracts.",
         '<key name="x" script="row.value"/>',
         '<key name="x" script="__row__.value"/>',

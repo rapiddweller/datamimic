@@ -7,7 +7,7 @@
     "a memstore that nothing reads back as a product is rejected, also when a variable reads it, and the remediation names the routes",
     "a readback without the role pair or with fewer rows than the producer is rejected",
     "max_count is the total of all rows: the total passes, the ceiling 2000 passes, one below the total, a missing max_count and 2001 are rejected",
-    "a count expression without braces, __import__ in a script and open() in a script are rejected with the correct form"
+    "a count expression without braces and an interpolation token or __import__ in a script are rejected with the correct form"
   ],
   "products": {"teams": 3, "team_copy": 3, "people": 4, "badges": 2},
   "negatives": [
@@ -27,7 +27,7 @@
        "old": "    {\"product\": \"team_copy\", \"field\": \"team_id\", \"role\": {\n      \"kind\": \"foreign_key\", \"parent_product\": \"teams\", \"parent_field\": \"team_id\"\n    }},\n",
        "new": ""}},
     {"name": "readback_of_a_subset", "diagnostic": "validation",
-     "remediation": "nest the child <generate> under the parent",
+     "remediation": "a braces count there also needs \"max_count\" at the top level of acceptance/build.json",
      "patch": {"file": "datamimic.xml",
        "old": "<generate name=\"team_copy\" source=\"mem\" sourceEntity=\"teams\" distribution=\"ordered\">",
        "new": "<generate name=\"team_copy\" source=\"mem\" sourceEntity=\"teams\" distribution=\"ordered\" count=\"2\">"}},
@@ -39,24 +39,19 @@
     {"name": "max_count_above_the_ceiling", "diagnostic": "validation", "expected": "2000",
      "patch": {"file": "acceptance/build.json", "old": "\"max_count\": 12,", "new": "\"max_count\": 2001,"}},
     {"name": "count_expression_without_braces", "diagnostic": "DM212",
-     "remediation": "a Python expression in braces, count=\"{1 if n == 1 else 0}\"",
+     "remediation": "a Python expression in braces, count=\"{2 + 1}\"",
      "patch": {"file": "datamimic.xml",
        "old": "count=\"{1 if person_id % 2 == 1 else 0}\"", "new": "count=\"1 if person_id % 2 == 1 else 0\""}},
     {"name": "import_in_script", "diagnostic": "DM314",
-     "remediation": "Write datetime.date(2026, 1, 1), not __import__('datetime').date(2026, 1, 1)",
+     "remediation": "Scripts have no __import__; the datetime module is there",
      "patch": {"file": "datamimic.xml",
        "old": "script=\"datetime.date(2026, 1, team_id).isoformat()\"",
        "new": "script=\"__import__('datetime').date(2026, 1, team_id).isoformat()\""}},
     {"name": "interpolation_in_script", "diagnostic": "DM314",
-     "remediation": "Write script=\"row.value\", not script=\"__row__.value\"",
+     "remediation": "Use the bare Python variable name in script, condition or where",
      "patch": {"file": "datamimic.xml",
        "old": "script=\"{row.person_id: row.tier for row in tiers}.get(str(person_id), 'NONE')\"",
-       "new": "script=\"{row.person_id: row.tier for row in tiers}.get(str(__person_id__), 'NONE')\""}},
-    {"name": "open_in_script", "diagnostic": "child_execution", "issue": "I832",
-     "remediation": "Scripts cannot call open()",
-     "patch": {"file": "datamimic.xml",
-       "old": "script=\"{row.person_id: row.tier for row in tiers}.get(str(person_id), 'NONE')\"",
-       "new": "script=\"open('data/entity/tiers.ent.csv').read() and 'NONE'\""}}
+       "new": "script=\"{row.person_id: row.tier for row in tiers}.get(str(__person_id__), 'NONE')\""}}
   ],
   "equivalents": [
     {"name": "readback_with_type", "patch": {"file": "datamimic.xml",

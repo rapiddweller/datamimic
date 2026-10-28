@@ -34,7 +34,8 @@ from .row_conditions import parse_row_condition
 MEMSTORE_READBACK_ONCE = (
     "A memstore readback reads every producer row exactly once, so its count is the producer count. For a "
     "subset of the rows, or for rows that belong to one parent, nest the child <generate> under the parent "
-    "and copy parent.<field> instead."
+    'and copy parent.<field> instead; a braces count there also needs "max_count" at the top level of '
+    "acceptance/build.json."
 )
 # Script scope names that a row condition does not have; an agent writes this.field from the scripts.
 _SCRIPT_SCOPES = frozenset(("this", "parent", "root"))

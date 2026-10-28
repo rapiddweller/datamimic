@@ -315,8 +315,8 @@ class InterpolationInScript(Rule):
                         type(self),
                         element,
                         evidence=f"{attr} contains interpolation token {token}",
-                        fix_context="Write datetime.date(2026, 1, 1), not __import__('datetime').date(2026, 1, 1): "
-                        "scripts already have the datetime module."
+                        fix_context="Scripts have no __import__; the datetime module is there: "
+                        "datetime.date(2026, 1, 1)."
                         if imports
                         else f"Use {token.strip('_')}.field in {attr}=.",
                         names_only=imports,

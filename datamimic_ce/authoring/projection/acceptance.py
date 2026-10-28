@@ -487,15 +487,15 @@ def _unread_memstore_remediation(producer: _Product, store: str) -> str:
     name = producer.product.name
     copy = f"{name}_copy"
     producer_role, consumer_role = _readback_roles(name, copy)
+    entity = _memstore_entity(producer.node, name)
     return (
         f'Nothing reads "{name}" back as a product: a <variable source="{store}"> read is not a readback. '
-        f"A readback reads every {name} row exactly once, so choose the route for the need. A subset of the rows, "
-        f'or rows that belong to one parent row: remove target="{store}", nest the child <generate> under the '
-        "parent and copy parent.<field>. A lookup in a data file: remove the memstore and read the file in the "
-        'generate with <variable name="rows" source="<file>" storage="data" distribution="ordered"/>. A copy of '
-        f'every row: after {name} add <generate name="{copy}" source="{store}" '
-        f'sourceEntity="{_memstore_entity(producer.node, name)}" distribution="ordered"><key name="<key>" '
-        f'script="this.<key>"/></generate> and the product_roles {producer_role} and {consumer_role}. '
+        f'{MEMSTORE_READBACK_ONCE} For that subset route, also remove target="{store}". A lookup in a data file: '
+        f'remove the <memstore> and the generate that writes target="{store}", and read the file with '
+        '<variable name="rows" source="<file>" storage="data" distribution="ordered"/>. A copy of every row: '
+        f'after {name} add <generate name="{copy}" source="{store}" sourceEntity="{entity}" distribution="ordered" '
+        'target="ConsoleExporter"><key name="<key>" script="this.<key>"/></generate> and the '
+        f"product_roles {producer_role} and {consumer_role}. "
         "Full project: datamimic authoring reference --topic examples --name memstore."
     )
 

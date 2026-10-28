@@ -105,12 +105,16 @@ def test_two_foreign_keys_on_one_identifier_say_to_keep_one(tmp_path: Path) -> N
     assert diagnostic.remediation == _MORE_CONSUMER_FK + ": keep only the one that reads the memstore back."
 
 
-def test_the_readback_that_an_unread_memstore_target_advertises_builds_ready(tmp_path: Path) -> None:
+# A file exporter elsewhere makes DM407 require a target on the pasted readback too.
+@pytest.mark.parametrize(
+    "other", ["", '<generate name="report" count="1" target="JSON"><key name="id" constant="1"/></generate>']
+)
+def test_the_readback_that_an_unread_memstore_target_advertises_builds_ready(tmp_path: Path, other: str) -> None:
     # A scenario negative cannot paste text from a diagnostic, so this test proves the advertised copy route works.
     xml = (
         '<setup rngSeed="1"><memstore id="store"/>'
         '<generate name="parents" count="2" target="store"><key name="id" generator="IncrementGenerator"/>'
-        "</generate></setup>"
+        f"</generate>{other}</setup>"
     )
     (tmp_path / "unread").mkdir()
     remediation = _first_error(build_project(tmp_path / "unread", xml)).remediation
