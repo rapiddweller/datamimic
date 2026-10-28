@@ -1,0 +1,37 @@
+{
+  "title": "A lookup (a join): each record reads the row of a second file that has its key",
+  "proves": [
+    "<variable source=\"*.ent.csv\" storage=\"data\"> holds every row of a second file, and a script selects the row with the key of the current record",
+    "a key with no row in the second file gives None, and the script writes a default (UNKNOWN)",
+    "several records read the same row, and the first and the last row of the second file are found",
+    "an empty column of the found row stays empty text, and the script can replace it",
+    "the lookup variables and an unlisted source column are not output fields",
+    "a list comprehension spells the same lookup, and the order of the second file does not change the result",
+    "the lookup table in a <nestedKey> is an output field, a key of another type finds no row, a missing default fails the run, and <variable> has no where="
+  ],
+  "products": {"account_view": 6},
+  "equivalents": [
+    {"name": "list_comprehension_lookup",
+     "patch": {"file": "datamimic.xml",
+               "old": "script=\"{b.branch_id: b for b in branches}.get(branch_id)\"",
+               "new": "script=\"([b for b in branches if b.branch_id == branch_id] or [None])[0]\""}},
+    {"name": "lookup_file_order_does_not_matter",
+     "patch": {"file": "datamimic.xml",
+               "old": " storage=\"data\" distribution=\"ordered\"",
+               "new": " storage=\"data\""}}
+  ],
+  "negatives": [
+    {"name": "a_nested_key_lookup_table_is_an_output_field", "diagnostic": "field_absent",
+     "patch": {"file": "datamimic.xml",
+               "old": "<variable name=\"branches\" source=\"data/entity/branches.ent.csv\" storage=\"data\" distribution=\"ordered\"/>\n        <variable name=\"branch\" script=\"{b.branch_id: b for b in branches}",
+               "new": "<nestedKey name=\"branches\" type=\"list\" source=\"data/entity/branches.ent.csv\" distribution=\"ordered\"/>\n        <variable name=\"branch\" script=\"{b.branch_id: b for b in this.branches}"}},
+    {"name": "a_key_of_another_type_finds_no_row", "diagnostic": "row_condition",
+     "patch": {"file": "datamimic.xml", "old": ".get(branch_id)", "new": ".get(int(branch_id[2:]))"}},
+    {"name": "an_unknown_key_needs_a_default", "diagnostic": "child_execution", "issue": "I832",
+     "patch": {"file": "datamimic.xml", "old": "script=\"branch.city if branch else 'UNKNOWN'\"", "new": "script=\"branch.city\""}},
+    {"name": "a_variable_has_no_where", "diagnostic": "DM103",
+     "patch": {"file": "datamimic.xml",
+               "old": "<variable name=\"branch\" script=\"{b.branch_id: b for b in branches}.get(branch_id)\"/>",
+               "new": "<variable name=\"branch\" source=\"data/entity/branches.ent.csv\" where=\"branch_id == this.branch_id\" distribution=\"ordered\"/>"}}
+  ]
+}

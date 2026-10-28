@@ -16,3 +16,13 @@ GUIDANCE_COUNT_SCOPE = (
 )
 
 GUIDANCE_DESCRIPTOR_ENV = "Check the descriptor file in your project environment configuration or uploaded assets."
+
+# The one way CE joins a second file; tests_ce/scenarios/s31_file_lookup builds this text.
+FILE_LOOKUP_PATTERN = (
+    "To look up a row of another file by a key, read the whole file once with "
+    '<variable name="branches" source="data/entity/branches.ent.csv" storage="data" distribution="ordered"/> '
+    "and select the row in a script: "
+    '<variable name="branch" script="{b.branch_id: b for b in branches}.get(branch_id)"/>. '
+    "branch is None when no row has the key: branch.city if branch else 'UNKNOWN'."
+)
+GUIDANCE_FILE_LOOKUP = f"{FILE_LOOKUP_PATTERN} Read datamimic authoring reference --topic learning --name lookup."
