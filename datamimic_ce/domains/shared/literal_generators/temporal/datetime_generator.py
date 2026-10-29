@@ -324,9 +324,10 @@ class DateTimeGenerator(ClockAnchoredDomainGenerator):
                     if input_format
                     # Agents read "pass input_format" as a <key> attribute (DM103), so name both working forms.
                     else f"DateTimeGenerator {argument} does not match the default layout '%Y-%m-%d %H:%M:%S'. "
-                    'Write the time too, for example min="2026-01-01 00:00:00" max="2026-03-31 23:59:59", '
-                    'and add outDateFormat="%Y-%m-%d" for a date text such as 2026-03-31. Pass another layout '
-                    "in the call: DateTimeGenerator(min='01/03/2026', max='31/12/2026', input_format='%d/%m/%Y')."
+                    'Write the time too, for example min="2026-01-01 00:00:00" max="2026-03-31 23:59:59", or pass '
+                    "the layout in the call: DateTimeGenerator(min='2026-01-01', max='2026-03-31', "
+                    "input_format='%Y-%m-%d'). Both forms give a datetime: add outDateFormat=\"%Y-%m-%d\" for a "
+                    "date text such as 2026-03-31."
                 )
                 raise generator_config_error(reason=reason) from error
 

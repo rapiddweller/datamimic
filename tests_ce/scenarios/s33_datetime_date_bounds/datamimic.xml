@@ -7,6 +7,8 @@
              outDateFormat="%Y-%m-%d"/>
         <variable name="expiry" generator="DateTimeGenerator(min='2026-03-01 00:00:00', max='2026-12-31 00:00:00')"
                   outDateFormat="%Y-%m-%d"/>
+        <!-- The call form of the date-overflow message, as written there. -->
+        <key name="renewed_on" generator="DateTimeGenerator(min='2026-01-01', max='2026-03-31', input_format='%Y-%m-%d')" outDateFormat="%Y-%m-%d"/>
         <key name="expires_on" script="None if license_id % 4 &lt; 1 else expiry"/>
         <!-- A script never imports: the datetime module is already there. An attribute writes < as &lt;. -->
         <key name="issued_on" script="(datetime.date(2026, 1, 1) + datetime.timedelta(days=license_id)).isoformat()"/>

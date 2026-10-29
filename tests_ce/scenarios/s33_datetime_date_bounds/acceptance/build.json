@@ -8,6 +8,8 @@
     {"kind": "row_condition", "subject": {"kind": "product", "product": "licenses"},
      "condition": "'2026-01-01' <= valid_from <= '2026-03-31'"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "licenses"},
+     "condition": "'2026-01-01' <= renewed_on <= '2026-03-31'"},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "licenses"},
      "condition": "expires_on == None or '2026-03-01' <= expires_on <= '2026-12-31'"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "licenses"},
      "condition": "'2026-01-02' <= issued_on <= '2026-01-21'"}

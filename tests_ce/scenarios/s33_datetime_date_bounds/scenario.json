@@ -2,12 +2,13 @@
   "title": "Dates YYYY-MM-DD from DateTimeGenerator and from a script (campaign b5, e06)",
   "proves": [
     "DateTimeGenerator bounds with the time (the default layout) and outDateFormat=\"%Y-%m-%d\" give a date text inside both ends, on a <key> and on a <variable>",
+    "the call form of the message, DateTimeGenerator(min='2026-01-01', max='2026-03-31', input_format='%Y-%m-%d') with outDateFormat, builds as written",
     "the attribute form and the call form of the bounds give the same rows, and another layout in the call with input_format gives the same rows as the default layout",
-    "a date-only min, max or value without input_format is refused with a message that names the argument, the default layout and the two working forms",
-    "a configured input_format that does not match keeps its own message, without the default-layout advice",
-    "without outDateFormat the value is no date text, and the bounds are applied",
+    "a date-only min, max or value without input_format is refused with a message that names the argument, the default layout, both working forms and outDateFormat for both",
+    "a configured input_format that does not match keeps its own message; the unit test test_custom_input_format_mismatch_does_not_recommend_the_default pins its exact text",
+    "without outDateFormat neither form gives a date text, and the bounds are applied",
     "a script has the datetime module without import: __import__ is refused with DM314 and its fix",
-    "a raw < in an attribute is refused as not well-formed XML, with the &lt; fix that the overview also shows"
+    "a raw < in an XML attribute is refused as not well-formed XML, with the &lt; fix that the overview also shows"
   ],
   "products": {"licenses": 20},
   "equivalents": [
@@ -20,13 +21,13 @@
   ],
   "negatives": [
     {"name": "date_only_min_attribute_form", "diagnostic": "child_execution",
-     "message": "DateTimeGenerator min does not match the default layout '%Y-%m-%d %H:%M:%S'. Write the time too, for example min=\"2026-01-01 00:00:00\" max=\"2026-03-31 23:59:59\", and add outDateFormat=\"%Y-%m-%d\"",
+     "message": "DateTimeGenerator min does not match the default layout '%Y-%m-%d %H:%M:%S'. Write the time too, for example min=\"2026-01-01 00:00:00\" max=\"2026-03-31 23:59:59\", or pass the layout in the call",
      "patch": {"file": "datamimic.xml", "old": "min=\"2026-01-01 00:00:00\"", "new": "min=\"2026-01-01\""}},
     {"name": "date_only_max_attribute_form", "diagnostic": "child_execution",
      "message": "DateTimeGenerator max does not match the default layout",
      "patch": {"file": "datamimic.xml", "old": "max=\"2026-03-31 23:59:59\"", "new": "max=\"2026-03-31\""}},
     {"name": "date_only_min_call_form", "diagnostic": "child_execution",
-     "message": "Pass another layout in the call: DateTimeGenerator(min='01/03/2026', max='31/12/2026', input_format='%d/%m/%Y').",
+     "message": "or pass the layout in the call: DateTimeGenerator(min='2026-01-01', max='2026-03-31', input_format='%Y-%m-%d'). Both forms give a datetime: add outDateFormat=\"%Y-%m-%d\" for a date text such as 2026-03-31.",
      "patch": {"file": "datamimic.xml", "old": "min='2026-03-01 00:00:00'", "new": "min='2026-03-01'"}},
     {"name": "date_only_value", "diagnostic": "child_execution",
      "message": "DateTimeGenerator value does not match the default layout",
@@ -36,6 +37,8 @@
      "patch": {"file": "datamimic.xml", "old": "DateTimeGenerator(min='2026-03-01 00:00:00', max='2026-12-31 00:00:00')", "new": "DateTimeGenerator(min='2026-03-01', max='2026-12-31', input_format='%d/%m/%Y')"}},
     {"name": "date_text_needs_out_date_format", "diagnostic": "row_condition",
      "patch": {"file": "datamimic.xml", "old": "max=\"2026-03-31 23:59:59\"\n             outDateFormat=\"%Y-%m-%d\"", "new": "max=\"2026-03-31 23:59:59\""}},
+    {"name": "call_form_date_text_needs_out_date_format", "diagnostic": "row_condition",
+     "patch": {"file": "datamimic.xml", "old": "input_format='%Y-%m-%d')\" outDateFormat=\"%Y-%m-%d\"/>", "new": "input_format='%Y-%m-%d')\"/>"}},
     {"name": "bounds_are_applied", "diagnostic": "row_condition",
      "patch": {"file": "datamimic.xml", "old": "max=\"2026-03-31 23:59:59\"", "new": "max=\"2026-06-30 23:59:59\""}},
     {"name": "script_imports_the_datetime_module", "diagnostic": "DM314",
