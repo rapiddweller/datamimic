@@ -15,7 +15,7 @@ from math import isfinite
 
 from lxml import etree
 
-from datamimic_ce.authoring.domain.rule_catalog import authoring_rule_definition
+from datamimic_ce.authoring.domain.rule_catalog import SCRIPT_IMPORT_FIX, authoring_rule_definition
 from datamimic_ce.authoring.domain.rules.base import LintContext, Rule
 from datamimic_ce.authoring.domain.script_semantics import iterates_a_set
 from datamimic_ce.authoring.domain.xml_diagnostics import Diagnostic
@@ -315,10 +315,7 @@ class InterpolationInScript(Rule):
                         type(self),
                         element,
                         evidence=f"{attr} contains interpolation token {token}",
-                        fix_context="Scripts have no __import__; the datetime module is there: "
-                        "datetime.date(2026, 1, 1)."
-                        if imports
-                        else f"Use {token.strip('_')}.field in {attr}=.",
+                        fix_context=SCRIPT_IMPORT_FIX if imports else f"Use {token.strip('_')}.field in {attr}=.",
                         names_only=imports,
                     )
 

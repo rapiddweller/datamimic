@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import JsonValue, TypeAdapter
 
+from datamimic_ce.authoring.adapters.validator import ATTRIBUTE_ESCAPE
 from datamimic_ce.authoring.domain.acceptance_contract import BRACES_COUNT_MAX_COUNT, nested_count_scope
 from datamimic_ce.authoring.domain.build_rules import authoring_rule_catalog
 from datamimic_ce.authoring.domain.capabilities import (
@@ -47,6 +48,7 @@ from datamimic_ce.authoring.domain.reference import (
     ReferenceResult,
 )
 from datamimic_ce.authoring.domain.requests import BuildRequestV5, ReferenceRequest, ReferenceTopic
+from datamimic_ce.authoring.domain.rule_catalog import SCRIPT_IMPORT_FIX
 from datamimic_ce.errors import FILE_LOOKUP_PATTERN
 
 if TYPE_CHECKING:
@@ -252,7 +254,8 @@ class CeDslCatalog:
                         "Project data files (*.ent.csv, *.wgt.csv): "
                         "datamimic authoring reference --topic learning --name data_files. "
                         "A row of a second file by a key (a join): "
-                        "datamimic authoring reference --topic learning --name lookup."
+                        "datamimic authoring reference --topic learning --name lookup. "
+                        f"{SCRIPT_IMPORT_FIX} {ATTRIBUTE_ESCAPE}."
                     ),
                     next_topics=tuple(topic for topic in ReferenceTopic if topic != ReferenceTopic.OVERVIEW),
                 )

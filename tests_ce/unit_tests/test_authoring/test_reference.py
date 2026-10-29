@@ -11,9 +11,11 @@ import pytest
 from typer.testing import CliRunner
 
 from datamimic_ce.authoring import create_authoring_application
+from datamimic_ce.authoring.adapters.validator import ATTRIBUTE_ESCAPE
 from datamimic_ce.authoring.domain.capabilities import CapabilityDomain, CapabilityNotFound, DslCatalogSnapshot
 from datamimic_ce.authoring.domain.reference import ReferenceResult
 from datamimic_ce.authoring.domain.requests import AuthoringSchemaId, BuildRequestV5, ReferenceRequest, ReferenceTopic
+from datamimic_ce.authoring.domain.rule_catalog import SCRIPT_IMPORT_FIX
 from datamimic_ce.authoring.domain.schema import build_schema_index
 from datamimic_ce.engine.dsl.model.registry import canonical_tag, get_element_definition, list_element_tags
 from datamimic_ce.engine.dsl.vocabulary.enums.converter_enums import ConverterEnum
@@ -239,6 +241,18 @@ def test_learning_lookup_teaches_the_join_the_s31_scenario_builds(application):
         assert "--topic learning --name lookup" in pointer.description, name
     overview = application.reference(ReferenceRequest(topic=ReferenceTopic.OVERVIEW))
     assert "--topic learning --name lookup" in overview.content
+
+
+def test_overview_shows_the_script_and_escape_fixes_before_the_first_build(application):
+    """Blind agents read the overview before they write the project, then lost their first Build to
+    __import__('datetime') (DM314) or a raw < in an attribute (campaign b5, e06). The reference holds no
+    descriptor, so this is a Python test; s33 builds both forms."""
+    overview = application.reference(ReferenceRequest(topic=ReferenceTopic.OVERVIEW)).content
+    scenario = (Path(__file__).parents[3] / "tests_ce/scenarios/s33_datetime_date_bounds/datamimic.xml").read_text(
+        encoding="utf-8"
+    )
+    for text, form in ((SCRIPT_IMPORT_FIX, "datetime.date(2026, 1, 1)"), (ATTRIBUTE_ESCAPE, "&lt;")):
+        assert text in overview and form in text and form in scenario, form
 
 
 def test_authoring_help_points_to_the_data_file_guidance():

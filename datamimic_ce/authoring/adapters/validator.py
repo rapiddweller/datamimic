@@ -43,9 +43,10 @@ from datamimic_ce.errors.codes import IssueCode
 
 # The parser reason may quote the descriptor, so the remediation names the two usual causes instead.
 _NOT_WELL_FORMED = "Descriptor is not well-formed XML."
+# The overview shows this clause too, so an agent escapes < before the first Build (campaign b5, e06).
+ATTRIBUTE_ESCAPE = 'Inside an attribute value write < as &lt; and & as &amp;, for example script="a &lt;= b"'
 _ESCAPE_HINT = (
-    "Inside an attribute value write < as &lt; and & as &amp;, for example "
-    'script="a &lt;= b"; or turn the comparison around (b >= a). Close every element and quote every attribute.'
+    f"{ATTRIBUTE_ESCAPE}; or turn the comparison around (b >= a). Close every element and quote every attribute."
 )
 
 
