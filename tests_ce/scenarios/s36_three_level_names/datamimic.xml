@@ -1,0 +1,14 @@
+<setup rngSeed="36">
+    <generate name="regions" count="2">
+        <key name="region_id" generator="IncrementGenerator"/>
+        <generate name="stores" count="2">
+            <key name="region_id" script="parent.region_id"/>
+            <key name="store_no" generator="IncrementGenerator"/>
+            <key name="store_id" script="parent.region_id * 10 + this.store_no"/>
+            <generate name="shelves" count="3">
+                <key name="store_id" script="parent.store_id"/>
+                <key name="shelf_no" generator="IncrementGenerator"/>
+            </generate>
+        </generate>
+    </generate>
+</setup>

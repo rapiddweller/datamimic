@@ -8,4 +8,5 @@ from .constants.convention_constants import NAME_SEPARATOR
 
 
 def capture_product_name(full_name: str) -> str:
-    return full_name.split(NAME_SEPARATOR, 1)[-1].strip() if NAME_SEPARATOR in full_name else full_name
+    # The own name at every depth: Build and its expectations name a product so (#442 T4).
+    return full_name.rsplit(NAME_SEPARATOR, 1)[-1].strip() if NAME_SEPARATOR in full_name else full_name

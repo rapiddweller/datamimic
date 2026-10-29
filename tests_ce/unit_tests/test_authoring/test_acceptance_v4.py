@@ -363,9 +363,9 @@ def test_memstore_same_name_field_must_read_source_even_if_value_accidentally_ma
 def test_deep_nested_capture_names_use_the_actual_exporter_convention():
     xml = '<setup><generate name="parents" count="1"><key name="id" constant="1"/><generate name="children" count="1"><key name="id" script="parent.id"/><generate name="grandchildren" count="1"><key name="parent_id" script="parent.id"/></generate></generate></generate></setup>'
     spec = project(xml)
-    assert spec.products[2].capture_name == "children|grandchildren"
+    assert spec.products[2].capture_name == "grandchildren"
     assert not evaluate_acceptance(
-        spec, capture(**{"parents": [{"id": 1}], "children": [{"id": 1}], "children|grandchildren": [{"parent_id": 1}]})
+        spec, capture(**{"parents": [{"id": 1}], "children": [{"id": 1}], "grandchildren": [{"parent_id": 1}]})
     )
 
 

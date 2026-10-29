@@ -239,6 +239,14 @@ with `distribution="ordered"` (or any other value but `random`) now fails with `
 effect and the draws did not follow the file order. Remove `distribution`, or read the file as an `.ent.csv` to get
 the file order. A `<generate source="*.wgt.ent.csv">` still reads the file as plain CSV with its weight column.
 
+### One product name at every depth (#442 T4)
+
+The run capture (`DataMimicTest.capture_result()`) and the Build evidence name each product by its own `name`.
+Before, a product nested two or more levels deep kept its parent name: `stores|shelves` for
+`regions > stores > shelves`. Expectations and roles already used `shelves`. A test that reads
+`result["stores|shelves"]` must read `result["shelves"]`. Two nested products with the same name share one
+capture key, as at the second level before; Build refuses such a model. Case: `tests_ce/scenarios/s36_three_level_names`.
+
 ## Public contract
 
 Persist XML as the executable project. `DmJsonDocumentV1` is an in-memory agent

@@ -1,0 +1,13 @@
+{
+  "title": "A product nested two levels deep has one name in Build, its evidence and the run capture",
+  "proves": [
+    "the run capture names the product of the third level by its own name (shelves), as Build and its expectations do (#442 T4)",
+    "the old capture name stores|shelves is no Build product name: Build rejects it and lists the three product names"
+  ],
+  "products": {"regions": 2, "stores": 4, "shelves": 12},
+  "negatives": [
+    {"name": "lineage_name_is_no_product_name", "diagnostic": "input",
+     "message": "Expectation references an unknown product.",
+     "patch": {"file": "acceptance/build.json", "old": "\"product\": \"shelves\"}, \"count\": 12", "new": "\"product\": \"stores|shelves\"}, \"count\": 12"}}
+  ]
+}
