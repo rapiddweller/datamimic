@@ -1,0 +1,13 @@
+{
+  "title": "A variable source that ends drops the parent row and the child rows made for it",
+  "proves": [
+    "a parent count equal to the rows of a non-cyclic variable source makes every parent and child row, and Build is ready",
+    "a parent count above the source rows makes Build not ready: the capture is unknown",
+    "in that run, a child generate before the variable keeps no row of the dropped parent (test_source_end_drops_children.py)"
+  ],
+  "products": {"orders": 2, "lines": 4},
+  "negatives": [
+    {"name": "parent_count_above_source_rows", "diagnostic": "validation",
+     "patch": {"file": "datamimic.xml", "old": "<generate name=\"orders\" count=\"2\">", "new": "<generate name=\"orders\" count=\"3\">"}}
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "version": "5.0",
+  "product_roles": [
+    {"product": "orders", "field": "order_id", "role": {"kind": "identifier"}},
+    {"product": "lines", "field": "order_id", "role": {
+      "kind": "foreign_key", "parent_product": "orders", "parent_field": "order_id"
+    }}
+  ],
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "orders"}, "count": 2},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "lines"}, "count": 4},
+    {"kind": "per_parent_count", "subject": {
+      "kind": "per_parent", "parent_product": "orders", "child_product": "lines"
+    }, "count": 2},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "orders"}, "field": "customer", "values": ["Ada", "Bo"]},
+    {"kind": "foreign_key",
+     "child": {"subject": {"kind": "product", "product": "lines"}, "field": "order_id"},
+     "parent": {"subject": {"kind": "product", "product": "orders"}, "field": "order_id"}}
+  ]
+}
