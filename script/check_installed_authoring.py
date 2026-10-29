@@ -95,12 +95,16 @@ def check_installed(with_mcp, checkout):
     origin = Path(datamimic_ce.__file__).resolve()
     assert origin.is_relative_to(Path(sysconfig.get_paths()["purelib"]).resolve()), origin
     data = Path("domains/shared/domain_data")
-    source, installed = (
-        {path.relative_to(root) for path in root.rglob("*") if path.is_file()}
-        for root in (checkout / "datamimic_ce" / data, origin.parent / data)
+    tracked = subprocess.run(
+        ["git", "ls-files", "-z"], cwd=checkout / "datamimic_ce" / data, capture_output=True, check=True
     )
-    missing = sorted(source - installed)
-    assert source and not missing, f"wheel lacks {len(missing)} of {len(source)} domain_data files: {missing[:3]}"
+    source = {Path(name) for name in tracked.stdout.decode().split("\0") if name}
+    installed = {path.relative_to(origin.parent / data) for path in (origin.parent / data).rglob("*") if path.is_file()}
+    missing, extra = sorted(source - installed), sorted(installed - source)
+    assert source and not missing and not extra, (
+        f"domain_data differs from {len(source)} tracked files: {len(missing)} missing {missing[:3]}, "
+        f"{len(extra)} extra {extra[:3]}"
+    )
     version = importlib.metadata.version("datamimic_ce")
     assert version
 
