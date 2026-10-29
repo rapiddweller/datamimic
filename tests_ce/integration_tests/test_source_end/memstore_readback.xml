@@ -1,0 +1,13 @@
+<setup rngSeed="34">
+    <memstore id="mem"/>
+    <!-- Count 3 over 2 customers: the third order is dropped after its lines ran. -->
+    <generate name="orders" count="3" target="mem">
+        <key name="order_id" generator="IncrementGenerator"/>
+        <generate name="lines" count="2" target="mem">
+            <key name="order_id" script="parent.order_id"/>
+        </generate>
+        <variable name="customer" source="data/customers.ent.csv" distribution="ordered"/>
+        <key name="customer" script="customer.name"/>
+    </generate>
+    <generate name="line_copy" source="mem" type="lines"/>
+</setup>

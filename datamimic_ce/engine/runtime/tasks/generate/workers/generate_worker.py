@@ -385,6 +385,8 @@ class GenerateWorker:
                     ctx.current_product = {name: row[name] for name in stmt.columns if name in row}
                     ctx.current_variables.update({name: row[name] for name in row if name not in ctx.current_product})
 
+            # Child rows join the page only with their parent row: a source that ends later in this row drops both.
+            row_products: dict[str, list] = {}
             try:
                 # Start executing sub-tasks
                 for task in tasks:
@@ -396,8 +398,7 @@ class GenerateWorker:
                         sub_gen_result = task.execute(ctx)
                         if isinstance(sub_gen_result, dict):
                             for key, value in sub_gen_result.items():
-                                # Store product for later export
-                                product_holder[key] = product_holder.get(key, []) + value
+                                row_products[key] = row_products.get(key, []) + value
                                 # Store temp product in context for later evaluate
                                 inner_generate_key = key.split("|", 1)[-1].strip()
                                 ctx.current_variables[inner_generate_key] = value
@@ -426,10 +427,12 @@ class GenerateWorker:
                     ctx.current_product = evaluated_product
 
                 result.append(ctx.current_product)
+                for key, value in row_products.items():
+                    product_holder[key] = product_holder.get(key, []) + value
                 product_holder.nested_exports.extend(ctx.pending_exports)
             except StopIteration:
                 if isinstance(budget, TotalRowBudget):
-                    budget.release()
+                    budget.release(1 + sum(len(rows) for rows in row_products.values()))
                 # Stop generating data if one of datasource reach the end
                 logger.info(
                     f"Data generator sub-task {task.__class__.__name__} '{task.statement.name}' has already reached "

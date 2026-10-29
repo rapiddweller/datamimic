@@ -84,6 +84,26 @@ def test_parent_stop_iteration_releases_only_its_uncommitted_reservation(tmp_pat
     assert {name: len(rows) for name, rows in captured.items()} == {"partial": 1, "rest": 4}
 
 
+def test_parent_stop_iteration_releases_the_child_rows_of_the_dropped_row(tmp_path: Path) -> None:
+    # The third order reserves itself and its 2 lines (9 rows), then the 2-row file ends and drops all 3 (#451).
+    # 2 orders + 4 lines + 2 rest = 8 rows fit the limit 9 only when the dropped lines are released too.
+    (tmp_path / "customers.ent.csv").write_text("name\nAda\nBo\n", encoding="utf-8")
+    descriptor = tmp_path / "model.xml"
+    descriptor.write_text(
+        '<setup rngSeed="1" reportLogging="false"><generate name="orders" count="3">'
+        '<key name="order_id" generator="IncrementGenerator"/>'
+        '<generate name="lines" count="2"><key name="order_id" script="parent.order_id"/></generate>'
+        '<variable name="customer" source="customers.ent.csv" distribution="ordered"/></generate>'
+        '<generate name="rest" count="2"><key name="id" constant="1"/></generate></setup>',
+        encoding="utf-8",
+    )
+    session = create_run_session(RunRequest(descriptor_path=descriptor, test_mode=True, total_row_limit=9))
+    captured = session.execute().captured
+
+    assert captured is not None
+    assert {name: len(rows) for name, rows in captured.items()} == {"orders": 2, "lines": 4, "rest": 2}
+
+
 def test_over_budget_candidate_does_not_run_its_row_subtasks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     from datamimic_ce.engine.runtime.tasks.values.scalar.key_task import KeyTask
 

@@ -1,0 +1,20 @@
+{
+  "title": "A nestedKey list that a variable source ends early leaves the capture unknown",
+  "proves": [
+    "a nestedKey count equal to the rows of a non-cyclic variable source fills every element, and Build is ready",
+    "a literal nestedKey count above the source rows makes Build not ready: the capture is unknown",
+    "a count expression above the source rows makes Build not ready in the same way",
+    "a parent that reads a file to its end does not prove the short list either",
+    "a list over a 3-row source file whose variable has 2 rows ends early in the same way",
+    "in that run, the list ends with the last source row and holds no empty element (test_nested_key_source_ends.py)"
+  ],
+  "products": {"baskets": 2},
+  "negatives": [
+    {"name": "literal_count_above_source_rows", "diagnostic": "validation",
+     "patch": {"file": "datamimic.xml", "old": "<nestedKey name=\"items\" type=\"list\" count=\"2\">", "new": "<nestedKey name=\"items\" type=\"list\" count=\"3\">"}},
+    {"name": "count_expression_above_source_rows", "diagnostic": "validation",
+     "patch": {"file": "datamimic.xml", "old": "<nestedKey name=\"items\" type=\"list\" count=\"2\">", "new": "<nestedKey name=\"items\" type=\"list\" count=\"{3}\">"}},
+    {"name": "source_parent_with_count_expression_above_source_rows", "diagnostic": "validation", "patch": {"file": "datamimic.xml", "old": "<generate name=\"baskets\" count=\"2\">\n        <key name=\"basket_id\" generator=\"IncrementGenerator\"/>\n        <!-- Each basket reads the fruit file again; the file has 2 rows and is not cyclic. -->\n        <nestedKey name=\"items\" type=\"list\" count=\"2\">", "new": "<generate name=\"baskets\" source=\"data/fixtures/fruits.ent.csv\" distribution=\"ordered\">\n        <key name=\"basket_id\" generator=\"IncrementGenerator\"/>\n        <!-- Each basket reads the fruit file again; the file has 2 rows and is not cyclic. -->\n        <nestedKey name=\"items\" type=\"list\" count=\"{3}\">"}},
+    {"name": "source_list_with_more_rows_than_the_variable", "diagnostic": "validation", "patch": {"file": "datamimic.xml", "old": "<nestedKey name=\"items\" type=\"list\" count=\"2\">", "new": "<nestedKey name=\"items\" type=\"list\" source=\"data/fixtures/slots.ent.csv\" distribution=\"ordered\">"}}
+  ]
+}

@@ -1,0 +1,14 @@
+<setup rngSeed="35">
+    <generate name="baskets" count="2">
+        <key name="basket_id" generator="IncrementGenerator"/>
+        <!-- The list sits in a <condition>; 2 customer rows end the list of count {3} early. -->
+        <condition>
+            <if condition="True">
+                <nestedKey name="items" type="list" count="{3}">
+                    <variable name="person" source="data/customers.ent.csv" distribution="ordered"/>
+                    <key name="name" script="person.name"/>
+                </nestedKey>
+            </if>
+        </condition>
+    </generate>
+</setup>

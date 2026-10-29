@@ -10,6 +10,7 @@ from datamimic_ce.engine.dsl.model.flow.commands.assert_model import AssertModel
 from datamimic_ce.engine.dsl.parsers.base.statement_parser import StatementParser
 from datamimic_ce.engine.dsl.parsers.input.xml import XmlElement
 from datamimic_ce.engine.dsl.statements.flow.commands.assert_statement import AssertStatement
+from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import ATTR_MESSAGE
 from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_ASSERT
 
 
@@ -30,4 +31,8 @@ class AssertParser(StatementParser):
         )
 
     def parse(self, **kwargs: Any) -> AssertStatement:
-        return AssertStatement(self.validate_attributes(AssertModel), line=self._element.sourceline)
+        return AssertStatement(
+            self.validate_attributes(AssertModel),
+            line=self._element.sourceline,
+            raw_message=self._element.get(ATTR_MESSAGE),
+        )

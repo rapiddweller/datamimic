@@ -47,9 +47,18 @@ class AssertTask(CommonSubTask):
             ) from err
         if passed:
             return
+        statement = self._statement
+        extra = (
+            f" | {statement.message}"
+            if statement.message is not None
+            else f" | The message of the <assert> at line {statement.line} is not shown: it contains {{, }} or __ "
+            "and can hold a property value"
+            if statement.message_hidden
+            else ""
+        )
         raise task_config_error(
             code=IssueCode.TASK_ASSERT_FAILED,
             condition="configured condition",
-            extra=f" | {self._statement.message}" if self._statement.message else "",
+            extra=extra,
             location=self._location(),
         )

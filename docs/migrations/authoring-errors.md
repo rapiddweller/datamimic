@@ -56,6 +56,10 @@ A failed `<assert>` rejects Build with `assert_failed` at the assert line, keeps
 products that completed before it and lists the other checks as `not_executed`.
 `assert_failed` echoes only a literal message: text without `{`, `}` or `__`, at most
 200 characters. It is author text from the descriptor file, never a resolved value.
+`datamimic run` uses the same rule (#438). For any other message it prints
+"The message of the <assert> at line N is not shown" and the name of the descriptor file.
+Before, the run printed the resolved property value. The rule now lives in the engine;
+Build calls it (`AssertStatement.literal_message`), so both use the same literal rule.
 The `review_artifact` of a stopped run lists each workspace file that the run read
 before the assert, with its digest, as a ready Build does. A changed source file
 changes the artifact. A `<variable source>` of a product after the assert is not read
@@ -178,6 +182,20 @@ Re-capture golden files of seeded projects that draw random values in an include
 second run in `tests_ce/scenarios` stay identical. Cases: `tests_ce/scenarios/s29_included_step_streams` (Build) and
 `tests_ce/integration_tests/test_included_step_seed` (an include inside a `<generate>` and a step that runs twice,
 which Build refuses, and the library cases).
+
+### A source that ends inside a row (#450, #451)
+
+A non-cyclic `<variable source>` or a generator that ends stops the rows without an error. Two cases changed:
+
+- A `<nestedKey type="list">` ends with its last full element. Before, it added an empty or partial element:
+  `count="{3}"` over 2 rows gave `[{a}, {b}, {}]`. Now it gives `[{a}, {b}]`. Build reports the product as
+  `validation` ("a <nestedKey> list ended before its count"), also for a count expression and a source list.
+  A dict nestedKey keeps the keys made so far, as before.
+- When the source ends after a child `<generate>` ran in that row, the run drops the child rows with the parent row.
+  Before, the capture and a memstore kept them as orphans. File exports were already correct.
+
+Cases: `tests_ce/scenarios/s34_source_end_drops_children`, `tests_ce/scenarios/s35_nested_key_source_ends` and
+`tests_ce/integration_tests/test_source_end`.
 
 ## Public contract
 

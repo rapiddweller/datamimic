@@ -1,0 +1,8 @@
+{
+  "version": "5.0",
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "baskets"}, "count": 2},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "baskets", "list_field": "items"}, "count": 4},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "baskets", "list_field": "items"}, "field": "fruit", "values": ["apple", "pear"]}
+  ]
+}

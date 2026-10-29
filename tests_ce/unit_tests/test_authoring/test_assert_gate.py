@@ -7,8 +7,11 @@ tests_ce/scenarios/s21_assert_gate; the scenario runner checks one code per vari
 that one code cannot carry: what Build kept, what it could not evaluate, and that no property value reaches it."""
 
 import json
+import os
 import pickle
 import shutil
+import subprocess
+import sys
 from hashlib import sha256
 from pathlib import Path
 
@@ -426,6 +429,31 @@ def test_datamimic_run_stops_with_exit_one_only_when_an_assert_fails(
     monkeypatch.chdir(_copy(tmp_path, negative))
 
     assert CliRunner().invoke(app, ["run", "datamimic.xml"]).exit_code == exit_code
+
+
+@pytest.mark.parametrize(
+    ("negative", "where"),
+    [
+        ("message_is_a_property", "line 11 is not shown"),
+        ("message_is_a_property_in_included_step", "line 4 is not shown"),
+    ],
+)
+def test_datamimic_run_shows_no_property_value_of_a_failed_assert(tmp_path: Path, negative: str, where: str) -> None:
+    # A real process with DEBUG logs: every console line of `datamimic run` is output that can leak the value (#438).
+    project = _copy(tmp_path, negative)
+    done = subprocess.run(
+        [sys.executable, "-m", "datamimic_ce.interfaces.cli", "run", "datamimic.xml"],
+        cwd=project,
+        env={**os.environ, "LOG_LEVEL": "DEBUG"},
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+
+    output = done.stdout + done.stderr
+    assert done.returncode == 1
+    assert where in output
+    assert "TOPSECRET-21" not in output
 
 
 def test_an_assert_in_step_10_still_lists_every_check_it_could_not_evaluate(tmp_path: Path) -> None:

@@ -1,0 +1,12 @@
+<setup rngSeed="34">
+    <generate name="orders" count="2">
+        <key name="order_id" generator="IncrementGenerator"/>
+        <!-- The lines run before the variable: when the customer file ends, the run drops the order and its lines. -->
+        <generate name="lines" count="2">
+            <key name="order_id" script="parent.order_id"/>
+            <key name="line_no" generator="IncrementGenerator"/>
+        </generate>
+        <variable name="customer" source="data/fixtures/customers.ent.csv" distribution="ordered"/>
+        <key name="customer" script="customer.name"/>
+    </generate>
+</setup>

@@ -1,0 +1,9 @@
+<setup rngSeed="35">
+    <generate name="baskets" count="1">
+        <!-- Two slot rows, one name row: the second element ends early and the list keeps one element. -->
+        <nestedKey name="items" type="list" source="data/slots.ent.csv" distribution="ordered">
+            <variable name="person" source="data/one.ent.csv" distribution="ordered"/>
+            <key name="name" script="person.name"/>
+        </nestedKey>
+    </generate>
+</setup>
