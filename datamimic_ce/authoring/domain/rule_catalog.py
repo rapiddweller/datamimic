@@ -95,9 +95,6 @@ def _rule_definition(
     )
 
 
-# The DM314 fix for __import__; the overview shows it too, because agents write __import__('datetime') before
-# their first Build (campaign b5, e06).
-SCRIPT_IMPORT_FIX = "Scripts have no __import__; the datetime module is there: datetime.date(2026, 1, 1)."
 # Public authoring evaluator catalog. Keep IDs stable: benchmark fixtures and
 # downstream agent tooling use them as machine contracts.
 _MINIMAL_GENERATE_EXAMPLE = '<generate name="g" count="1"/>'

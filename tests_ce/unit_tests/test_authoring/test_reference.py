@@ -11,16 +11,17 @@ import pytest
 from typer.testing import CliRunner
 
 from datamimic_ce.authoring import create_authoring_application
-from datamimic_ce.authoring.adapters.validator import ATTRIBUTE_ESCAPE
 from datamimic_ce.authoring.domain.capabilities import CapabilityDomain, CapabilityNotFound, DslCatalogSnapshot
+from datamimic_ce.authoring.domain.dm_json import DmJsonDocumentV1, DmJsonNodeV1
 from datamimic_ce.authoring.domain.reference import ReferenceResult
 from datamimic_ce.authoring.domain.requests import AuthoringSchemaId, BuildRequestV5, ReferenceRequest, ReferenceTopic
-from datamimic_ce.authoring.domain.rule_catalog import SCRIPT_IMPORT_FIX
 from datamimic_ce.authoring.domain.schema import build_schema_index
 from datamimic_ce.engine.dsl.model.registry import canonical_tag, get_element_definition, list_element_tags
 from datamimic_ce.engine.dsl.vocabulary.enums.converter_enums import ConverterEnum
 from datamimic_ce.engine.io.api import buffered_exporter_names
+from datamimic_ce.errors import ATTRIBUTE_ESCAPE, SCRIPT_IMPORT_FIX
 from datamimic_ce.interfaces.cli import app
+from tests_ce.authoring_project import build_project
 
 
 @pytest.fixture(scope="module")
@@ -243,16 +244,40 @@ def test_learning_lookup_teaches_the_join_the_s31_scenario_builds(application):
     assert "--topic learning --name lookup" in overview.content
 
 
-def test_overview_shows_the_script_and_escape_fixes_before_the_first_build(application):
-    """Blind agents read the overview before they write the project, then lost their first Build to
-    __import__('datetime') (DM314) or a raw < in an attribute (campaign b5, e06). The reference holds no
-    descriptor, so this is a Python test; s33 builds both forms."""
+def test_overview_shows_the_script_fix_and_scopes_the_escape_to_xml(application):
+    """Agents read the overview before their first Build. The reference holds no descriptor, so this is a Python
+    test; s33 refuses __import__ and a raw < in XML with these texts."""
     overview = application.reference(ReferenceRequest(topic=ReferenceTopic.OVERVIEW)).content
-    scenario = (Path(__file__).parents[3] / "tests_ce/scenarios/s33_datetime_date_bounds/datamimic.xml").read_text(
-        encoding="utf-8"
+    assert SCRIPT_IMPORT_FIX in overview
+    assert f"In an XML file: {ATTRIBUTE_ESCAPE}; DM JSON takes a raw <." in overview
+
+
+@pytest.mark.parametrize(("script", "outcome"), [("a <= 2", "ready"), ("a &lt;= 2", "rejected")])
+def test_dm_json_takes_a_raw_less_than(tmp_path, script, outcome):
+    """Compile escapes a DM JSON value, so the XML escape applied in DM JSON is escaped twice and fails."""
+    document = DmJsonDocumentV1(
+        root=DmJsonNodeV1(
+            kind="setup",
+            properties={"rng_seed": 1},
+            children=(
+                DmJsonNodeV1(
+                    kind="generate",
+                    properties={"name": "t", "count": "3"},
+                    children=(
+                        DmJsonNodeV1(kind="key", properties={"name": "a", "generator": "IncrementGenerator"}),
+                        DmJsonNodeV1(kind="key", properties={"name": "b", "script": script}),
+                    ),
+                ),
+            ),
+        )
     )
-    for text, form in ((SCRIPT_IMPORT_FIX, "datetime.date(2026, 1, 1)"), (ATTRIBUTE_ESCAPE, "&lt;")):
-        assert text in overview and form in text and form in scenario, form
+    built = build_project(
+        tmp_path,
+        document,
+        version="5.0",
+        expectations=[{"kind": "exact_count", "subject": {"kind": "product", "product": "t"}, "count": 3}],
+    )
+    assert built.outcome == outcome
 
 
 def test_authoring_help_points_to_the_data_file_guidance():

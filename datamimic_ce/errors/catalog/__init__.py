@@ -9,6 +9,7 @@ from datamimic_ce.errors.catalog.definition import IssueDefinition
 from datamimic_ce.errors.catalog.exporter_errors import ISSUES as _EXPORTER_ERRORS
 from datamimic_ce.errors.catalog.generator_errors import ISSUES as _GENERATOR_ERRORS
 from datamimic_ce.errors.catalog.guidance import (
+    ATTRIBUTE_ESCAPE,
     FILE_LOOKUP_PATTERN,
     GUIDANCE_COUNT_SCOPE,
     GUIDANCE_EMPTY_VALUE,
@@ -20,6 +21,7 @@ from datamimic_ce.errors.catalog.guidance import (
     GUIDANCE_VALID_LOCALE,
     GUIDANCE_WHERE_SCOPE,
     SCRIPT_BUILTIN_NAMES,
+    SCRIPT_IMPORT_FIX,
 )
 from datamimic_ce.errors.catalog.include_errors import ISSUES as _INCLUDE_ERRORS
 from datamimic_ce.errors.catalog.operation_errors import ISSUES as _OPERATION_ERRORS
@@ -92,6 +94,7 @@ __all__ = [
     "get_issue_definition",
     "invalid_locale_text",
     "ERROR_TEMPLATES",
+    "ATTRIBUTE_ESCAPE",
     "FILE_LOOKUP_PATTERN",
     "GUIDANCE_COUNT_SCOPE",
     "GUIDANCE_EMPTY_VALUE",
@@ -102,5 +105,6 @@ __all__ = [
     "GUIDANCE_SCRIPT_BUILTIN",
     "GUIDANCE_WHERE_SCOPE",
     "SCRIPT_BUILTIN_NAMES",
+    "SCRIPT_IMPORT_FIX",
     "GUIDANCE_VALID_LOCALE",
 ]
