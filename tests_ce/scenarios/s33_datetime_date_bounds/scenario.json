@@ -1,0 +1,44 @@
+{
+  "title": "Dates YYYY-MM-DD from DateTimeGenerator and from a script (campaign b5, e06)",
+  "proves": [
+    "DateTimeGenerator bounds with the time (the default layout) and outDateFormat=\"%Y-%m-%d\" give a date text inside both ends, on a <key> and on a <variable>",
+    "the attribute form and the call form of the bounds give the same rows, and another layout in the call with input_format gives the same rows as the default layout",
+    "a date-only min, max or value without input_format is refused with a message that names the argument, the default layout and the two working forms",
+    "a configured input_format that does not match keeps its own message, without the default-layout advice",
+    "without outDateFormat the value is no date text, and the bounds are applied",
+    "a script has the datetime module without import: __import__ is refused with DM314 and its fix"
+  ],
+  "products": {"licenses": 20},
+  "equivalents": [
+    {"name": "valid_from_call_form",
+     "patch": {"file": "datamimic.xml", "old": "generator=\"DateTimeGenerator\" min=\"2026-01-01 00:00:00\" max=\"2026-03-31 23:59:59\"", "new": "generator=\"DateTimeGenerator(min='2026-01-01 00:00:00', max='2026-03-31 23:59:59')\""}},
+    {"name": "another_layout_in_the_call",
+     "patch": {"file": "datamimic.xml", "old": "DateTimeGenerator(min='2026-03-01 00:00:00', max='2026-12-31 00:00:00')", "new": "DateTimeGenerator(min='01/03/2026', max='31/12/2026', input_format='%d/%m/%Y')"}},
+    {"name": "iso_date_with_input_format_in_the_call",
+     "patch": {"file": "datamimic.xml", "old": "DateTimeGenerator(min='2026-03-01 00:00:00', max='2026-12-31 00:00:00')", "new": "DateTimeGenerator(min='2026-03-01', max='2026-12-31', input_format='%Y-%m-%d')"}}
+  ],
+  "negatives": [
+    {"name": "date_only_min_attribute_form", "diagnostic": "child_execution",
+     "message": "DateTimeGenerator min does not match the default layout '%Y-%m-%d %H:%M:%S'. Write the time too, for example min=\"2026-01-01 00:00:00\" max=\"2026-03-31 23:59:59\", and add outDateFormat=\"%Y-%m-%d\"",
+     "patch": {"file": "datamimic.xml", "old": "min=\"2026-01-01 00:00:00\"", "new": "min=\"2026-01-01\""}},
+    {"name": "date_only_max_attribute_form", "diagnostic": "child_execution",
+     "message": "DateTimeGenerator max does not match the default layout",
+     "patch": {"file": "datamimic.xml", "old": "max=\"2026-03-31 23:59:59\"", "new": "max=\"2026-03-31\""}},
+    {"name": "date_only_min_call_form", "diagnostic": "child_execution",
+     "message": "Pass another layout in the call: DateTimeGenerator(min='01/03/2026', max='31/12/2026', input_format='%d/%m/%Y').",
+     "patch": {"file": "datamimic.xml", "old": "min='2026-03-01 00:00:00'", "new": "min='2026-03-01'"}},
+    {"name": "date_only_value", "diagnostic": "child_execution",
+     "message": "DateTimeGenerator value does not match the default layout",
+     "patch": {"file": "datamimic.xml", "old": "DateTimeGenerator(min='2026-03-01 00:00:00', max='2026-12-31 00:00:00')", "new": "DateTimeGenerator(value='2026-05-01')"}},
+    {"name": "configured_input_format_mismatch", "diagnostic": "child_execution",
+     "message": "DateTimeGenerator min does not match the configured input_format",
+     "patch": {"file": "datamimic.xml", "old": "DateTimeGenerator(min='2026-03-01 00:00:00', max='2026-12-31 00:00:00')", "new": "DateTimeGenerator(min='2026-03-01', max='2026-12-31', input_format='%d/%m/%Y')"}},
+    {"name": "date_text_needs_out_date_format", "diagnostic": "row_condition",
+     "patch": {"file": "datamimic.xml", "old": "max=\"2026-03-31 23:59:59\"\n             outDateFormat=\"%Y-%m-%d\"", "new": "max=\"2026-03-31 23:59:59\""}},
+    {"name": "bounds_are_applied", "diagnostic": "row_condition",
+     "patch": {"file": "datamimic.xml", "old": "max=\"2026-03-31 23:59:59\"", "new": "max=\"2026-06-30 23:59:59\""}},
+    {"name": "script_imports_the_datetime_module", "diagnostic": "DM314",
+     "remediation": "Scripts have no __import__; the datetime module is there: datetime.date(2026, 1, 1).",
+     "patch": {"file": "datamimic.xml", "old": "(datetime.date(2026, 1, 1) + datetime.timedelta", "new": "(__import__('datetime').date(2026, 1, 1) + datetime.timedelta"}}
+  ]
+}

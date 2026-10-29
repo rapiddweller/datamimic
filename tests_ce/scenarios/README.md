@@ -30,6 +30,8 @@ A negative can also give `issue`: the catalog code of a runtime refusal, for exa
 Build reports it as the `ce_error` of the diagnostic with the code `diagnostic`, usually `child_execution`.
 A negative can also give `remediation`: a text that the remediation of a diagnostic with the code `diagnostic` contains.
 Use it when the scenario proves the fix that the agent reads, not only the rejection.
+A negative can also give `message`: a text that the message of a diagnostic with the code `diagnostic` contains.
+Use it for a runtime refusal that carries its fix in the message, for example a generator argument error.
 A negative can also give `run_error`. Then a normal run of the variant must stop with a `TaskConfigError` that contains this text.
 
 ## What the test does
