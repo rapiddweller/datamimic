@@ -193,17 +193,18 @@ def _running(pid):
 
 @pytest.mark.skipif(os.name == "nt", reason="POSIX process groups only")
 def test_timeout_stays_timeout_while_the_killed_group_is_still_exiting(tmp_path, monkeypatch):
-    """macOS killpg returns EPERM when the members of the group still exit after SIGTERM (#432). Linux does not,
-    so the fake sends the real signal and then gives that EPERM."""
+    """macOS killpg returns EPERM when no member of the group is alive but one is not reaped yet (#432). That can
+    occur at the SIGTERM and at the SIGKILL. Linux does not do this, so the fake sends the real signal and then
+    gives that EPERM for each call."""
     import errno
     import signal
     from contextlib import suppress
 
     real_killpg = os.killpg
+    sent = []
 
     def exiting_group(pgid, sig):
-        if sig != signal.SIGKILL:
-            return real_killpg(pgid, sig)
+        sent.append(sig)
         with suppress(ProcessLookupError):
             real_killpg(pgid, sig)
         raise PermissionError(errno.EPERM, os.strerror(errno.EPERM))
@@ -217,6 +218,7 @@ def test_timeout_stays_timeout_while_the_killed_group_is_still_exiting(tmp_path,
     )
     assert not result.ok
     assert result.diagnostics[0].code is AuthoringSystemDiagnosticCode.TIMEOUT
+    assert sent == [signal.SIGTERM, signal.SIGKILL]
 
 
 def test_pure_descriptor_does_not_copy_unrelated_repository_files(tmp_path, monkeypatch):

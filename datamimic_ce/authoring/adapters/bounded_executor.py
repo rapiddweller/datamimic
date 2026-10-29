@@ -174,11 +174,11 @@ def _terminate_process_tree(process: subprocess.Popen[bytes]) -> None:
         if completed.returncode != 0:
             raise OSError("taskkill did not terminate the bounded process tree")
     else:
-        with suppress(ProcessLookupError):
+        # macOS gives EPERM when no member of the group is alive but one is not reaped; a live member makes it succeed.
+        with suppress(ProcessLookupError, PermissionError):
             os.killpg(process.pid, signal.SIGTERM)
         with suppress(subprocess.TimeoutExpired):
             process.wait(timeout=0.2)
-        # macOS gives EPERM when every member of the group is still exiting; a live member makes it succeed.
         with suppress(ProcessLookupError, PermissionError):
             os.killpg(process.pid, signal.SIGKILL)
     try:
