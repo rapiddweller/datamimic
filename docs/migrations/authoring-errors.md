@@ -212,6 +212,10 @@ same results as before. Three differences remain:
 
 Case: `tests_ce/scenarios/s36_script_list_rows`.
 
+The same rule covers a `<nestedKey type="list">` that a later script of the record reads by its bare name (#478):
+`{b.branch_id: b for b in branches}` and `{b.branch_id: b for b in this.branches}` give the same rows. Before, the
+bare name gave plain dicts and `b.branch_id` failed with `I832`. Case: `tests_ce/scenarios/s38_nested_key_list_rows`.
+
 ## Public contract
 
 Persist XML as the executable project. `DmJsonDocumentV1` is an in-memory agent

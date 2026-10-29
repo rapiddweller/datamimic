@@ -1,0 +1,16 @@
+{
+  "title": "A <nestedKey type=\"list\"> read by its bare name gives rows, as this.<name> does",
+  "proves": [
+    "a script reads an item of a <nestedKey type=\"list\" source=...> by dot through its bare name (#478)",
+    "the bare name and this.<name> give the same rows",
+    "a field that the row does not have is named in the run error"
+  ],
+  "products": {"account_view": 6},
+  "negatives": [
+    {"name": "missing_field", "diagnostic": "child_execution", "run_error": "AttributeError: no attribute 'branch_no'",
+     "patch": {"file": "datamimic.xml", "old": "{b.branch_id: b for b in branches}", "new": "{b.branch_no: b for b in branches}"}}
+  ],
+  "equivalents": [
+    {"name": "this_prefix", "patch": {"file": "datamimic.xml", "old": "for b in branches}", "new": "for b in this.branches}"}}
+  ]
+}

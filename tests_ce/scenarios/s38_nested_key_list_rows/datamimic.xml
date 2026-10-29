@@ -1,0 +1,8 @@
+<setup rngSeed="38">
+    <!-- A lookup through a <nestedKey type="list">: its bare name and this.<name> give the same rows (#478). -->
+    <generate name="account_view" source="data/entity/accounts.ent.csv" distribution="ordered" columns="account_id, branch_id">
+        <nestedKey name="branches" type="list" source="data/entity/branches.ent.csv" distribution="ordered"/>
+        <variable name="branch" script="{b.branch_id: b for b in branches}.get(branch_id)"/>
+        <key name="city" script="branch.city if branch else 'UNKNOWN'"/>
+    </generate>
+</setup>
