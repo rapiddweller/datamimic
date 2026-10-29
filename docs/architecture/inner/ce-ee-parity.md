@@ -132,6 +132,6 @@ These rows are not compared yet. They need a comparison before the release date.
 | `identical` | 11 |
 | `CE-extension` | 3 |
 | `EE-only` | 4 |
-| `gap` | 27 |
+| `gap` | 28 |
 | `unverified` | 1 |
 | Open rows (not compared) | 9 |
