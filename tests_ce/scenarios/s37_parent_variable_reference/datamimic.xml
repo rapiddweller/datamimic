@@ -1,0 +1,13 @@
+<setup rngSeed="37">
+    <generate name="depots" source="data/fixtures/depots.ent.csv" distribution="ordered" count="3">
+        <!-- A variable of the parent is no output field; a child copies it with parent.zone. -->
+        <variable name="zone" script="this.region"/>
+        <key name="depot_id" script="int(this.depot_id)"/>
+        <key name="city" script="this.city"/>
+        <generate name="vans" count="2">
+            <key name="depot_id" script="parent.depot_id"/>
+            <key name="zone" script="parent.zone"/>
+            <key name="van_no" generator="IncrementGenerator"/>
+        </generate>
+    </generate>
+</setup>

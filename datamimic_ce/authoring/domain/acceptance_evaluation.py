@@ -59,7 +59,9 @@ _DATETIME_LITERAL_PATTERN = r"\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:\.\d{1,6}
 # Build joins a child row to its parent only through one key that copies a unique parent field.
 _GROUP_BY_PARENT_COPY = (
     "Build groups the child rows by one child <key> whose script is exactly parent.<field> of a unique parent "
-    'field, for example <key name="depot_id" script="parent.depot_id"/>.'
+    'field, for example <key name="depot_id" script="parent.depot_id"/>. A copy of a parent <variable> does not '
+    "group: the variable is no field of the parent. When the child copies several parent fields, declare a "
+    "foreign_key role for the copy that groups."
 )
 
 

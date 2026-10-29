@@ -272,15 +272,22 @@ def project_acceptance(
         checks.append(AcceptanceCheckV1(expectation=expectation, path=path, origin=AcceptanceOrigin.DERIVED))
 
     counts: dict[str, int] = {}
+    by_name = {entry.product.name: entry for entry in entries}
     for entry in entries:
         name = entry.product.name
         subject = ProductRowsSubject(product=name)
         if entry.parent:
+            parent_node = by_name[entry.parent].node
+            parent_variables = {
+                child.properties.get("name") for child in parent_node.children if child.kind == "variable"
+            }
             joins = tuple(
                 AcceptanceJoinV1(child_field=_name(child, entry.path), parent_field=parent_field)
                 for child in entry.node.children
                 if child.kind == "key"
                 if (parent_field := _parent_reference(child.properties.get("script"))) is not None
+                # A <variable> of the parent is no output field, so it joins nothing; the run resolves it (#442 T1).
+                if parent_field in by_name[entry.parent].product.fields or parent_field not in parent_variables
             )
             relationships.append(AcceptanceRelationshipV1(parent_product=entry.parent, child_product=name, joins=joins))
             if entry.count is not None:
@@ -307,11 +314,16 @@ def project_acceptance(
                         _derive_field(
                             inner, list_subject, entry.path + ("children", index, "children", inner_index), derive
                         )
-    by_name = {entry.product.name: entry for entry in entries}
     for relationship in relationships:
         for join in relationship.joins:
             if join.parent_field not in by_name[relationship.parent_product].product.fields:
-                _reject("Parent reference names an unknown field.", by_name[relationship.child_product].path)
+                _reject(
+                    "Parent reference names an unknown field.",
+                    by_name[relationship.child_product].path,
+                    remediation="A child <key> script parent.<name> reads a <key>, a columns= column or a <variable> "
+                    'of the parent. Declare a source column in the parent as <key name="region" '
+                    'script="this.region"/>, or list it in columns=.',
+                )
     spec = AcceptanceSpecV1(products=tuple(entry.product for entry in entries), relationships=tuple(relationships))
     explicit_joins: dict[tuple[str, str], tuple[AcceptanceJoinV1, ...]] = {}
     for index, declaration in enumerate(request.product_roles):

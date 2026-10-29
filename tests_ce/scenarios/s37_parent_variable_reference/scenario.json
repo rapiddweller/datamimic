@@ -1,0 +1,54 @@
+{
+  "title": "A child key reads a variable of its parent with parent.<name>",
+  "proves": [
+    "a child <key script=\"parent.zone\"> that reads a <variable> of the parent is ready, as the run is; the variable is no field, so it joins nothing, and the foreign key parent.depot_id groups the child rows (#442 T1)",
+    "parent.<a source column that no key and no columns= declares> is rejected before the run, and the remediation names both working forms",
+    "both working forms give the same rows: a parent <key script=\"this.region\">, or the column listed in columns=; the foreign_key role picks the copy that groups",
+    "without the key copy, the foreign_key role names the copy it needs"
+  ],
+  "products": {
+    "depots": 3,
+    "vans": 6
+  },
+  "negatives": [
+    {
+      "name": "a_variable_copy_is_no_foreign_key",
+      "diagnostic": "input",
+      "message": "A nested foreign-key role must copy the exact parent field using parent.field.",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "<key name=\"depot_id\" script=\"parent.depot_id\"/>",
+        "new": "<key name=\"depot_id\" script=\"parent.zone\"/>"
+      }
+    },
+    {
+      "name": "an_undeclared_source_column_is_no_field",
+      "diagnostic": "input",
+      "message": "Parent reference names an unknown field.",
+      "remediation": "Declare a source column in the parent as <key name=\"region\" script=\"this.region\"/>, or list it in columns=.",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "<key name=\"zone\" script=\"parent.zone\"/>",
+        "new": "<key name=\"zone\" script=\"parent.region\"/>"
+      }
+    }
+  ],
+  "equivalents": [
+    {
+      "name": "the_column_as_a_parent_key",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "        <key name=\"city\" script=\"this.city\"/>\n        <generate name=\"vans\" count=\"2\">\n            <key name=\"depot_id\" script=\"parent.depot_id\"/>\n            <key name=\"zone\" script=\"parent.zone\"/>",
+        "new": "        <key name=\"city\" script=\"this.city\"/>\n        <key name=\"region\" script=\"this.region\"/>\n        <generate name=\"vans\" count=\"2\">\n            <key name=\"depot_id\" script=\"parent.depot_id\"/>\n            <key name=\"zone\" script=\"parent.region\"/>"
+      }
+    },
+    {
+      "name": "the_column_listed_in_columns",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "distribution=\"ordered\" count=\"3\">\n        <!-- A variable of the parent is no output field; a child copies it with parent.zone. -->\n        <variable name=\"zone\" script=\"this.region\"/>\n        <key name=\"depot_id\" script=\"int(this.depot_id)\"/>\n        <key name=\"city\" script=\"this.city\"/>\n        <generate name=\"vans\" count=\"2\">\n            <key name=\"depot_id\" script=\"parent.depot_id\"/>\n            <key name=\"zone\" script=\"parent.zone\"/>",
+        "new": "distribution=\"ordered\" count=\"3\" columns=\"depot_id, city, region\">\n        <key name=\"depot_id\" script=\"int(this.depot_id)\"/>\n        <generate name=\"vans\" count=\"2\">\n            <key name=\"depot_id\" script=\"parent.depot_id\"/>\n            <key name=\"zone\" script=\"parent.region\"/>"
+      }
+    }
+  ]
+}

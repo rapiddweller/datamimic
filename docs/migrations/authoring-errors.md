@@ -247,6 +247,15 @@ Before, a product nested two or more levels deep kept its parent name: `stores|s
 `result["stores|shelves"]` must read `result["shelves"]`. Two nested products with the same name share one
 capture key, as at the second level before; Build refuses such a model. Case: `tests_ce/scenarios/s36_three_level_names`.
 
+### A child key that reads a parent variable (#442 T1)
+
+A child `<key script="parent.zone">` that reads a `<variable>` of the parent is ready. Before, Build rejected it
+with `input` "Parent reference names an unknown field", while the run worked. The variable is no output field, so it
+joins nothing; a key copy such as `parent.depot_id` groups the child rows. A name that is no key, no `columns=`
+column and no variable of the parent (for example a source column that nothing declares) stays rejected, and the
+remediation now names both working forms. The per-parent remediation says that a variable copy does not group, and
+that a child with several parent copies needs a `foreign_key` role. Case: `tests_ce/scenarios/s37_parent_variable_reference`.
+
 ## Public contract
 
 Persist XML as the executable project. `DmJsonDocumentV1` is an in-memory agent

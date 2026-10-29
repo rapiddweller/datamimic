@@ -1,0 +1,17 @@
+{
+  "version": "5.0",
+  "product_roles": [
+    {"product": "depots", "field": "depot_id", "role": {"kind": "identifier"}},
+    {"product": "vans", "field": "depot_id", "role": {
+      "kind": "foreign_key", "parent_product": "depots", "parent_field": "depot_id"
+    }}
+  ],
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "depots"}, "count": 3},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "vans"}, "count": 6},
+    {"kind": "per_parent_count", "subject": {
+      "kind": "per_parent", "parent_product": "depots", "child_product": "vans"
+    }, "count": 2},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "vans"}, "field": "zone", "values": ["north", "south"]}
+  ]
+}
