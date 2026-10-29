@@ -12,7 +12,7 @@ from typing import Literal
 from pydantic import model_validator
 
 from .build_rules import catalog_diagnostic
-from .common import AuthoringModel, NonEmptyStrictStr, NonNegativeStrictInt
+from .common import MAX_AUTHORING_MAX_COUNT, AuthoringModel, NonEmptyStrictStr, NonNegativeStrictInt
 from .diagnostics import AuthoringRuleId, Diagnostic, DiagnosticPhase
 from .expectations import (
     DeclaredSinkIdentity,
@@ -28,15 +28,36 @@ from .expectations import (
     expectation_subjects,
 )
 from .proof import AcceptanceOrigin
+from .requests import DEFAULT_AUTHORING_MAX_COUNT
 from .row_conditions import parse_row_condition
 
-# Agents read a memstore back to take a subset of the producer rows; a readback reads each row once.
-MEMSTORE_READBACK_ONCE = (
-    "A memstore readback reads every producer row exactly once, so its count is the producer count. For a "
-    "subset of the rows, or for rows that belong to one parent, nest the child <generate> under the parent "
-    'and copy parent.<field> instead; a braces count there also needs "max_count" at the top level of '
-    "acceptance/build.json."
+# On the nest route blind agents wrote max_count 1, and parent.<field> into the count (campaign b5, e06).
+BRACES_COUNT_MAX_COUNT = (
+    f"A braces count stops Build from deriving max_count, and without max_count Build stops at "
+    f'{DEFAULT_AUTHORING_MAX_COUNT} rows: set "max_count" at the top level of acceptance/build.json to the rows of '
+    f"all products together; {MAX_AUTHORING_MAX_COUNT} is safe."
 )
+
+
+def nested_count_scope(parent_field: str) -> str:
+    """The count rule of a nested <generate>, with a field of the parent row in the example."""
+    return (
+        "A nested braces count runs in the parent row: it counts the child rows for each parent row and names the "
+        f"parent's fields bare, count=\"{{1 if {parent_field} % 2 == 1 else 0}}\"; only the child's keys write "
+        "parent.<field>."
+    )
+
+
+def memstore_readback_once(parent_field: str) -> str:
+    """The readback rule and the nest route; ``parent_field`` names a field of the producer in the count example."""
+    return (
+        "A memstore readback reads every producer row exactly once, so its count is the producer count. For a "
+        "subset of the rows, or for rows that belong to one parent, nest the child <generate> under the parent "
+        f"and copy parent.<field> instead. {nested_count_scope(parent_field)} {BRACES_COUNT_MAX_COUNT}"
+    )
+
+
+MEMSTORE_READBACK_ONCE = memstore_readback_once("id")
 # Script scope names that a row condition does not have; an agent writes this.field from the scripts.
 _SCRIPT_SCOPES = frozenset(("this", "parent", "root"))
 

@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import JsonValue, TypeAdapter
 
+from datamimic_ce.authoring.domain.acceptance_contract import BRACES_COUNT_MAX_COUNT, nested_count_scope
 from datamimic_ce.authoring.domain.build_rules import authoring_rule_catalog
 from datamimic_ce.authoring.domain.capabilities import (
     AttributeCapability,
@@ -54,6 +55,13 @@ if TYPE_CHECKING:
 
 
 _JSON_OBJECT = TypeAdapter(dict[str, JsonValue])
+# Blind agents read the memstore example first and built a readback for rows of another product (e06).
+_EXAMPLE_ROUTES = (
+    "nested: rows made from the rows of another product (rows for each parent row, some of the rows, or a "
+    "match on its values) are a <generate> inside that product's <generate>; the keys copy parent.<field> "
+    f"and no memstore is needed. {nested_count_scope('id')} {BRACES_COUNT_MAX_COUNT} "
+    "memstore: a later product that copies every row of a product exactly once."
+)
 
 
 class CeDslCatalog:
@@ -281,7 +289,7 @@ class CeDslCatalog:
                     entries=expectation_entries,
                 )
             case ReferenceTopic.EXAMPLES:
-                names = ("starter", "memstore")
+                names = ("starter", "nested", "memstore")
                 if request.name is None:
                     entries = tuple(AuthoringExampleReference(name=name, title=name) for name in names)
                 elif request.name in names:
@@ -297,7 +305,7 @@ class CeDslCatalog:
                     name=request.name,
                     content=(
                         "Native CE examples; request one by name to compile it. "
-                        "Compilation does not execute or verify its expectations."
+                        f"Compilation does not execute or verify its expectations. {_EXAMPLE_ROUTES}"
                     )
                     if entries
                     else "No matching example.",
@@ -508,6 +516,22 @@ def _example(name: str) -> tuple[DmJsonDocumentV1, BuildRequestV5]:
             ),
         )
         expectations += (ExactCountExpectation(subject=ProductRowsSubject(product="readback"), count=2),)
+    elif name == "nested":
+        roles = (
+            ProductRoleDeclaration(product="rows", field="id", role=IdentifierRole()),
+            ProductRoleDeclaration(
+                product="children", field="row_id", role=ForeignKeyRole(parent_product="rows", parent_field="id")
+            ),
+        )
+        child = DmJsonNodeV1(
+            kind="generate",
+            properties={"name": "children", "count": "{1 if id % 2 == 1 else 0}"},
+            children=(DmJsonNodeV1(kind="key", properties={"name": "row_id", "script": "parent.id"}),),
+        )
+        children = (
+            DmJsonNodeV1(kind="generate", properties=producer.properties, children=(*producer.children, child)),
+        )
+        expectations += (ExactCountExpectation(subject=ProductRowsSubject(product="children"), count=1),)
     return (
         DmJsonDocumentV1(root=DmJsonNodeV1(kind="setup", properties={"rng_seed": 7}, children=children)),
         BuildRequestV5(expectations=expectations, product_roles=roles, sample_rows=5),

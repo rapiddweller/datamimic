@@ -1,0 +1,25 @@
+<setup rngSeed="32">
+    <memstore id="mem"/>
+    <generate name="employments" count="4" target="mem">
+        <key name="employment_id" generator="IncrementGenerator"/>
+        <key name="person_id" script="(employment_id + 1) // 2"/>
+    </generate>
+    <generate name="audits" count="2">
+        <key name="audit_id" generator="IncrementGenerator"/>
+    </generate>
+    <!-- The copy route of the unread-memstore rejection, pasted as written: it reads each producer row exactly once. -->
+    <generate name="employments_copy" source="mem" sourceEntity="employments" distribution="ordered" target="ConsoleExporter"><key name="employment_id" script="this.employment_id"/></generate>
+    <!-- The role-pair route, followed: a readback with the producer count gets the key that copies the identifier. -->
+    <generate name="audit_refs" source="mem" sourceEntity="employments" distribution="ordered" count="4">
+        <key name="audit_id" generator="IncrementGenerator"/>
+        <key name="employment_id" script="this.employment_id"/>
+    </generate>
+    <!-- Rows made from some rows of another product: nest the child, and its keys copy parent.<field>. -->
+    <generate name="contracts" count="4">
+        <key name="id" generator="IncrementGenerator"/>
+        <!-- The braces count runs in the contracts row, so it names id bare. -->
+        <generate name="shifts" count="{1 if id % 2 == 1 else 0}">
+            <key name="contract_id" script="parent.id"/>
+        </generate>
+    </generate>
+</setup>
