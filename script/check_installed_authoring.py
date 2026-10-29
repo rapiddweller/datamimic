@@ -82,7 +82,7 @@ async def check_mcp(schemas):
     assert not protocol_errors, protocol_errors
 
 
-def check_installed(with_mcp):
+def check_installed(with_mcp, checkout):
     import datamimic_ce
     from datamimic_ce.authoring import create_authoring_application
 
@@ -94,6 +94,13 @@ def check_installed(with_mcp):
         assert importlib.util.find_spec("uvicorn") is None, "base wheel profile must exclude HTTP transport"
     origin = Path(datamimic_ce.__file__).resolve()
     assert origin.is_relative_to(Path(sysconfig.get_paths()["purelib"]).resolve()), origin
+    data = Path("domains/shared/domain_data")
+    source, installed = (
+        {path.relative_to(root) for path in root.rglob("*") if path.is_file()}
+        for root in (checkout / "datamimic_ce" / data, origin.parent / data)
+    )
+    missing = sorted(source - installed)
+    assert source and not missing, f"wheel lacks {len(missing)} of {len(source)} domain_data files: {missing[:3]}"
     version = importlib.metadata.version("datamimic_ce")
     assert version
 
@@ -179,7 +186,6 @@ def check_installed(with_mcp):
 
     package = importlib.resources.files("datamimic_ce")
     assert package.joinpath("py.typed").is_file()
-    assert package.joinpath("domains/shared/domain_data/common/country_US.csv").read_bytes()
     assert "demo-condition" in set(demo_names())
     assert b"<setup" in demo_root().joinpath("demo-condition/datamimic.xml").read_bytes()
     assert "demo-condition" in cli("demo", "list")
@@ -219,7 +225,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix="datamimic-installed-check-") as directory:
         os.chdir(directory)
         assert not Path.cwd().is_relative_to(checkout)
-        check_installed(arguments.mcp)
+        check_installed(arguments.mcp, checkout)
 
 
 if __name__ == "__main__":
