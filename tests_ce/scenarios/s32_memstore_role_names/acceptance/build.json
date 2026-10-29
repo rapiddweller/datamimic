@@ -1,18 +1,18 @@
 {
   "version": "5.0",
-  "max_count": 16,
+  "max_count": 20,
   "product_roles": [
     {"product": "employments", "field": "employment_id", "role": {"kind": "identifier"}},
-    {"product": "employment_copy", "field": "employment_id", "role": {
-      "kind": "foreign_key", "parent_product": "employments", "parent_field": "employment_id"
-    }},
+    {"product": "employments_copy", "field": "employment_id", "role": {"kind": "foreign_key", "parent_product": "employments", "parent_field": "employment_id"}},
+    {"product": "audit_refs", "field": "employment_id", "role": {"kind": "foreign_key", "parent_product": "employments", "parent_field": "employment_id"}},
     {"product": "contracts", "field": "id", "role": {"kind": "identifier"}},
     {"product": "shifts", "field": "contract_id", "role": {
       "kind": "foreign_key", "parent_product": "contracts", "parent_field": "id"
     }}
   ],
   "expectations": [
-    {"kind": "exact_count", "subject": {"kind": "product", "product": "employment_copy"}, "count": 4},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "employments_copy"}, "count": 4},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "audit_refs"}, "count": 4},
     {"kind": "exact_count", "subject": {"kind": "product", "product": "shifts"}, "count": 2}
   ]
 }

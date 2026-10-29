@@ -1,79 +1,206 @@
 {
-  "title": "The memstore role-pair rejection names the fields of the descriptor, and a subset readback gets the nest route",
+  "title": "The memstore role-pair rejection names the fields of the descriptor, a subset readback gets the nest route, and both routes build as written",
   "proves": [
+    "the copy route of the unread-memstore rejection, pasted as written, is ready (employments_copy)",
+    "the role-pair route for a readback with the producer count, followed as written, is ready (audit_refs)",
     "a readback without count, with the producer count or above it reads every producer row once and is ready",
-    "a readback whose literal count is below the literal producer count (producer - 1, and 0) leads with the nest route and names both products",
+    "a readback whose literal count is below the literal producer count (producer - 1, and 0) leads with the nest route, names both products and a producer field in the count example",
     "a readback with the producer count, above it, without count or with a braces count gets the role template, not the nest route",
     "a braces producer count gives no nest route, because Build cannot compare it",
-    "the role template names the declared producer identifier and the consumer key that copies it",
+    "the role template names the declared producer identifier and the consumer key that copies it, also under another name",
     "a consumer that does not copy the identifier is told which key to add",
     "a foreign key without a producer identifier gets the identifier role filled from its parent_field",
+    "without roles the template never names one copied field as the identifier: it states that the field must differ in every row",
     "without roles the template lists the producer fields that the readback copies",
-    "the copy-of-every-row route names the declared producer identifier",
-    "the nest route names the max_count value and the count scope; a nested braces count names the parent's fields bare, and parent.<field> in the count fails"
+    "the copy route of the unread-memstore rejection names the declared producer identifier, and keeps placeholders without one",
+    "a nested braces count names the parent's fields bare; parent.<field> in the count fails"
   ],
-  "products": {"employments": 4, "audits": 2, "employment_copy": 4, "contracts": 4, "shifts": 2},
+  "products": {
+    "employments": 4,
+    "audits": 2,
+    "employments_copy": 4,
+    "audit_refs": 4,
+    "contracts": 4,
+    "shifts": 2
+  },
   "negatives": [
-    {"name": "readback_below_the_producer_count", "diagnostic": "input",
-     "remediation": "\"audits\" sets a count below the rows of \"employments\", so this readback cannot pass. Move <generate name=\"audits\"> inside <generate name=\"employments\">",
-     "patch": {"file": "datamimic.xml", "old": "<generate name=\"audits\" count=\"2\">",
-       "new": "<generate name=\"audits\" source=\"mem\" sourceEntity=\"employments\" distribution=\"ordered\" count=\"3\">"}},
-    {"name": "subset_readback_names_max_count_and_the_count_scope", "diagnostic": "input",
-     "remediation": "Its value is the rows of all products together; 2000 is safe. The braces count runs in the parent row, so it names the parent's fields bare, count=\"{1 if id % 2 == 1 else 0}\"; only the child's keys write parent.<field>.",
-     "patch": {"file": "datamimic.xml", "old": "<generate name=\"audits\" count=\"2\">",
-       "new": "<generate name=\"audits\" source=\"mem\" sourceEntity=\"employments\" distribution=\"ordered\" count=\"3\">"}},
-    {"name": "readback_of_zero_rows", "diagnostic": "input",
-     "remediation": "Move <generate name=\"audits\"> inside <generate name=\"employments\">",
-     "patch": {"file": "datamimic.xml", "old": "<generate name=\"audits\" count=\"2\">",
-       "new": "<generate name=\"audits\" source=\"mem\" sourceEntity=\"employments\" distribution=\"ordered\" count=\"0\">"}},
-    {"name": "readback_with_the_producer_count", "diagnostic": "input",
-     "remediation": "Add the consumer foreign-key role, or point an existing one at the producer's identifier field: {\"product\": \"audits\", \"field\": \"employment_id\", \"role\": {\"kind\": \"foreign_key\", \"parent_product\": \"employments\", \"parent_field\": \"employment_id\"}}. First add <key name=\"employment_id\" script=\"this.employment_id\"/> to audits.",
-     "patch": {"file": "datamimic.xml", "old": "<generate name=\"audits\" count=\"2\">",
-       "new": "<generate name=\"audits\" source=\"mem\" sourceEntity=\"employments\" distribution=\"ordered\" count=\"4\">"}},
-    {"name": "readback_above_the_producer_count", "diagnostic": "input",
-     "remediation": "Add the consumer foreign-key role, or point an existing one",
-     "patch": {"file": "datamimic.xml", "old": "<generate name=\"audits\" count=\"2\">",
-       "new": "<generate name=\"audits\" source=\"mem\" sourceEntity=\"employments\" distribution=\"ordered\" count=\"5\">"}},
-    {"name": "readback_without_count", "diagnostic": "input",
-     "remediation": "Add the consumer foreign-key role, or point an existing one",
-     "patch": {"file": "datamimic.xml", "old": "<generate name=\"audits\" count=\"2\">",
-       "new": "<generate name=\"audits\" source=\"mem\" sourceEntity=\"employments\" distribution=\"ordered\">"}},
-    {"name": "readback_with_a_braces_count", "diagnostic": "input",
-     "remediation": "Add the consumer foreign-key role, or point an existing one",
-     "patch": {"file": "datamimic.xml", "old": "<generate name=\"audits\" count=\"2\">",
-       "new": "<generate name=\"audits\" source=\"mem\" sourceEntity=\"employments\" distribution=\"ordered\" count=\"{1 + 2}\">"}},
-    {"name": "braces_producer_count_gives_no_nest_route", "diagnostic": "input",
-     "remediation": "Add the consumer foreign-key role, or point an existing one",
-     "patch": {"file": "datamimic.xml",
-       "old": "<generate name=\"employments\" count=\"4\" target=\"mem\">\n        <key name=\"employment_id\" generator=\"IncrementGenerator\"/>\n        <key name=\"person_id\" script=\"(employment_id + 1) // 2\"/>\n    </generate>\n    <generate name=\"audits\" count=\"2\">",
-       "new": "<generate name=\"employments\" count=\"{2 * 2}\" target=\"mem\">\n        <key name=\"employment_id\" generator=\"IncrementGenerator\"/>\n        <key name=\"person_id\" script=\"(employment_id + 1) // 2\"/>\n    </generate>\n    <generate name=\"audits\" source=\"mem\" sourceEntity=\"employments\" distribution=\"ordered\" count=\"3\">"}},
-    {"name": "readback_that_copies_the_identifier", "diagnostic": "input",
-     "remediation": "{\"product\": \"audits\", \"field\": \"employment_id\", \"role\": {\"kind\": \"foreign_key\", \"parent_product\": \"employments\", \"parent_field\": \"employment_id\"}}. A memstore readback",
-     "patch": {"file": "datamimic.xml",
-       "old": "<generate name=\"audits\" count=\"2\">\n        <key name=\"audit_id\" generator=\"IncrementGenerator\"/>",
-       "new": "<generate name=\"audits\" source=\"mem\" sourceEntity=\"employments\" distribution=\"ordered\">\n        <key name=\"employment_id\" script=\"this.employment_id\"/>"}},
-    {"name": "foreign_key_without_producer_identifier", "diagnostic": "input",
-     "remediation": "Add the producer identifier role: {\"product\": \"employments\", \"field\": \"employment_id\", \"role\": {\"kind\": \"identifier\"}}",
-     "patch": {"file": "acceptance/build.json",
-       "old": "    {\"product\": \"employments\", \"field\": \"employment_id\", \"role\": {\"kind\": \"identifier\"}},\n", "new": ""}},
-    {"name": "no_roles_list_the_copied_fields", "diagnostic": "input",
-     "remediation": "Add two product_roles entries: {\"product\": \"employments\", \"field\": \"<employment_id or person_id: the field that differs in every row>\"",
-     "patch": {"file": "acceptance/build.json",
-       "old": "    {\"product\": \"employments\", \"field\": \"employment_id\", \"role\": {\"kind\": \"identifier\"}},\n    {\"product\": \"employment_copy\", \"field\": \"employment_id\", \"role\": {\n      \"kind\": \"foreign_key\", \"parent_product\": \"employments\", \"parent_field\": \"employment_id\"\n    }},\n",
-       "new": ""}},
-    {"name": "unread_memstore_names_the_identifier", "diagnostic": "input",
-     "remediation": "<key name=\"employment_id\" script=\"this.employment_id\"/></generate> and the product_roles {\"product\": \"employments\", \"field\": \"employment_id\", \"role\": {\"kind\": \"identifier\"}} and {\"product\": \"employments_copy\", \"field\": \"employment_id\"",
-     "patch": {"file": "datamimic.xml",
-       "old": "    <generate name=\"employment_copy\" source=\"mem\" sourceEntity=\"employments\" distribution=\"ordered\">\n        <key name=\"employment_id\" script=\"this.employment_id\"/>\n        <key name=\"person_id\" script=\"this.person_id\"/>",
-       "new": "    <generate name=\"employment_copy\" count=\"4\">\n        <key name=\"employment_id\" generator=\"IncrementGenerator\"/>\n        <key name=\"person_id\" script=\"employment_id\"/>"}},
-    {"name": "parent_field_in_a_nested_braces_count", "diagnostic": "child_execution", "issue": "I832",
-     "patch": {"file": "datamimic.xml", "old": "count=\"{1 if id % 2 == 1 else 0}\"",
-       "new": "count=\"{1 if parent.id % 2 == 1 else 0}\""}}
+    {
+      "name": "readback_below_the_producer_count",
+      "diagnostic": "input",
+      "remediation": "\"audits\" sets a count below the rows of \"employments\", so this readback cannot pass. Move <generate name=\"audits\"> inside <generate name=\"employments\">",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "<generate name=\"audits\" count=\"2\">",
+        "new": "<generate name=\"audits\" source=\"mem\" sourceEntity=\"employments\" distribution=\"ordered\" count=\"3\">"
+      }
+    },
+    {
+      "name": "subset_route_names_a_producer_field_and_max_count",
+      "diagnostic": "input",
+      "remediation": "A nested braces count runs in the parent row: it counts the child rows for each parent row and names the parent's fields bare, count=\"{1 if employment_id % 2 == 1 else 0}\"; only the child's keys write parent.<field>. A braces count stops Build from deriving max_count, and without max_count Build stops at 10 rows: set \"max_count\" at the top level of acceptance/build.json to the rows of all products together; 2000 is safe.",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "<generate name=\"audits\" count=\"2\">",
+        "new": "<generate name=\"audits\" source=\"mem\" sourceEntity=\"employments\" distribution=\"ordered\" count=\"3\">"
+      }
+    },
+    {
+      "name": "readback_of_zero_rows",
+      "diagnostic": "input",
+      "remediation": "Move <generate name=\"audits\"> inside <generate name=\"employments\">",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "<generate name=\"audits\" count=\"2\">",
+        "new": "<generate name=\"audits\" source=\"mem\" sourceEntity=\"employments\" distribution=\"ordered\" count=\"0\">"
+      }
+    },
+    {
+      "name": "readback_with_the_producer_count",
+      "diagnostic": "input",
+      "remediation": "Add the consumer foreign-key role, or point an existing one at the producer's identifier field: {\"product\": \"audits\", \"field\": \"employment_id\", \"role\": {\"kind\": \"foreign_key\", \"parent_product\": \"employments\", \"parent_field\": \"employment_id\"}}. First add <key name=\"employment_id\" script=\"this.employment_id\"/> to audits.",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "<generate name=\"audits\" count=\"2\">",
+        "new": "<generate name=\"audits\" source=\"mem\" sourceEntity=\"employments\" distribution=\"ordered\" count=\"4\">"
+      }
+    },
+    {
+      "name": "readback_above_the_producer_count",
+      "diagnostic": "input",
+      "remediation": "Add the consumer foreign-key role, or point an existing one",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "<generate name=\"audits\" count=\"2\">",
+        "new": "<generate name=\"audits\" source=\"mem\" sourceEntity=\"employments\" distribution=\"ordered\" count=\"5\">"
+      }
+    },
+    {
+      "name": "readback_without_count",
+      "diagnostic": "input",
+      "remediation": "Add the consumer foreign-key role, or point an existing one",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "<generate name=\"audits\" count=\"2\">",
+        "new": "<generate name=\"audits\" source=\"mem\" sourceEntity=\"employments\" distribution=\"ordered\">"
+      }
+    },
+    {
+      "name": "readback_with_a_braces_count",
+      "diagnostic": "input",
+      "remediation": "Add the consumer foreign-key role, or point an existing one",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "<generate name=\"audits\" count=\"2\">",
+        "new": "<generate name=\"audits\" source=\"mem\" sourceEntity=\"employments\" distribution=\"ordered\" count=\"{1 + 2}\">"
+      }
+    },
+    {
+      "name": "braces_producer_count_gives_no_nest_route",
+      "diagnostic": "input",
+      "remediation": "Add the consumer foreign-key role, or point an existing one",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "<generate name=\"employments\" count=\"4\" target=\"mem\">\n        <key name=\"employment_id\" generator=\"IncrementGenerator\"/>\n        <key name=\"person_id\" script=\"(employment_id + 1) // 2\"/>\n    </generate>\n    <generate name=\"audits\" count=\"2\">",
+        "new": "<generate name=\"employments\" count=\"{2 * 2}\" target=\"mem\">\n        <key name=\"employment_id\" generator=\"IncrementGenerator\"/>\n        <key name=\"person_id\" script=\"(employment_id + 1) // 2\"/>\n    </generate>\n    <generate name=\"audits\" source=\"mem\" sourceEntity=\"employments\" distribution=\"ordered\" count=\"3\">"
+      }
+    },
+    {
+      "name": "readback_that_copies_the_identifier",
+      "diagnostic": "input",
+      "remediation": "{\"product\": \"audits\", \"field\": \"employment_id\", \"role\": {\"kind\": \"foreign_key\", \"parent_product\": \"employments\", \"parent_field\": \"employment_id\"}}. A memstore readback",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "<generate name=\"audits\" count=\"2\">\n        <key name=\"audit_id\" generator=\"IncrementGenerator\"/>",
+        "new": "<generate name=\"audits\" source=\"mem\" sourceEntity=\"employments\" distribution=\"ordered\">\n        <key name=\"employment_id\" script=\"this.employment_id\"/>"
+      }
+    },
+    {
+      "name": "readback_copies_the_identifier_under_another_name",
+      "diagnostic": "input",
+      "remediation": "{\"product\": \"audits\", \"field\": \"emp_ref\", \"role\": {\"kind\": \"foreign_key\", \"parent_product\": \"employments\", \"parent_field\": \"employment_id\"}}. A memstore readback",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "<generate name=\"audits\" count=\"2\">\n        <key name=\"audit_id\" generator=\"IncrementGenerator\"/>",
+        "new": "<generate name=\"audits\" source=\"mem\" sourceEntity=\"employments\" distribution=\"ordered\">\n        <key name=\"emp_ref\" script=\"this.employment_id\"/>"
+      }
+    },
+    {
+      "name": "foreign_key_without_producer_identifier",
+      "diagnostic": "input",
+      "remediation": "Add the producer identifier role: {\"product\": \"employments\", \"field\": \"employment_id\", \"role\": {\"kind\": \"identifier\"}}",
+      "patch": {
+        "file": "acceptance/build.json",
+        "old": "    {\"product\": \"employments\", \"field\": \"employment_id\", \"role\": {\"kind\": \"identifier\"}},\n",
+        "new": ""
+      }
+    },
+    {
+      "name": "no_roles_one_copied_field_keeps_the_condition",
+      "diagnostic": "input",
+      "remediation": "Add two product_roles entries: {\"product\": \"employments\", \"field\": \"<employment_id: the field that differs in every row>\"",
+      "patch": {
+        "file": "acceptance/build.json",
+        "old": "    {\"product\": \"employments\", \"field\": \"employment_id\", \"role\": {\"kind\": \"identifier\"}},\n    {\"product\": \"employments_copy\", \"field\": \"employment_id\", \"role\": {\"kind\": \"foreign_key\", \"parent_product\": \"employments\", \"parent_field\": \"employment_id\"}},\n",
+        "new": ""
+      }
+    },
+    {
+      "name": "no_roles_list_the_copied_fields",
+      "diagnostic": "input",
+      "remediation": "Add two product_roles entries: {\"product\": \"audits\", \"field\": \"<audit_id or team: the field that differs in every row>\"",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "<generate name=\"audits\" count=\"2\">\n        <key name=\"audit_id\" generator=\"IncrementGenerator\"/>\n    </generate>",
+        "new": "<generate name=\"audits\" count=\"2\" target=\"mem\">\n        <key name=\"audit_id\" generator=\"IncrementGenerator\"/>\n        <key name=\"team\" script=\"audit_id % 2\"/>\n    </generate>\n    <generate name=\"audit_copy\" source=\"mem\" sourceEntity=\"audits\" distribution=\"ordered\">\n        <key name=\"audit_id\" script=\"this.audit_id\"/>\n        <key name=\"team\" script=\"this.team\"/>\n    </generate>"
+      }
+    },
+    {
+      "name": "unread_memstore_names_the_identifier",
+      "diagnostic": "input",
+      "remediation": "<key name=\"employment_id\" script=\"this.employment_id\"/></generate> and the product_roles {\"product\": \"employments\", \"field\": \"employment_id\", \"role\": {\"kind\": \"identifier\"}} and {\"product\": \"employments_copy\", \"field\": \"employment_id\"",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "    <generate name=\"employments_copy\" source=\"mem\" sourceEntity=\"employments\" distribution=\"ordered\" target=\"ConsoleExporter\"><key name=\"employment_id\" script=\"this.employment_id\"/></generate>\n    <!-- The role-pair route, followed: a readback with the producer count gets the key that copies the identifier. -->\n    <generate name=\"audit_refs\" source=\"mem\" sourceEntity=\"employments\" distribution=\"ordered\" count=\"4\">\n        <key name=\"audit_id\" generator=\"IncrementGenerator\"/>\n        <key name=\"employment_id\" script=\"this.employment_id\"/>",
+        "new": "    <generate name=\"employments_copy\" count=\"4\"><key name=\"employment_id\" generator=\"IncrementGenerator\"/></generate>\n    <generate name=\"audit_refs\" count=\"4\">\n        <key name=\"audit_id\" generator=\"IncrementGenerator\"/>\n        <key name=\"employment_id\" script=\"audit_id\"/>"
+      }
+    },
+    {
+      "name": "unread_memstore_without_identifier_keeps_placeholders",
+      "diagnostic": "input",
+      "remediation": "<key name=\"<key>\" script=\"this.<key>\"/></generate> and the product_roles {\"product\": \"audits\", \"field\": \"<key>\"",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "<generate name=\"audits\" count=\"2\">",
+        "new": "<generate name=\"audits\" count=\"2\" target=\"mem\">"
+      }
+    },
+    {
+      "name": "parent_field_in_a_nested_braces_count",
+      "diagnostic": "child_execution",
+      "issue": "I832",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "count=\"{1 if id % 2 == 1 else 0}\"",
+        "new": "count=\"{1 if parent.id % 2 == 1 else 0}\""
+      }
+    }
   ],
   "equivalents": [
-    {"name": "readback_with_the_producer_count", "patch": {"file": "datamimic.xml",
-      "old": "sourceEntity=\"employments\" distribution=\"ordered\">", "new": "sourceEntity=\"employments\" distribution=\"ordered\" count=\"4\">"}},
-    {"name": "readback_above_the_producer_count", "patch": {"file": "datamimic.xml",
-      "old": "sourceEntity=\"employments\" distribution=\"ordered\">", "new": "sourceEntity=\"employments\" distribution=\"ordered\" count=\"5\">"}}
+    {
+      "name": "readback_with_the_producer_count",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "distribution=\"ordered\" target=\"ConsoleExporter\">",
+        "new": "distribution=\"ordered\" target=\"ConsoleExporter\" count=\"4\">"
+      }
+    },
+    {
+      "name": "readback_above_the_producer_count",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "distribution=\"ordered\" target=\"ConsoleExporter\">",
+        "new": "distribution=\"ordered\" target=\"ConsoleExporter\" count=\"5\">"
+      }
+    }
   ]
 }

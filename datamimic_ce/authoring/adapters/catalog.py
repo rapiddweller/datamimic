@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import JsonValue, TypeAdapter
 
+from datamimic_ce.authoring.domain.acceptance_contract import BRACES_COUNT_MAX_COUNT, nested_count_scope
 from datamimic_ce.authoring.domain.build_rules import authoring_rule_catalog
 from datamimic_ce.authoring.domain.capabilities import (
     AttributeCapability,
@@ -58,8 +59,7 @@ _JSON_OBJECT = TypeAdapter(dict[str, JsonValue])
 _EXAMPLE_ROUTES = (
     "nested: rows made from the rows of another product (rows for each parent row, some of the rows, or a "
     "match on its values) are a <generate> inside that product's <generate>; the keys copy parent.<field> "
-    "and no memstore is needed. A braces count runs in the parent row and names its fields bare; Build then "
-    'cannot derive max_count, so above 10 rows set "max_count" to the rows of all products together. '
+    f"and no memstore is needed. {nested_count_scope('id')} {BRACES_COUNT_MAX_COUNT} "
     "memstore: a later product that copies every row of a product exactly once."
 )
 

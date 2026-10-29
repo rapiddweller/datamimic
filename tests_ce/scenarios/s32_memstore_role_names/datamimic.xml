@@ -7,10 +7,12 @@
     <generate name="audits" count="2">
         <key name="audit_id" generator="IncrementGenerator"/>
     </generate>
-    <!-- A copy of every row: a readback without count reads each producer row exactly once. -->
-    <generate name="employment_copy" source="mem" sourceEntity="employments" distribution="ordered">
+    <!-- The copy route of the unread-memstore rejection, pasted as written: it reads each producer row exactly once. -->
+    <generate name="employments_copy" source="mem" sourceEntity="employments" distribution="ordered" target="ConsoleExporter"><key name="employment_id" script="this.employment_id"/></generate>
+    <!-- The role-pair route, followed: a readback with the producer count gets the key that copies the identifier. -->
+    <generate name="audit_refs" source="mem" sourceEntity="employments" distribution="ordered" count="4">
+        <key name="audit_id" generator="IncrementGenerator"/>
         <key name="employment_id" script="this.employment_id"/>
-        <key name="person_id" script="this.person_id"/>
     </generate>
     <!-- Rows made from some rows of another product: nest the child, and its keys copy parent.<field>. -->
     <generate name="contracts" count="4">
