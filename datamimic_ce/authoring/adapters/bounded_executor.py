@@ -203,9 +203,6 @@ def _read_file_digests(
     return tuple(digests)
 
 
-# Whole-value ``{name}`` is replaced by a property, possibly a secret, when the runtime parses the descriptor; ``__``
-# is the interpolation mark of string and pattern. A message with neither mark is the literal text of the file.
-_INTERPOLATION_MARKS = ("{", "}", "__")
 _SHOWN_MESSAGE_LENGTH = 200
 
 
@@ -214,7 +211,7 @@ def _failed_assert(
 ) -> tuple[tuple[str | int, ...], str, str | None]:
     """Path, message and literal rule text of the failed <assert>, read from the raw file that ran. Only the
     attribute text of that file can prove a message literal: the runtime value of ``{name}`` has no braces."""
-    from datamimic_ce.engine.dsl.api import parse_xml_source
+    from datamimic_ce.engine.dsl.api import AssertStatement, parse_xml_source
 
     file = location.descriptor_path or entry
     path: tuple[str | int, ...] = ("descriptor", entry) if file == entry else ("include", file)
@@ -237,7 +234,7 @@ def _failed_assert(
         return (*path, "assert", *line), shared if len(found) > 1 else "An <assert> failed.", None
     raw, owner = found[0]
     where = "under <setup>" if owner is None else f"in '{owner}'"
-    rule = raw if raw and not any(mark in raw for mark in _INTERPOLATION_MARKS) else None
+    rule = AssertStatement.literal_message(raw)
     # Build shows the rule twice (message and expected); a cap keeps a long message from doubling the result size.
     if rule is not None and len(rule) > _SHOWN_MESSAGE_LENGTH:
         rule = rule[: _SHOWN_MESSAGE_LENGTH - 3] + "..."
