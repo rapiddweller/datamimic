@@ -178,7 +178,8 @@ def _terminate_process_tree(process: subprocess.Popen[bytes]) -> None:
             os.killpg(process.pid, signal.SIGTERM)
         with suppress(subprocess.TimeoutExpired):
             process.wait(timeout=0.2)
-        with suppress(ProcessLookupError):
+        # macOS gives EPERM when every member of the group is still exiting; a live member makes it succeed.
+        with suppress(ProcessLookupError, PermissionError):
             os.killpg(process.pid, signal.SIGKILL)
     try:
         process.wait(timeout=1)
