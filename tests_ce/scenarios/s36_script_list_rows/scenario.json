@@ -1,0 +1,26 @@
+{
+  "title": "An item of a list in a script reads by dot and by key, as a source row does",
+  "proves": [
+    "an item of a list of dicts that a <variable> script builds reads as item.field and as item['field'] (#441)",
+    "dict(item), str(item) and a membership test give the same result as for a plain dict",
+    "a list that a script builds from source rows, and an item of a nested list, read by dot as well",
+    "a list that a script module binds stays the script's list of plain dicts, so script code that gets it sees dicts",
+    "where= reads an item of a list field of a source row by dot",
+    "a field that the item does not have is named in the run error"
+  ],
+  "products": {"orders": 2, "large_baskets": 1},
+  "negatives": [
+    {"name": "missing_field", "diagnostic": "child_execution", "run_error": "AttributeError: no attribute 'qtx'",
+     "patch": {"file": "datamimic.xml", "old": "script=\"lines[0].qty\"", "new": "script=\"lines[0].qtx\""}},
+    {"name": "source_row_item", "diagnostic": "row_condition", "expected": "first_sku == 'A1' and source_sku == 'B2'",
+     "patch": {"file": "datamimic.xml", "old": "items[1].sku", "new": "items[0].sku"}},
+    {"name": "nested_list_item", "diagnostic": "row_condition", "expected": "cell == order_id",
+     "patch": {"file": "datamimic.xml", "old": "grid[1][0].cell", "new": "grid[0][0].cell"}},
+    {"name": "membership", "diagnostic": "row_condition", "expected": "copied == True and text == True and found == True",
+     "patch": {"file": "datamimic.xml", "old": "{'order': order_id, 'qty': 5} in lines", "new": "{'order': order_id, 'qty': 6} in lines"}},
+    {"name": "script_list_stays_plain", "diagnostic": "row_condition", "expected": "script_list_plain == True",
+     "patch": {"file": "datamimic.xml", "old": "all_plain(LIMITS)", "new": "all_plain(lines)"}},
+    {"name": "where_list_item", "diagnostic": "exact_count",
+     "patch": {"file": "datamimic.xml", "old": "lines[0].qty &gt; 2", "new": "lines[0].qty &gt; 0"}}
+  ]
+}

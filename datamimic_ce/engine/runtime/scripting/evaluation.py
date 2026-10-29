@@ -7,7 +7,7 @@ import re
 import types
 from collections.abc import Iterable, Iterator, KeysView, Mapping
 from functools import lru_cache
-from typing import Protocol, TypeGuard
+from typing import Protocol, SupportsIndex, TypeGuard, overload
 
 from datamimic_ce.engine.dsl.api import ATTR_WHERE, EL_GENERATE
 from datamimic_ce.engine.runtime.scripting.expression_globals import (
@@ -48,12 +48,11 @@ class DotableDict:
     # WHY: not a Mapping subclass; inheriting would add items()/values() methods that shadow
     # rows with fields of those names. Registered as a virtual Mapping below instead.
     def __getitem__(self, key: str) -> object:
-        item = self._dictionary[key]
-        if isinstance(item, dict):
-            return DotableDict(item)
-        if isinstance(item, list):
-            return [DotableDict(value) if isinstance(value, dict) else value for value in item]
-        return item
+        return _dotable(self._dictionary[key])
+
+    # copy and pickle build a new row through __init__: __getattr__ cannot read _dictionary before it is set.
+    def __reduce__(self) -> tuple[type[DotableDict], tuple[dict[str, object]]]:
+        return DotableDict, (self._dictionary,)
 
     def __getattr__(self, name: str) -> object:
         try:
@@ -85,8 +84,87 @@ class DotableDict:
     def keys(self) -> KeysView[str]:
         return self._dictionary.keys()
 
+    # As a plain dict: str(row) and row == {...} must not change when a list item becomes a row (#441). With __eq__
+    # and no __hash__, a row is unhashable, as a dict is.
+    def __repr__(self) -> str:
+        return repr(self._dictionary)
+
+    def __eq__(self, other: object) -> bool:
+        return self._dictionary == (other._dictionary if isinstance(other, DotableDict) else other)
+
 
 Mapping.register(DotableDict)
+
+
+def _dotable(value: object) -> object:
+    """A dict reads by dot and by key in an expression, and so does each item of a list: the item of a list that a
+    script builds reads as a source row does (#441)."""
+    if isinstance(value, dict):
+        return DotableDict(value)
+    if isinstance(value, list):
+        return _RowList(value)
+    return value
+
+
+class _RowList(list[object]):
+    """A copy of a list that wraps an item only when the expression reads it. The copy runs in C: wrapping each item
+    of a 20,000-item list made every expression that read it 25 times slower."""
+
+    @overload
+    def __getitem__(self, index: SupportsIndex) -> object: ...
+
+    @overload
+    def __getitem__(self, index: slice) -> list[object]: ...
+
+    def __getitem__(self, index: SupportsIndex | slice) -> object:
+        if isinstance(index, slice):
+            return _RowList(list.__getitem__(self, index))
+        return _dotable(list.__getitem__(self, index))
+
+    def __iter__(self) -> Iterator[object]:
+        return map(_dotable, list.__iter__(self))
+
+    def __reversed__(self) -> Iterator[object]:
+        return map(_dotable, list.__reversed__(self))
+
+    # A script object can keep a list that an expression passed to it: a copy of it holds the plain items.
+    def __reduce__(self) -> tuple[type[_RowList], tuple[list[object]]]:
+        return _RowList, (list(list.__iter__(self)),)
+
+
+def _code_names(code: types.CodeType) -> set[str]:
+    names = set(code.co_names)
+    for constant in code.co_consts:
+        if isinstance(constant, types.CodeType):  # a comprehension, generator expression or lambda
+            names |= _code_names(constant)
+    return names
+
+
+@lru_cache(maxsize=8192)
+def _read_names(expression: str) -> frozenset[str]:
+    return frozenset(_code_names(_compiled(expression)))
+
+
+def dotable_namespace(
+    names: dict[str, object],
+    expression: str,
+    *,
+    text_from_data: bool = False,
+    script_names: Mapping[str, object] | None = None,
+) -> None:
+    """Make each dict, and each list that the expression reads, read by dot and by key. Only a read list is copied:
+    a copy of every list for every expression made a run with a 20,000-item setup list nine times slower. A list that
+    a script module binds stays the script's own list: script code that receives it expects plain dicts."""
+    own = {} if script_names is None else script_names
+    try:
+        read = frozenset(_code_names(_compile(expression))) if text_from_data else _read_names(expression)
+    except SyntaxError:  # the colon retry of evaluate_python rewrites the text, so every list counts
+        read = None
+    for key, value in names.items():
+        if isinstance(value, dict) or (
+            isinstance(value, list) and (read is None or key in read) and not (key in own and own[key] is value)
+        ):
+            names[key] = _dotable(value)
 
 
 def _plain(value: object) -> object:
@@ -103,7 +181,7 @@ def _plain(value: object) -> object:
             if plain[key] is not value[key]:
                 return plain
         return value
-    if type(value) is list:
+    if type(value) is list or isinstance(value, _RowList):
         return [_plain(item) for item in value]
     return value
 
@@ -344,9 +422,7 @@ class WhereCondition:
 
     def __call__(self, row: Mapping[str, object]) -> bool:
         names = dict(row)
-        for key, value in names.items():
-            if isinstance(value, dict):
-                names[key] = DotableDict(value)
+        dotable_namespace(names, self._where)
         names.setdefault("this", DotableDict(dict(row)))
         try:
             result = evaluate_python(self._where, self._globals, names, diagnostic_expression=ATTR_WHERE)
@@ -406,6 +482,7 @@ def evaluate_source_template(context: ExpressionContext, data: object, prefix: s
 __all__ = [
     "DotableDict",
     "WhereCondition",
+    "dotable_namespace",
     "evaluate_condition_value",
     "evaluate_python",
     "evaluate_source_template",

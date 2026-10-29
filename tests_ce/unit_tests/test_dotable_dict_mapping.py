@@ -2,6 +2,8 @@
 # Copyright (c) 2023-2026 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License. See LICENSE.
 
+import copy
+import pickle
 from collections.abc import Mapping
 
 import pytest
@@ -90,3 +92,15 @@ def test_script_result_keeps_identity_and_dict_subclasses() -> None:
     # A row inside still exports as a plain dict, wherever it sits.
     row_result = evaluate_python("{'r': row, 'l': [row]}", {}, {"row": DotableDict({"id": 1})})
     assert type(row_result["r"]) is dict and type(row_result["l"][0]) is dict
+
+
+@pytest.mark.parametrize("copier", [copy.copy, copy.deepcopy, lambda value: pickle.loads(pickle.dumps(value))])
+def test_a_row_and_a_row_list_survive_copy_and_pickle(copier) -> None:
+    """A script object can keep a row list that an expression passed to it, and the run deep-copies the context."""
+    row_list = _row()["items"]
+
+    copied = copier(row_list)
+
+    assert copied[0].sku == "a"
+    assert copier(_row()) == _row()
+    assert type(list.__getitem__(copied, 0)) is dict  # the copy holds the plain item, as the original does

@@ -1,0 +1,23 @@
+<setup rngSeed="36">
+    <execute uri="lib/rules.scr.py"/>
+    <generate name="orders" count="2">
+        <key name="order_id" generator="IncrementGenerator"/>
+        <variable name="lines" script="[{'order': order_id, 'qty': 2}, {'order': order_id, 'qty': 5}]"/>
+        <nestedKey name="items" type="list" source="data/entity/items.ent.csv" distribution="ordered"/>
+        <variable name="picked" script="[item for item in items]"/>
+        <variable name="grid" script="[[{'cell': 1}], [{'cell': order_id}]]"/>
+        <key name="first_qty" script="lines[0].qty"/>
+        <key name="first_qty_item" script="lines[0]['qty']"/>
+        <key name="qty_total" script="sum(line.qty for line in lines)"/>
+        <key name="copied" script="dict(lines[1]) == {'order': order_id, 'qty': 5}"/>
+        <key name="text" script="str(lines[0]) == str({'order': order_id, 'qty': 2})"/>
+        <key name="found" script="{'order': order_id, 'qty': 5} in lines"/>
+        <key name="first_sku" script="picked[0].sku"/>
+        <key name="source_sku" script="items[1].sku"/>
+        <key name="cell" script="grid[1][0].cell"/>
+        <key name="script_list_plain" script="all_plain(LIMITS) and LIMITS[1]['qty'] == 5"/>
+    </generate>
+    <generate name="large_baskets" source="data/entity/baskets.json" distribution="ordered" where="lines[0].qty &gt; 2">
+        <key name="basket" script="this.basket"/>
+    </generate>
+</setup>

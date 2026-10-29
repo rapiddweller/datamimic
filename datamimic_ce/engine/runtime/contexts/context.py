@@ -105,11 +105,9 @@ class Context(ABC):
         content_tree = self.get_content_variables_products(current_context)
         data_dict.update(content_tree)
 
-        # Evaluate python expression, use dict of products and variables as local namespace
-        # Convert namespace dict to dotable dict
-        for key, value in data_dict.items():
-            if isinstance(value, dict):
-                data_dict[key] = evaluation.DotableDict(value)
+        evaluation.dotable_namespace(
+            data_dict, expr, text_from_data=text_from_data, script_names=current_context.root.namespace
+        )
 
         # Canonical scope aliases, mirroring DATAMIMIC EE (bound only when not already a user name):
         #  - `this`: the current content scope, so `this.field` == bare `field` (essential in nested

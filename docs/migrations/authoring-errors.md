@@ -197,6 +197,21 @@ A non-cyclic `<variable source>` or a generator that ends stops the rows without
 Cases: `tests_ce/scenarios/s34_source_end_drops_children`, `tests_ce/scenarios/s35_nested_key_source_ends` and
 `tests_ce/integration_tests/test_source_end`.
 
+### An item of a list reads as a row (#441)
+
+An expression reads a dict item of a list by dot and by key, as it reads a source row. This applies to a list that a
+script builds, a list of source rows and a list in a list, and also in `where=`. Before, only a list that the
+expression reached through `this.`, `parent.`, `root.` or a row field held rows; a bare list held plain dicts, so
+`lines[0].qty` failed. `lines[0]['qty']`, `dict(item)`, `str(item)`, `item == {...}` and `{...} in lines` give the
+same results as before. Three differences remain:
+
+- An expression reads a copy of the list. `lines.append(x)` in an expression does not change the variable.
+- A row has no `items()` or `values()` method, because a field of that name wins. Use `dict(item).items()`.
+- A list that an `<execute>` script binds at module level stays the script's own list of plain dicts, because
+  script code that gets it as an argument expects dicts.
+
+Case: `tests_ce/scenarios/s36_script_list_rows`.
+
 ## Public contract
 
 Persist XML as the executable project. `DmJsonDocumentV1` is an in-memory agent
