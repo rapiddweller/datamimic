@@ -19,8 +19,10 @@ review the files; Build proves them.
 └── README.md                    purpose, process, rule → file table, evidence
 ```
 
-Data files are UTF-8 and use the default pipe `|` separator. Never set
-`separator=","` or `defaultSeparator=","`. An `.ent.csv` file has one header row.
+Every data file inside the project is UTF-8 and uses the default pipe `|` separator.
+Convert a comma file before you add it to the project, and set no `separator=` or
+`defaultSeparator=` for it. Only a source that reads an external comma file, outside
+the project, sets `separator=","`. An `.ent.csv` file has one header row.
 A `.wgt.csv` file has no header; each line is `value|weight`.
 
 Leave out folders the task does not need. Keep the entry at `datamimic.xml`.
