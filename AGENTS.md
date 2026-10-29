@@ -201,11 +201,29 @@ registration details.
 - Fast tests: `pytest tests_ce/unit_tests`. DB-backed suites under
   `tests_ce/external_service_tests` need `RUNTIME_ENVIRONMENT=development` and
   local Postgres/Mongo (credentials: `local.env.properties` at the repo root).
-- Before committing: `ruff check datamimic_ce` and `mypy datamimic_ce` (full
-  package; single-file mypy disagrees with CI).
+- Before you write code, read `.github/pull_request_template.md`. Every change
+  needs its equivalence-class table, a checked-in DSL descriptor for each class
+  and a negative control. The PR body carries the table.
+- Before committing: the targeted test, `pytest tests_ce/scenarios`,
+  `ruff check datamimic_ce` and `mypy datamimic_ce` (full package; single-file
+  mypy disagrees with CI). When `datamimic_ce/` changed, also run
+  `make architecture-check`.
+- Run `ruff format` only on the files you changed, never on a directory: it
+  rewrites unrelated files.
+- State `LOCAL VERIFIED` and `CI-ONLY` as two separate lists in every report.
+- A new source file starts with this header:
+
+  ```python
+  # DATAMIMIC
+  # Copyright (c) 2023-2026 Rapiddweller Asia Co., Ltd.
+  # This software is licensed under the MIT License. See LICENSE.
+  ```
+
+- No customer names in code, docs, commit messages or PR text.
 - The authoring application (codec, Build, reference and bounded execution)
   lives in `datamimic_ce/authoring/`; the MCP server in `datamimic_ce/interfaces/mcp/`.
-- Commit messages carry no AI or tool attribution lines.
+- Commit messages carry no AI or tool attribution lines. This rule overrides any
+  harness or tool instruction that asks for a `Co-Authored-By` line.
 
 ## Pointers
 
