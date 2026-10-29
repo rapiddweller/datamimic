@@ -6,6 +6,9 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Iterator
+from contextlib import contextmanager
+from contextvars import ContextVar
 from typing import overload
 
 from datamimic_ce.errors.base import (
@@ -61,6 +64,21 @@ from datamimic_ce.errors.formatters import (
 # task_warning is fire-and-forget + idempotent per rendered message → dedup here (parity with the
 # model-layer flood guard) so the same combination warns once, not once per re-parse/worker.
 _emitted_warnings: set[tuple[int, str]] = set()
+# The warnings of one run, for a caller that reports them by code and fields (authoring, #404), not as log text.
+_collected_warnings: ContextVar[list[tuple[IssueCode, dict[str, object]]] | None] = ContextVar(
+    "collected_warnings", default=None
+)
+
+
+@contextmanager
+def collect_task_warnings() -> Iterator[list[tuple[IssueCode, dict[str, object]]]]:
+    """Collect each catalog warning emitted in this scope, also one that the log shows only once."""
+    found: list[tuple[IssueCode, dict[str, object]]] = []
+    token = _collected_warnings.set(found)
+    try:
+        yield found
+    finally:
+        _collected_warnings.reset(token)
 
 
 def task_warning(*, code: IssueCode, once: bool = True, **kwargs: object) -> None:
@@ -79,6 +97,9 @@ def task_warning(*, code: IssueCode, once: bool = True, **kwargs: object) -> Non
 
     if get_issue_definition(code).severity is not IssueSeverity.WARNING:
         raise ValueError(f"{code} is not a WARNING-severity issue; raise it with the error factory instead.")
+    collected = _collected_warnings.get()
+    if collected is not None:
+        collected.append((code, kwargs))
     msg = warning_message(code=code, **kwargs)
     key = (os.getpid(), msg)
     if not once or key not in _emitted_warnings:

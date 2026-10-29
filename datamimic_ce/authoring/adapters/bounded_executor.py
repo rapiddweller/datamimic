@@ -205,6 +205,23 @@ def _read_file_digests(
     return tuple(digests)
 
 
+def _warning_diagnostics(warnings: tuple[dryrun._EngineWarning, ...]) -> tuple[Diagnostic, ...]:
+    """Catalog warnings of the run (#404): the title and the static resolution, never the log text."""
+    return tuple(
+        Diagnostic(
+            code=AuthoringSystemDiagnosticCode.ENGINE_WARNING,
+            phase=DiagnosticPhase.EVIDENCE,
+            severity="warning",
+            message=get_issue_definition(warning.code).title
+            + ("." if warning.location is None else f": script '{warning.location[0]}', line {warning.location[1]}."),
+            remediation=get_issue_definition(warning.code).resolution,
+            ce_error=CeErrorIdentity(error_code=None, issue_code=warning.code),
+            path=() if warning.location is None else ("script", warning.location[0], "line", warning.location[1]),
+        )
+        for warning in warnings
+    )
+
+
 _SHOWN_MESSAGE_LENGTH = 200
 
 
@@ -302,6 +319,7 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
                                 ),
                             )
                         ),
+                        *_warning_diagnostics(message.warnings),
                     ),
                     base_run_ok=False,
                     source_accesses=tuple(
@@ -372,7 +390,7 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
             return BoundedExecutionEvidence(
                 ok=False,
                 captured=CapturedProducts((), request.max_count),
-                diagnostics=(diagnostic,),
+                diagnostics=(diagnostic, *_warning_diagnostics(message.warnings)),
                 base_run_ok=False,
                 files=_read_file_digests(message.read_files, request, workspace),
             )
@@ -422,7 +440,8 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
         return BoundedExecutionEvidence(
             ok=(base_run_ok or bool(skipped) or ran_operation) and not diagnostics,
             captured=captured,
-            diagnostics=diagnostics + skipped,
+            # Warnings follow ok: they inform and never reject.
+            diagnostics=diagnostics + skipped + _warning_diagnostics(message.warnings),
             smoke_export=message.smoke_export,
             source_accesses=tuple(
                 SourceAccessEvidence(source_type=source_type, requests=count)

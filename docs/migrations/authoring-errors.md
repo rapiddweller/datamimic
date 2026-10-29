@@ -264,6 +264,19 @@ failed, with `child_execution` (`I830`) and the generic text "Use a supported so
 `datamimic run` still fails with `I830`. Case: the negative `the_lookup_variable_goes_inside_the_generate` of
 `tests_ce/scenarios/s31_file_lookup`.
 
+### Engine warnings as authoring diagnostics (#404)
+
+`dry-run`, `run` and Build now show the catalog warnings `W007` (Bash execution) and `W008` (a seeded script draws
+while it loads) as diagnostics with `code: "engine_warning"`, `severity: "warning"` and `phase: "evidence"`. The
+message is the catalog title; for `W008` it adds the script file name and the line, and `path` is
+`["script", "<file>", "line", <n>]`. The remediation is the catalog resolution. `ce_error.issue_code` holds the
+`W` code, and `ce_error.error_code` is `null`, because a warning has no `E` code: consumers that read
+`ce_error.error_code` must accept `null`. A warning never rejects. Build shows `W008` next to the failed replay gate.
+`W002` (`<echo>`) is not shown, because its text can hold a property value. The bounded child collects the
+warnings with `collect_task_warnings` (`datamimic_ce.errors`); the log keeps one line for each message, as before.
+Cases: the negative `draw_while_loading` of `tests_ce/scenarios/s14_seeded_library_random` and
+`tests_ce/unit_tests/test_authoring/test_load_time_entropy_build.py`.
+
 ## Public contract
 
 Persist XML as the executable project. `DmJsonDocumentV1` is an in-memory agent

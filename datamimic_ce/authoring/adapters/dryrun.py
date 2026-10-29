@@ -129,6 +129,23 @@ class _MemstoreSourceBinding:
     producers: tuple[_MemstoreProducer, ...]
 
 
+# Engine warnings that authoring shows (#404). W002 renders the <echo> text, which can hold a property value.
+SHOWN_WARNINGS = frozenset({IssueCode.EXECUTE_BASH_NONDETERMINISTIC, IssueCode.EXECUTE_SEEDED_LOAD_TIME_ENTROPY})
+
+
+@dataclass(frozen=True, config=ConfigDict(extra="forbid", strict=True, revalidate_instances="always"))
+class _EngineWarning:
+    """One catalog warning of the run, by code and the fields that name where it is, never by its log text."""
+
+    code: IssueCode
+    # (script file name, line) of a script warning such as W008
+    location: tuple[NonEmptyStrictStr, PositiveStrictInt] | None = None
+
+    def __post_init__(self) -> None:
+        if self.code not in SHOWN_WARNINGS:
+            raise ValueError("worker warning is not shown by authoring")
+
+
 @dataclass(frozen=True, config=ConfigDict(extra="forbid", strict=True, revalidate_instances="always"))
 class _WorkerSuccess:
     captured: dict[NonEmptyStrictStr, tuple[dict[StrictStr, CaptureValue], ...]]
@@ -142,6 +159,7 @@ class _WorkerSuccess:
     skipped_operations: tuple[NonEmptyStrictStr, ...] = ()
     # Names of the clear and drop statements a side-effect run executed: they establish success without a product.
     executed_operations: tuple[NonEmptyStrictStr, ...] = ()
+    warnings: tuple[_EngineWarning, ...] = ()
 
 
 @dataclass(frozen=True, config=ConfigDict(extra="forbid", strict=True, revalidate_instances="always"))
@@ -157,6 +175,7 @@ class _WorkerFailure:
     # What the run read before it failed, as in _WorkerSuccess: the stopped evidence binds those files.
     source_accesses: tuple[tuple[NonEmptyStrictStr, PositiveStrictInt], ...] = ()
     read_files: tuple[NonEmptyStrictStr, ...] = ()
+    warnings: tuple[_EngineWarning, ...] = ()
 
 
 class _BoundedPolicyRefusal(ValueError):
@@ -943,6 +962,7 @@ def _decode_worker_payload(payload: bytes) -> object:
     allowed = (
         _WorkerSuccess,
         _WorkerFailure,
+        _EngineWarning,
         _ProductBudget,
         _CountBoundaryKind,
         _MemstoreProducer,
@@ -1103,6 +1123,7 @@ def _validated_worker_success(message: _WorkerSuccess, max_count: int | None = N
         message.read_files,
         message.skipped_operations,
         message.executed_operations,
+        message.warnings,
     )
     names = [budget.name for budget in message.budgets]
     if len(names) != len(set(names)):
