@@ -183,6 +183,20 @@ second run in `tests_ce/scenarios` stay identical. Cases: `tests_ce/scenarios/s2
 `tests_ce/integration_tests/test_included_step_seed` (an include inside a `<generate>` and a step that runs twice,
 which Build refuses, and the library cases).
 
+### A source that ends inside a row (#450, #451)
+
+A non-cyclic `<variable source>` or a generator that ends stops the rows without an error. Two cases changed:
+
+- A `<nestedKey type="list">` ends with its last full element. Before, it added an empty or partial element:
+  `count="{3}"` over 2 rows gave `[{a}, {b}, {}]`. Now it gives `[{a}, {b}]`. Build reports the product as
+  `validation` ("a <nestedKey> list ended before its count"), also for a count expression and a source list.
+  A dict nestedKey keeps the keys made so far, as before.
+- When the source ends after a child `<generate>` ran in that row, the run drops the child rows with the parent row.
+  Before, the capture and a memstore kept them as orphans. File exports were already correct.
+
+Cases: `tests_ce/scenarios/s34_source_end_drops_children`, `tests_ce/scenarios/s35_nested_key_source_ends` and
+`tests_ce/integration_tests/test_source_end`.
+
 ## Public contract
 
 Persist XML as the executable project. `DmJsonDocumentV1` is an in-memory agent

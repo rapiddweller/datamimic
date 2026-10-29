@@ -45,7 +45,9 @@ from datamimic_ce.authoring.domain.xml_diagnostics import Diagnostic
 from datamimic_ce.engine.dsl.api import (
     ATTR_WHERE,
     NAME_SEPARATOR,
+    CompositeStatement,
     GenerateStatement,
+    NestedKeyStatement,
     capture_product_name,
     resource_reader_scope,
 )
@@ -191,6 +193,9 @@ _CONTAINMENT_HINT = (
 _UNDERRUN_REASON = (
     "the captured rows differ from the count that the run resolved from where=, a count expression or a count range;"
     " a non-cyclic variable source or a generator ended early"
+)
+_NESTED_LIST_UNDERRUN_REASON = (
+    "a <nestedKey> list ended before its count: a non-cyclic variable source or a generator ended early"
 )
 
 
@@ -1255,8 +1260,27 @@ def _check_runtime_counts(
     for name, stmt in statements.items():
         budget = budgets[name]
         observed = len(captured[name]) if name in captured else 0
-        if budget.bounded_without_cap and budget.requested_per_parent is None and observed != stmt.bounded_rows:
+        if _nested_list_ended_early(stmt):
+            # Every row is there, but a list in a row is short: neither a bound nor an exhausted source proves it.
+            budgets[name] = replace(
+                budget, bounded_without_cap=False, source_exhaustible=False, reason=_NESTED_LIST_UNDERRUN_REASON
+            )
+        elif budget.bounded_without_cap and budget.requested_per_parent is None and observed != stmt.bounded_rows:
             budgets[name] = replace(budget, bounded_without_cap=False, reason=_UNDERRUN_REASON)
+
+
+def _nested_list_ended_early(stmt: CompositeStatement) -> bool:
+    """Whether a <nestedKey> list of this product ended before its count (#450). A nested <generate> is a product of
+    its own and has its own budget."""
+    return any(
+        (isinstance(sub, NestedKeyStatement) and sub.ended_early)
+        or (
+            isinstance(sub, CompositeStatement)
+            and not isinstance(sub, GenerateStatement)
+            and _nested_list_ended_early(sub)
+        )
+        for sub in stmt.sub_statements
+    )
 
 
 def _stopped_capture(

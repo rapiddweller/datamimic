@@ -108,7 +108,11 @@ class NestedKeyTask(GenSubTask):
                 for _ in range(nestedkey_len):
                     # Create sub-context for each list element creation
                     ctx = GenIterContext(parent_context, str(self._statement.name), unique_cursors=self._unique_cursors)
-                    generated_value = self._try_execute_sub_tasks(ctx)
+                    try:
+                        generated_value = self._try_execute_sub_tasks(ctx, end_list=True)
+                    except StopIteration:
+                        self._statement.ended_early = True
+                        break
                     generated_rows.append(generated_value)
         elif nestedkey_type == DATA_TYPE_DICT:
             self._lazy_init_sub_tasks(parent_context=parent_context, nestedkey_length=1)
@@ -188,12 +192,9 @@ class NestedKeyTask(GenSubTask):
         # Add field "nestedKey" into current product
         parent_context.add_current_product_field(self._statement.name, result)
 
-    def _try_execute_sub_tasks(self, ctx: GenIterContext) -> dict:
-        """
-        Try to execute sub-tasks of nestedkey_task. Throw StopIteration error when any source reach the end
-        :param ctx:
-        :return:
-        """
+    def _try_execute_sub_tasks(self, ctx: GenIterContext, *, end_list: bool = False) -> dict:
+        """Execute the sub-tasks for one element. When a source ends, a list element re-raises StopIteration: the
+        list ends before it, as a <generate> drops its partial row. A dict element keeps the keys made so far."""
         attributes = {}
         # Try to execute sub_tasks
         if self._sub_tasks:
@@ -209,6 +210,8 @@ class NestedKeyTask(GenSubTask):
                         f"Data generator sub-task {sub_task.__class__.__name__} '{sub_task.statement.name}' "
                         f"has already reached the end"
                     )
+                    if end_list:
+                        raise
                     break
         converted_product = self._post_convert(ctx.current_product)
         if not isinstance(converted_product, dict):
@@ -303,7 +306,11 @@ class NestedKeyTask(GenSubTask):
                     f"but get invalid datatype: '{type(ctx.current_product)}'"
                 )
 
-            modified_value = self._try_execute_sub_tasks(ctx)
+            try:
+                modified_value = self._try_execute_sub_tasks(ctx, end_list=True)
+            except StopIteration:
+                self._statement.ended_early = True
+                break
             result.append(modified_value)
 
         return result

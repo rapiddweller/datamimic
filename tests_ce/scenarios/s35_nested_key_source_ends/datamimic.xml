@@ -1,0 +1,10 @@
+<setup rngSeed="35">
+    <generate name="baskets" count="2">
+        <key name="basket_id" generator="IncrementGenerator"/>
+        <!-- Each basket reads the fruit file again; the file has 2 rows and is not cyclic. -->
+        <nestedKey name="items" type="list" count="2">
+            <variable name="fruit" source="data/fixtures/fruits.ent.csv" distribution="ordered"/>
+            <key name="fruit" script="fruit.name"/>
+        </nestedKey>
+    </generate>
+</setup>
