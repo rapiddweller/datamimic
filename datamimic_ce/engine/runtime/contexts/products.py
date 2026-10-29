@@ -21,7 +21,7 @@ class TotalRowBudget:
             raise task_config_error(code=IssueCode.TASK_TOTAL_ROW_BUDGET_EXCEEDED, limit=self.limit)
         self.used += 1
 
-    def release(self, rows: int = 1) -> None:
+    def release(self, rows: int) -> None:
         self.used -= rows
 
 

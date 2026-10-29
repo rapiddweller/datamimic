@@ -59,7 +59,7 @@ products that completed before it and lists the other checks as `not_executed`.
 `datamimic run` uses the same rule (#438). For any other message it prints
 "The message of the <assert> at line N is not shown" and the name of the descriptor file.
 Before, the run printed the resolved property value. The rule now lives in the engine;
-Build calls it (`AssertStatement.literal_message`), so the run and Build cannot differ.
+Build calls it (`AssertStatement.literal_message`), so both use the same literal rule.
 The `review_artifact` of a stopped run lists each workspace file that the run read
 before the assert, with its digest, as a ready Build does. A changed source file
 changes the artifact. A `<variable source>` of a product after the assert is not read
