@@ -1,0 +1,54 @@
+{
+  "title": "The nest route that a memstore rejection names builds as written",
+  "proves": [
+    "a readback without count, with the producer count or above it reads every producer row once and is ready",
+    "the nest route names the max_count value and the count scope; a nested braces count names the parent's fields bare, and parent.<field> in the count fails"
+  ],
+  "products": {
+    "employments": 4,
+    "audits": 2,
+    "employment_copy": 4,
+    "contracts": 4,
+    "shifts": 2
+  },
+  "negatives": [
+    {
+      "name": "subset_readback_names_max_count_and_the_count_scope",
+      "diagnostic": "input",
+      "remediation": "Its value is the rows of all products together; 2000 is safe. The braces count runs in the parent row, so it names the parent's fields bare, count=\"{1 if id % 2 == 1 else 0}\"; only the child's keys write parent.<field>.",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "<generate name=\"audits\" count=\"2\">",
+        "new": "<generate name=\"audits\" source=\"mem\" sourceEntity=\"employments\" distribution=\"ordered\" count=\"3\">"
+      }
+    },
+    {
+      "name": "parent_field_in_a_nested_braces_count",
+      "diagnostic": "child_execution",
+      "issue": "I832",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "count=\"{1 if id % 2 == 1 else 0}\"",
+        "new": "count=\"{1 if parent.id % 2 == 1 else 0}\""
+      }
+    }
+  ],
+  "equivalents": [
+    {
+      "name": "readback_with_the_producer_count",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "sourceEntity=\"employments\" distribution=\"ordered\">",
+        "new": "sourceEntity=\"employments\" distribution=\"ordered\" count=\"4\">"
+      }
+    },
+    {
+      "name": "readback_above_the_producer_count",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "sourceEntity=\"employments\" distribution=\"ordered\">",
+        "new": "sourceEntity=\"employments\" distribution=\"ordered\" count=\"5\">"
+      }
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+<setup rngSeed="32">
+    <memstore id="mem"/>
+    <generate name="employments" count="4" target="mem">
+        <key name="employment_id" generator="IncrementGenerator"/>
+        <key name="person_id" script="(employment_id + 1) // 2"/>
+    </generate>
+    <generate name="audits" count="2">
+        <key name="audit_id" generator="IncrementGenerator"/>
+    </generate>
+    <!-- A copy of every row: a readback without count reads each producer row exactly once. -->
+    <generate name="employment_copy" source="mem" sourceEntity="employments" distribution="ordered">
+        <key name="employment_id" script="this.employment_id"/>
+        <key name="person_id" script="this.person_id"/>
+    </generate>
+    <!-- Rows made from some rows of another product: nest the child, and its keys copy parent.<field>. -->
+    <generate name="contracts" count="4">
+        <key name="id" generator="IncrementGenerator"/>
+        <!-- The braces count runs in the contracts row, so it names id bare. -->
+        <generate name="shifts" count="{1 if id % 2 == 1 else 0}">
+            <key name="contract_id" script="parent.id"/>
+        </generate>
+    </generate>
+</setup>

@@ -30,12 +30,14 @@ from .expectations import (
 from .proof import AcceptanceOrigin
 from .row_conditions import parse_row_condition
 
-# Agents read a memstore back to take a subset of the producer rows; a readback reads each row once.
+# Agents read a memstore back for a subset; on the nest route they wrote max_count 1 and parent. in the count.
 MEMSTORE_READBACK_ONCE = (
     "A memstore readback reads every producer row exactly once, so its count is the producer count. For a "
     "subset of the rows, or for rows that belong to one parent, nest the child <generate> under the parent "
     'and copy parent.<field> instead; a braces count there also needs "max_count" at the top level of '
-    "acceptance/build.json."
+    "acceptance/build.json. Its value is the rows of all products together; 2000 is safe. The braces count "
+    'runs in the parent row, so it names the parent\'s fields bare, count="{1 if id % 2 == 1 else 0}"; only '
+    "the child's keys write parent.<field>."
 )
 # Script scope names that a row condition does not have; an agent writes this.field from the scripts.
 _SCRIPT_SCOPES = frozenset(("this", "parent", "root"))
