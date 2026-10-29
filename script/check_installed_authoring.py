@@ -82,7 +82,7 @@ async def check_mcp(schemas):
     assert not protocol_errors, protocol_errors
 
 
-def check_installed(with_mcp):
+def check_installed(with_mcp, checkout):
     import datamimic_ce
     from datamimic_ce.authoring import create_authoring_application
 
@@ -94,6 +94,17 @@ def check_installed(with_mcp):
         assert importlib.util.find_spec("uvicorn") is None, "base wheel profile must exclude HTTP transport"
     origin = Path(datamimic_ce.__file__).resolve()
     assert origin.is_relative_to(Path(sysconfig.get_paths()["purelib"]).resolve()), origin
+    data = Path("domains/shared/domain_data")
+    tracked = subprocess.run(
+        ["git", "ls-files", "-z"], cwd=checkout / "datamimic_ce" / data, capture_output=True, check=True
+    )
+    source = {Path(name) for name in tracked.stdout.decode().split("\0") if name}
+    installed = {path.relative_to(origin.parent / data) for path in (origin.parent / data).rglob("*") if path.is_file()}
+    missing, extra = sorted(source - installed), sorted(installed - source)
+    assert source and not missing and not extra, (
+        f"domain_data differs from {len(source)} tracked files: {len(missing)} missing {missing[:3]}, "
+        f"{len(extra)} extra {extra[:3]}"
+    )
     version = importlib.metadata.version("datamimic_ce")
     assert version
 
@@ -179,7 +190,6 @@ def check_installed(with_mcp):
 
     package = importlib.resources.files("datamimic_ce")
     assert package.joinpath("py.typed").is_file()
-    assert package.joinpath("domains/shared/domain_data/common/country_US.csv").read_bytes()
     assert "demo-condition" in set(demo_names())
     assert b"<setup" in demo_root().joinpath("demo-condition/datamimic.xml").read_bytes()
     assert "demo-condition" in cli("demo", "list")
@@ -219,7 +229,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix="datamimic-installed-check-") as directory:
         os.chdir(directory)
         assert not Path.cwd().is_relative_to(checkout)
-        check_installed(arguments.mcp)
+        check_installed(arguments.mcp, checkout)
 
 
 if __name__ == "__main__":

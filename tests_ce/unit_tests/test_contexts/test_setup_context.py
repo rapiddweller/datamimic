@@ -1,4 +1,5 @@
 import ast
+import builtins
 import copy
 import inspect
 import pickle
@@ -192,6 +193,18 @@ def test_add_client_registers_lookup_and_script_namespace_identity() -> None:
     assert context.get_client_by_id("missing") is None
     assert context.evaluate_python_expression("db") is client
     assert context.eval_namespace("script_client = db")["script_client"] is client
+
+
+def test_a_script_dataclass_leaves_the_builtins_module_unchanged() -> None:
+    """Python-only: the DSL cannot see the builtins module. A script class without a module name was in "builtins",
+    so @dataclass wrote __builtins__ into that module and a later test in the process saw it."""
+    before = set(vars(builtins))
+
+    names = _context().eval_namespace("from dataclasses import dataclass\n@dataclass\nclass Seat:\n    row: int = 0\n")
+
+    assert set(vars(builtins)) == before
+    assert names["Seat"].__module__ != "builtins"
+    assert dill.loads(dill.dumps(names["Seat"]))(3).row == 3
 
 
 def test_setup_context_deepcopy_preserves_client_alias_without_disposing_engine(tmp_path, monkeypatch) -> None:

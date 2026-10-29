@@ -99,6 +99,14 @@ CE is done (#399). EE follows in [EE #89](https://gitlab.dwellerlab.com/rapiddwe
 | A17 | `<nestedKey type="list">` whose variable source or generator ends before its count (#450) | the list ends with its last full element (no empty or partial element); Build reports the product as `validation` ("a <nestedKey> list ended before its count") | not compared | `gap` | Owner: EE port, [EE #128](https://gitlab.dwellerlab.com/rapiddweller/datamimic/datamimic-ee/-/work_items/128). Acceptance: `tests_ce/scenarios/s35_nested_key_source_ends` and `tests_ce/integration_tests/test_source_end/test_nested_key_source_ends.py` pass on EE (the Build part after A1). |
 | A18 | Child rows of a parent row that a source end drops (#451) | dropped with the parent in the capture and the memstore; the Build row budget is released | not compared | `gap` | Owner: EE port, [EE #128](https://gitlab.dwellerlab.com/rapiddweller/datamimic/datamimic-ee/-/work_items/128). Acceptance: `tests_ce/scenarios/s34_source_end_drops_children`, `tests_ce/integration_tests/test_source_end/test_source_end_drops_children.py`. |
 
+## Runtime and packaging
+
+| # | Behavior | CE | EE | Status | Owner / next step |
+|---|---|---|---|---|---|
+| R1 | Module of a class that a setup script defines (`<execute>` of a `.scr.py`) | `execute_script` sets `__name__` to the plugins module before `exec`. A script class is not in `builtins`, and `@dataclass` leaves the builtins module unchanged. Test: `test_a_script_dataclass_leaves_the_builtins_module_unchanged` | `SetupContext.eval_namespace` runs `exec(content, initial_ns)` without `__name__` (EE `2daa65076`, code check, no run). A script class is then in `builtins`, and `@dataclass` adds `__builtins__` to the builtins module | `gap` | Owner: EE port, [EE #130](https://gitlab.dwellerlab.com/rapiddweller/datamimic/datamimic-ee/-/work_items/130) (it also holds the R3 check). The `__name__` must be a module that is in `sys.modules` and is not `__main__`: both editions inherit `from __future__ import annotations` into `exec`, so `dataclasses._is_type` needs the module. |
+| R2 | Bounded cleanup when `killpg` returns EPERM on macOS (#432) | the SIGTERM and the SIGKILL of the private group ignore `ProcessLookupError` and `PermissionError`; the result stays `timeout`; other `OSError`s and a leader that does not stop give `cleanup` | `_kill_process_group` ignores every `OSError` (EE `2daa65076`, code check, no run); the result stays the run result | `identical` | For the EPERM case only. EE has no `cleanup` result for a failed `killpg`; that is outside #432. |
+| R3 | Package data of a wheel built from a tree without `.git` (#435) | setuptools-scm finds the files of a `git archive` tree through `.git_archival.txt` (`export-subst`); a checkout wheel holds the tracked files only; the installed check compares domain_data with `git ls-files` | maturin build with a static version and `python-packages = ["datamimic_ee"]`; not built from a `git archive` tree | `unverified` | Owner: EE session. Build an EE wheel from `git archive` without `.git` and from a checkout with an untracked and an ignored file. Then compare the `domains/domain_data` file lists (996 tracked files at `2daa65076`). |
+
 ## Behavior cases
 
 | Case | Area | CE | EE |
@@ -132,9 +140,9 @@ These rows are not compared yet. They need a comparison before the release date.
 
 | Status | Rows |
 |---|---|
-| `identical` | 11 |
+| `identical` | 12 |
 | `CE-extension` | 3 |
 | `EE-only` | 4 |
-| `gap` | 31 |
-| `unverified` | 1 |
+| `gap` | 32 |
+| `unverified` | 2 |
 | Open rows (not compared) | 9 |
