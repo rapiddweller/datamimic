@@ -9,6 +9,7 @@
     "a braces producer count gives no nest route, because Build cannot compare it",
     "the role template names the declared producer identifier and the consumer key that copies it, also under another name",
     "a consumer that does not copy the identifier is told which key to add",
+    "a consumer that already has a key of the identifier name with another script is told to set that script, not to add a second key",
     "a foreign key without a producer identifier gets the identifier role filled from its parent_field",
     "without roles the template never names one copied field as the identifier: it states that the field must differ in every row",
     "without roles the template lists the producer fields that the readback copies",
@@ -125,6 +126,16 @@
       }
     },
     {
+      "name": "readback_key_of_the_identifier_name_with_another_script",
+      "diagnostic": "input",
+      "remediation": "Set the script of key \"employment_id\" in audits to this.employment_id.",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "<generate name=\"audits\" count=\"2\">\n        <key name=\"audit_id\" generator=\"IncrementGenerator\"/>",
+        "new": "<generate name=\"audits\" source=\"mem\" sourceEntity=\"employments\" distribution=\"ordered\">\n        <key name=\"employment_id\" script=\"this.employment_id + 0\"/>"
+      }
+    },
+    {
       "name": "foreign_key_without_producer_identifier",
       "diagnostic": "input",
       "remediation": "Add the producer identifier role: {\"product\": \"employments\", \"field\": \"employment_id\", \"role\": {\"kind\": \"identifier\"}}",
@@ -200,6 +211,14 @@
         "file": "datamimic.xml",
         "old": "distribution=\"ordered\" target=\"ConsoleExporter\">",
         "new": "distribution=\"ordered\" target=\"ConsoleExporter\" count=\"5\">"
+      }
+    },
+    {
+      "name": "readback_key_with_an_expression_script_and_its_role",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "        <key name=\"audit_id\" generator=\"IncrementGenerator\"/>\n        <key name=\"employment_id\" script=\"this.employment_id\"/>",
+        "new": "        <key name=\"audit_id\" generator=\"IncrementGenerator\"/>\n        <key name=\"employment_id\" script=\"this.employment_id + 0\"/>"
       }
     }
   ]

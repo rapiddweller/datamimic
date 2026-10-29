@@ -581,7 +581,12 @@ def _role_pair_remediation(
             if parent_fields
             else f"Add two product_roles entries: {producer_role} and {consumer_role}. {MEMSTORE_READBACK_ONCE}"
         )
-    missing_key = "" if key in copies else f' First add <key name="{key}" script="this.{key}"/> to {consumer_name}.'
+    missing_key = ""
+    if key in consumer.product.fields and key not in copies:
+        # A second key of the same name would be rejected as a duplicate output field.
+        missing_key = f' Set the script of key "{key}" in {consumer_name} to this.{key}.'
+    elif key not in copies:
+        missing_key = f' First add <key name="{key}" script="this.{key}"/> to {consumer_name}.'
     return (
         "Add the consumer foreign-key role, or point an existing one at the producer's identifier field: "
         f"{consumer_role}.{missing_key} {MEMSTORE_READBACK_ONCE}"
