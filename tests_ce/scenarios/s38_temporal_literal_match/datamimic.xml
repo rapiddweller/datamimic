@@ -1,0 +1,12 @@
+<setup rngSeed="38">
+    <!-- Date and datetime objects (not text): fixed_value and allowed_values compare them with ISO literals. -->
+    <generate name="bookings" count="3">
+        <key name="booking_id" generator="IncrementGenerator"/>
+        <key name="day" script="datetime.date(2026, 3, 1)"/>
+        <key name="at" script="datetime.datetime(2026, 3, 1, 9, 30, 15)"/>
+        <key name="at_fine" script="datetime.datetime(2026, 3, 1, 9, 30, 15, 250000)"/>
+        <key name="at_text" script="'2026-03-01 09:30:15'"/>
+        <key name="units" script="1"/>
+        <key name="paid" script="True"/>
+    </generate>
+</setup>

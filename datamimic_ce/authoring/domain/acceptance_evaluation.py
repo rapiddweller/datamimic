@@ -216,7 +216,7 @@ def _display(value: object) -> str:
     return json.dumps(_typed_identity(value), sort_keys=True, separators=(",", ":"), ensure_ascii=False)
 
 
-def _temporal_allowed_value_matches(actual: date, expected: str) -> bool:
+def _temporal_literal_matches(actual: date, expected: str) -> bool:
     if isinstance(actual, datetime):
         if re.fullmatch(_DATETIME_LITERAL_PATTERN, expected) is None:
             return False
@@ -230,6 +230,14 @@ def _temporal_allowed_value_matches(actual: date, expected: str) -> bool:
         return actual == date.fromisoformat(expected)
     except ValueError:
         return False
+
+
+def _matches_literal(actual: object, expected: object) -> bool:
+    """One rule for allowed_values and fixed_value (#476): a date or datetime capture matches its ISO literal;
+    every other value compares by type and value, so the literal 1 never matches a True capture."""
+    if isinstance(actual, date) and isinstance(expected, str):
+        return _temporal_literal_matches(actual, expected)
+    return _display(actual) == _display(expected)
 
 
 def _json_value(value: object) -> JsonValue:
@@ -439,14 +447,7 @@ def _check_expectation(
                 {"expected": list(allowed), "actual": None, "allowed_values": allowed},
             )
         invalid = tuple(
-            value
-            for value in values
-            if not any(
-                _temporal_allowed_value_matches(value, item)
-                if isinstance(value, date) and isinstance(item, str)
-                else _display(value) == _display(item)
-                for item in expectation.values
-            )
+            value for value in values if not any(_matches_literal(value, item) for item in expectation.values)
         )
         if invalid:
             return _ExpectationFailure(
@@ -482,7 +483,7 @@ def _check_expectation(
                 f"field '{expectation.field}' is missing from {_subject_label(expectation.subject)}",
                 {"expected": _json_value(expectation.value), "actual": None},
             )
-        invalid = tuple(value for value in values if _display(value) != _display(expectation.value))
+        invalid = tuple(value for value in values if not _matches_literal(value, expectation.value))
         if invalid:
             return _ExpectationFailure(
                 f"values for '{expectation.field}' in {_subject_label(expectation.subject)} do not match",

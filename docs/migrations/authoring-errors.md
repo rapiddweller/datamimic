@@ -279,6 +279,14 @@ warnings with `collect_task_warnings` (`datamimic_ce.errors`); the log keeps one
 Cases: the negative `draw_while_loading` of `tests_ce/scenarios/s14_seeded_library_random` and
 `tests_ce/unit_tests/test_authoring/test_load_time_entropy_build.py`.
 
+### One literal rule for fixed_value and allowed_values (#476)
+
+`fixed_value` now matches a captured date or datetime by the ISO literal rule of `allowed_values`. Before, a date
+capture `2026-03-01` failed `"value": "2026-03-01"` and passed `"values": ["2026-03-01"]`. A date matches
+`YYYY-MM-DD`; a datetime matches `YYYY-MM-DD` with `T` or a space and `HH:MM:SS`, with a fraction of 1 to 6 digits.
+An offset, `Z`, minute precision and a compact form never match. Every other value compares by type and value, so
+the literal `1` does not match a `True` capture. Case: `tests_ce/scenarios/s38_temporal_literal_match`.
+
 ## Public contract
 
 Persist XML as the executable project. `DmJsonDocumentV1` is an in-memory agent

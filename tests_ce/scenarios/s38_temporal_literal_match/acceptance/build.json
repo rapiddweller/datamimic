@@ -1,0 +1,17 @@
+{
+  "version": "5.0",
+  "product_roles": [
+    {"product": "bookings", "field": "booking_id", "role": {"kind": "identifier"}}
+  ],
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "bookings"}, "count": 3},
+    {"kind": "fixed_value", "subject": {"kind": "product", "product": "bookings"}, "field": "day", "value": "2026-03-01"},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "bookings"}, "field": "day", "values": ["2026-03-01"]},
+    {"kind": "fixed_value", "subject": {"kind": "product", "product": "bookings"}, "field": "at", "value": "2026-03-01T09:30:15"},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "bookings"}, "field": "at", "values": ["2026-03-01 09:30:15"]},
+    {"kind": "fixed_value", "subject": {"kind": "product", "product": "bookings"}, "field": "at_fine", "value": "2026-03-01 09:30:15.25"},
+    {"kind": "fixed_value", "subject": {"kind": "product", "product": "bookings"}, "field": "at_text", "value": "2026-03-01 09:30:15"},
+    {"kind": "fixed_value", "subject": {"kind": "product", "product": "bookings"}, "field": "units", "value": 1},
+    {"kind": "fixed_value", "subject": {"kind": "product", "product": "bookings"}, "field": "paid", "value": true}
+  ]
+}
