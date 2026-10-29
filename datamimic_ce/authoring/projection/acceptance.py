@@ -473,21 +473,47 @@ def _derive_field(
         derive(RangeExpectation(subject=subject, field=name, minimum=lower, maximum=upper), path)
 
 
-def _readback_roles(producer: str, consumer: str) -> tuple[str, str]:
-    """The product_roles pair of one readback; product names are structural names, so the templates carry them."""
+_KEY = "<key>"
+_HOLDER = "<field holding the key>"
+
+
+def _readback_roles(producer: str, consumer: str, key: str = _KEY, holder: str = _HOLDER) -> tuple[str, str]:
+    """The product_roles pair of one readback; field and product names are structural, so the templates carry them."""
     producer_name, consumer_name = json.dumps(producer), json.dumps(consumer)
+    key_name, holder_name = json.dumps(key), json.dumps(holder)
     return (
-        f'{{"product": {producer_name}, "field": "<key>", "role": {{"kind": "identifier"}}}}',
-        f'{{"product": {consumer_name}, "field": "<field holding the key>", "role": {{"kind": "foreign_key", '
-        f'"parent_product": {producer_name}, "parent_field": "<key>"}}}}',
+        f'{{"product": {producer_name}, "field": {key_name}, "role": {{"kind": "identifier"}}}}',
+        f'{{"product": {consumer_name}, "field": {holder_name}, "role": {{"kind": "foreign_key", '
+        f'"parent_product": {producer_name}, "parent_field": {key_name}}}}}',
     )
 
 
-def _unread_memstore_remediation(producer: _Product, store: str) -> str:
+def _identifier_fields(request: BuildRequestV5, product: str) -> set[str]:
+    return {
+        role.field
+        for role in request.product_roles
+        if role.product == product and role.list_field is None and isinstance(role.role, IdentifierRole)
+    }
+
+
+def _copied_fields(consumer: DmJsonNodeV1, producer_fields: tuple[str, ...]) -> dict[str, str]:
+    """Each producer field that a consumer key copies unchanged (this.<field>), with the first such key."""
+    copies: dict[str, str] = {}
+    for child in consumer.children:
+        name, script = child.properties.get("name"), child.properties.get("script")
+        if child.kind == "key" and isinstance(name, str) and isinstance(script, str):
+            for field in producer_fields:
+                if field not in copies and is_exact_scope_field_reference(script, ScriptScope.CURRENT, field):
+                    copies[field] = name
+    return copies
+
+
+def _unread_memstore_remediation(producer: _Product, store: str, identifiers: set[str]) -> str:
     """Agents write a memstore for a subset or a lookup; the first rejection names the route for each need."""
     name = producer.product.name
     copy = f"{name}_copy"
-    producer_role, consumer_role = _readback_roles(name, copy)
+    key = next(iter(identifiers)) if len(identifiers) == 1 else _KEY
+    producer_role, consumer_role = _readback_roles(name, copy, key, key if key != _KEY else _HOLDER)
     entity = _memstore_entity(producer.node, name)
     return (
         f'Nothing reads "{name}" back as a product: a <variable source="{store}"> read is not a readback. '
@@ -495,9 +521,61 @@ def _unread_memstore_remediation(producer: _Product, store: str) -> str:
         f'remove the <memstore> and the generate that writes target="{store}". {GUIDANCE_LOOKUP_POINTER} '
         "A copy of every row: "
         f'after {name} add <generate name="{copy}" source="{store}" sourceEntity="{entity}" distribution="ordered" '
-        'target="ConsoleExporter"><key name="<key>" script="this.<key>"/></generate> and the '
+        f'target="ConsoleExporter"><key name="{key}" script="this.{key}"/></generate> and the '
         f"product_roles {producer_role} and {consumer_role}. "
         "Full project: datamimic authoring reference --topic examples --name memstore."
+    )
+
+
+def _role_pair_remediation(
+    producer: _Product, consumer: _Product, identifiers: set[str], parent_fields: tuple[str, ...], candidates: int
+) -> str:
+    """Name the fields Build can see in the descriptor; a subset readback can never pass, so it gets the nest route."""
+    producer_name, consumer_name = producer.product.name, consumer.product.name
+    consumer_count = _count_per_invocation(consumer.node)
+    # A nested producer writes this count for each parent row, so a smaller readback count is a subset there too.
+    if producer.count is not None and consumer_count is not None and consumer_count < producer.count:
+        store = consumer.node.properties.get("source")
+        return (
+            f'"{consumer_name}" sets a count below the rows of "{producer_name}", so this readback cannot pass. '
+            f'Move <generate name="{consumer_name}"> inside <generate name="{producer_name}">. Remove its '
+            f'source="{store}" and sourceEntity, and remove "{store}" from the target of "{producer_name}" when '
+            "nothing else reads it. Its keys then write parent.<field> where they now write this.<field>. "
+            f"{MEMSTORE_READBACK_ONCE}"
+        )
+    if len(identifiers) > 1:
+        return (
+            "Memstore readback checks one identifier role per producer: declare only the identifier that the "
+            "consumer's foreign key names, and express any other uniqueness as a unique expectation."
+        )
+    if candidates > 1:
+        return (
+            "More than one foreign-key role on the consumer names this producer: keep only the one that reads "
+            "the memstore back."
+        )
+    copies = _copied_fields(consumer.node, producer.product.fields)
+    key, holder = _KEY, _HOLDER
+    if identifiers:
+        (key,) = identifiers
+        holder = copies.get(key, key)
+    elif len(set(parent_fields)) == 1:
+        key = parent_fields[0]
+    elif len(copies) == 1:
+        (key,) = copies
+        holder = copies[key]
+    elif copies:
+        key = f"<{' or '.join(copies)}: the field that differs in every row>"
+    producer_role, consumer_role = _readback_roles(producer_name, consumer_name, key, holder)
+    if not identifiers:
+        return (
+            f"Add the producer identifier role: {producer_role}. {MEMSTORE_READBACK_ONCE}"
+            if parent_fields
+            else f"Add two product_roles entries: {producer_role} and {consumer_role}. {MEMSTORE_READBACK_ONCE}"
+        )
+    missing_key = "" if key in copies else f' First add <key name="{key}" script="this.{key}"/> to {consumer_name}.'
+    return (
+        "Add the consumer foreign-key role, or point an existing one at the producer's identifier field: "
+        f"{consumer_role}.{missing_key} {MEMSTORE_READBACK_ONCE}"
     )
 
 
@@ -552,13 +630,7 @@ def _readbacks(
                         "A same-name memstore readback field must read its current source field.",
                         consumer.path + ("children", index),
                     )
-        identifiers = {
-            role.field
-            for role in request.product_roles
-            if role.product == producer.product.name
-            and role.list_field is None
-            and isinstance(role.role, IdentifierRole)
-        }
+        identifiers = _identifier_fields(request, producer.product.name)
         named = [
             role
             for role in request.product_roles
@@ -571,33 +643,12 @@ def _readbacks(
             role for role in named if isinstance(role.role, ForeignKeyRole) and role.role.parent_field in identifiers
         ]
         if len(identifiers) != 1 or len(candidates) != 1:
-            producer_role, consumer_role = _readback_roles(producer.product.name, consumer.product.name)
-            if len(identifiers) > 1:
-                remediation = (
-                    "Memstore readback checks one identifier role per producer: declare only the identifier that the "
-                    "consumer's foreign key names, and express any other uniqueness as a unique expectation."
-                )
-            elif not identifiers:
-                remediation = (
-                    f"Add the producer identifier role: {producer_role}. {MEMSTORE_READBACK_ONCE}"
-                    if named
-                    else f"Add two product_roles entries: {producer_role} and {consumer_role}. {MEMSTORE_READBACK_ONCE}"
-                )
-            elif not candidates:
-                remediation = (
-                    "Add the consumer foreign-key role, or point an existing one at the producer's identifier field: "
-                    f"{consumer_role}. {MEMSTORE_READBACK_ONCE}"
-                )
-            else:
-                remediation = (
-                    "More than one foreign-key role on the consumer names this producer: keep only the one that reads "
-                    "the memstore back."
-                )
+            parent_fields = tuple(role.role.parent_field for role in named if isinstance(role.role, ForeignKeyRole))
             _reject(
                 "Memstore completeness requires one producer identifier role "
                 "and one matching consumer foreign-key role.",
                 consumer.path,
-                remediation=remediation,
+                remediation=_role_pair_remediation(producer, consumer, identifiers, parent_fields, len(candidates)),
             )
         result.append(
             AcceptanceReadbackV1(
@@ -617,6 +668,8 @@ def _readbacks(
                 _reject(
                     "A memstore target requires a declared consumer readback.",
                     producer.path + ("properties", "target"),
-                    remediation=_unread_memstore_remediation(producer, store),
+                    remediation=_unread_memstore_remediation(
+                        producer, store, _identifier_fields(request, producer.product.name)
+                    ),
                 )
     return tuple(result)

@@ -22,7 +22,7 @@
        "old": "    <generate name=\"team_copy\" source=\"mem\" sourceEntity=\"teams\" distribution=\"ordered\">\n        <key name=\"team_id\" script=\"this.team_id\"/>\n",
        "new": "    <generate name=\"team_copy\" count=\"3\">\n        <variable name=\"team\" source=\"mem\" sourceEntity=\"teams\" distribution=\"ordered\"/>\n        <key name=\"team_id\" script=\"team.team_id\"/>\n"}},
     {"name": "readback_without_foreign_key_role", "diagnostic": "input",
-     "remediation": "{\"product\": \"team_copy\", \"field\": \"<field holding the key>\", \"role\": {\"kind\": \"foreign_key\", \"parent_product\": \"teams\", \"parent_field\": \"<key>\"}}",
+     "remediation": "{\"product\": \"team_copy\", \"field\": \"team_id\", \"role\": {\"kind\": \"foreign_key\", \"parent_product\": \"teams\", \"parent_field\": \"team_id\"}}",
      "patch": {"file": "acceptance/build.json",
        "old": "    {\"product\": \"team_copy\", \"field\": \"team_id\", \"role\": {\n      \"kind\": \"foreign_key\", \"parent_product\": \"teams\", \"parent_field\": \"team_id\"\n    }},\n",
        "new": ""}},
