@@ -19,6 +19,7 @@ from datamimic_ce.authoring.domain.xml_diagnostics import Diagnostic
 from datamimic_ce.engine.dsl.api import (
     ATTR_GENERATOR,
     ATTR_SOURCE,
+    ATTR_STORAGE,
     ATTR_WHERE,
     DATA_TYPE_DICT,
     DATA_TYPE_LIST,
@@ -41,6 +42,11 @@ _GENERATOR_PARAMETERS = 'Pass generator parameters in the call: generator="Integ
 _GENERATOR_BOUNDS = frozenset(("min", "max", "granularity"))
 # Agents write where= on a value element to look up a row of a second file (campaign b3, e07).
 _WHERE_ON_VALUE = f"where= keeps rows of a <generate> or <iterate> file source. {GUIDANCE_FILE_LOOKUP}"
+# The run refuses storage= at setup level (I830) only after it starts; lint names the fix first (#442 T3).
+_STORAGE_AT_SETUP = (
+    f"storage= holds rows for one record: move this <variable> into the <generate> that reads it. "
+    f"{GUIDANCE_FILE_LOOKUP}"
+)
 
 
 def _key_id_data_types(ctx: LintContext) -> frozenset[str]:
@@ -116,6 +122,14 @@ class InvalidChild(Rule):
                         child,
                         evidence=f"<{child.tag}> appears inside <{tag}>",
                         fix_context=f"<{tag}> accepts: {', '.join(sorted(schema.allowed_children))}.",
+                    )
+                elif tag == EL_SETUP and child.tag == EL_VARIABLE and child.get(ATTR_STORAGE) is not None:
+                    yield ctx.diag(
+                        type(self),
+                        child,
+                        evidence="<variable storage> appears inside <setup>",
+                        fix_context=_STORAGE_AT_SETUP,
+                        names_only=True,
                     )
 
 

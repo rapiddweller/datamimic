@@ -256,6 +256,14 @@ column and no variable of the parent (for example a source column that nothing d
 remediation now names both working forms. The per-parent remediation says that a variable copy does not group, and
 that a child with several parent copies needs a `foreign_key` role. Case: `tests_ce/scenarios/s37_parent_variable_reference`.
 
+### A setup-level variable with storage= (#442 T3)
+
+`lint`, `dry-run` and Build reject a `<variable storage=...>` directly under `<setup>` with `DM102`. The remediation
+says to move the variable into the `<generate>` that reads it and shows the file lookup. Before, only the bounded run
+failed, with `child_execution` (`I830`) and the generic text "Use a supported source or adjust the configuration".
+`datamimic run` still fails with `I830`. Case: the negative `the_lookup_variable_goes_inside_the_generate` of
+`tests_ce/scenarios/s31_file_lookup`.
+
 ## Public contract
 
 Persist XML as the executable project. `DmJsonDocumentV1` is an in-memory agent
