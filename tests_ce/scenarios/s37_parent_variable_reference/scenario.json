@@ -4,7 +4,8 @@
     "a child <key script=\"parent.zone\"> that reads a <variable> of the parent is ready, as the run is; the variable is no field, so it joins nothing, and the foreign key parent.depot_id groups the child rows (#442 T1)",
     "parent.<a source column that no key and no columns= declares> is rejected before the run, and the remediation names both working forms",
     "both working forms give the same rows: a parent <key script=\"this.region\">, or the column listed in columns=; the foreign_key role picks the copy that groups",
-    "without the key copy, the foreign_key role names the copy it needs"
+    "without the key copy, the foreign_key role names the copy it needs",
+    "an expectation on a source column that no key and no columns= declares is rejected, and the remediation names columns= (#479)"
   ],
   "products": {
     "depots": 3,
@@ -30,6 +31,17 @@
         "file": "datamimic.xml",
         "old": "<key name=\"zone\" script=\"parent.zone\"/>",
         "new": "<key name=\"zone\" script=\"parent.region\"/>"
+      }
+    },
+    {
+      "name": "an_expectation_on_an_undeclared_column_names_columns",
+      "diagnostic": "input",
+      "message": "Expectation references an unknown field.",
+      "remediation": "or, for a column of its file source, list the column in columns=",
+      "patch": {
+        "file": "acceptance/build.json",
+        "old": "\"product\": \"vans\"}, \"field\": \"zone\"",
+        "new": "\"product\": \"depots\"}, \"field\": \"region\""
       }
     }
   ],

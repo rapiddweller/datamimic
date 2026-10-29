@@ -237,7 +237,8 @@ def validate_acceptance_subject(
             )
             return
         fields = product.fields
-        owner = "of that product"
+        # columns= declares the columns of a file source as fields too (#479).
+        owner = "of that product, or, for a column of its file source, list the column in columns="
         if isinstance(subject, ProductRowsSubject) and subject.list_field is not None:
             selected = next((item for item in product.lists if item.name == subject.list_field), None)
             if selected is None:
@@ -250,7 +251,7 @@ def validate_acceptance_subject(
                 "Expectation references an unknown field.",
                 path + ("field",),
                 remediation=(
-                    f"Declare the field as a <key> {owner}; Build knows only declared keys, not fields that "
+                    f"Declare the field as a <key> {owner}; Build knows only declared fields, not fields that "
                     "appear only in rows a script or source produces."
                 ),
                 declared=fields,
