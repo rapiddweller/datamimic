@@ -290,11 +290,13 @@ def _artifact(result: ReadyBuild | RejectedBuild) -> dict[str, str]:
     return {item.path.as_posix(): item.sha256 for item in artifact.files}
 
 
-def test_the_review_artifact_binds_the_files_the_stopped_run_read(tmp_path: Path) -> None:
+# A failed <assert> and a condition that raises (#445): every EVIDENCE rejection binds the files the run read.
+@pytest.mark.parametrize("negative", ["fails_at_middle_row", "condition_raises"])
+def test_the_review_artifact_binds_the_files_the_stopped_run_read(tmp_path: Path, negative: str) -> None:
     ready = create_authoring_application(_copy(tmp_path / "ready", None), descriptor_path=PROJECT_ENTRY_PATH).build()
     assert isinstance(ready, ReadyBuild)
-    first = _build(tmp_path / "first", "fails_at_middle_row")
-    project = _copy(tmp_path / "second", "fails_at_middle_row")
+    first = _build(tmp_path / "first", negative)
+    project = _copy(tmp_path / "second", negative)
     items = project / "data" / "entity" / "items.json"
     # A byte that no assert or check reads: the run stops at the same row with the same diagnostics.
     items.write_text(items.read_text(encoding="utf-8").replace('"S1"', '"S9"'), encoding="utf-8")

@@ -370,7 +370,11 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
                 ),
             )
             return BoundedExecutionEvidence(
-                ok=False, captured=CapturedProducts((), request.max_count), diagnostics=(diagnostic,), base_run_ok=False
+                ok=False,
+                captured=CapturedProducts((), request.max_count),
+                diagnostics=(diagnostic,),
+                base_run_ok=False,
+                files=_read_file_digests(message.read_files, request, workspace),
             )
         if not isinstance(message, dryrun._WorkerSuccess):
             raise ValueError("unknown worker response")

@@ -62,7 +62,9 @@ Before, the run printed the resolved property value. The rule now lives in the e
 Build calls it (`AssertStatement.literal_message`), so both use the same literal rule.
 The `review_artifact` of a stopped run lists each workspace file that the run read
 before the assert, with its digest, as a ready Build does. A changed source file
-changes the artifact. A `<variable source>` of a product after the assert is not read
+changes the artifact. Every other EVIDENCE rejection of a failed run, for example a
+`child_execution` from a condition that raises, lists the read files in the same way (#445).
+Before, its artifact listed only the project files. A `<variable source>` of a product after the assert is not read
 and not listed. Build counts the rows of a top-level `<generate source>` before the
 run, so that file is listed also after the assert. An `<assert>` tag over several
 lines reports its last line; the runtime and Build read the same line.
