@@ -38,14 +38,14 @@ from datamimic_ce.engine.dsl.api import (
     resource_reader_scope,
 )
 from datamimic_ce.engine.dsl.parsers.base.client_config import ConnectionProfileLoader
+from datamimic_ce.errors import ATTRIBUTE_ESCAPE
 from datamimic_ce.errors.base import ParserValidationError, UserErrorBase
 from datamimic_ce.errors.codes import IssueCode
 
 # The parser reason may quote the descriptor, so the remediation names the two usual causes instead.
 _NOT_WELL_FORMED = "Descriptor is not well-formed XML."
 _ESCAPE_HINT = (
-    "Inside an attribute value write < as &lt; and & as &amp;, for example "
-    'script="a &lt;= b"; or turn the comparison around (b >= a). Close every element and quote every attribute.'
+    f"{ATTRIBUTE_ESCAPE}; or turn the comparison around (b >= a). Close every element and quote every attribute."
 )
 
 

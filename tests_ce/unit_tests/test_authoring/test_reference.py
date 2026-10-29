@@ -12,13 +12,16 @@ from typer.testing import CliRunner
 
 from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.domain.capabilities import CapabilityDomain, CapabilityNotFound, DslCatalogSnapshot
+from datamimic_ce.authoring.domain.dm_json import DmJsonDocumentV1, DmJsonNodeV1
 from datamimic_ce.authoring.domain.reference import ReferenceResult
 from datamimic_ce.authoring.domain.requests import AuthoringSchemaId, BuildRequestV5, ReferenceRequest, ReferenceTopic
 from datamimic_ce.authoring.domain.schema import build_schema_index
 from datamimic_ce.engine.dsl.model.registry import canonical_tag, get_element_definition, list_element_tags
 from datamimic_ce.engine.dsl.vocabulary.enums.converter_enums import ConverterEnum
 from datamimic_ce.engine.io.api import buffered_exporter_names
+from datamimic_ce.errors import ATTRIBUTE_ESCAPE, SCRIPT_IMPORT_FIX
 from datamimic_ce.interfaces.cli import app
+from tests_ce.authoring_project import build_project
 
 
 @pytest.fixture(scope="module")
@@ -239,6 +242,42 @@ def test_learning_lookup_teaches_the_join_the_s31_scenario_builds(application):
         assert "--topic learning --name lookup" in pointer.description, name
     overview = application.reference(ReferenceRequest(topic=ReferenceTopic.OVERVIEW))
     assert "--topic learning --name lookup" in overview.content
+
+
+def test_overview_shows_the_script_fix_and_scopes_the_escape_to_xml(application):
+    """Agents read the overview before their first Build. The reference holds no descriptor, so this is a Python
+    test; s33 refuses __import__ and a raw < in XML with these texts."""
+    overview = application.reference(ReferenceRequest(topic=ReferenceTopic.OVERVIEW)).content
+    assert SCRIPT_IMPORT_FIX in overview
+    assert f"In an XML file: {ATTRIBUTE_ESCAPE}; DM JSON takes a raw <." in overview
+
+
+@pytest.mark.parametrize(("script", "outcome"), [("a <= 2", "ready"), ("a &lt;= 2", "rejected")])
+def test_dm_json_takes_a_raw_less_than(tmp_path, script, outcome):
+    """Compile escapes a DM JSON value, so the XML escape applied in DM JSON is escaped twice and fails."""
+    document = DmJsonDocumentV1(
+        root=DmJsonNodeV1(
+            kind="setup",
+            properties={"rng_seed": 1},
+            children=(
+                DmJsonNodeV1(
+                    kind="generate",
+                    properties={"name": "t", "count": "3"},
+                    children=(
+                        DmJsonNodeV1(kind="key", properties={"name": "a", "generator": "IncrementGenerator"}),
+                        DmJsonNodeV1(kind="key", properties={"name": "b", "script": script}),
+                    ),
+                ),
+            ),
+        )
+    )
+    built = build_project(
+        tmp_path,
+        document,
+        version="5.0",
+        expectations=[{"kind": "exact_count", "subject": {"kind": "product", "product": "t"}, "count": 3}],
+    )
+    assert built.outcome == outcome
 
 
 def test_authoring_help_points_to_the_data_file_guidance():

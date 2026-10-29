@@ -41,6 +41,8 @@ class Negative(BaseModel):
     issue: StrictStr | None = None
     # A text that the remediation of the named diagnostic contains: the fix the agent reads.
     remediation: StrictStr | None = None
+    # A text that the message of the named diagnostic contains: a runtime refusal can carry its fix in the message.
+    message: StrictStr | None = None
     # A normal run of the variant must also stop, with an error that contains this text.
     run_error: StrictStr | None = None
 
@@ -142,6 +144,9 @@ def test_negative_is_rejected_with_named_diagnostic(
             if str(item.code) == negative.diagnostic and item.remediation is not None
         ]
         assert any(negative.remediation in text for text in texts), f"expected {negative.remediation!r} in {texts}"
+    if negative.message is not None:
+        messages = [item.message for item in rejected.diagnostics if str(item.code) == negative.diagnostic]
+        assert any(negative.message in text for text in messages), f"expected {negative.message!r} in {messages}"
     if negative.run_error is not None:
         monkeypatch.chdir(project)
         with pytest.raises(TaskConfigError, match=re.escape(negative.run_error)):

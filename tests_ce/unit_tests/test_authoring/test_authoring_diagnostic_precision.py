@@ -32,9 +32,8 @@ def test_datetime_bound_layout_failure_names_argument_and_layout() -> None:
         BoundedExecutionRequest(xml=path.read_text(encoding="utf-8"), descriptor_path=logical)
     )
     assert not result.ok
-    assert result.diagnostics[0].message == (
-        "DateTimeGenerator min does not match input_format; "
-        "the default layout is '%Y-%m-%d %H:%M:%S', pass input_format for other layouts"
+    assert result.diagnostics[0].message.startswith(
+        "DateTimeGenerator min does not match the default layout '%Y-%m-%d %H:%M:%S'."
     )
 
 

@@ -37,6 +37,9 @@ GUIDANCE_WHERE_SCOPE = (
     "int(amount_cents). A row of another file with the key of the "
     f"current record is a lookup, not a filter. {GUIDANCE_FILE_LOOKUP}"
 )
+# Shared by a Build rejection and the overview, which agents read before their first Build.
+SCRIPT_IMPORT_FIX = "Scripts have no __import__; the datetime module is there: datetime.date(2026, 1, 1)."
+ATTRIBUTE_ESCAPE = 'Inside an attribute value write < as &lt; and & as &amp;, for example script="a &lt;= b"'
 # The Python builtins in the script globals (SAFE_GLOBALS); a unit test pins the two equal.
 SCRIPT_BUILTIN_NAMES = (
     "abs", "all", "any", "bin", "bool", "dict", "filter", "float", "hex", "int", "len", "list",

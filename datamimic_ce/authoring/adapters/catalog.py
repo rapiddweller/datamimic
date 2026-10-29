@@ -47,7 +47,7 @@ from datamimic_ce.authoring.domain.reference import (
     ReferenceResult,
 )
 from datamimic_ce.authoring.domain.requests import BuildRequestV5, ReferenceRequest, ReferenceTopic
-from datamimic_ce.errors import FILE_LOOKUP_PATTERN
+from datamimic_ce.errors import ATTRIBUTE_ESCAPE, FILE_LOOKUP_PATTERN, SCRIPT_IMPORT_FIX
 
 if TYPE_CHECKING:
     from datamimic_ce.authoring.ports import DmJsonDescriptorContract
@@ -252,7 +252,8 @@ class CeDslCatalog:
                         "Project data files (*.ent.csv, *.wgt.csv): "
                         "datamimic authoring reference --topic learning --name data_files. "
                         "A row of a second file by a key (a join): "
-                        "datamimic authoring reference --topic learning --name lookup."
+                        "datamimic authoring reference --topic learning --name lookup. "
+                        f"{SCRIPT_IMPORT_FIX} In an XML file: {ATTRIBUTE_ESCAPE}; DM JSON takes a raw <."
                     ),
                     next_topics=tuple(topic for topic in ReferenceTopic if topic != ReferenceTopic.OVERVIEW),
                 )

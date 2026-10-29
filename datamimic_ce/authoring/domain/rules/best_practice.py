@@ -42,6 +42,7 @@ from datamimic_ce.engine.dsl.api import (
     parse_consumer,
 )
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat, source_file_format
+from datamimic_ce.errors import SCRIPT_IMPORT_FIX
 
 _GENERATES = (EL_GENERATE, EL_ITERATE)
 _SOURCE_READERS = (*_GENERATES, EL_VARIABLE, EL_NESTED_KEY, EL_REFERENCE)
@@ -315,10 +316,7 @@ class InterpolationInScript(Rule):
                         type(self),
                         element,
                         evidence=f"{attr} contains interpolation token {token}",
-                        fix_context="Scripts have no __import__; the datetime module is there: "
-                        "datetime.date(2026, 1, 1)."
-                        if imports
-                        else f"Use {token.strip('_')}.field in {attr}=.",
+                        fix_context=SCRIPT_IMPORT_FIX if imports else f"Use {token.strip('_')}.field in {attr}=.",
                         names_only=imports,
                     )
 
