@@ -96,6 +96,14 @@ CE is done (#399). EE follows in [EE #89](https://gitlab.dwellerlab.com/rapiddwe
 | A15 | Memstore role-pair remediation from the descriptor, and the nested example (campaign b5, case e06) | the role-pair rejection names the declared producer identifier and the consumer key that copies it (`this.<field>`), or the key to add; a foreign key without a producer identifier fills the identifier from its `parent_field`; without roles it lists the producer fields that the readback copies and says that the identifier must differ in every row; a literal readback count below the literal producer count leads with the nest route and both product names; `MEMSTORE_READBACK_ONCE` and the examples topic share one `max_count` sentence (default limit and ceiling from their constants) and one count-scope sentence; the subset route puts a producer field into the count example; the copy route of the unread-memstore rejection names the declared identifier; `authoring reference --topic examples` lists `nested` and says which need each example serves | not compared: Build v4 (A1), no `nested` example, no `DM` codes (A5) | `gap` | Owner: EE, after A1, follows [EE #104](https://gitlab.dwellerlab.com/rapiddweller/datamimic/datamimic-ee/-/work_items/104); EE issue: [#124](https://gitlab.dwellerlab.com/rapiddweller/datamimic/datamimic-ee/-/work_items/124). Conformance case: `tests_ce/scenarios/s32_memstore_role_names` (16 negatives, 15 of them check the remediation text; 2 equivalents; the base builds the pasted copy route and the followed role-pair route). A parallel change adds a row too: the second merge renumbers it and recounts the `gap` rows. |
 | A16 | Remediation of the e06 first-Build losses outside the memstore texts (campaigns b3 and b5, case e06) | a `DateTimeGenerator` `min`, `max` or `value` that does not match the default layout names the argument, the layout and two working forms (the bound with the time, or `input_format='%Y-%m-%d'` in the call), and says that both give a datetime and need `outDateFormat="%Y-%m-%d"` for a date text; a configured `input_format` keeps its own text; the texts show no descriptor value. The `overview` reference ends with the `DM314` fix for `__import__` and, for an XML file, the `&lt;` clause of the not-well-formed text (DM JSON takes a raw `<`); both texts live in `errors/catalog/guidance.py` (`SCRIPT_IMPORT_FIX`, `ATTRIBUTE_ESCAPE`); the Build texts do not change | the three `DATETIME_*_FORMAT_MISMATCH` codes echo the value and the layout, with the resolution "Review the configuration and retry."; no Build v5 `overview` (A1) | `gap` | Owner: EE port, [EE #123](https://gitlab.dwellerlab.com/rapiddweller/datamimic/datamimic-ee/-/work_items/123). Acceptance: the 3 equivalents and the 8 date negatives of CE scenario `tests_ce/scenarios/s33_datetime_date_bounds` pass on EE; its `DM314` and raw `<` negatives follow A5. |
 
+## Runtime and packaging
+
+| # | Behavior | CE | EE | Status | Owner / next step |
+|---|---|---|---|---|---|
+| R1 | Module of a class that a setup script defines (`<execute>` of a `.scr.py`) | `execute_script` sets `__name__` to the plugins module before `exec`. A script class is not in `builtins`, and `@dataclass` leaves the builtins module unchanged. Test: `test_a_script_dataclass_leaves_the_builtins_module_unchanged` | `SetupContext.eval_namespace` runs `exec(content, initial_ns)` without `__name__` (EE `2daa65076`, code check, no run). A script class is then in `builtins`, and `@dataclass` adds `__builtins__` to the builtins module | `gap` | Owner: EE port, [EE #130](https://gitlab.dwellerlab.com/rapiddweller/datamimic/datamimic-ee/-/work_items/130) (it also holds the R3 check). The `__name__` must be a module that is in `sys.modules` and is not `__main__`: both editions inherit `from __future__ import annotations` into `exec`, so `dataclasses._is_type` needs the module. |
+| R2 | Bounded cleanup when `killpg` returns EPERM on macOS (#432) | the SIGTERM and the SIGKILL of the private group ignore `ProcessLookupError` and `PermissionError`; the result stays `timeout`; other `OSError`s and a leader that does not stop give `cleanup` | `_kill_process_group` ignores every `OSError` (EE `2daa65076`, code check, no run); the result stays the run result | `identical` | For the EPERM case only. EE has no `cleanup` result for a failed `killpg`; that is outside #432. |
+| R3 | Package data of a wheel built from a tree without `.git` (#435) | setuptools-scm finds the files of a `git archive` tree through `.git_archival.txt` (`export-subst`); a checkout wheel holds the tracked files only; the installed check compares domain_data with `git ls-files` | maturin build with a static version and `python-packages = ["datamimic_ee"]`; not built from a `git archive` tree | `unverified` | Owner: EE session. Build an EE wheel from `git archive` without `.git` and from a checkout with an untracked and an ignored file. Then compare the `domains/domain_data` file lists (996 tracked files at `2daa65076`). |
+
 ## Behavior cases
 
 | Case | Area | CE | EE |
@@ -129,9 +137,9 @@ These rows are not compared yet. They need a comparison before the release date.
 
 | Status | Rows |
 |---|---|
-| `identical` | 11 |
+| `identical` | 12 |
 | `CE-extension` | 3 |
 | `EE-only` | 4 |
-| `gap` | 28 |
-| `unverified` | 1 |
+| `gap` | 29 |
+| `unverified` | 2 |
 | Open rows (not compared) | 9 |

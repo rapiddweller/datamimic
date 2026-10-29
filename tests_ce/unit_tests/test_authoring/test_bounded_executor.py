@@ -177,8 +177,48 @@ def test_timeout_terminates_worker_children_and_grandchildren(tmp_path):
     assert not result.ok
     assert result.diagnostics[0].code is AuthoringSystemDiagnosticCode.TIMEOUT
     assert marker.exists(), "the descendant probe must actually execute before cancellation"
-    for pid in json.loads(marker.read_text()):
-        assert not psutil.pid_exists(pid) or psutil.Process(pid).status() == psutil.STATUS_ZOMBIE
+    # The leader is reaped at once; a descendant can still be exiting after the SIGKILL (#432).
+    deadline = time.monotonic() + 5
+    while (alive := [pid for pid in json.loads(marker.read_text()) if _running(pid)]) and time.monotonic() < deadline:
+        time.sleep(0.05)
+    assert not alive
+
+
+def _running(pid):
+    try:
+        return psutil.Process(pid).status() != psutil.STATUS_ZOMBIE
+    except psutil.NoSuchProcess:
+        return False
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX process groups only")
+def test_timeout_stays_timeout_while_the_killed_group_is_still_exiting(tmp_path, monkeypatch):
+    """macOS killpg returns EPERM when no member of the group is alive but one is not reaped yet (#432). That can
+    occur at the SIGTERM and at the SIGKILL. Linux does not do this, so the fake sends the real signal and then
+    gives that EPERM for each call."""
+    import errno
+    import signal
+    from contextlib import suppress
+
+    real_killpg = os.killpg
+    sent = []
+
+    def exiting_group(pgid, sig):
+        sent.append(sig)
+        with suppress(ProcessLookupError):
+            real_killpg(pgid, sig)
+        raise PermissionError(errno.EPERM, os.strerror(errno.EPERM))
+
+    monkeypatch.setattr(os, "killpg", exiting_group)
+    (tmp_path / "sleep.scr.py").write_text("import time\ntime.sleep(30)\n")
+    result = CeBoundedExecutor(AuthoringWorkspaceContext(tmp_path)).execute(
+        BoundedExecutionRequest(
+            xml='<setup><execute uri="sleep.scr.py"/></setup>', allow_side_effects=True, timeout_seconds=2
+        )
+    )
+    assert not result.ok
+    assert result.diagnostics[0].code is AuthoringSystemDiagnosticCode.TIMEOUT
+    assert sent == [signal.SIGTERM, signal.SIGKILL]
 
 
 def test_pure_descriptor_does_not_copy_unrelated_repository_files(tmp_path, monkeypatch):
