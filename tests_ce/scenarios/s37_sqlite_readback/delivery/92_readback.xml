@@ -1,0 +1,8 @@
+<setup>
+    <!-- Purpose: read the delivered rows back from the SQLite table. -->
+    <generate name="orders_back" source="shop" selector="SELECT id, status, amount_cents FROM orders ORDER BY id" distribution="ordered" count="12" target="">
+        <key name="id" script="this.id"/>
+        <key name="status" script="this.status"/>
+        <key name="amount_cents" script="this.amount_cents"/>
+    </generate>
+</setup>
