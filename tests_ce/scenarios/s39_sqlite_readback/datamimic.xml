@@ -1,5 +1,5 @@
 <setup rngSeed="37">
-    <database id="shop" dbms="sqlite" database="s37_shop"/>
+    <database id="shop" dbms="sqlite" database="s39_shop"/>
     <include uri="delivery/90_clear.xml"/>
     <include uri="delivery/91_load.xml"/>
     <include uri="delivery/92_readback.xml"/>

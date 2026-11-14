@@ -3,7 +3,7 @@
   "proves": [
     "a project declares one SQLite client in the entry and uses it in three steps: clear the table, write the orders, read them back",
     "a normal run writes 12 rows to the SQLite table and the readback product returns 12 rows; a second run clears first and gives the same rows",
-    "Build needs an environment binding for the client and reads the table in the project (db/s37_shop.sqlite, 12 rows): it proves the readback product against the table as it is on disk",
+    "Build needs an environment binding for the client and reads the table in the project (db/s39_shop.sqlite, 12 rows): it proves the readback product against the table as it is on disk",
     "Build does not prove that the load wrote the rows: Build isolates the write target and skips the clear, so the readback in Build shows the fixture rows, not the generated rows",
     "a readback needs a literal count: without count Build cannot prove the cardinality; a count above the rows of the table stops the source early (DM316)",
     "the table comes from a checked-in SQLite file, because Build refuses an <execute> step (unsupported_bounded_operation): a project cannot create its own table and stay provable"
