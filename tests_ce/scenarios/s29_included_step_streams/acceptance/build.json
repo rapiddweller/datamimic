@@ -19,6 +19,7 @@
     {"kind": "exact_count", "subject": {"kind": "product", "product": "stream_check"}, "count": 4},
     {"kind": "allowed_values", "subject": {"kind": "product", "product": "nested_draws"}, "field": "distinct_draws", "values": [3]},
     {"kind": "allowed_values", "subject": {"kind": "product", "product": "stream_check"}, "field": "distinct_draws", "values": [3]},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "stream_check"}, "field": "distinct_ctx", "values": [4]},
     {"kind": "allowed_values", "subject": {"kind": "product", "product": "stream_check"}, "field": "distinct_labels", "values": [2]}
   ]
 }
