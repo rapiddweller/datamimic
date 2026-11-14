@@ -1,0 +1,4 @@
+<setup>
+    <!-- Purpose: empty the orders table, so a second run does not meet the rows of the first run. -->
+    <generate name="clear_orders" targetEntity="orders" target="shop.clear"/>
+</setup>
