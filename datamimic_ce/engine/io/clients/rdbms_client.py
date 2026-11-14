@@ -409,7 +409,7 @@ class RdbmsClient(DatabaseClient):
         """
         self._require_read_query(original_query)
         if pagination is None:
-            logger.info(f"page is None, get all data from query {original_query}")
+            logger.info("page is None, get all data from query")
             result = self.get(original_query)
             # Use _mapping attribute for SQLAlchemy 2.0 Row objects
             return [dict(row._mapping) if isinstance(row, Row) else dict(row) for row in result]

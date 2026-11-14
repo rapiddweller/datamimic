@@ -70,7 +70,7 @@ def rdbms_count_source_query(client: RegisteredClient, query: str, source_str: s
             and isinstance(error.__cause__, ProgrammingError | OperationalError)
         ):
             raise
-        logger.error(f"Cannot get length of database source '{source_str}' with {query_label} '{query}'")
+        logger.error(f"Cannot get length of database source '{source_str}' with {query_label}")
         return None
 
 
