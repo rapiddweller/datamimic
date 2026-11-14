@@ -93,6 +93,8 @@ class AcceptanceProductV1(AuthoringModel):
     fields: tuple[NonEmptyStrictStr, ...] = ()
     lists: tuple[AcceptanceListV1, ...] = ()
     declared_sinks: tuple[DeclaredSinkIdentity, ...] = ()
+    # True when the product reads a file source, whose columns= also declare fields (#479).
+    reads_file_source: bool = False
 
 
 class AcceptanceCheckV1(AuthoringModel):
@@ -237,8 +239,9 @@ def validate_acceptance_subject(
             )
             return
         fields = product.fields
-        # columns= declares the columns of a file source as fields too (#479).
-        owner = "of that product, or, for a column of its file source, list the column in columns="
+        owner = "of that product"
+        if product.reads_file_source:
+            owner += ", or, for a column of its file source, list the column in columns="
         if isinstance(subject, ProductRowsSubject) and subject.list_field is not None:
             selected = next((item for item in product.lists if item.name == subject.list_field), None)
             if selected is None:

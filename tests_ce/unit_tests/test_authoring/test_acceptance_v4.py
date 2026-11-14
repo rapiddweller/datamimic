@@ -833,3 +833,17 @@ def test_allowed_values_match_temporal_literals_without_coercing_json_values(act
     failures = evaluate_acceptance(spec, capture(rows=[{"value": actual}]))
 
     assert bool(failures) is not accepted
+
+
+@pytest.mark.parametrize(
+    ("generate", "names_columns"),
+    [
+        ('<generate name="rows" source="data/rows.ent.csv" count="2"><key name="id" constant="1"/></generate>', True),
+        ('<generate name="rows" count="2"><key name="id" constant="1"/></generate>', False),
+    ],
+)
+def test_unknown_field_remediation_names_columns_only_for_a_file_source(generate, names_columns):
+    expectation = {"kind": "fixed_value", "subject": {"kind": "product", "product": "rows"}, "field": "x", "value": 1}
+    with pytest.raises(AcceptanceProjectionError) as error:
+        project(f"<setup>{generate}</setup>", expectations=[expectation])
+    assert ("columns=" in str(error.value.diagnostics[0].remediation)) is names_columns

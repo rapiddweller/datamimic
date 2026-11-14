@@ -255,8 +255,8 @@ joins nothing; a key copy such as `parent.depot_id` groups the child rows. A nam
 column and no variable of the parent (for example a source column that nothing declares) stays rejected, and the
 remediation now names both working forms. The per-parent remediation says that a variable copy does not group, and
 that a child with several parent copies needs a `foreign_key` role. Case: `tests_ce/scenarios/s37_parent_variable_reference`.
-An expectation or role on an undeclared field ("Expectation references an unknown field") now also says that
-`columns=` declares a column of a file source (#479).
+An expectation or role on an undeclared field ("Expectation references an unknown field") now also says, for a product that reads a file
+source, that `columns=` declares a column of that source (#479). A generated product keeps the text without it.
 
 ### A setup-level variable with storage= (#442 T3)
 

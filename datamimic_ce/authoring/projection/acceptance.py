@@ -63,6 +63,7 @@ from datamimic_ce.engine.dsl.api import (
     capture_product_name,
     column_names,
     parse_literal_values,
+    source_file_format_for,
 )
 from datamimic_ce.errors import GUIDANCE_LOOKUP_POINTER
 
@@ -213,6 +214,7 @@ def _products(document: DmJsonDocumentV1, included: tuple[tuple[str, DmJsonDocum
                 for index, child in enumerate(node.children)
                 if child.kind == "nestedKey" and child.properties.get("type") == "list"
             )
+            source = node.properties.get("source")
             fields = _fields(node)
             columns = node.properties.get("columns")
             if isinstance(columns, str):
@@ -233,6 +235,7 @@ def _products(document: DmJsonDocumentV1, included: tuple[tuple[str, DmJsonDocum
                 fields=fields,
                 lists=lists,
                 declared_sinks=tuple(sinks),
+                reads_file_source=isinstance(source, str) and source_file_format_for(node.kind, source) is not None,
             )
             entry = _Product(node, path, product, parent.product.name if parent else None, _count(node, path))
             entries.append(entry)
