@@ -1,0 +1,11 @@
+{
+  "version": "5.0",
+  "max_count": 20,
+  "product_roles": [
+    {"product": "german_accounts", "field": "iban", "role": {"kind": "identifier"}}
+  ],
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "german_accounts"}, "count": 20},
+    {"kind": "unique", "subject": {"kind": "product", "product": "german_accounts"}, "field": "iban"}
+  ]
+}

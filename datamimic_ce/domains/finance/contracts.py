@@ -40,7 +40,7 @@ class GeneratedTransactionData(TypedDict):
 
 class BankAccountData(TypedDict):
     account_number: str
-    iban: str
+    iban: str | None
     account_type: str
     balance: float
     currency: str

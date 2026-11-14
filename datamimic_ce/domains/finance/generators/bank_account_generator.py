@@ -15,6 +15,35 @@ from datamimic_ce.domains.shared.datasets.loader import pick_one_weighted_no_rep
 from datamimic_ce.domains.shared.literal_generators.primitives.data_faker_generator import DataFakerGenerator
 
 
+_DIGITS = "0123456789"
+_UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+# ISO 13616 character classes: n = digits, a = upper-case letters, c = alphanumeric.
+_CLASS_CHARS = {"n": _DIGITS, "a": _UPPER, "c": _UPPER + _DIGITS}
+_IBAN_PREFIX_LENGTH = 4
+
+# ISO 13616-1:2020 BBAN structure per country as (class, length) segments, the same table as EE.
+# A country that is not listed has no IBAN here. Belgium and Spain are left out on purpose: their BBAN
+# holds national check digits that this table does not compute.
+_BBAN_SPECS: dict[str, tuple[tuple[str, int], ...]] = {
+    "AT": (("n", 16),),
+    "CH": (("n", 5), ("c", 12)),
+    "DE": (("n", 18),),
+    "FR": (("n", 10), ("c", 11), ("n", 2)),
+    "GB": (("a", 4), ("n", 6), ("n", 8)),
+    "IT": (("a", 1), ("n", 10), ("c", 12)),
+    "NL": (("a", 4), ("n", 10)),
+    "PT": (("n", 21),),
+}
+
+
+def _mod97(iban: str) -> int:
+    """Return the ISO 7064 mod 97 remainder of an IBAN string; a letter A to Z counts 10 to 35."""
+    total = 0
+    for char in iban:
+        total = (total * 10 + ord(char) - 48) % 97 if char.isdigit() else (total * 100 + ord(char) - 55) % 97
+    return total
+
+
 class BankAccountGenerator(ClockAnchoredDomainGenerator):
     def __init__(
         self,
@@ -103,3 +132,13 @@ class BankAccountGenerator(ClockAnchoredDomainGenerator):
         choice = pick_one_weighted_no_repeat(self._rng, codes, weights, last=self._last_currency)
         self._last_currency = choice
         return choice
+
+    def generate_iban(self) -> str | None:
+        """Return an IBAN of the dataset's country, or None for a country without an IBAN scheme."""
+        country = self.dataset[:2].upper()
+        spec = _BBAN_SPECS.get(country)
+        if spec is None:
+            return None
+        bban = "".join(self.rng.choice(_CLASS_CHARS[kind]) for kind, length in spec for _ in range(length))
+        check = 98 - _mod97(f"{bban}{country}00")
+        return f"{country}{check:02d}{bban}"

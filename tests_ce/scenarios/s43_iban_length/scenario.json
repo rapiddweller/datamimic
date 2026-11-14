@@ -1,0 +1,11 @@
+{
+  "title": "BankAccount IBAN has the length of its country",
+  "proves": [
+    "a BankAccount with dataset DE gives an IBAN of 22 characters in every row"
+  ],
+  "products": {"german_accounts": 20},
+  "negatives": [
+    {"name": "wrong_iban_length", "diagnostic": "assert_failed", "expected": "A German IBAN has 22 characters", "run_error": "A German IBAN has 22 characters",
+     "patch": {"file": "datamimic.xml", "old": "== 22", "new": "== 21"}}
+  ]
+}

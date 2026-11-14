@@ -117,7 +117,7 @@ class CreditCard(BaseEntity):
 
     @property
     @property_cache
-    def iban(self) -> str:
+    def iban(self) -> str | None:
         return self.bank_account_data.iban
 
     def to_dict(self) -> dict[str, object]:

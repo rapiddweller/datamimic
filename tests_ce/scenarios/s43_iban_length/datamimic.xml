@@ -1,0 +1,7 @@
+<setup rngSeed="36">
+    <generate name="german_accounts" count="20">
+        <variable name="account" entity="BankAccount" dataset="DE"/>
+        <key name="iban" script="account.iban"/>
+        <assert condition="len(this.iban) == 22" message="A German IBAN has 22 characters"/>
+    </generate>
+</setup>

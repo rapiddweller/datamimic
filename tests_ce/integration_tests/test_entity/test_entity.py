@@ -59,7 +59,7 @@ class TestEntity:
         fr_accounts = result.get("fr_bank_accounts", [])
 
         assert fr_accounts, "Expected FR bank accounts to be generated"
-        assert all(account["iban"].startswith("FR") for account in fr_accounts)
+        assert all(account["iban"].startswith("FR") and len(account["iban"]) == 27 for account in fr_accounts)
         assert all(len(account["account_number"]) > 0 for account in fr_accounts)
 
     def test_entity_bank(self):
