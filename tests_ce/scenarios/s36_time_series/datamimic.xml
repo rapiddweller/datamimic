@@ -3,6 +3,7 @@
         <key name="sensor" script="'sensor-' + str(ts.series)"/>
         <key name="recorded_at" script="ts.now.isoformat()"/>
         <key name="hour" script="ts.step"/>
+        <key name="minute_of_day" script="ts.now.hour * 60 + ts.now.minute"/>
         <key name="temperature_c" type="int" min="15" max="30"/>
     </generate>
 </setup>

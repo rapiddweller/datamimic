@@ -4,7 +4,8 @@
     "a generate with start, end and interval makes one row for each window point and series: 6 points x 3 series = 18 rows",
     "the end of the window is exclusive: the last tick is 05:00",
     "ts.series numbers the series, ts.step the point, ts.now the tick time",
-    "the time column is a timestamp role and stays inside the window"
+    "the time column is a timestamp role and stays inside the window",
+    "the tick spacing is one hour: a row condition ties the minute of the day (from ts.now) to the step (minute_of_day = hour x 60); CE has no composite uniqueness expectation for (sensor, hour), so the row count and the spacing guard it"
   ],
   "products": {
     "readings": 18
@@ -20,6 +21,8 @@
      "patch": {"file": "acceptance/build.json", "old": "\"minimum\": 0, \"maximum\": 5", "new": "\"minimum\": 0, \"maximum\": 4"}},
     {"name": "time_outside_window", "diagnostic": "row_condition",
      "patch": {"file": "acceptance/build.json", "old": "recorded_at < '2026-03-01T06:00:00'", "new": "recorded_at < '2026-03-01T05:00:00'"}},
+    {"name": "spacing_not_hourly", "diagnostic": "row_condition",
+     "patch": {"file": "datamimic.xml", "old": "interval=\"PT1H\"", "new": "interval=\"PT30M\""}},
     {"name": "bad_interval", "diagnostic": "input", "message": "must be an ISO 8601 duration",
      "patch": {"file": "datamimic.xml", "old": "interval=\"PT1H\"", "new": "interval=\"hourly\""}}
   ]

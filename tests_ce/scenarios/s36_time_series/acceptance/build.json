@@ -8,6 +8,7 @@
     {"kind": "range", "subject": {"kind": "product", "product": "readings"}, "field": "hour", "minimum": 0, "maximum": 5},
     {"kind": "range", "subject": {"kind": "product", "product": "readings"}, "field": "temperature_c", "minimum": 15, "maximum": 30},
     {"kind": "allowed_values", "subject": {"kind": "product", "product": "readings"}, "field": "sensor", "values": ["sensor-0", "sensor-1", "sensor-2"]},
-    {"kind": "row_condition", "subject": {"kind": "product", "product": "readings"}, "condition": "recorded_at >= '2026-03-01T00:00:00' and recorded_at < '2026-03-01T06:00:00'"}
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "readings"}, "condition": "recorded_at >= '2026-03-01T00:00:00' and recorded_at < '2026-03-01T06:00:00'"},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "readings"}, "condition": "minute_of_day == hour * 60"}
   ]
 }
