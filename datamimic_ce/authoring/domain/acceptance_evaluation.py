@@ -232,7 +232,7 @@ def _temporal_literal_matches(actual: date, expected: str) -> bool:
         return False
 
 
-def _matches_literal(actual: object, expected: object) -> bool:
+def _matches_literal(actual: object, expected: JsonValue) -> bool:
     """One rule for allowed_values and fixed_value (#476): a date or datetime capture matches its ISO literal;
     every other value compares by type and value, so the literal 1 never matches a True capture."""
     if isinstance(actual, date) and isinstance(expected, str):
