@@ -10,7 +10,7 @@ fastmcp_client = pytest.importorskip("fastmcp.client")
 Client = fastmcp_client.Client
 
 import datamimic_ce.interfaces.mcp.server as mcp_server  # noqa: E402
-from datamimic_ce.authoring.domain.requests import BUILD_PROTOCOL, BuildRequestV5  # noqa: E402
+from datamimic_ce.authoring.domain.requests import BUILD_PROTOCOL, BuildRequestV5, LintResult  # noqa: E402
 from datamimic_ce.interfaces.mcp.server import create_server  # noqa: E402
 from tests_ce.authoring_project import write_project  # noqa: E402
 
@@ -69,8 +69,10 @@ async def test_unusable_project_is_an_input_diagnostic_not_a_tool_error(
     allowed.mkdir()
     outside = tmp_path / "outside"
     outside.mkdir()
-    project = {"relative": "shop", "missing": str(allowed / "none"), "outside": str(outside)}[kind]
-    async with Client(create_server(workspace_root=allowed)) as client:
+    project = {"relative": ".", "missing": str(allowed / "none"), "outside": str(outside)}[kind]
+    # Without a root restriction only the absolute-path rule can refuse the existing relative path ".".
+    restriction = allowed if kind != "relative" else None
+    async with Client(create_server(workspace_root=restriction)) as client:
         response = await client.call_tool(tool, {"project": project, **PROJECT_TOOLS[tool]})
     payload = json.loads(response[0].text)
     diagnostics = payload["diagnostics"]
@@ -89,16 +91,42 @@ async def test_project_inside_the_workspace_root_is_accepted(anyio_backend: str,
 
 
 @pytest.mark.anyio
-async def test_project_dotenv_is_loaded_not_the_server_working_directory(
+async def test_each_call_gets_the_dotenv_of_its_own_project(
     anyio_backend: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    seen: list[dict[str, str]] = []
+
+    class RecordingApplication:
+        def lint(self, request) -> LintResult:
+            return LintResult(ok=True)
+
+    def record(**kwargs) -> RecordingApplication:
+        seen.append(dict(kwargs["environment"]))
+        return RecordingApplication()
+
+    monkeypatch.setattr(mcp_server, "create_authoring_application", record)
     monkeypatch.delenv("PROJECT_ONLY_VALUE", raising=False)
-    (tmp_path / ".env").write_text("PROJECT_ONLY_VALUE=1\n", encoding="utf-8")
-    write_project(tmp_path, XML)
+    first, second = tmp_path / "first", tmp_path / "second"
+    for project, value in ((first, "one"), (second, "two")):
+        project.mkdir()
+        (project / ".env").write_text(f"PROJECT_ONLY_VALUE={value}\n", encoding="utf-8")
     async with Client(create_server()) as client:
-        await client.call_tool("datamimic_build", {"project": str(tmp_path)})
-    assert os.environ.get("PROJECT_ONLY_VALUE") == "1"
-    monkeypatch.delenv("PROJECT_ONLY_VALUE")
+        for project in (first, second, first):
+            await client.call_tool("datamimic_lint", {"project": str(project), "request": {"xml": "<setup/>"}})
+    assert [item["PROJECT_ONLY_VALUE"] for item in seen] == ["one", "two", "one"]
+    assert "PROJECT_ONLY_VALUE" not in os.environ
+
+
+def test_child_environment_adds_project_values_without_touching_this_process(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from datamimic_ce.authoring.adapters.bounded_executor import _child_environment
+
+    monkeypatch.delenv("PROJECT_ONLY_VALUE", raising=False)
+    assert _child_environment({}, None) is None
+    child = _child_environment({"PROJECT_ONLY_VALUE": "1"}, 5)
+    assert child is not None and child["PROJECT_ONLY_VALUE"] == "1" and child["PYTHONHASHSEED"] == "5"
+    assert "PROJECT_ONLY_VALUE" not in os.environ
 
 
 @pytest.mark.anyio
@@ -134,3 +162,41 @@ async def test_document_schema_over_the_limit_names_smaller_schemas(anyio_backen
         with pytest.raises(Exception, match="result_too_large") as raised:
             await client.call_tool("datamimic_schema", {})
     assert "build_request_v5" in str(raised.value)
+
+
+WIDE_XML = (
+    '<setup rngSeed="7"><generate name="rows" count="50">'
+    + "".join(f'<key name="k{index}" type="string" pattern="[a-z]{{60}}"/>' for index in range(30))
+    + "</generate></setup>"
+)
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("tool", ["datamimic_dry_run", "datamimic_run"])
+async def test_oversized_bounded_run_is_refused_with_its_hint(anyio_backend: str, tmp_path: Path, tool: str) -> None:
+    async with Client(create_server()) as client:
+        with pytest.raises(Exception, match="result_too_large") as raised:
+            await client.call_tool(
+                tool, {"project": str(tmp_path), "request": {"xml": WIDE_XML, "sample_rows": 50, "max_count": 50}}
+            )
+    assert "sample_rows" in str(raised.value)
+
+
+@pytest.mark.anyio
+async def test_every_tool_is_guarded(anyio_backend: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(mcp_server, "MAX_RESULT_CHARACTERS", 2)
+    project = str(tmp_path)
+    calls = {
+        "datamimic_version": {},
+        "datamimic_schema": {},
+        "datamimic_capabilities": {},
+        "datamimic_capability": {"domain": "element", "name": "setup"},
+        "datamimic_reference": {"request": {"topic": "overview"}},
+        **{name: {"project": project, **arguments} for name, arguments in PROJECT_TOOLS.items()},
+    }
+    async with Client(create_server()) as client:
+        names = {tool.name for tool in await client.list_tools()}
+        assert names == set(calls)
+        for name, arguments in calls.items():
+            with pytest.raises(Exception, match="result_too_large"):
+                await client.call_tool(name, arguments)

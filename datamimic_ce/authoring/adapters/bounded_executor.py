@@ -14,6 +14,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from collections.abc import Mapping
 from contextlib import suppress
 from hashlib import sha256
 from itertools import islice
@@ -519,9 +520,23 @@ def _requires_workspace_snapshot(request: BoundedExecutionRequest, workspace: Au
     return False
 
 
+def _child_environment(environment: Mapping[str, str], hash_seed: int | None) -> dict[str, str] | None:
+    """None lets the child inherit this process's environment unchanged."""
+    if hash_seed is None and not environment:
+        return None
+    seeded = {} if hash_seed is None else {"PYTHONHASHSEED": str(hash_seed)}
+    return {**os.environ, **environment, **seeded}
+
+
 class CeBoundedExecutor:
-    def __init__(self, workspace_context: AuthoringWorkspaceContext | None = None) -> None:
+    def __init__(
+        self,
+        workspace_context: AuthoringWorkspaceContext | None = None,
+        environment: Mapping[str, str] | None = None,
+    ) -> None:
         self._workspace_context = workspace_context
+        # Variables of the project's own .env; only the child sees them, never this process.
+        self._environment = dict(environment or {})
 
     def execute(self, request: BoundedExecutionRequest) -> BoundedExecutionEvidence:
         from datamimic_ce.domains.api import configured_dataset_overrides
@@ -565,7 +580,9 @@ class CeBoundedExecutor:
                     request.max_count,
                 )
             else:
-                result = self._execute_child(request, private_workspace, request_file, private_root / "reply.pickle")
+                result = self._execute_child(
+                    request, private_workspace, request_file, private_root / "reply.pickle", self._environment
+                )
         finally:
             try:
                 temporary.cleanup()
@@ -579,7 +596,11 @@ class CeBoundedExecutor:
 
     @staticmethod
     def _execute_child(
-        request: BoundedExecutionRequest, workspace: Path, request_file: Path, reply_file: Path
+        request: BoundedExecutionRequest,
+        workspace: Path,
+        request_file: Path,
+        reply_file: Path,
+        environment: Mapping[str, str],
     ) -> BoundedExecutionEvidence:
         command = [
             sys.executable,
@@ -593,7 +614,7 @@ class CeBoundedExecutor:
         try:
             process = subprocess.Popen(
                 command,
-                env=None if request.hash_seed is None else {**os.environ, "PYTHONHASHSEED": str(request.hash_seed)},
+                env=_child_environment(environment, request.hash_seed),
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,

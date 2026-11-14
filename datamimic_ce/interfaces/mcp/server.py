@@ -10,11 +10,11 @@ from pathlib import Path, PurePosixPath
 from typing import Annotated, ParamSpec, Protocol, TypeVar
 
 from anyio import to_thread
-from dotenv import load_dotenv
+from dotenv import dotenv_values
 from fastmcp import FastMCP
 from fastmcp.exceptions import ToolError
 from pydantic import Field, JsonValue
-from pydantic_core import to_json
+from pydantic_core import to_jsonable_python
 from starlette.applications import Starlette
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
@@ -79,7 +79,8 @@ def _guarded(hint: str) -> Callable[[Callable[_P, Awaitable[_R]]], Callable[_P, 
         @wraps(function)
         async def guarded(*args: _P.args, **kwargs: _P.kwargs) -> _R:
             result = await function(*args, **kwargs)
-            size = len(to_json(result).decode())
+            # The text FastMCP sends: its default JSON form of the result.
+            size = len(json.dumps(to_jsonable_python(result)))
             if size > MAX_RESULT_CHARACTERS:
                 raise ToolError(json.dumps({"error": "result_too_large", "size": size, "hint": hint}))
             return result
@@ -109,43 +110,50 @@ def create_server(
     server = FastMCP(name="datamimic-ce", version=None)
 
     def application(root: Path, path: PurePosixPath = descriptor_path) -> AuthoringApplication:
-        # The project owns its environment bindings, whatever the server's working directory is.
-        load_dotenv(root / ".env", override=False)
-        return create_authoring_application(workspace_root=root, descriptor_path=path)
+        # The project's own .env reaches this call only; another project's call never sees it.
+        environment = {name: value for name, value in dotenv_values(root / ".env").items() if value is not None}
+        return create_authoring_application(workspace_root=root, descriptor_path=path, environment=environment)
+
+    def tool(name: str, hint: str) -> Callable[[Callable[_P, Awaitable[_R]]], Callable[_P, Awaitable[_R]]]:
+        """Register one tool whose result may not exceed the size limit."""
+
+        def register(function: Callable[_P, Awaitable[_R]]) -> Callable[_P, Awaitable[_R]]:
+            server.tool(name)(_guarded(hint)(function))
+            return function
+
+        return register
 
     def catalog_application() -> AuthoringApplication:
         return create_authoring_application()
 
-    @server.tool("datamimic_version")
+    @tool("datamimic_version", "This result cannot be narrowed.")
     async def datamimic_version() -> dict[str, str]:
         """Show the installed CE package version and the Build protocol it speaks."""
         version = await to_thread.run_sync(get_datamimic_lib_version)
         return {"ce_version": version or "unknown", "build_protocol": BUILD_PROTOCOL}
 
-    @server.tool("datamimic_schema")
-    @_guarded("Read a smaller schema: build_request_v5, expectation_intent, diagnostic, build_result.")
+    @tool("datamimic_schema", "Read a smaller schema: build_request_v5, expectation_intent, diagnostic, build_result.")
     async def datamimic_schema(name: AuthoringSchemaId = AuthoringSchemaId.DM_JSON_DOCUMENT_V1) -> dict[str, JsonValue]:
         """Read one schema generated from the running Authoring contract."""
         return await to_thread.run_sync(catalog_application().schema, name)
 
-    @server.tool("datamimic_capabilities")
-    @_guarded("Call datamimic_capability with domain and name instead of the full list.")
+    @tool("datamimic_capabilities", "Call datamimic_capability with domain and name instead of the full list.")
     async def datamimic_capabilities() -> dict[str, object]:
         """Discover the names of the CE runtime vocabulary; read one contract with datamimic_capability."""
         snapshot = await to_thread.run_sync(catalog_application().capabilities)
         return snapshot.to_index_dict()
 
-    @server.tool("datamimic_capability")
+    @tool("datamimic_capability", "Name one exact capability; datamimic_capabilities lists the names.")
     async def datamimic_capability(domain: CapabilityDomain, name: str) -> CapabilityLookupResult:
         """Read one exact registered CE capability, or its typed not-found result."""
         return await to_thread.run_sync(catalog_application().capability, domain, name)
 
-    @server.tool("datamimic_reference")
+    @tool("datamimic_reference", "Set request.name to read one named contract instead of the whole topic.")
     async def datamimic_reference(request: ReferenceRequest) -> ReferenceResult:
         """Read one model-derived reference topic or named contract."""
         return await to_thread.run_sync(catalog_application().reference, request)
 
-    @server.tool("datamimic_compile")
+    @tool("datamimic_compile", "Compile a smaller DM JSON document.")
     async def datamimic_compile(
         project: Annotated[str, Field(description=_PROJECT_ARGUMENT)], request: CompileDocumentRequest
     ) -> CompileDocumentResult:
@@ -155,7 +163,7 @@ def create_server(
             return RejectedCompileDocument.from_input_error(root)
         return await to_thread.run_sync(application(root, request.descriptor_path).compile_document, request)
 
-    @server.tool("datamimic_decompile")
+    @tool("datamimic_decompile", "Decompile a smaller descriptor.")
     async def datamimic_decompile(
         project: Annotated[str, Field(description=_PROJECT_ARGUMENT)], request: DecompileDocumentRequest
     ) -> DecompileDocumentResult:
@@ -165,8 +173,7 @@ def create_server(
             return RejectedDecompileDocument.from_input_error(root)
         return await to_thread.run_sync(application(root, request.descriptor_path).decompile_document, request)
 
-    @server.tool("datamimic_build")
-    @_guarded("Fix the first diagnostics and call datamimic_build again; read the artifacts on disk.")
+    @tool("datamimic_build", "Fix the first diagnostics and call datamimic_build again; read the artifacts on disk.")
     async def datamimic_build(project: Annotated[str, Field(description=_PROJECT_ARGUMENT)]) -> BuildResult:
         """Prove the project: its datamimic.xml entry against its acceptance/build.json."""
         root = _project_root(project, workspace_root)
@@ -174,7 +181,7 @@ def create_server(
             return RejectedBuild.from_input_error(root)
         return await to_thread.run_sync(application(root, PROJECT_ENTRY_PATH).build)
 
-    @server.tool("datamimic_lint")
+    @tool("datamimic_lint", "Lint a smaller descriptor; split the model into included steps.")
     async def datamimic_lint(
         project: Annotated[str, Field(description=_PROJECT_ARGUMENT)], request: LintRequest
     ) -> LintResult:
@@ -184,8 +191,7 @@ def create_server(
             return LintResult.from_input_error(root)
         return await to_thread.run_sync(application(root).lint, request)
 
-    @server.tool("datamimic_dry_run")
-    @_guarded("Lower sample_rows or max_count.")
+    @tool("datamimic_dry_run", "Lower sample_rows or max_count.")
     async def datamimic_dry_run(
         project: Annotated[str, Field(description=_PROJECT_ARGUMENT)], request: RunRequest
     ) -> RunResult:
@@ -195,8 +201,7 @@ def create_server(
             return RunResult.from_input_error(root).model_copy(update={"phase": RunPhase.DRY_RUN})
         return await to_thread.run_sync(application(root, request.descriptor_path).dry_run, request)
 
-    @server.tool("datamimic_run")
-    @_guarded("Lower sample_rows or max_count.")
+    @tool("datamimic_run", "Lower sample_rows or max_count.")
     async def datamimic_run(
         project: Annotated[str, Field(description=_PROJECT_ARGUMENT)], request: RunRequest
     ) -> RunResult:

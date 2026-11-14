@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING
 
@@ -18,6 +19,7 @@ if TYPE_CHECKING:
 def create_authoring_application(
     workspace_root: Path | None = None,
     descriptor_path: PurePosixPath = DEFAULT_AUTHORING_DESCRIPTOR_PATH,
+    environment: Mapping[str, str] | None = None,
 ) -> AuthoringApplication:
     from datamimic_ce.authoring.adapters.bounded_execution_policy import CeBoundedExecutionPolicy
     from datamimic_ce.authoring.adapters.bounded_executor import CeBoundedExecutor
@@ -35,10 +37,10 @@ def create_authoring_application(
     return AuthoringApplication(
         catalog=CeDslCatalog(codec),
         validator=CeDescriptorValidator(workspace, profile_loader=workspace.load_connection_profile),
-        executor=CeBoundedExecutor(workspace),
+        executor=CeBoundedExecutor(workspace, environment),
         descriptor_contract=codec,
         bounded_execution_policy=CeBoundedExecutionPolicy(),
         files=project,
         project_validator=CeDescriptorValidator(project, profile_loader=project.load_connection_profile),
-        project_executor=CeBoundedExecutor(project),
+        project_executor=CeBoundedExecutor(project, environment),
     )
