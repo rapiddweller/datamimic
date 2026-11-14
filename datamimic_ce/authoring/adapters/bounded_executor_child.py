@@ -25,7 +25,7 @@ from datamimic_ce.authoring.adapters.dryrun import (
 from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
 from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest
 from datamimic_ce.engine.dsl.api import resource_reader_scope
-from datamimic_ce.errors import IssueCode, collect_task_warnings
+from datamimic_ce.errors import CollectedWarning, collect_task_warnings
 
 # Audit events that start a process; refused in every bounded run without side effects.
 _PROCESS_EVENTS = frozenset(
@@ -193,7 +193,7 @@ def main() -> None:
             workspace_root=workspace.root,
         )
     if isinstance(message, (_WorkerSuccess, _WorkerFailure)):
-        shown = (_engine_warning(code, fields) for code, fields in found if code in SHOWN_WARNINGS)
+        shown = (_engine_warning(item) for item in found if item.code in SHOWN_WARNINGS)
         warnings = tuple(dict.fromkeys(shown))
         message = dataclasses.replace(message, read_files=tuple(sorted(read)), warnings=warnings)
     payload = pickle.dumps(message, protocol=pickle.HIGHEST_PROTOCOL)
@@ -206,9 +206,8 @@ def main() -> None:
     time.sleep(request.timeout_seconds + 5)
 
 
-def _engine_warning(code: IssueCode, fields: dict[str, object]) -> _EngineWarning:
-    script, line = fields.get("script"), fields.get("line")
-    return _EngineWarning(code, (script, line) if isinstance(script, str) and isinstance(line, int) else None)
+def _engine_warning(item: CollectedWarning) -> _EngineWarning:
+    return _EngineWarning(item.code, (item.script, item.line) if item.script is not None and item.line else None)
 
 
 if __name__ == "__main__":
