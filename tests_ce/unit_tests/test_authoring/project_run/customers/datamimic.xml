@@ -1,0 +1,7 @@
+<setup rngSeed="7">
+    <generate name="customers" count="25" target="CSV">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="name" type="string" pattern="[A-Z][a-z]{5}"/>
+        <key name="email" type="string" pattern="[a-z]{6}@example\.com"/>
+    </generate>
+</setup>

@@ -84,6 +84,7 @@ async def test_cli_sse_exact_tools_with_api_key(anyio_backend: str) -> None:
                 "datamimic_lint",
                 "datamimic_dry_run",
                 "datamimic_run",
+                "datamimic_run_project",
                 "datamimic_reference",
             }
     finally:

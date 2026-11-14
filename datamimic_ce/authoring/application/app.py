@@ -9,6 +9,7 @@ from __future__ import annotations
 from pydantic import JsonValue, TypeAdapter
 
 from datamimic_ce.authoring.application.build import BuildDocumentWorkflow
+from datamimic_ce.authoring.application.project_run import ProjectRunWorkflow
 from datamimic_ce.authoring.application.raw_xml import RawXmlUseCase
 from datamimic_ce.authoring.application.schema import contract_schemas
 from datamimic_ce.authoring.application.use_cases import (
@@ -16,6 +17,7 @@ from datamimic_ce.authoring.application.use_cases import (
     DecompileDocumentUseCase,
 )
 from datamimic_ce.authoring.domain.capabilities import CapabilityDomain, CapabilityLookupResult, DslCatalogSnapshot
+from datamimic_ce.authoring.domain.project_run import ProjectRunRequest, ProjectRunResult
 from datamimic_ce.authoring.domain.reference import ReferenceResult
 from datamimic_ce.authoring.domain.requests import (
     BUILD_PROTOCOL,
@@ -39,7 +41,9 @@ from datamimic_ce.authoring.ports import (
     DescriptorValidator,
     DmJsonDescriptorContract,
     DslCatalog,
+    ExternalEffectsDetector,
     ProjectFiles,
+    ProjectRunner,
 )
 
 
@@ -56,6 +60,8 @@ class AuthoringApplication:
         files: ProjectFiles,
         project_validator: DescriptorValidator,
         project_executor: BoundedExecutor,
+        external_effects: ExternalEffectsDetector,
+        project_runner: ProjectRunner,
     ) -> None:
         self._validator = validator
         self._raw_xml = RawXmlUseCase(validator, executor)
@@ -67,6 +73,11 @@ class AuthoringApplication:
         self._build = BuildDocumentWorkflow(
             descriptor_contract, project_validator, project_executor, bounded_execution_policy, files
         )
+        self._project_run = ProjectRunWorkflow(self._build.execute, external_effects, project_runner)
+
+    def run_project(self, request: ProjectRunRequest) -> ProjectRunResult:
+        """Build the bound project, then run it for its real output within the allowed effects."""
+        return self._project_run.execute(request)
 
     def build_protocol(self) -> str:
         """The Build contract version this package speaks; clients check it instead of the package version."""

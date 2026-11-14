@@ -325,7 +325,7 @@ def test_existing_entrypoints_have_explicit_inner_public_decisions() -> None:
         f"datamimic_ce.authoring.ports:{name}"
         for name in (
             "DmJsonDescriptorContract", "DslCatalog", "DescriptorValidator",
-            "BoundedExecutor", "BoundedExecutionPolicy", "ProjectFiles",
+            "BoundedExecutor", "BoundedExecutionPolicy", "ProjectFiles", "ExternalEffectsDetector", "ProjectRunner",
         )
     }
     assert set(ports["public"]).issubset(public)

@@ -13,7 +13,7 @@ from anyio import to_thread
 from dotenv import dotenv_values
 from fastmcp import FastMCP
 from fastmcp.exceptions import ToolError
-from pydantic import Field, JsonValue
+from pydantic import Field, JsonValue, ValidationError
 from pydantic_core import to_jsonable_python
 from starlette.applications import Starlette
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
@@ -23,6 +23,7 @@ from starlette.status import HTTP_401_UNAUTHORIZED
 
 from datamimic_ce.authoring import AuthoringApplication, create_authoring_application
 from datamimic_ce.authoring.domain.capabilities import CapabilityDomain, CapabilityLookupResult
+from datamimic_ce.authoring.domain.project_run import ProjectParam, ProjectRunRequest, ProjectRunResult
 from datamimic_ce.authoring.domain.reference import ReferenceResult
 from datamimic_ce.authoring.domain.requests import (
     DEFAULT_AUTHORING_DESCRIPTOR_PATH,
@@ -179,6 +180,28 @@ def create_server(
         if isinstance(root, str):
             return RejectedBuild.from_input_error(root)
         return await to_thread.run_sync(application(root, PROJECT_ENTRY_PATH).build)
+
+    @tool("datamimic_run_project", "Read the generated files from disk; the result lists their paths.")
+    async def datamimic_run_project(
+        project: Annotated[str, Field(description=_PROJECT_ARGUMENT)],
+        allow_side_effects: bool = False,
+        params: dict[str, str] | None = None,
+        timeout_seconds: int = 600,
+    ) -> ProjectRunResult:
+        """Build the project, then run it for its real data. Targets outside the project need allow_side_effects."""
+        root = _project_root(project, workspace_root)
+        if isinstance(root, str):
+            return ProjectRunResult.from_input_error(root)
+        values: dict[str, str] = params or {}
+        try:
+            request = ProjectRunRequest(
+                allow_side_effects=allow_side_effects,
+                params=tuple(ProjectParam(name=name, value=values[name]) for name in values),
+                timeout_seconds=timeout_seconds,
+            )
+        except ValidationError:
+            return ProjectRunResult.from_input_error("Run options are invalid: check params and timeout_seconds.")
+        return await to_thread.run_sync(application(root, PROJECT_ENTRY_PATH).run_project, request)
 
     @tool("datamimic_lint", "Lint a smaller descriptor; split the model into included steps.")
     async def datamimic_lint(

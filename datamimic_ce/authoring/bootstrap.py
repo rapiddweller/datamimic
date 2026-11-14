@@ -25,6 +25,8 @@ def create_authoring_application(
     from datamimic_ce.authoring.adapters.bounded_executor import CeBoundedExecutor
     from datamimic_ce.authoring.adapters.catalog import CeDslCatalog
     from datamimic_ce.authoring.adapters.dm_json_codec import CeDmJsonCodec
+    from datamimic_ce.authoring.adapters.external_effects import CeExternalEffectsDetector
+    from datamimic_ce.authoring.adapters.project_runner import CeProjectRunner
     from datamimic_ce.authoring.adapters.validator import CeDescriptorValidator
     from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
     from datamimic_ce.authoring.application.app import AuthoringApplication
@@ -43,4 +45,6 @@ def create_authoring_application(
         files=project,
         project_validator=CeDescriptorValidator(project, profile_loader=project.load_connection_profile),
         project_executor=CeBoundedExecutor(project, environment),
+        external_effects=CeExternalEffectsDetector(project),
+        project_runner=CeProjectRunner(project, environment),
     )

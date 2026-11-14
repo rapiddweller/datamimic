@@ -1,0 +1,6 @@
+<setup rngSeed="7">
+    <database id="db" dbms="sqlite" database="warehouse"/>
+    <generate name="customers" count="3" target="db">
+        <key name="id" generator="IncrementGenerator"/>
+    </generate>
+</setup>

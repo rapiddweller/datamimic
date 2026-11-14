@@ -46,6 +46,7 @@ def test_cli_has_exact_command_surface() -> None:
         "compile",
         "decompile",
         "build",
+        "run-project",
         "lint",
         "dry-run",
         "run",

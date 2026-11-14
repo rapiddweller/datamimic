@@ -15,7 +15,7 @@ import os
 import pickle
 import tempfile
 import uuid
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, suppress
 from dataclasses import replace
 from enum import StrEnum
@@ -254,7 +254,8 @@ def _runtime_hint(err: Exception) -> str:
     return "Repair the reported runtime input or workspace configuration."
 
 
-def _memstore_ids(root_stmt: object) -> set[str]:
+def memstore_ids(root_stmt: object) -> set[str]:
+    """The memstores a setup declares; the one owner for bounded runs and the external-effect check."""
     from datamimic_ce.engine.dsl.api import MemstoreStatement, SetupStatement
 
     assert isinstance(root_stmt, SetupStatement)
@@ -399,7 +400,7 @@ def _refuse_unbounded_execute(
 _MAX_INCLUDE_GRAPH_BYTES = 64 * 1024 * 1024
 
 
-def _literal_include_graph(entry: etree._Element, entry_path: Path) -> tuple[tuple[str, bytes], ...]:
+def literal_include_graph(entry: etree._Element, entry_path: Path) -> tuple[tuple[str, bytes], ...]:
     """The entry's literal include graph in execution order: (workspace-relative uri, file bytes) per ``.xml``
     step; ``.properties`` files are read for containment but not retained. Nested uris resolve against the entry
     directory, as the runtime resolves them. Raises _BoundedPolicyRefusal unless the graph is literal,
@@ -470,7 +471,7 @@ def _validate_bounded_includes(
     if all(PurePosixPath(node.get("uri", "")).suffix != ".xml" for node in root.iter("include")):
         return set(), None
     try:
-        graph = _literal_include_graph(root, path)
+        graph = literal_include_graph(root, path)
     except _BoundedPolicyRefusal:
         raise
     except (OSError, ValueError) as error:
@@ -616,24 +617,53 @@ def _static_count(value: object) -> int | None:
     return None
 
 
-def _parse_buffered_targets(targets: set[str]) -> list[_FileTarget]:
-    """The subset of raw target strings that are buffered FILE exporters, parsed to
-    (name, params). Membership in the exporter registry is the dispatch — memstores,
-    clients, Console/Log never appear there, so they can never be smoked."""
+UNREADABLE_TARGET = "A target of this statement could not be read."
+
+
+@dataclass(frozen=True, config=ConfigDict(extra="forbid", strict=True, revalidate_instances="always"))
+class TargetClassification:
+    """Where the raw targets of one statement lead. Policies decide what each group means."""
+
+    files: tuple[_FileTarget, ...] = ()
+    # Registered exporters that only show output: console, log and the test result.
+    diagnostics: tuple[str, ...] = ()
+    # Everything else: database or MongoDB clients, unknown names, unresolved placeholders.
+    external: tuple[str, ...] = ()
+    unreadable: bool = False
+
+
+def classify_targets(targets: Iterable[str], memstores: set[str] | frozenset[str]) -> TargetClassification:
+    """Split raw target strings into buffered file exporters, diagnostics and external targets.
+    Membership in the exporter registry is the dispatch; memstores are in-memory and never listed."""
     from datamimic_ce.engine.dsl.parsers.input.target import parse_function_string
+    from datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants import (
+        EXPORTER_CONSOLE_EXPORTER,
+        EXPORTER_LOG_EXPORTER,
+        EXPORTER_TEST_RESULT_EXPORTER,
+    )
     from datamimic_ce.engine.io.api import buffered_exporter_names
 
-    parsed: list[_FileTarget] = []
     buffered_names = buffered_exporter_names()
-    for raw in sorted(targets):
+    diagnostic_names = {EXPORTER_CONSOLE_EXPORTER, EXPORTER_LOG_EXPORTER, EXPORTER_TEST_RESULT_EXPORTER}
+    files: list[_FileTarget] = []
+    diagnostics: list[str] = []
+    external: list[str] = []
+    unreadable = False
+    for raw in sorted(set(targets) - memstores):
         try:
             entries = parse_function_string(raw)
         except ValueError:
-            continue  # malformed target string — the engine's own path reports it
+            unreadable = True  # the engine's own path reports the malformed target
+            continue
         for entry in entries:
-            if entry["function_name"] in buffered_names:
-                parsed.append((entry["function_name"], entry.get("params") or {}))
-    return parsed
+            name = entry["function_name"]
+            if name in buffered_names:
+                files.append((name, entry.get("params") or {}))
+            elif name in diagnostic_names:
+                diagnostics.append(name)
+            elif name not in memstores:
+                external.append(name)
+    return TargetClassification(tuple(files), tuple(diagnostics), tuple(external), unreadable)
 
 
 def neutralize_for_dry_run(
@@ -688,7 +718,7 @@ def neutralize_for_dry_run(
             )
     elif not allow_side_effects and executes:
         raise _BoundedPolicyRefusal("bounded execution refuses execute without a descriptor directory")
-    memstores = _memstore_ids(root_stmt) | (included_memstores or set())
+    memstores = memstore_ids(root_stmt) | (included_memstores or set())
     # With steps, producers come from the whole graph: a step may read what another step wrote.
     memstore_producers = graph_producers if graph_producers is not None else _memstore_producers(root_stmt, memstores)
     root_stmt.num_process = 1
@@ -744,7 +774,7 @@ def neutralize_for_dry_run(
                         migration=delete_problem[1],
                     )
                 if stripped_file_targets is not None:
-                    file_targets = _parse_buffered_targets(stmt.targets - memstores)
+                    file_targets = list(classify_targets(stmt.targets, memstores).files)
                     if file_targets:
                         # same basename resolution as the real exporter factory
                         basename = resolve_target_entity(stmt.target_entity, None, stmt.name)

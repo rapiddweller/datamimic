@@ -1,0 +1,1 @@
+{"version": "5.0", "environment_bindings": [{"environment": "db", "family": "database"}], "expectations": [{"kind": "exact_count", "subject": {"kind": "product", "product": "customers"}, "count": 3}]}

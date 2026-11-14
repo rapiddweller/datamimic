@@ -15,7 +15,7 @@ from lxml import etree
 from datamimic_ce.authoring.adapters.dryrun import (
     _BoundedPolicyRefusal,
     _IncludeBudgetExceeded,
-    _literal_include_graph,
+    literal_include_graph,
 )
 from datamimic_ce.authoring.adapters.linter import _run_rules
 from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
@@ -145,7 +145,7 @@ class CeDescriptorValidator:
         """The parser decodes literal ``.properties`` includes eagerly, so the byte budget has to hold before it
         runs. Every other graph problem (missing file, non-literal uri, cycle) is left to the parser and Build."""
         try:
-            _literal_include_graph(parse_xml_source(xml), physical_path)
+            literal_include_graph(parse_xml_source(xml), physical_path)
         except _IncludeBudgetExceeded:
             raise
         except (etree.XMLSyntaxError, ValueError, OSError):
@@ -157,7 +157,7 @@ class CeDescriptorValidator:
         that Build and dry-run report."""
         try:
             with resource_reader_scope(self._workspace_context.read_resource_bytes):
-                graph = _literal_include_graph(root, physical_path)
+                graph = literal_include_graph(root, physical_path)
             steps = {
                 uri: parse_xml_source(str(data, "utf-8")) for uri, data in graph if PurePosixPath(uri).suffix == ".xml"
             }
@@ -172,7 +172,7 @@ class CeDescriptorValidator:
         try:
             physical_path = self._workspace_context.resolve_descriptor_path(logical_path)
             with resource_reader_scope(self._workspace_context.read_resource_bytes):
-                graph = _literal_include_graph(parse_xml_source(xml), physical_path)
+                graph = literal_include_graph(parse_xml_source(xml), physical_path)
         except _BoundedPolicyRefusal as refusal:
             return _graph_refused(logical_path, str(refusal))  # static rule texts, no paths or values
         except etree.XMLSyntaxError:
