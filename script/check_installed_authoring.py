@@ -25,6 +25,9 @@ def cli(*arguments, stdin=None, status=0):
     return result.stdout
 
 
+MAX_MCP_RESULT_CHARACTERS = 60_000
+
+
 async def check_mcp(schemas):
     from fastmcp import Client
     from fastmcp.client.transports import StdioTransport
@@ -63,18 +66,30 @@ async def check_mcp(schemas):
                 "run",
             )
         }
+        version = json.loads((await client.call_tool("datamimic_version", {}))[0].text)
+        assert version["build_protocol"] == "5.0", version
         for name, schema in schemas.items():
+            if len(json.dumps(schema)) > MAX_MCP_RESULT_CHARACTERS:
+                # A schema over the result limit is refused with a hint, never cut.
+                try:
+                    await client.call_tool("datamimic_schema", {"name": name})
+                except Exception as error:
+                    assert "result_too_large" in str(error), name
+                else:
+                    raise AssertionError(f"{name} exceeds the MCP result limit and must be refused")
+                continue
             result = await client.call_tool("datamimic_schema", {"name": name})
             assert json.loads(result[0].text) == schema, name
-        result = await client.call_tool("datamimic_build", {})
+        result = await client.call_tool("datamimic_build", {"project": str(Path.cwd())})
         built = json.loads(result[0].text)
         assert built["outcome"] == "ready" and built["evidence"][0]["count"] == 2, built
         result = await client.call_tool(
             "datamimic_dry_run",
             {
+                "project": str(Path.cwd()),
                 "request": {
                     "xml": '<setup rngSeed="7"><generate name="rows" source="rows.csv" distribution="ordered"/></setup>'
-                }
+                },
             },
         )
         sourced = json.loads(result[0].text)
@@ -193,7 +208,7 @@ def check_installed(with_mcp, checkout):
     assert "demo-condition" in set(demo_names())
     assert b"<setup" in demo_root().joinpath("demo-condition/datamimic.xml").read_bytes()
     assert "demo-condition" in cli("demo", "list")
-    assert json.loads(cli("authoring", "version")) == {"ce_version": version}
+    assert json.loads(cli("authoring", "version")) == {"ce_version": version, "build_protocol": "5.0"}
     assert json.loads(cli("authoring", "schema", "--name", "build_request_v5")) == schemas["build_request_v5"]
     assert json.loads(cli("authoring", "capabilities", "--full")) == capabilities
     assert json.loads(cli("authoring", "reference"))["topic"] == "overview"

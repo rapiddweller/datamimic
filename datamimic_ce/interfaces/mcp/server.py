@@ -25,7 +25,6 @@ from datamimic_ce.authoring import AuthoringApplication, create_authoring_applic
 from datamimic_ce.authoring.domain.capabilities import CapabilityDomain, CapabilityLookupResult
 from datamimic_ce.authoring.domain.reference import ReferenceResult
 from datamimic_ce.authoring.domain.requests import (
-    BUILD_PROTOCOL,
     DEFAULT_AUTHORING_DESCRIPTOR_PATH,
     PROJECT_ENTRY_PATH,
     AuthoringSchemaId,
@@ -130,7 +129,7 @@ def create_server(
     async def datamimic_version() -> dict[str, str]:
         """Show the installed CE package version and the Build protocol it speaks."""
         version = await to_thread.run_sync(get_datamimic_lib_version)
-        return {"ce_version": version or "unknown", "build_protocol": BUILD_PROTOCOL}
+        return {"ce_version": version or "unknown", "build_protocol": catalog_application().build_protocol()}
 
     @tool("datamimic_schema", "Read a smaller schema: build_request_v5, expectation_intent, diagnostic, build_result.")
     async def datamimic_schema(name: AuthoringSchemaId = AuthoringSchemaId.DM_JSON_DOCUMENT_V1) -> dict[str, JsonValue]:
