@@ -119,6 +119,15 @@ def plan_variable_source(
             location=DescriptorLocation("variable", attribute="source"),
         )
 
+    if source_format is SourceFileFormat.WEIGHTED_ENTITY_CSV and stmt.distribution is not SourceDistribution.RANDOM:
+        raise task_config_error(
+            code=IssueCode.TASK_VARIABLE_SOURCE_UNSUPPORTED,
+            source=source,
+            name=stmt.name,
+            guidance="A weighted entity file draws one row by its weight column; remove distribution.",
+            location=DescriptorLocation("variable", attribute="distribution"),
+        )
+
     if source_format in {SourceFileFormat.WEIGHTED_ENTITY_CSV, SourceFileFormat.WEIGHTED_CSV}:
         seeded = context.derive_seeded_rng()
         return VariableSourcePlan(

@@ -148,9 +148,46 @@ def test_all_zero_weights_fail_on_generate_with_original_random_error(tmp_path: 
     assert str(raised.value.__cause__) == "Total of weights must be finite"
 
 
-def test_malformed_weight_fails_during_source_construction(tmp_path: Path) -> None:
-    source_file = tmp_path / "malformed.wgt.csv"
-    source_file.write_text("A,1\nB,not-a-number\n", encoding="utf-8")
+@pytest.mark.parametrize(
+    ("separator", "contents"),
+    [
+        ("|", "A|1\nB|not-a-number\n"),
+        ("|", "OPERATOR|90\nSECRET-A|\n"),
+        ("|", "SECRET-A|\nB|3\n"),
+        (",", "SECRET-A|90\nB|10\n"),
+        ("|", "SECRET-A\nB\n"),
+        ("|", "SECRET-A|1|x\n"),
+    ],
+    ids=[
+        "non-number-weight",
+        "empty-weight-later-line",
+        "empty-weight-first-line",
+        "separator-does-not-split",
+        "no-weight-column",
+        "third-column",
+    ],
+)
+def test_malformed_weighted_file_fails_with_the_typed_error_that_names_only_the_file(
+    tmp_path: Path, separator: str, contents: str
+) -> None:
+    """#448: the typed I102 at construction, never a raw pandas error; no value and no host path in the message."""
+    source_file = tmp_path / "roles.wgt.csv"
+    source_file.write_text(contents, encoding="utf-8")
 
-    with pytest.raises(ValueError, match="could not convert string to float"):
-        WeightedDataSource(source_file, ",", Random(1))
+    with pytest.raises(ValueError, match=r"\[E006/I102\] .*'roles\.wgt\.csv'") as raised:
+        WeightedDataSource(source_file, separator, Random(1))
+
+    assert type(raised.value.__cause__) is ValueError
+    assert "SECRET-A" not in str(raised.value)
+    assert str(tmp_path) not in str(raised.value)
+
+
+def test_a_first_line_with_a_named_weight_stays_a_header(tmp_path: Path) -> None:
+    source_file = tmp_path / "roles.wgt.csv"
+    source_file.write_text("role|weight\nA|3\nB|\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match=r"\[E006/I102\]"):  # the header is skipped, the empty weight of B is not
+        FileUtil.read_weight_csv(source_file, "|")
+    valid_file = tmp_path / "valid.wgt.csv"  # the reader caches file content by path
+    valid_file.write_text("role|weight\nA|3\nB|1\n", encoding="utf-8")
+    assert FileUtil.read_weight_csv(valid_file, "|")[0].tolist() == ["A", "B"]

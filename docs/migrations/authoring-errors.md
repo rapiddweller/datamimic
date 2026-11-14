@@ -197,6 +197,46 @@ A non-cyclic `<variable source>` or a generator that ends stops the rows without
 Cases: `tests_ce/scenarios/s34_source_end_drops_children`, `tests_ce/scenarios/s35_nested_key_source_ends` and
 `tests_ce/integration_tests/test_source_end`.
 
+### An item of a list reads as a row (#441)
+
+An expression reads a dict item of a list by dot and by key, as it reads a source row. This applies to a list that a
+script builds, a list of source rows and a list in a list, and also in `where=`. Before, only a list that the
+expression reached through `this.`, `parent.`, `root.` or a row field held rows; a bare list held plain dicts, so
+`lines[0].qty` failed. `lines[0]['qty']`, `dict(item)`, `str(item)`, `item == {...}` and `{...} in lines` give the
+same results as before. Three differences remain:
+
+- An expression reads a copy of the list. `lines.append(x)` in an expression does not change the variable.
+- A row has no `items()` or `values()` method, because a field of that name wins. Use `dict(item).items()`.
+- A list that an `<execute>` script binds at module level stays the script's own list of plain dicts, because
+  script code that gets it as an argument expects dicts.
+
+Case: `tests_ce/scenarios/s36_script_list_rows`.
+
+The same rule covers a `<nestedKey type="list">` that a later script of the record reads by its bare name (#478):
+`{b.branch_id: b for b in branches}` and `{b.branch_id: b for b in this.branches}` give the same rows. Before, the
+bare name gave plain dicts and `b.branch_id` failed with `I832`. Case: `tests_ce/scenarios/s38_nested_key_list_rows`.
+
+### Malformed weighted sources (#448)
+
+A `.wgt.csv` source that the reader cannot split into a value and a number weight fails with `I102` and the file name.
+The message holds no value and no host path. Before, these files gave a raw pandas `ValueError`:
+
+- an empty or non-number weight on a line after the first, such as `A|`;
+- a line with three columns, or a file in which no line has a weight column, such as a pipe file read with
+  `separator=","`. A file of values without weights is such a file: give each value a weight.
+
+A first line is a header only when its weight is a name, such as `role|weight` (ADR-029). An empty weight is no name.
+A headerless file is the standard form, so a first line `A|` is data and fails with `I102`, as on a later line.
+Before, the reader took that line for a header and dropped the value `A` without an error. A line without a separator
+(`A`) still gets the weight 1 when another line has a weight. Case: `tests_ce/scenarios/s37_weighted_source_inputs`.
+
+### `distribution` on a weighted entity variable (#452)
+
+A `<variable>` over a `*.wgt.ent.csv` file draws one row by its weight column. Such a variable
+with `distribution="ordered"` (or any other value but `random`) now fails with `I830`. Before, the attribute had no
+effect and the draws did not follow the file order. Remove `distribution`, or read the file as an `.ent.csv` to get
+the file order. A `<generate source="*.wgt.ent.csv">` still reads the file as plain CSV with its weight column.
+
 ## Public contract
 
 Persist XML as the executable project. `DmJsonDocumentV1` is an in-memory agent

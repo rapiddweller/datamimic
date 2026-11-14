@@ -216,7 +216,7 @@ def test_learning_names_the_project_data_file_forms_the_s24_scenario_proves(appl
         'separator=","',
     ):
         assert form in text, form
-    assert 'distribution="ordered" has no effect on a .wgt.ent.csv <variable>' in text
+    assert 'A .wgt.ent.csv <variable> refuses distribution="ordered"' in text
     # file_sources owns the where=/columns= rules; data_files only points to it.
     assert "--topic learning --name file_sources" in text
     assert 'where="' not in text and 'columns="' not in text

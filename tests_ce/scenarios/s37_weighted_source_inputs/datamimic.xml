@@ -1,0 +1,8 @@
+<setup rngSeed="37">
+    <generate name="accounts" count="20">
+        <key name="account_id" generator="IncrementGenerator"/>
+        <key name="role" source="data/weighting/roles.wgt.csv"/>
+        <variable name="tier_row" source="data/weighting/tiers.wgt.ent.csv"/>
+        <key name="tier" script="tier_row.tier"/>
+    </generate>
+</setup>

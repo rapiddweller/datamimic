@@ -1,0 +1,85 @@
+{
+  "title": "A weighted source with a malformed line stops with the typed source error that names the file",
+  "proves": [
+    "a weighted .wgt.csv source draws only values with a positive weight (GUEST has weight 0)",
+    "an empty weight on a later line stops with I102 and the file name, not with a raw pandas error (#448 W1)",
+    "a first line with an empty weight is data, not a header: it stops with I102 instead of losing the value (#448 W2)",
+    "a separator that does not split the lines stops with I102 (#448 W3)",
+    "a first line whose weight is a name stays a header (ADR-029): the rows do not change",
+    "a <variable> over a .wgt.ent.csv draws a row by its weight; distribution=\"ordered\" on it stops with the typed error instead of being ignored (#452)"
+  ],
+  "products": {
+    "accounts": 20
+  },
+  "negatives": [
+    {
+      "name": "empty_weight_on_a_later_line",
+      "diagnostic": "child_execution",
+      "issue": "I102",
+      "patch": {
+        "file": "data/weighting/roles.wgt.csv",
+        "old": "ADMIN|10",
+        "new": "ADMIN|"
+      }
+    },
+    {
+      "name": "empty_weight_on_the_first_line",
+      "diagnostic": "child_execution",
+      "issue": "I102",
+      "patch": {
+        "file": "data/weighting/roles.wgt.csv",
+        "old": "OPERATOR|90",
+        "new": "OPERATOR|"
+      }
+    },
+    {
+      "name": "separator_does_not_split_the_lines",
+      "diagnostic": "child_execution",
+      "issue": "I102",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "source=\"data/weighting/roles.wgt.csv\"",
+        "new": "source=\"data/weighting/roles.wgt.csv\" separator=\",\""
+      }
+    },
+    {
+      "name": "missing_file",
+      "diagnostic": "child_execution",
+      "issue": "I101",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "data/weighting/roles.wgt.csv",
+        "new": "data/weighting/role.wgt.csv"
+      }
+    },
+    {
+      "name": "ordered_on_a_weighted_entity_variable",
+      "diagnostic": "child_execution",
+      "issue": "I830",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "source=\"data/weighting/tiers.wgt.ent.csv\"",
+        "new": "source=\"data/weighting/tiers.wgt.ent.csv\" distribution=\"ordered\""
+      }
+    },
+    {
+      "name": "zero_weight_value_is_not_drawn",
+      "diagnostic": "allowed_values",
+      "patch": {
+        "file": "data/weighting/roles.wgt.csv",
+        "old": "GUEST|0",
+        "new": "GUEST|500"
+      }
+    }
+  ],
+  "equivalents": [
+    {
+      "name": "named_header_line",
+      "patch": {
+        "file": "data/weighting/roles.wgt.csv",
+        "old": "OPERATOR|90",
+        "new": "role|weight\nOPERATOR|90"
+      }
+    }
+  ]
+}
