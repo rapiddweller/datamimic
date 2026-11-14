@@ -14,7 +14,6 @@ from datamimic_ce.domains.finance.generators.bank_generator import BankGenerator
 from datamimic_ce.domains.shared.datasets.loader import pick_one_weighted_no_repeat, read_csv_rows
 from datamimic_ce.domains.shared.literal_generators.primitives.data_faker_generator import DataFakerGenerator
 
-
 _DIGITS = "0123456789"
 _UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 # ISO 13616 character classes: n = digits, a = upper-case letters, c = alphanumeric.

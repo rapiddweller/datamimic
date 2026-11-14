@@ -31,7 +31,7 @@ CREDIT_CARD_SCHEMA = EntitySchema(
         field("bank_code", str, "Issuing bank code."),
         field("bic", str, "Bank identifier code (BIC)."),
         field("bin", str, "Bank identification number (BIN)."),
-        field("iban", str, "International bank account number."),
+        field("iban", str, "International bank account number, if the country has one.", optional=True),
     ),
 )
 
