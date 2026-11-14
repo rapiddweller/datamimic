@@ -174,10 +174,7 @@ def count_source(
             try:
                 return database_count_query_length(client, iteration_selector)
             except ValueError:
-                logger.error(
-                    f"Cannot get length of database source '{request.source}' "
-                    f"with iterationSelector '{iteration_selector}'"
-                )
+                logger.error(f"Cannot get length of database source '{request.source}' with iterationSelector")
                 return None
         raise ValueError("MongoDB source requires at least attribute 'type', 'selector' or 'iterationSelector'")
 

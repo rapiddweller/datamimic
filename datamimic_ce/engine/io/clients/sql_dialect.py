@@ -185,8 +185,8 @@ def _parse_selector(query: str, dbms: Dbms) -> exp.Query | None:
     """The selector as a query AST; None when it is not a parseable query."""
     try:
         parsed = sqlglot.parse_one(_statement_text(query, dbms), read=DIALECT_RULES[dbms].sqlglot_dialect)
-    except sqlglot.errors.ParseError as error:
-        logger.warning(f"Cannot parse selector, paging it in canonical column order: {error}")
+    except sqlglot.errors.ParseError:
+        logger.warning("Cannot parse selector, paging it in canonical column order")
         return None
     return parsed if isinstance(parsed, exp.Query) else None
 
