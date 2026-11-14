@@ -1,0 +1,14 @@
+<setup>
+    <!-- Purpose: read the table back and count: each product is one check of the database state. -->
+    <generate name="accounts_back" source="bank" selector="SELECT id, status, balance_cents FROM accounts ORDER BY id" distribution="ordered" count="8" target="">
+        <key name="id" script="this.id"/>
+        <key name="status" script="this.status"/>
+        <key name="balance_cents" script="this.balance_cents"/>
+    </generate>
+    <generate name="accounts_total" source="bank" selector="SELECT COUNT(*) AS total FROM accounts" distribution="ordered" count="1" target="">
+        <key name="total" script="this.total"/>
+    </generate>
+    <generate name="audit_total" source="bank" selector="SELECT COUNT(*) AS total FROM audit" distribution="ordered" count="1" target="">
+        <key name="total" script="this.total"/>
+    </generate>
+</setup>

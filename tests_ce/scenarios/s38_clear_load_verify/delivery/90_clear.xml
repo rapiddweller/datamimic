@@ -1,0 +1,4 @@
+<setup>
+    <!-- Purpose: empty the accounts table before the load. The audit table stays as it is. -->
+    <generate name="clear_accounts" targetEntity="accounts" target="bank.clear"/>
+</setup>

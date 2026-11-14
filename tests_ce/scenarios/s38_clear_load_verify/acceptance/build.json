@@ -1,0 +1,20 @@
+{
+  "version": "5.0",
+  "environment_bindings": [
+    {"environment": "bank", "family": "database"}
+  ],
+  "product_roles": [
+    {"product": "accounts", "field": "id", "role": {"kind": "identifier"}},
+    {"product": "accounts_back", "field": "id", "role": {"kind": "identifier"}}
+  ],
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "accounts"}, "count": 8},
+    {"kind": "unique", "subject": {"kind": "product", "product": "accounts"}, "field": "id"},
+    {"kind": "range", "subject": {"kind": "product", "product": "accounts"}, "field": "balance_cents", "minimum": 0, "maximum": 500000},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "accounts_back"}, "count": 8},
+    {"kind": "unique", "subject": {"kind": "product", "product": "accounts_back"}, "field": "id"},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "accounts_back"}, "field": "status", "values": ["loaded"]},
+    {"kind": "range", "subject": {"kind": "product", "product": "accounts_total"}, "field": "total", "minimum": 8, "maximum": 8},
+    {"kind": "range", "subject": {"kind": "product", "product": "audit_total"}, "field": "total", "minimum": 3, "maximum": 3}
+  ]
+}

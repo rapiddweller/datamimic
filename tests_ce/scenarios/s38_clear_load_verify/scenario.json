@@ -1,0 +1,31 @@
+{
+  "title": "Clear, load, verify, run again on SQLite",
+  "proves": [
+    "one project does three delivery steps in order: clear the accounts table, load 8 accounts, verify by reading the database back",
+    "the table holds the rows of an earlier load (db/s38_bank.sqlite); a normal run needs the clear, because the load would meet the same primary keys, and the run can repeat with the same result",
+    "the verify step has one product for each check: the rows of the table, the total of the accounts table, the total of the audit table",
+    "clear empties one table: the audit table is not touched and keeps its 3 rows",
+    "Build runs the model against the table as it is on disk: it skips the clear (not_executed) and isolates the load, so it does not prove that the clear removed rows or that the load wrote them",
+    "the run row counts in this file are the check of the delivery: accounts_back has 8 rows and each total is one row"
+  ],
+  "products": {
+    "accounts": 8,
+    "accounts_back": 8,
+    "accounts_total": 1,
+    "audit_total": 1
+  },
+  "negatives": [
+    {"name": "load_count_wrong", "diagnostic": "exact_count", "expected": "9",
+     "patch": {"file": "acceptance/build.json", "old": "\"product\": \"accounts\"}, \"count\": 8", "new": "\"product\": \"accounts\"}, \"count\": 9"}},
+    {"name": "accounts_total_wrong", "diagnostic": "range",
+     "patch": {"file": "acceptance/build.json", "old": "\"field\": \"total\", \"minimum\": 8, \"maximum\": 8", "new": "\"field\": \"total\", \"minimum\": 9, \"maximum\": 9"}},
+    {"name": "audit_table_changed", "diagnostic": "range",
+     "patch": {"file": "acceptance/build.json", "old": "\"minimum\": 3, \"maximum\": 3", "new": "\"minimum\": 4, \"maximum\": 4"}},
+    {"name": "status_not_loaded", "diagnostic": "allowed_values",
+     "patch": {"file": "acceptance/build.json", "old": "\"values\": [\"loaded\"]", "new": "\"values\": [\"stale\"]"}},
+    {"name": "client_binding_missing", "diagnostic": "unknown_environment",
+     "patch": {"file": "acceptance/build.json", "old": "{\"environment\": \"bank\", \"family\": \"database\"}", "new": "{\"environment\": \"other\", \"family\": \"database\"}"}},
+    {"name": "verify_count_above_table_rows", "diagnostic": "DM316",
+     "patch": {"file": "delivery/92_verify.xml", "old": "distribution=\"ordered\" count=\"8\"", "new": "distribution=\"ordered\" count=\"9\""}}
+  ]
+}
