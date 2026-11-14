@@ -1,5 +1,5 @@
 <setup rngSeed="45">
-    <generate name="scores" source="data/scores.json" distribution="ordered">
+    <generate name="scores" source="data/entity/scores.json" distribution="ordered">
         <key name="id" script="this.id"/>
         <key name="score" script="this.score"/>
     </generate>

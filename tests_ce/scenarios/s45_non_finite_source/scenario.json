@@ -7,12 +7,12 @@
   "products": {"scores": 2},
   "negatives": [
     {"name": "nan", "diagnostic": "child_execution", "issue": "I958",
-     "patch": {"file": "data/scores.json", "old": "\"score\": 2.5", "new": "\"score\": NaN"}},
+     "patch": {"file": "data/entity/scores.json", "old": "\"score\": 2.5", "new": "\"score\": NaN"}},
     {"name": "infinity", "diagnostic": "child_execution", "issue": "I958",
-     "patch": {"file": "data/scores.json", "old": "\"score\": 2.5", "new": "\"score\": Infinity"}},
+     "patch": {"file": "data/entity/scores.json", "old": "\"score\": 2.5", "new": "\"score\": Infinity"}},
     {"name": "negative_infinity", "diagnostic": "child_execution", "issue": "I958",
-     "patch": {"file": "data/scores.json", "old": "\"score\": 2.5", "new": "\"score\": -Infinity"}},
+     "patch": {"file": "data/entity/scores.json", "old": "\"score\": 2.5", "new": "\"score\": -Infinity"}},
     {"name": "above_max_float", "diagnostic": "child_execution", "issue": "I958",
-     "patch": {"file": "data/scores.json", "old": "\"score\": 2.5", "new": "\"score\": 1e309"}}
+     "patch": {"file": "data/entity/scores.json", "old": "\"score\": 2.5", "new": "\"score\": 1e309"}}
   ]
 }
