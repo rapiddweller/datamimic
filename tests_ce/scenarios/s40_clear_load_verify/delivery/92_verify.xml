@@ -1,0 +1,16 @@
+<setup>
+    <!-- Purpose: read the table back; each product is one check of the database state, and its assert fails the run. -->
+    <generate name="accounts_back" source="bank" selector="SELECT id, status, balance_cents FROM accounts ORDER BY id" distribution="ordered" count="8" target="">
+        <key name="id" script="this.id"/>
+        <key name="status" script="this.status"/>
+        <key name="balance_cents" script="this.balance_cents"/>
+    </generate>
+    <generate name="accounts_total" source="bank" selector="SELECT COUNT(*) AS total FROM accounts" distribution="ordered" count="1" target="">
+        <key name="total" script="this.total"/>
+        <assert condition="this.total == 8" message="The accounts table must hold the 8 loaded accounts"/>
+    </generate>
+    <generate name="audit_total" source="bank" selector="SELECT COUNT(*) AS total FROM audit" distribution="ordered" count="1" target="">
+        <key name="total" script="this.total"/>
+        <assert condition="this.total == 3" message="The audit table must keep its 3 rows"/>
+    </generate>
+</setup>

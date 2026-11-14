@@ -40,6 +40,7 @@ tests_ce/integration_tests/consumer_csv/data
 
 # SQLite
 *.sqlite
+!tests_ce/scenarios/*/**/*.sqlite
 
 # Rust
 src/bin

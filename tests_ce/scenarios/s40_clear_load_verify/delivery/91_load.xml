@@ -1,0 +1,8 @@
+<setup>
+    <!-- Purpose: write 8 accounts to the empty accounts table. -->
+    <generate name="accounts" count="8" target="bank">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="status" constant="loaded"/>
+        <key name="balance_cents" type="int" min="0" max="500000"/>
+    </generate>
+</setup>
