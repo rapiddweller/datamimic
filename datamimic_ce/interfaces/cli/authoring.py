@@ -85,7 +85,13 @@ def _descriptor_path(source: str, workspace_root: Path | None) -> PurePosixPath:
 
 @app.command("version")
 def version(output_format: OutputFormat = CliOutputFormat.JSON) -> None:
-    emit_authoring({"ce_version": get_datamimic_lib_version() or "unknown"}, output_format)
+    emit_authoring(
+        {
+            "ce_version": get_datamimic_lib_version() or "unknown",
+            "build_protocol": create_authoring_application().build_protocol(),
+        },
+        output_format,
+    )
 
 
 @app.command("schema")

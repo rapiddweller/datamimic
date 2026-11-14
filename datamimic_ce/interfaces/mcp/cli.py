@@ -74,7 +74,7 @@ def serve(
             exists=True,
             file_okay=False,
             resolve_path=True,
-            help="Project root for model paths; defaults to the server's working directory",
+            help="Only allow projects inside this directory; default: any project a call names",
         ),
     ] = None,
     log_level: Annotated[

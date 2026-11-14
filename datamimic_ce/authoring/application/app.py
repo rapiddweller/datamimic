@@ -18,6 +18,7 @@ from datamimic_ce.authoring.application.use_cases import (
 from datamimic_ce.authoring.domain.capabilities import CapabilityDomain, CapabilityLookupResult, DslCatalogSnapshot
 from datamimic_ce.authoring.domain.reference import ReferenceResult
 from datamimic_ce.authoring.domain.requests import (
+    BUILD_PROTOCOL,
     AuthoringSchemaId,
     BuildResult,
     CompileDocumentRequest,
@@ -66,6 +67,10 @@ class AuthoringApplication:
         self._build = BuildDocumentWorkflow(
             descriptor_contract, project_validator, project_executor, bounded_execution_policy, files
         )
+
+    def build_protocol(self) -> str:
+        """The Build contract version this package speaks; clients check it instead of the package version."""
+        return BUILD_PROTOCOL
 
     def reference(self, request: ReferenceRequest) -> ReferenceResult:
         return self._catalog.reference(request)
