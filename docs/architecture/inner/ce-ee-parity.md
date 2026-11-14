@@ -154,6 +154,6 @@ These rows are not compared yet. They need a comparison before the release date.
 | `identical` | 12 |
 | `CE-extension` | 3 |
 | `EE-only` | 4 |
-| `gap` | 34 |
+| `gap` | 39 |
 | `unverified` | 3 |
 | Open rows (not compared) | 9 |
