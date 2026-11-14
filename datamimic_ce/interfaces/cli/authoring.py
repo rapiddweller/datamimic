@@ -13,6 +13,7 @@ from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.domain.capabilities import CapabilityDomain
 from datamimic_ce.authoring.domain.dm_json import DmJsonDocumentV1
 from datamimic_ce.authoring.domain.requests import (
+    BUILD_PROTOCOL,
     PROJECT_ENTRY_PATH,
     AuthoringSchemaId,
     CompileDocumentRequest,
@@ -85,7 +86,9 @@ def _descriptor_path(source: str, workspace_root: Path | None) -> PurePosixPath:
 
 @app.command("version")
 def version(output_format: OutputFormat = CliOutputFormat.JSON) -> None:
-    emit_authoring({"ce_version": get_datamimic_lib_version() or "unknown"}, output_format)
+    emit_authoring(
+        {"ce_version": get_datamimic_lib_version() or "unknown", "build_protocol": BUILD_PROTOCOL}, output_format
+    )
 
 
 @app.command("schema")

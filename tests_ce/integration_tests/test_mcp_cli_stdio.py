@@ -67,9 +67,10 @@ async def test_cli_stdio_explicit_workspace_reads_project_instead_of_launcher(tm
         result = await client.call_tool(
             "datamimic_dry_run",
             {
+                "project": str(project),
                 "request": {
                     "xml": '<setup rngSeed="7"><generate name="rows" source="rows.csv" distribution="ordered"/></setup>'
-                }
+                },
             },
         )
         payload = json.loads(result[0].text)

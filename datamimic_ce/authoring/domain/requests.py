@@ -120,6 +120,8 @@ DEFAULT_AUTHORING_DESCRIPTOR_PATH = PurePosixPath("model.xml")
 # A project is a directory: its entry descriptor and the acceptance Build proves it against sit at fixed paths.
 PROJECT_ENTRY_PATH = PurePosixPath("datamimic.xml")
 PROJECT_ACCEPTANCE_PATH = PurePosixPath("acceptance/build.json")
+# The Build contract a client can rely on; keep equal to BuildRequestV5.version.
+BUILD_PROTOCOL = "5.0"
 
 
 class BuildRequestV5(AuthoringModel):
