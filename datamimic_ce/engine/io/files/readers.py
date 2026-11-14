@@ -221,6 +221,15 @@ class FileUtil:
         return [{name: (row[idx] if idx < len(row) else None) for idx, name in columns} for row in rows]
 
     @staticmethod
+    def _is_weight_header(row: tuple[str, ...]) -> bool:
+        """A first row whose weight is a name, not a number, is a header. An empty weight is no name: a headerless file
+        is the standard form, so that row is data and fails as an empty weight does on a later line (#448)."""
+        if len(row) < 2:
+            return False
+        weight: str = row[1]
+        return bool(weight.strip()) and not FileUtil._parses_as_float(weight)
+
+    @staticmethod
     def _parses_as_float(value: str) -> bool:
         try:
             float(value)
@@ -305,19 +314,25 @@ class FileUtil:
     @staticmethod
     def read_weight_csv(file_path: Path, separator: str = ",", encoding: str = "utf-8") -> DataFrame:
         """
-        Read a 2-column value|weight csv, header optional. Auto-detected: if the first row's
-        weight column doesn't parse as a number, it's a header row and gets skipped.
+        Read a 2-column value|weight csv, header optional (ADR-029): see _is_weight_header.
         """
         # Load file content from cache or file
         raw_data = FileUtil._read_raw_csv(file_path, separator, encoding)
 
-        if raw_data and len(raw_data[0]) > 1 and not FileUtil._parses_as_float(raw_data[0][1]):
+        if raw_data and FileUtil._is_weight_header(raw_data[0]):
             raw_data = raw_data[1:]
 
-        # Convert data to DataFrame, select only 2 columns (data and weight)
-        df = pd.DataFrame(raw_data, columns=[0, 1])
-        # Convert column 1 to float and replace NaN with 1
-        df[1] = df[1].astype(float).fillna(1)
+        try:
+            # Convert data to DataFrame, select only 2 columns (data and weight)
+            df = pd.DataFrame(raw_data, columns=[0, 1])
+            # Convert column 1 to float and replace NaN with 1
+            df[1] = df[1].astype(float).fillna(1)
+        except ValueError as error:  # an empty or non-number weight, or a line that the separator does not split
+            raise invalid_source_error(
+                code=IssueCode.SOURCE_INVALID_CSV,
+                name=file_path.name,
+                guidance="Give each line a value and a number as its weight, and check the separator.",
+            ) from error
         # Replace NaN df in the first column with None to avoid nan
         df[0] = df[0].replace(to_replace=np.nan, value=None)
         # Calculate probability using count stat
@@ -528,7 +543,7 @@ class FileUtil:
 def weighted_csv_has_header(file_path: Path, separator: str) -> bool:
     """Return whether a weighted CSV starts with a non-numeric header row."""
     rows = FileUtil._read_raw_csv(file_path, separator, "utf-8")
-    return bool(rows) and len(rows[0]) > 1 and not FileUtil._parses_as_float(rows[0][1])
+    return bool(rows) and FileUtil._is_weight_header(rows[0])
 
 
 def load_source_rows(

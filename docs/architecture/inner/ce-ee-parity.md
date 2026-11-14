@@ -107,6 +107,8 @@ CE is done (#399). EE follows in [EE #89](https://gitlab.dwellerlab.com/rapiddwe
 | R2 | Bounded cleanup when `killpg` returns EPERM on macOS (#432) | the SIGTERM and the SIGKILL of the private group ignore `ProcessLookupError` and `PermissionError`; the result stays `timeout`; other `OSError`s and a leader that does not stop give `cleanup` | `_kill_process_group` ignores every `OSError` (EE `2daa65076`, code check, no run); the result stays the run result | `identical` | For the EPERM case only. EE has no `cleanup` result for a failed `killpg`; that is outside #432. |
 | R3 | Package data of a wheel built from a tree without `.git` (#435) | setuptools-scm finds the files of a `git archive` tree through `.git_archival.txt` (`export-subst`); a checkout wheel holds the tracked files only; the installed check compares domain_data with `git ls-files` | maturin build with a static version and `python-packages = ["datamimic_ee"]`; not built from a `git archive` tree | `unverified` | Owner: EE session. Build an EE wheel from `git archive` without `.git` and from a checkout with an untracked and an ignored file. Then compare the `domains/domain_data` file lists (996 tracked files at `2daa65076`). |
 | R4 | Dot and key access to a dict item of a list that an expression reads bare (#441), also a `<nestedKey type="list">` read by its bare name (#478) | the item is a row: `lines[0].qty` and `lines[0]['qty']`, also in a nested list and in `where=`; `str`, `==` and `in` as for a dict; the expression reads a copy of the list | `make_eval_value` wraps a top-level list in `EvalListProxy`, whose items are `EvalMappingProxy` with dot access (EE `5d19c9687`, code check, no run: the EE venv native module is older than the source) | `identical` | For dot and key access. An older difference for every row stays: an EE row has `items()`, a CE row does not. Acceptance: `tests_ce/scenarios/s36_script_list_rows` and `s38_nested_key_list_rows` pass on EE. |
+| R5 | Malformed weighted `.wgt.csv` source (#448): an empty or non-number weight, a third column, no weight column (a separator that does not split) | `InvalidSourceError` `I102` with the file name only; a first line is a header only when its weight is a non-empty name (ADR-029), so a first line `A\|` is data and fails | `read_weight_csv` has no header rule and no guard: `pd.DataFrame(raw, columns=[0, 1])` and `astype(float)` raise a raw `ValueError` (EE `5d19c9687`, code check, no run) | `gap` | Owner: EE port, ticket to file. EE has no ADR-029 header either; port the header rule with the guard. Acceptance: `tests_ce/scenarios/s37_weighted_source_inputs` passes on EE. |
+| R6 | `distribution` other than `random` on a `<variable>` over a `.wgt.ent.csv` (#452) | `I830` (`TASK_VARIABLE_SOURCE_UNSUPPORTED`) at `distribution`; the draw is by weight | not compared; the EE variable plan for a weighted entity file is not read for this attribute | `unverified` | Owner: EE port. Check whether EE ignores `distribution` here, then port the refusal. Acceptance: the `ordered_on_a_weighted_entity_variable` negative of `tests_ce/scenarios/s37_weighted_source_inputs` fails on EE with a catalog error. |
 
 ## Behavior cases
 
@@ -144,6 +146,6 @@ These rows are not compared yet. They need a comparison before the release date.
 | `identical` | 12 |
 | `CE-extension` | 3 |
 | `EE-only` | 4 |
-| `gap` | 32 |
-| `unverified` | 2 |
+| `gap` | 33 |
+| `unverified` | 3 |
 | Open rows (not compared) | 9 |

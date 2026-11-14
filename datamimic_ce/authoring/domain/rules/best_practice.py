@@ -53,7 +53,7 @@ _WEIGHTED_DRAWS = (SourceFileFormat.WEIGHTED_CSV, SourceFileFormat.WEIGHTED_ENTI
 
 def _ordered_source(element: etree._Element) -> str | None:
     """The source of an element that reads it in an order. A <variable> draws a weighted file by weight: it
-    refuses distribution="ordered" on a .wgt.csv and draws the same rows with it on a .wgt.ent.csv."""
+    refuses distribution="ordered" on both weighted formats at run time."""
     source = element.get("source")
     if source is None or (element.tag == EL_VARIABLE and source_file_format(source) in _WEIGHTED_DRAWS):
         return None

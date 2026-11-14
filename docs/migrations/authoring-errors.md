@@ -216,6 +216,27 @@ The same rule covers a `<nestedKey type="list">` that a later script of the reco
 `{b.branch_id: b for b in branches}` and `{b.branch_id: b for b in this.branches}` give the same rows. Before, the
 bare name gave plain dicts and `b.branch_id` failed with `I832`. Case: `tests_ce/scenarios/s38_nested_key_list_rows`.
 
+### Malformed weighted sources (#448)
+
+A `.wgt.csv` source that the reader cannot split into a value and a number weight fails with `I102` and the file name.
+The message holds no value and no host path. Before, these files gave a raw pandas `ValueError`:
+
+- an empty or non-number weight on a line after the first, such as `A|`;
+- a line with three columns, or a file in which no line has a weight column, such as a pipe file read with
+  `separator=","`. A file of values without weights is such a file: give each value a weight.
+
+A first line is a header only when its weight is a name, such as `role|weight` (ADR-029). An empty weight is no name.
+A headerless file is the standard form, so a first line `A|` is data and fails with `I102`, as on a later line.
+Before, the reader took that line for a header and dropped the value `A` without an error. A line without a separator
+(`A`) still gets the weight 1 when another line has a weight. Case: `tests_ce/scenarios/s37_weighted_source_inputs`.
+
+### `distribution` on a weighted entity variable (#452)
+
+A `<variable>` over a `*.wgt.ent.csv` file draws one row by its weight column. Such a variable
+with `distribution="ordered"` (or any other value but `random`) now fails with `I830`. Before, the attribute had no
+effect and the draws did not follow the file order. Remove `distribution`, or read the file as an `.ent.csv` to get
+the file order. A `<generate source="*.wgt.ent.csv">` still reads the file as plain CSV with its weight column.
+
 ## Public contract
 
 Persist XML as the executable project. `DmJsonDocumentV1` is an in-memory agent

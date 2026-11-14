@@ -1,0 +1,12 @@
+{
+  "version": "5.0",
+  "product_roles": [
+    {"product": "accounts", "field": "account_id", "role": {"kind": "identifier"}}
+  ],
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "accounts"}, "count": 20},
+    {"kind": "unique", "subject": {"kind": "product", "product": "accounts"}, "field": "account_id"},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "accounts"}, "field": "role", "values": ["OPERATOR", "ADMIN"]},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "accounts"}, "field": "tier", "values": ["GOLD", "SILVER"]}
+  ]
+}
