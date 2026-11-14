@@ -1,0 +1,26 @@
+{
+  "title": "Time series: three parallel series over a six-hour window",
+  "proves": [
+    "a generate with start, end and interval makes one row for each window point and series: 6 points x 3 series = 18 rows",
+    "the end of the window is exclusive: the last tick is 05:00",
+    "ts.series numbers the series, ts.step the point, ts.now the tick time",
+    "the time column is a timestamp role and stays inside the window"
+  ],
+  "products": {
+    "readings": 18
+  },
+  "negatives": [
+    {"name": "wrong_row_count", "diagnostic": "exact_count", "expected": "17",
+     "patch": {"file": "acceptance/build.json", "old": "\"readings\"}, \"count\": 18}", "new": "\"readings\"}, \"count\": 17}"}},
+    {"name": "wider_window_than_declared", "diagnostic": "exact_count",
+     "patch": {"file": "datamimic.xml", "old": "T06:00:00\"", "new": "T07:00:00\""}},
+    {"name": "fewer_series_than_declared", "diagnostic": "exact_count",
+     "patch": {"file": "datamimic.xml", "old": "count=\"3\"", "new": "count=\"2\""}},
+    {"name": "step_outside_window", "diagnostic": "range",
+     "patch": {"file": "acceptance/build.json", "old": "\"minimum\": 0, \"maximum\": 5", "new": "\"minimum\": 0, \"maximum\": 4"}},
+    {"name": "time_outside_window", "diagnostic": "row_condition",
+     "patch": {"file": "acceptance/build.json", "old": "recorded_at < '2026-03-01T06:00:00'", "new": "recorded_at < '2026-03-01T05:00:00'"}},
+    {"name": "bad_interval", "diagnostic": "input", "message": "must be an ISO 8601 duration",
+     "patch": {"file": "datamimic.xml", "old": "interval=\"PT1H\"", "new": "interval=\"hourly\""}}
+  ]
+}
