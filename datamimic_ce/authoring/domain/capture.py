@@ -18,6 +18,9 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, model_validator
 from typing_extensions import TypeAliasType
 
+from datamimic_ce.errors import task_config_error
+from datamimic_ce.errors.codes import IssueCode
+
 from .common import NonEmptyStrictStr, NonNegativeStrictInt, PositiveStrictInt
 
 MAX_CAPTURE_DEPTH = 64
@@ -155,9 +158,9 @@ def validate_capture_values(value: object) -> None:
             if current.bit_length() > 14_000:
                 raise ValueError("capture integer exceeds JSON serialization limits")
             continue
-        if isinstance(current, float) and math.isfinite(current):
-            continue
-        if isinstance(current, Decimal) and current.is_finite():
+        if isinstance(current, float | Decimal):
+            if not (math.isfinite(current) if isinstance(current, float) else current.is_finite()):
+                raise task_config_error(code=IssueCode.TASK_CAPTURE_VALUE_NOT_FINITE)
             continue
         if isinstance(current, dict | list | tuple):
             identity = id(current)
