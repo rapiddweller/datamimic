@@ -22,6 +22,7 @@ from datamimic_ce.engine.dsl.model.constraints.types import (
     RequiredOneOf,
     Requires,
     RequiresWhenValue,
+    Unsupported,
     ValidValues,
     resolved_allowed,
     resolved_values,
@@ -94,6 +95,8 @@ def _serialized_constraint_fields(fact: Constraint) -> JsonSchemaValue:
             "when_true": fact.when_true,
             "excludes_when_true": fact.excludes_when_true,
         }
+    if isinstance(fact, Unsupported):
+        return {"attr": fact.attr}
     if isinstance(fact, ForbidsWhenValue):
         return {
             "when_attr": fact.when_attr,
@@ -133,6 +136,7 @@ _CONSTRAINT_KIND_MAP: dict[type, str] = {
     RequiresWhenValue: "requires_when_value",
     AllOrNone: "all_or_none",
     Forbids: "forbids",
+    Unsupported: "unsupported",
     ForbidsWhenValue: "forbids_when_value",
     ValidValues: "valid_values",
     AllowedValuesWhen: "allowed_values_when",

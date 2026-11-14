@@ -57,6 +57,13 @@ def test_binary_casts_str_script_to_utf8_bytes():
     assert rows[0]["from_str"] == b"hello"
 
 
+def test_binary_generator_attribute_applies_the_mime_signature():
+    """generator="BinaryGenerator" mimeType= is the call form BinaryGenerator(mime_type=...) (#466)."""
+    for row in _run("binary_generator_mime_type.xml")["g"]:
+        assert row["png"].startswith(b"\x89PNG\r\n\x1a\n") and len(row["png"]) == 64
+        assert row["typed"].startswith(b"\x89PNG\r\n\x1a\n")
+
+
 # ---------- error handling ----------
 
 

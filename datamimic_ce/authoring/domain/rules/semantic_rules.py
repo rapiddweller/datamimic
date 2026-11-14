@@ -59,6 +59,7 @@ from datamimic_ce.engine.dsl.api import (
     RequiredOneOf,
     Requires,
     RequiresWhenValue,
+    Unsupported,
     ValidValues,
     resolved_allowed,
     resolved_values,
@@ -275,12 +276,32 @@ def _source_companion_diag(
     )
 
 
+def _unsupported_attribute_diag(
+    rule: type[Rule],
+    ctx: LintContext,
+    element: etree._Element,
+    fact: Unsupported,
+) -> Diagnostic | None:
+    if element.get(fact.attr) is None:
+        return None
+    return ctx.diag(
+        rule,
+        element,
+        evidence=f"{fact.message} Present unsupported attribute: {fact.attr}",
+        fix_context=f"{fact.message} Remove {fact.attr}=.",
+        severity=rule.definition.severity_for(advisory=fact.lint_only),
+        names_only=True,
+    )
+
+
 def _forbidden_companion_diag(
     rule: type[Rule],
     ctx: LintContext,
     element: etree._Element,
     fact: Constraint,
 ) -> Diagnostic | None:
+    if isinstance(fact, Unsupported):
+        return _unsupported_attribute_diag(rule, ctx, element, fact)
     if not isinstance(fact, Forbids) or _is_unique_constraint(fact):
         return None
     if not _gate_open(element, fact):

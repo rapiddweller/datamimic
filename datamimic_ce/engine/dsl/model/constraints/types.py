@@ -118,6 +118,18 @@ class Forbids:
 
 
 @dataclass(frozen=True)
+class Unsupported:
+    """The attribute is refused whenever it is written, with any value.
+
+    The element reads no such attribute, so an accepted attribute would be ignored without a message.
+    """
+
+    attr: str
+    message: str
+    lint_only: bool = False
+
+
+@dataclass(frozen=True)
 class ForbidsWhenValue:
     """When ``when_attr`` has one of ``when_values``, forbid ``excludes``."""
 
@@ -184,6 +196,7 @@ Constraint = (
     | RequiresWhenValue
     | AllOrNone
     | Forbids
+    | Unsupported
     | ForbidsWhenValue
     | ValidValues
     | AllowedValuesWhen

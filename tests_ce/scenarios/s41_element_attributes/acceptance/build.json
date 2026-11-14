@@ -1,0 +1,7 @@
+{
+  "version": "5.0",
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "rooms"}, "count": 20},
+    {"kind": "unique", "subject": {"kind": "product", "product": "rooms"}, "field": "room_id"}
+  ]
+}

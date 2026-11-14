@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from datamimic_ce.engine.dsl.model.constraints import (
     SOURCE_DISTRIBUTION_VALUES,
+    VARIABLE_DISTRIBUTION_FORBIDS_GENERATOR,
     VARIABLE_GENERATION_EXCLUSIVE,
     VARIABLE_GENERATION_REQUIRED,
     VARIABLE_GENERATOR_ARGUMENT_CONSTRAINTS,
@@ -387,7 +388,13 @@ class VariableModel(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def validate_generator_arguments_require_generator(cls, values: dict):
-        return check_constraints(values, VARIABLE_GENERATOR_ARGUMENT_CONSTRAINTS)
+        return check_constraints(
+            values,
+            (
+                *VARIABLE_GENERATOR_ARGUMENT_CONSTRAINTS,
+                VARIABLE_DISTRIBUTION_FORBIDS_GENERATOR,
+            ),
+        )
 
     @model_validator(mode="before")
     @classmethod

@@ -6,7 +6,8 @@
     "<element generator= min= max=> applies the bounds instead of ignoring them",
     "each attribute form gives the same rows as the call form for the same seed",
     "an attribute the generator does not take is refused with I438, an attribute next to a call with I439",
-    "a variable bound without generator= is refused (DM214), also next to type=, values= or entity="
+    "a variable bound without generator= is refused (DM214), also next to type=, values= or entity=",
+    "distribution= beside generator= and mimeType= on a <variable> are refused (DM218 and DM103), not ignored (#468)"
   ],
   "products": {
     "bookings": 25
@@ -209,6 +210,24 @@
         "file": "datamimic.xml",
         "old": " min=\"50\" max=\"100\" granularity",
         "new": " granularity"
+      }
+    },
+    {
+      "name": "variable_distribution_beside_generator",
+      "diagnostic": "DM218",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "generator=\"IntegerGenerator\" min=\"1\" max=\"14\"",
+        "new": "generator=\"IntegerGenerator\" min=\"1\" max=\"14\" distribution=\"cumulated\""
+      }
+    },
+    {
+      "name": "variable_mime_type",
+      "diagnostic": "DM103",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "generator=\"StringGenerator\" minLength=\"6\" maxLength=\"6\"",
+        "new": "generator=\"StringGenerator\" minLength=\"6\" maxLength=\"6\" mimeType=\"image/png\""
       }
     }
   ]

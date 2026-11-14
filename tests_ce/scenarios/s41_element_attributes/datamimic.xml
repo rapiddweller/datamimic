@@ -1,0 +1,8 @@
+<setup rngSeed="53601">
+    <generate name="rooms" count="20">
+        <key name="room_id" generator="IncrementGenerator"/>
+        <key name="room" type="string" constant="R">
+            <element name="floor" generator="IntegerGenerator" min="1" max="9"/>
+        </key>
+    </generate>
+</setup>
