@@ -6,6 +6,10 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Iterator
+from contextlib import contextmanager
+from contextvars import ContextVar
+from dataclasses import dataclass
 from typing import overload
 
 from datamimic_ce.errors.base import (
@@ -63,6 +67,30 @@ from datamimic_ce.errors.formatters import (
 _emitted_warnings: set[tuple[int, str]] = set()
 
 
+# The warnings of one run, for a caller that reports them by code and fields (authoring, #404), not as log text.
+@dataclass(frozen=True)
+class CollectedWarning:
+    """One catalog warning by code and, for a script warning, the script file name and line."""
+
+    code: IssueCode
+    script: str | None = None
+    line: int | None = None
+
+
+_collected_warnings: ContextVar[list[CollectedWarning] | None] = ContextVar("collected_warnings", default=None)
+
+
+@contextmanager
+def collect_task_warnings() -> Iterator[list[CollectedWarning]]:
+    """Collect each catalog warning emitted in this scope, also one that the log shows only once."""
+    found: list[CollectedWarning] = []
+    token = _collected_warnings.set(found)
+    try:
+        yield found
+    finally:
+        _collected_warnings.reset(token)
+
+
 def task_warning(*, code: IssueCode, once: bool = True, **kwargs: object) -> None:
     """Emit a catalog warning once per process and rendered message; once=False always emits.
 
@@ -79,6 +107,12 @@ def task_warning(*, code: IssueCode, once: bool = True, **kwargs: object) -> Non
 
     if get_issue_definition(code).severity is not IssueSeverity.WARNING:
         raise ValueError(f"{code} is not a WARNING-severity issue; raise it with the error factory instead.")
+    collected = _collected_warnings.get()
+    if collected is not None:
+        script, line = kwargs.get("script"), kwargs.get("line")
+        collected.append(
+            CollectedWarning(code, script if isinstance(script, str) else None, line if isinstance(line, int) else None)
+        )
     msg = warning_message(code=code, **kwargs)
     key = (os.getpid(), msg)
     if not once or key not in _emitted_warnings:

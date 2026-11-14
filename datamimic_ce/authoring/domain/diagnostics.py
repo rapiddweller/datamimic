@@ -64,6 +64,7 @@ class AuthoringSystemDiagnosticCode(StrEnum):
     TIMEOUT = "timeout"
     NOT_EXECUTED = "not_executed"
     ASSERT_FAILED = "assert_failed"
+    ENGINE_WARNING = "engine_warning"
 
 
 class AuthoringBuildDiagnosticCode(StrEnum):
@@ -100,9 +101,9 @@ DiagnosticCode = (
 
 
 class CeErrorIdentity(AuthoringModel):
-    """Machine-readable identity of one catalog-backed CE error."""
+    """Machine-readable identity of one catalog-backed CE error, or of one catalog warning (no error code)."""
 
-    error_code: ErrorCode
+    error_code: ErrorCode | None
     issue_code: IssueCode | None = None
 
 

@@ -15,10 +15,17 @@ import time
 from pathlib import Path
 
 from datamimic_ce.authoring.adapters.bounded_executor import _MAX_REPLY_BYTES
-from datamimic_ce.authoring.adapters.dryrun import _run_engine_capture, _WorkerFailure, _WorkerSuccess
+from datamimic_ce.authoring.adapters.dryrun import (
+    SHOWN_WARNINGS,
+    _EngineWarning,
+    _run_engine_capture,
+    _WorkerFailure,
+    _WorkerSuccess,
+)
 from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
 from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest
 from datamimic_ce.engine.dsl.api import resource_reader_scope
+from datamimic_ce.errors import CollectedWarning, collect_task_warnings
 
 # Audit events that start a process; refused in every bounded run without side effects.
 _PROCESS_EVENTS = frozenset(
@@ -174,7 +181,7 @@ def main() -> None:
         read.add(Path(os.path.abspath(resource)).relative_to(workspace.root).as_posix())
         return data
 
-    with resource_reader_scope(read_resource):
+    with resource_reader_scope(read_resource), collect_task_warnings() as found:
         message = _run_engine_capture(
             path,
             request.max_count,
@@ -186,7 +193,9 @@ def main() -> None:
             workspace_root=workspace.root,
         )
     if isinstance(message, (_WorkerSuccess, _WorkerFailure)):
-        message = dataclasses.replace(message, read_files=tuple(sorted(read)))
+        shown = (_engine_warning(item) for item in found if item.code in SHOWN_WARNINGS)
+        warnings = tuple(dict.fromkeys(shown))
+        message = dataclasses.replace(message, read_files=tuple(sorted(read)), warnings=warnings)
     payload = pickle.dumps(message, protocol=pickle.HIGHEST_PROTOCOL)
     if len(payload) > _MAX_REPLY_BYTES:
         raise ValueError("bounded child evidence exceeds the transport limit")
@@ -195,6 +204,10 @@ def main() -> None:
     staging.replace(reply_file)
     # Keep the tree leader alive until the parent has terminated all descendants (Windows taskkill).
     time.sleep(request.timeout_seconds + 5)
+
+
+def _engine_warning(item: CollectedWarning) -> _EngineWarning:
+    return _EngineWarning(item.code, (item.script, item.line) if item.script is not None and item.line else None)
 
 
 if __name__ == "__main__":

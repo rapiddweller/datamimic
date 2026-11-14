@@ -5,7 +5,8 @@
     "triangular, betavariate, expovariate, gammavariate, lognormvariate, normalvariate, paretovariate, vonmisesvariate and weibullvariate replay identically, also under an alias",
     "Random() without a seed, random.seed() without a value and getstate/setstate replay identically",
     "a Random subclass that the library defines while it loads is not seeded, and the Build replay rejects it",
-    "random.SystemRandom stays refused under rngSeed"
+    "random.SystemRandom stays refused under rngSeed",
+    "a draw while the library loads shows the catalog warning W008 with the script and the line next to the failed replay (#404)"
   ],
   "products": {
     "samples": 5
@@ -28,6 +29,18 @@
         "file": "lib/draws.scr.py",
         "old": "def dice():\n    return randint(1, 6)\n",
         "new": "class LocalRandom(Random):\n    pass\n\n\ndef dice():\n    return LocalRandom().randint(1, 6)\n"
+      }
+    },
+    {
+      "name": "draw_while_loading",
+      "diagnostic": "engine_warning",
+      "issue": "W008",
+      "message": "script 'draws.scr.py', line 37.",
+      "remediation": "Move the draw into a function the model calls",
+      "patch": {
+        "file": "lib/draws.scr.py",
+        "old": "def dice():\n    return randint(1, 6)\n",
+        "new": "DIE = randint(1, 6)\n\n\ndef dice():\n    return DIE\n"
       }
     }
   ]

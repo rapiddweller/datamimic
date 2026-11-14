@@ -76,14 +76,14 @@ def test_capture_preserves_read_only_product_order_and_native_row_identity() -> 
     products = MappingProxyType({"parent| rows |detail ": rows, "empty": []})
 
     exporter_registry.capture_test_results(context, products)
-    first = exporter.get_result()["rows |detail"]
-    assert list(exporter.get_result()) == ["rows |detail", "empty"]
+    first = exporter.get_result()["detail"]
+    assert list(exporter.get_result()) == ["detail", "empty"]
     assert first is not rows and first[0] is row
     assert first[0]["value"] is native
     assert first[0]["amount"] is row["amount"]
 
     exporter_registry.capture_test_results(context, products)
-    current = exporter.get_result()["rows |detail"]
+    current = exporter.get_result()["detail"]
     assert current is not first and current == [row, row]
     assert all(item is row for item in current)
     assert rows == [row]

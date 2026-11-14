@@ -1,0 +1,96 @@
+{
+  "title": "fixed_value and allowed_values match a captured date or datetime by one ISO literal rule",
+  "proves": [
+    "fixed_value accepts the ISO literal of a date capture (2026-03-01), as allowed_values does (#476)",
+    "a datetime capture matches YYYY-MM-DD with T or a space and HH:MM:SS, also with a fraction of 1 to 6 digits",
+    "an offset, Z, minute precision, a compact date and a datetime literal for a date capture never match",
+    "every other value compares by type and value: the literal 1 does not match a True capture",
+    "the ISO rule applies only to a date or datetime object: a text capture matches only the same text"
+  ],
+  "products": {
+    "bookings": 3
+  },
+  "negatives": [
+    {
+      "name": "an_offset_never_matches",
+      "diagnostic": "fixed_value",
+      "patch": {
+        "file": "acceptance/build.json",
+        "old": "\"value\": \"2026-03-01T09:30:15\"}",
+        "new": "\"value\": \"2026-03-01T09:30:15+00:00\"}"
+      }
+    },
+    {
+      "name": "z_never_matches",
+      "diagnostic": "fixed_value",
+      "patch": {
+        "file": "acceptance/build.json",
+        "old": "\"value\": \"2026-03-01T09:30:15\"}",
+        "new": "\"value\": \"2026-03-01T09:30:15Z\"}"
+      }
+    },
+    {
+      "name": "minute_precision_never_matches",
+      "diagnostic": "allowed_values",
+      "patch": {
+        "file": "acceptance/build.json",
+        "old": "\"values\": [\"2026-03-01 09:30:15\"]",
+        "new": "\"values\": [\"2026-03-01 09:30\"]"
+      }
+    },
+    {
+      "name": "a_compact_date_never_matches",
+      "diagnostic": "fixed_value",
+      "patch": {
+        "file": "acceptance/build.json",
+        "old": "\"field\": \"day\", \"value\": \"2026-03-01\"}",
+        "new": "\"field\": \"day\", \"value\": \"20260301\"}"
+      }
+    },
+    {
+      "name": "a_datetime_literal_does_not_match_a_date",
+      "diagnostic": "allowed_values",
+      "patch": {
+        "file": "acceptance/build.json",
+        "old": "\"values\": [\"2026-03-01\"]",
+        "new": "\"values\": [\"2026-03-01 00:00:00\"]"
+      }
+    },
+    {
+      "name": "another_day_does_not_match",
+      "diagnostic": "fixed_value",
+      "patch": {
+        "file": "acceptance/build.json",
+        "old": "\"field\": \"day\", \"value\": \"2026-03-01\"}",
+        "new": "\"field\": \"day\", \"value\": \"2026-03-02\"}"
+      }
+    },
+    {
+      "name": "one_does_not_match_true",
+      "diagnostic": "fixed_value",
+      "patch": {
+        "file": "acceptance/build.json",
+        "old": "\"field\": \"paid\", \"value\": true}",
+        "new": "\"field\": \"paid\", \"value\": 1}"
+      }
+    },
+    {
+      "name": "text_does_not_match_an_int",
+      "diagnostic": "fixed_value",
+      "patch": {
+        "file": "acceptance/build.json",
+        "old": "\"field\": \"units\", \"value\": 1}",
+        "new": "\"field\": \"units\", \"value\": \"1\"}"
+      }
+    },
+    {
+      "name": "text_matches_only_the_same_text",
+      "diagnostic": "fixed_value",
+      "patch": {
+        "file": "acceptance/build.json",
+        "old": "\"field\": \"at_text\", \"value\": \"2026-03-01 09:30:15\"}",
+        "new": "\"field\": \"at_text\", \"value\": \"2026-03-01T09:30:15\"}"
+      }
+    }
+  ]
+}

@@ -294,6 +294,29 @@ def test_parent_script_unknown_field_rejects_projection_with_logical_path():
     assert error.value.diagnostics[0].path[:2] == ("document", "root")
 
 
+# #442 T1. Python, because the foreign_key role of s37_parent_variable_reference picks the join before these paths.
+@pytest.mark.parametrize(
+    ("child_keys", "rows", "advice"),
+    [
+        ('<key name="zone" script="parent.zone"/>', [{"zone": "n"}] * 2, "A copy of a parent <variable> does not"),
+        (
+            '<key name="id" script="parent.id"/><key name="tag" script="parent.tag"/>',
+            [{"id": 1, "tag": "t"}] * 2,
+            "declare a foreign_key role for the copy that groups",
+        ),
+    ],
+)
+def test_a_child_without_one_field_copy_names_the_copy_that_groups(child_keys, rows, advice):
+    spec = project(
+        '<setup><generate name="parents" count="1"><variable name="zone" constant="n"/><key name="id" constant="1"/>'
+        '<key name="tag" constant="t"/><generate name="children" count="2">'
+        f"{child_keys}</generate></generate></setup>"
+    )
+    diagnostics = evaluate_acceptance(spec, capture(parents=[{"id": 1, "tag": "t"}], children=rows))
+    assert {str(item.code) for item in diagnostics} == {"per_parent_count"}
+    assert all(advice in str(item.remediation) for item in diagnostics)
+
+
 def test_evaluator_rejects_invalid_complete_provenance_even_when_manually_mutated():
     spec = project('<setup><generate name="rows" count="1"><key name="id" constant="1"/></generate></setup>')
     product = capture(rows=[{"id": 1}]).products[0]
@@ -363,9 +386,9 @@ def test_memstore_same_name_field_must_read_source_even_if_value_accidentally_ma
 def test_deep_nested_capture_names_use_the_actual_exporter_convention():
     xml = '<setup><generate name="parents" count="1"><key name="id" constant="1"/><generate name="children" count="1"><key name="id" script="parent.id"/><generate name="grandchildren" count="1"><key name="parent_id" script="parent.id"/></generate></generate></generate></setup>'
     spec = project(xml)
-    assert spec.products[2].capture_name == "children|grandchildren"
+    assert spec.products[2].capture_name == "grandchildren"
     assert not evaluate_acceptance(
-        spec, capture(**{"parents": [{"id": 1}], "children": [{"id": 1}], "children|grandchildren": [{"parent_id": 1}]})
+        spec, capture(**{"parents": [{"id": 1}], "children": [{"id": 1}], "grandchildren": [{"parent_id": 1}]})
     )
 
 
@@ -810,3 +833,17 @@ def test_allowed_values_match_temporal_literals_without_coercing_json_values(act
     failures = evaluate_acceptance(spec, capture(rows=[{"value": actual}]))
 
     assert bool(failures) is not accepted
+
+
+@pytest.mark.parametrize(
+    ("generate", "names_columns"),
+    [
+        ('<generate name="rows" source="data/rows.ent.csv" count="2"><key name="id" constant="1"/></generate>', True),
+        ('<generate name="rows" count="2"><key name="id" constant="1"/></generate>', False),
+    ],
+)
+def test_unknown_field_remediation_names_columns_only_for_a_file_source(generate, names_columns):
+    expectation = {"kind": "fixed_value", "subject": {"kind": "product", "product": "rows"}, "field": "x", "value": 1}
+    with pytest.raises(AcceptanceProjectionError) as error:
+        project(f"<setup>{generate}</setup>", expectations=[expectation])
+    assert ("columns=" in str(error.value.diagnostics[0].remediation)) is names_columns

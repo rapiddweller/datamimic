@@ -45,7 +45,9 @@ from datamimic_ce.errors.catalog import (
 from datamimic_ce.errors.codes import DomainErrorCode, ErrorCode, IssueCode
 from datamimic_ce.errors.context import DescriptorLocation
 from datamimic_ce.errors.factory import (
+    CollectedWarning,
     client_config_error,
+    collect_task_warnings,
     condition_evaluation_error,
     datetime_conversion_error,
     ensure_user_error,
@@ -133,6 +135,8 @@ __all__ = [
     "runtime_config_error",
     "rule_evaluation_error",
     "task_config_error",
+    "CollectedWarning",
+    "collect_task_warnings",
     "task_warning",
     "descriptor_hint",
     "descriptor_hint_if_missing",

@@ -41,8 +41,8 @@ class TestGlobalIncrementGenerator:
         o_ids = [int(r["oId"]) for r in orders]
         assert o_ids == list(range(1, 31))
 
-        # Nested level 2 (note: key becomes 'orders|line_items' after trimming the first segment)
-        line_items = cap["orders|line_items"]
+        # Nested level 2: the capture names a product by its own name, as Build does (#442 T4)
+        line_items = cap["line_items"]
         l_ids = [int(r["lId"]) for r in line_items]
         assert l_ids == list(range(1, 91))
 
@@ -98,7 +98,7 @@ def test_requested_workers_keep_global_ids_unique(tmp_path, platform, nested):
     assert {row["pid"] for row in captured["rows"]} == {os.getpid()}
     if nested:
         assert [row["other"] for row in captured["children"]] == list(range(1, 25))
-        assert [row["id"] for row in captured["children|grandchildren"]] == list(range(1, 49))
+        assert [row["id"] for row in captured["grandchildren"]] == list(range(1, 49))
 
 
 def test_ordinary_increment_keeps_backend_workers(tmp_path):

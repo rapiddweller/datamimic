@@ -62,7 +62,9 @@ Before, the run printed the resolved property value. The rule now lives in the e
 Build calls it (`AssertStatement.literal_message`), so both use the same literal rule.
 The `review_artifact` of a stopped run lists each workspace file that the run read
 before the assert, with its digest, as a ready Build does. A changed source file
-changes the artifact. A `<variable source>` of a product after the assert is not read
+changes the artifact. Every other EVIDENCE rejection of a failed run, for example a
+`child_execution` from a condition that raises, lists the read files in the same way (#445).
+Before, its artifact listed only the project files. A `<variable source>` of a product after the assert is not read
 and not listed. Build counts the rows of a top-level `<generate source>` before the
 run, so that file is listed also after the assert. An `<assert>` tag over several
 lines reports its last line; the runtime and Build read the same line.
@@ -236,6 +238,54 @@ A `<variable>` over a `*.wgt.ent.csv` file draws one row by its weight column. S
 with `distribution="ordered"` (or any other value but `random`) now fails with `I830`. Before, the attribute had no
 effect and the draws did not follow the file order. Remove `distribution`, or read the file as an `.ent.csv` to get
 the file order. A `<generate source="*.wgt.ent.csv">` still reads the file as plain CSV with its weight column.
+
+### One product name at every depth (#442 T4)
+
+The run capture (`DataMimicTest.capture_result()`) and the Build evidence name each product by its own `name`.
+Before, a product nested two or more levels deep kept its parent name: `stores|shelves` for
+`regions > stores > shelves`. Expectations and roles already used `shelves`. A test that reads
+`result["stores|shelves"]` must read `result["shelves"]`. Two nested products with the same name share one
+capture key, as at the second level before; Build refuses such a model. Case: `tests_ce/scenarios/s36_three_level_names`.
+
+### A child key that reads a parent variable (#442 T1)
+
+A child `<key script="parent.zone">` that reads a `<variable>` of the parent is ready. Before, Build rejected it
+with `input` "Parent reference names an unknown field", while the run worked. The variable is no output field, so it
+joins nothing; a key copy such as `parent.depot_id` groups the child rows. A name that is no key, no `columns=`
+column and no variable of the parent (for example a source column that nothing declares) stays rejected, and the
+remediation now names both working forms. The per-parent remediation says that a variable copy does not group, and
+that a child with several parent copies needs a `foreign_key` role. Case: `tests_ce/scenarios/s37_parent_variable_reference`.
+An expectation or role on an undeclared field ("Expectation references an unknown field") now also says, for a product that reads a file
+source, that `columns=` declares a column of that source (#479). A generated product keeps the text without it.
+
+### A setup-level variable with storage= (#442 T3)
+
+`lint`, `dry-run` and Build reject a `<variable storage=...>` directly under `<setup>` with `DM102`. The remediation
+says to move the variable into the `<generate>` that reads it and shows the file lookup. Before, only the bounded run
+failed, with `child_execution` (`I830`) and the generic text "Use a supported source or adjust the configuration".
+`datamimic run` still fails with `I830`. Case: the negative `the_lookup_variable_goes_inside_the_generate` of
+`tests_ce/scenarios/s31_file_lookup`.
+
+### Engine warnings as authoring diagnostics (#404)
+
+`dry-run`, `run` and Build now show the catalog warnings `W007` (Bash execution) and `W008` (a seeded script draws
+while it loads) as diagnostics with `code: "engine_warning"`, `severity: "warning"` and `phase: "evidence"`. The
+message is the catalog title; for `W008` it adds the script file name and the line, and `path` is
+`["script", "<file>", "line", <n>]`. The remediation is the catalog resolution. `ce_error.issue_code` holds the
+`W` code, and `ce_error.error_code` is `null`, because a warning has no `E` code: consumers that read
+`ce_error.error_code` must accept `null`. A warning never rejects. Build shows `W008` next to the failed replay gate.
+`W002` (`<echo>`) is not shown, because its text can hold a property value. The bounded child collects the
+warnings with `collect_task_warnings` (`datamimic_ce.errors`); the log keeps one line for each message, as before.
+Cases: the negative `draw_while_loading` of `tests_ce/scenarios/s14_seeded_library_random` and
+`tests_ce/unit_tests/test_authoring/test_load_time_entropy_build.py`.
+
+### One literal rule for fixed_value and allowed_values (#476)
+
+`fixed_value` now matches a captured date or datetime by the ISO literal rule of `allowed_values`. Before, a date
+capture `2026-03-01` failed `"value": "2026-03-01"` and passed `"values": ["2026-03-01"]`. A date matches
+`YYYY-MM-DD`; a datetime matches `YYYY-MM-DD` with `T` or a space and `HH:MM:SS`, with a fraction of 1 to 6 digits.
+An offset, `Z`, minute precision and a compact form never match. Every other value compares by type and value, so
+the literal `1` does not match a `True` capture. Case: `tests_ce/scenarios/s38_temporal_literal_match`.
 
 ## Public contract
 

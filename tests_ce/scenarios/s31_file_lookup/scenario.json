@@ -10,7 +10,7 @@
     "the lookup table in a <nestedKey> is an output field, a key of another type finds no row, a missing default fails the run, and <variable> has no where=",
     "a script can use the builtins that scripts offer (str), and open() and next() fail with I957, which names the builtin; a bare builtin name that is no field (id) stays I832",
     "where= reads only the current file row: a where= that reads parent. fails with I832 and the where= guidance",
-    "the lookup variable goes inside the <generate> (a setup-level one fails with I830); a where= value error gets the issue resolution, not the scope hint; a key script name failure keeps the scope hint"
+    "the lookup variable goes inside the <generate> (lint, dry-run and Build reject a setup-level one with DM102 and say where it goes, #442 T3; the run fails with I830); a where= value error gets the issue resolution, not the scope hint; a key script name failure keeps the scope hint"
   ],
   "products": {
     "account_view": 6
@@ -130,8 +130,9 @@
     },
     {
       "name": "the_lookup_variable_goes_inside_the_generate",
-      "diagnostic": "child_execution",
-      "issue": "I830",
+      "diagnostic": "DM102",
+      "remediation": "storage= holds rows for one record: move this <variable> into the <generate> that reads it.",
+      "run_error": "Cannot get data from source 'configured storage pool' of <variable> 'branches'",
       "patch": {
         "file": "datamimic.xml",
         "old": "    <generate name=\"account_view\" source=\"data/entity/accounts.ent.csv\" distribution=\"ordered\" columns=\"account_id, branch_id\">\n        <!-- storage=\"data\" holds every row of the file, the same list in each record; a variable is no output field.\n             branch is None when no branch row has the key. Both keys are file text. -->\n        <variable name=\"branches\" source=\"data/entity/branches.ent.csv\" storage=\"data\" distribution=\"ordered\"/>",
