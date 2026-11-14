@@ -1,8 +1,17 @@
 <setup>
-    <!-- Purpose: read the delivered rows back from the SQLite table. -->
+    <!-- Purpose: read the rows back and check their values in the run. The literal count="12" works around #493 (DM211 in an included step): remove it when #493 is fixed. -->
     <generate name="orders_back" source="shop" selector="SELECT id, status, amount_cents FROM orders ORDER BY id" distribution="ordered" count="12" target="">
         <key name="id" script="this.id"/>
         <key name="status" script="this.status"/>
         <key name="amount_cents" script="this.amount_cents"/>
+        <assert condition="this.status in ('new', 'paid', 'shipped')" message="The table holds a status that the load does not write"/>
+    </generate>
+    <!-- The totals are the sums of the rows that the seed writes: a wrong load or a stale table fails the run. -->
+    <generate name="orders_check" source="shop" selector="SELECT COUNT(*) AS total, SUM(id) AS id_sum, SUM(amount_cents) AS amount_sum, COUNT(DISTINCT status) AS statuses FROM orders" distribution="ordered" count="1" target="">
+        <key name="total" script="this.total"/>
+        <key name="id_sum" script="this.id_sum"/>
+        <key name="amount_sum" script="this.amount_sum"/>
+        <key name="statuses" script="this.statuses"/>
+        <assert condition="this.total == 12 and this.id_sum == 78 and this.amount_sum == 67826 and this.statuses == 3" message="The table does not hold the rows that the load writes"/>
     </generate>
 </setup>
