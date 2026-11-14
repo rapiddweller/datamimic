@@ -79,6 +79,10 @@ class Context(ABC):
     def rng(self) -> RandomSource:
         """The rng for randomness driven by this context (Random or random module)."""
 
+    @abstractmethod
+    def enter_generator(self, element: str) -> None:
+        """Give this copy of the context the stream of the generator built for ``element``."""
+
     def evaluate_python_expression(
         self,
         expr: str,
@@ -244,6 +248,7 @@ class SetupContext(Context):
         profile_loader: Callable[[Path, str], dict[str, str]] | None = None,
         total_row_limit: int | None = None,
         step_key: str | None = None,
+        generator_key: str | None = None,
     ) -> None:
         # SetupContext is always its root_context
         super().__init__(self)
@@ -307,15 +312,23 @@ class SetupContext(Context):
         self._total_row_budget = TotalRowBudget(total_row_limit) if total_row_limit is not None else None
         # How often this context ran each included step, so that a repeated include gets its own stream.
         self._step_runs: dict[str, int] = {}
-        self._enter_stream(step_key)
+        self._enter_stream(step_key, generator_key)
         self._seeded_faker: Faker | None = None
 
-    def _enter_stream(self, step_key: str | None) -> None:
+    def _enter_stream(self, step_key: str | None, generator_key: str | None = None) -> None:
         """Start the generator stream root: variables/keys without their own seed fork a reproducible child RNG
         from it. The entry keeps ``Random(rngSeed)``; an included step keys its stream from the seed and its
-        step key, so two steps differ and a replay agrees (#463)."""
+        step key, so two steps differ and a replay agrees (#463). A generator that takes the context keys its
+        stream from the step key and its own element, so two generators do not repeat each other (#473)."""
         self._step_key = step_key
-        seed = self._run_seed.value if step_key is None else self._run_seed.int_for(f"include|{step_key}")
+        self._generator_key = generator_key
+        seed: int | None
+        if generator_key is not None:
+            seed = self._run_seed.int_for(f"generator|{step_key or ''}|{generator_key}")
+        elif step_key is None:
+            seed = self._run_seed.value
+        else:
+            seed = self._run_seed.int_for(f"include|{step_key}")
         self._root_rng: Random | None = Random(seed) if self._run_seed.seeded else None
         # Cached call-time rng — populated lazily on first ``.rng`` access.
         self._call_rng: RandomSource | None = None
@@ -328,6 +341,10 @@ class SetupContext(Context):
         run = parent._step_runs.get(path, 0)
         parent._step_runs[path] = run + 1
         self._enter_stream(f"{parent._step_key or ''}/{path}#{run}")
+
+    def enter_generator(self, element: str) -> None:
+        """Give this copy of the context the stream of the generator built for ``element``."""
+        self._enter_stream(self._step_key, element)
 
     def derive_seeded_rng(self) -> Random | None:
         """Fork a reproducible child RNG from the model-wide root seed.
@@ -401,6 +418,7 @@ class SetupContext(Context):
             profile_loader=self.profile_loader,
             total_row_limit=self._total_row_budget.limit if self._total_row_budget is not None else None,
             step_key=self._step_key,
+            generator_key=self._generator_key,
         )
         memo[id(self)] = copied
         copied._pending_client_configs = copy.deepcopy(self._pending_client_configs, memo)

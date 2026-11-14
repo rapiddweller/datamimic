@@ -2,6 +2,8 @@
     <generate name="first_draws" source="mem" sourceEntity="entry_draws" distribution="ordered" target="mem">
         <key name="draw_id" script="this.draw_id"/>
         <key name="first_draw" type="int" min="0" max="999999999"/>
+        <key name="first_ctx_a" generator="CtxGen(context=context)"/>
+        <key name="first_ctx_b" generator="CtxGen(context=context.root)"/>
         <key name="first_label" script="fake.name()"/>
     </generate>
 </setup>

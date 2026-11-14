@@ -2,6 +2,7 @@
   "title": "Each included step draws from its own seeded stream (#463)",
   "proves": [
     "two included steps, the entry and a nested step draw different values and fake names for one rngSeed",
+    "four generators that take the context (as context and as context.root; in the entry and in a step) draw four different values in each row",
     "a second run with the same seed gives the same rows",
     "the order of two independent steps does not change their rows; the step key is the step path, not its position (an entry <execute> library keeps one run-wide stream and follows the call order)",
     "./model/10_first.xml and model/10_first.xml are the same step",

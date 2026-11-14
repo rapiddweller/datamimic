@@ -48,6 +48,11 @@ class GenIterContext(Context):
         else:
             self._rng = None
 
+    def enter_generator(self, element: str) -> None:
+        """Give this copy of the context the stream of the generator built for ``element``."""
+        self.root.enter_generator(element)
+        self._rng = self.root.derive_seeded_rng()
+
     @property
     def rng(self) -> RandomSource:
         """Seeded ``Random`` or the ``random`` module (same callable API)."""

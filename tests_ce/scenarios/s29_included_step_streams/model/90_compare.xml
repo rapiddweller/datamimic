@@ -3,6 +3,7 @@
         <variable name="second" source="mem" sourceEntity="second_draws" distribution="ordered"/>
         <key name="draw_id" script="this.draw_id"/>
         <key name="distinct_draws" script="len({entry_draw, first_draw, second.second_draw})"/>
+        <key name="distinct_ctx" script="len({ctx_a, ctx_b, first_ctx_a, first_ctx_b})"/>
         <key name="distinct_labels" script="len({first_label, second.second_label})"/>
     </generate>
 </setup>

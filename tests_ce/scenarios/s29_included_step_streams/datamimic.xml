@@ -1,9 +1,13 @@
 <setup rngSeed="29">
     <!-- Each included step draws from its own stream. The seed and the step path decide it (#463). -->
+    <execute uri="lib/ctx.scr.py"/>
     <memstore id="mem"/>
     <generate name="entry_draws" count="4" target="mem">
         <key name="draw_id" generator="IncrementGenerator"/>
         <key name="entry_draw" type="int" min="0" max="999999999"/>
+        <!-- two generators that take the context: each draws from its own stream (#473) -->
+        <key name="ctx_a" generator="CtxGen(context=context)"/>
+        <key name="ctx_b" generator="CtxGen(context=context.root)"/>
     </generate>
     <!-- 10 first: one draw and one fake name for each entry row -->
     <include uri="model/10_first.xml"/>

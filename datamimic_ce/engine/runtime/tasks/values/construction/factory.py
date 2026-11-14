@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import ast
+import copy
 import functools
 import inspect
 import logging
@@ -323,7 +324,11 @@ class GeneratorUtil:
                 # Instanz-Namespaces getrennt halten, um Typkonflikte zu vermeiden.
                 # NumberDistribution so the DSL can pass the real enum type, not a magic string,
                 # e.g. IntegerGenerator(min=1, max=27, distribution=NumberDistribution.CUMULATED).
-                local_ns_inst = {"context": self._context, "self": self, "NumberDistribution": NumberDistribution}
+                local_ns_inst = {
+                    "context": self._generator_context(generator_str, stmt),
+                    "self": self,
+                    "NumberDistribution": NumberDistribution,
+                }
                 namespace = {**local_ns, **local_ns_inst}
                 if seeded_rng is not None:
                     namespace = {name: _bind_rng(obj, seeded_rng) for name, obj in namespace.items()}
@@ -370,6 +375,15 @@ class GeneratorUtil:
                 element_name=stmt.name,
                 error=type(e).__name__,
             ) from e
+
+    def _generator_context(self, generator_str: str, stmt: Statement) -> Context:
+        """The context a generator call receives. Under a seed each generator that names ``context`` gets a
+        copy with its own stream, so two of them do not draw the same values (#473)."""
+        if not self._context.root.is_seeded or "context" not in generator_str:
+            return self._context
+        generator_context = copy.deepcopy(self._context)
+        generator_context.enter_generator(stmt.full_name or stmt.name or generator_str)
+        return generator_context
 
     def attribute_call(
         self, generator: str, arguments: list[tuple[str, str, str]], element_tag: str, element_name: str
