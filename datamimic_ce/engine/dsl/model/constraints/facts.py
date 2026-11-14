@@ -594,7 +594,8 @@ VARIABLE_GENERATOR_ARGUMENT_CONSTRAINTS: tuple[Constraint, ...] = (
 VARIABLE_DISTRIBUTION_FORBIDS_GENERATOR = Forbids(
     ATTR_DISTRIBUTION,
     frozenset((ATTR_GENERATOR,)),
-    message=_KEY_DISTRIBUTION_GENERATOR_MESSAGE.replace("<key>", "<variable>"),
+    message="'distribution' on a <variable> shapes a type= range; with generator= write it in the call: "
+    'generator="IntegerGenerator(min=1, max=9, distribution=NumberDistribution.CUMULATED)"',
 )
 VARIABLE_STORAGE_VALUES = ValidValues(ATTR_STORAGE, ("value", "data", "iterator"))
 ITERATION_SELECTOR_REQUIRES_SOURCE = Requires(
