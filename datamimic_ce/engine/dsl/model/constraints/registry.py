@@ -9,6 +9,7 @@
 # Attribute constants (imported at module level to avoid circular imports)
 from datamimic_ce.engine.dsl.model.constraints.facts import (
     _ARRAY_RULES,
+    _ELEMENT_RULES,
     _EXECUTE_RULES,
     _GENERATE_RULES,
     _KEY_RULES,
@@ -59,7 +60,7 @@ _ELEMENT_CONSTRAINTS: dict[str, tuple[Constraint, ...]] = {
     EL_ITERATE: (*_GENERATE_RULES, ITERATE_REQUIRES_SOURCE),
     EL_KEY: _KEY_RULES,
     EL_ID: _KEY_RULES,
-    EL_ELEMENT: _KEY_RULES,
+    EL_ELEMENT: _ELEMENT_RULES,
     EL_VARIABLE: _VARIABLE_RULES,
     EL_NESTED_KEY: _NESTED_KEY_RULES,
     EL_ARRAY: _ARRAY_RULES,

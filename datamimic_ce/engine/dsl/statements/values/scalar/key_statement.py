@@ -14,6 +14,7 @@ from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import (
     ATTR_GRANULARITY,
     ATTR_MAX,
     ATTR_MAX_LENGTH,
+    ATTR_MIME_TYPE,
     ATTR_MIN,
     ATTR_MIN_LENGTH,
 )
@@ -28,10 +29,14 @@ class GeneratorArguments:
     granularity: str | None
     min_length: str | None
     max_length: str | None
+    mime_type: str | None
 
     @classmethod
     def of(cls, model: KeyModel | VariableModel) -> "GeneratorArguments":
-        return GeneratorArguments(model.min, model.max, model.granularity, model.min_length, model.max_length)
+        mime_type = model.mime_type if isinstance(model, KeyModel) else None
+        return GeneratorArguments(
+            model.min, model.max, model.granularity, model.min_length, model.max_length, mime_type
+        )
 
     def lengths(self) -> tuple[tuple[str, str, str | None], ...]:
         """minLength/maxLength are the min_len/max_len parameters of StringGenerator and BinaryGenerator, in the
@@ -46,6 +51,7 @@ class GeneratorArguments:
             (ATTR_MAX, "max", self.max),
             (ATTR_GRANULARITY, "granularity", self.granularity),
             *self.lengths(),
+            (ATTR_MIME_TYPE, "mime_type", self.mime_type),
         )
         return [(attribute, parameter, text) for attribute, parameter, text in every if text is not None]
 

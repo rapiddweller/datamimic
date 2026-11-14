@@ -1,0 +1,58 @@
+{
+  "title": "An element refuses the attributes its runtime does not read (#465)",
+  "proves": [
+    "<element generator= min= max=> takes its range as arguments of the generator",
+    "nullQuota, mimeType and distribution on an <element> are refused (DM218), not ignored",
+    "a typed range on an <element> is refused (DM214); minLength beside values= is refused (DM218)"
+  ],
+  "products": {
+    "rooms": 20
+  },
+  "negatives": [
+    {
+      "name": "element_null_quota",
+      "diagnostic": "DM218",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "generator=\"IntegerGenerator\" min=\"1\" max=\"9\"",
+        "new": "generator=\"IntegerGenerator\" min=\"1\" max=\"9\" nullQuota=\"0.5\""
+      }
+    },
+    {
+      "name": "element_mime_type",
+      "diagnostic": "DM218",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "generator=\"IntegerGenerator\" min=\"1\" max=\"9\"",
+        "new": "generator=\"IntegerGenerator\" min=\"1\" max=\"9\" mimeType=\"image/png\""
+      }
+    },
+    {
+      "name": "element_distribution",
+      "diagnostic": "DM218",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "generator=\"IntegerGenerator\" min=\"1\" max=\"9\"",
+        "new": "generator=\"IntegerGenerator\" min=\"1\" max=\"9\" distribution=\"cumulated\""
+      }
+    },
+    {
+      "name": "element_typed_range",
+      "diagnostic": "DM214",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "generator=\"IntegerGenerator\" min=\"1\" max=\"9\"",
+        "new": "type=\"int\" min=\"1\" max=\"9\""
+      }
+    },
+    {
+      "name": "element_length_beside_values",
+      "diagnostic": "DM218",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "generator=\"IntegerGenerator\" min=\"1\" max=\"9\"",
+        "new": "values=\"a, b\" minLength=\"1\""
+      }
+    }
+  ]
+}

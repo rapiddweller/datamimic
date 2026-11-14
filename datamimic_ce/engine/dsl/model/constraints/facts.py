@@ -32,6 +32,7 @@ from datamimic_ce.engine.dsl.model.constraints.types import (
     RequiredOneOf,
     Requires,
     RequiresWhenValue,
+    Unsupported,
     ValidValues,
 )
 from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import (
@@ -50,9 +51,11 @@ from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import (
     ATTR_MAX,
     ATTR_MAX_COUNT,
     ATTR_MAX_LENGTH,
+    ATTR_MIME_TYPE,
     ATTR_MIN,
     ATTR_MIN_COUNT,
     ATTR_MIN_LENGTH,
+    ATTR_NULL_QUOTA,
     ATTR_OFFSET,
     ATTR_OUT_DATE_FORMAT,
     ATTR_PATTERN,
@@ -403,6 +406,10 @@ _KEY_LENGTH_MESSAGE = (
     "'minLength' and 'maxLength' on a <key> apply to type= or generator= only: write "
     'type="string" minLength="1" maxLength="9", or generator="StringGenerator" minLength="1" maxLength="9"'
 )
+_KEY_DISTRIBUTION_GENERATOR_MESSAGE = (
+    "'distribution' on a <key> shapes a type= range; with generator= write it in the call: "
+    'generator="IntegerGenerator(min=1, max=9, distribution=NumberDistribution.CUMULATED)"'
+)
 KEY_RANGE_CONSTRAINTS: tuple[Constraint, ...] = (
     *(Requires(attr, _KEY_RANGE_SOURCES, message=_KEY_RANGE_MESSAGE) for attr in _KEY_RANGE_ATTRS),
     *(
@@ -434,12 +441,7 @@ KEY_RANGE_CONSTRAINTS: tuple[Constraint, ...] = (
         message="'granularity' on a <key> needs a range - add min= and/or max=",
     ),
     # generator= takes min/max/granularity only; a distribution attribute next to it would be silently ignored.
-    Forbids(
-        ATTR_DISTRIBUTION,
-        frozenset((ATTR_GENERATOR,)),
-        message="'distribution' on a <key> shapes a type= range; with generator= write it in the call: "
-        'generator="IntegerGenerator(min=1, max=9, distribution=NumberDistribution.CUMULATED)"',
-    ),
+    Forbids(ATTR_DISTRIBUTION, frozenset((ATTR_GENERATOR,)), message=_KEY_DISTRIBUTION_GENERATOR_MESSAGE),
     *(Requires(attr, _KEY_RANGE_SOURCES, message=_KEY_LENGTH_MESSAGE) for attr in _KEY_LENGTH_ATTRS),
     *(
         Forbids(attr, KEY_GENERATION_REQUIRED.attrs - _KEY_RANGE_SOURCES, message=_KEY_LENGTH_MESSAGE)
@@ -456,6 +458,62 @@ KEY_RANGE_CONSTRAINTS: tuple[Constraint, ...] = (
         )
         for attr in _KEY_LENGTH_ATTRS
     ),
+)
+# mimeType prefixes the signature to a binary payload: type="binary" or BinaryGenerator(mime_type=...) reads it (#466).
+_KEY_MIME_TYPE_MESSAGE = '\'mimeType\' on a <key> needs type="binary" or generator="BinaryGenerator"'
+KEY_MIME_TYPE_CONSTRAINTS: tuple[Constraint, ...] = (
+    Requires(ATTR_MIME_TYPE, _KEY_RANGE_SOURCES, message=_KEY_MIME_TYPE_MESSAGE),
+    AllowedValuesWhen(
+        ATTR_TYPE,
+        frozenset((DATA_TYPE_BINARY,)),
+        ATTR_MIME_TYPE,
+        unless=frozenset((ATTR_GENERATOR,)),
+        message=_KEY_MIME_TYPE_MESSAGE,
+    ),
+    # A script, constant, values or pattern value is not a generated payload: the signature would be ignored.
+    Forbids(
+        ATTR_MIME_TYPE,
+        KEY_GENERATION_REQUIRED.attrs - _KEY_RANGE_SOURCES,
+        message="'mimeType' on a <key> applies to a generated binary payload only: remove script=, constant=, "
+        "values=, pattern=, source= or string=",
+    ),
+)
+# The <element> runtime reads no nullQuota, mimeType or distribution; it reads a range only as the arguments of
+# its generator (#465). Each of these would be ignored without a message. unique and weights work on values=.
+ELEMENT_UNSUPPORTED_CONSTRAINTS: tuple[Constraint, ...] = (
+    *(
+        Unsupported(
+            attr,
+            "nullQuota and mimeType are not supported on an <element>. "
+            "The element runtime does not read them and would ignore them without a message. Use a <key>.",
+        )
+        for attr in (ATTR_NULL_QUOTA, ATTR_MIME_TYPE)
+    ),
+    Unsupported(
+        ATTR_DISTRIBUTION,
+        "distribution is not supported on an <element>: it shapes a numeric range, and an element has no range. "
+        "Use a <key>.",
+    ),
+)
+_ELEMENT_RANGE_MESSAGE = (
+    "min, max and granularity on an <element> need generator= as the only value source. "
+    "The element runtime reads a range only as arguments of its generator. Use a <key> for a typed range."
+)
+_ELEMENT_LENGTH_MESSAGE = (
+    "minLength and maxLength on an <element> need generator= as the only value source. Use a <key> for a typed length."
+)
+_ELEMENT_GENERATOR = frozenset((ATTR_GENERATOR,))
+ELEMENT_ARGUMENT_CONSTRAINTS: tuple[Constraint, ...] = tuple(
+    fact
+    for attrs, message in (
+        (_KEY_RANGE_ATTRS, _ELEMENT_RANGE_MESSAGE),
+        (_KEY_LENGTH_ATTRS, _ELEMENT_LENGTH_MESSAGE),
+    )
+    for attr in attrs
+    for fact in (
+        Requires(attr, _ELEMENT_GENERATOR, message=message),
+        Forbids(attr, KEY_GENERATION_REQUIRED.attrs - _ELEMENT_GENERATOR, message=message),
+    )
 )
 KEY_DISTRIBUTION_NUMERIC_TYPE = AllowedValuesWhen(
     ATTR_TYPE,
@@ -532,6 +590,11 @@ VARIABLE_GENERATOR_ARGUMENT_CONSTRAINTS: tuple[Constraint, ...] = (
         frozenset((ATTR_MIN, ATTR_MAX)),
         message="'granularity' on a <variable> needs a range - add min= and/or max=",
     ),
+)
+VARIABLE_DISTRIBUTION_FORBIDS_GENERATOR = Forbids(
+    ATTR_DISTRIBUTION,
+    frozenset((ATTR_GENERATOR,)),
+    message=_KEY_DISTRIBUTION_GENERATOR_MESSAGE.replace("<key>", "<variable>"),
 )
 VARIABLE_STORAGE_VALUES = ValidValues(ATTR_STORAGE, ("value", "data", "iterator"))
 ITERATION_SELECTOR_REQUIRES_SOURCE = Requires(
@@ -652,6 +715,19 @@ _KEY_RULES: tuple[Constraint, ...] = (
     KEY_DISTRIBUTION_NUMERIC_TYPE,
     KEY_DISTRIBUTION_VALUES,
     *KEY_RANGE_CONSTRAINTS,
+    *KEY_MIME_TYPE_CONSTRAINTS,
+    DEFAULT_VALUE_REQUIRES_SCRIPT,
+    OUT_DATE_FORMAT_STRING_TYPE,
+)
+_ELEMENT_RULES: tuple[Constraint, ...] = (
+    WEIGHTS_REQUIRE_VALUES,
+    *KEY_UNIQUE_CONSTRAINTS,
+    *ELEMENT_UNSUPPORTED_CONSTRAINTS,
+    *KEY_SOURCE_COMPANIONS,
+    KEY_GENERATION_REQUIRED,
+    KEY_GENERATION_EXCLUSIVE,
+    KEY_TYPE_VALUES,
+    *ELEMENT_ARGUMENT_CONSTRAINTS,
     DEFAULT_VALUE_REQUIRES_SCRIPT,
     OUT_DATE_FORMAT_STRING_TYPE,
 )
@@ -672,6 +748,7 @@ _VARIABLE_RULES: tuple[Constraint, ...] = (
     ITERATION_SELECTOR_REQUIRES_SOURCE,
     SOURCE_DISTRIBUTION_VALUES,
     *VARIABLE_GENERATOR_ARGUMENT_CONSTRAINTS,
+    VARIABLE_DISTRIBUTION_FORBIDS_GENERATOR,
 )
 _NESTED_KEY_RULES: tuple[Constraint, ...] = (
     COUNT_XOR_MIN,

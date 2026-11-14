@@ -115,7 +115,7 @@ def test_distribution_projections_use_the_central_runtime_derived_facts() -> Non
 
     for tag in ("generate", "iterate", "variable", "nestedKey", "reference"):
         assert SOURCE_DISTRIBUTION_VALUES in element_constraints(tag)
-    for tag in ("key", "id", "element"):
+    for tag in ("key", "id"):
         assert KEY_DISTRIBUTION_VALUES in element_constraints(tag)
 
 

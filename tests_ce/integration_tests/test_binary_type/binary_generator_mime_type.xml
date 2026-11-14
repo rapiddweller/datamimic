@@ -1,0 +1,6 @@
+<setup rngSeed="5">
+    <generate name="g" count="3" target="">
+        <key name="png" generator="BinaryGenerator" mimeType="image/png" minLength="64" maxLength="64"/>
+        <key name="typed" type="binary" mimeType="image/png" minLength="64" maxLength="64"/>
+    </generate>
+</setup>

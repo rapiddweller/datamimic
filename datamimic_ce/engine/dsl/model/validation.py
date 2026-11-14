@@ -21,6 +21,7 @@ from datamimic_ce.engine.dsl.model.constraints import (
     RequiredOneOf,
     Requires,
     RequiresWhenValue,
+    Unsupported,
     ValidValues,
     resolved_allowed,
     resolved_values,
@@ -197,6 +198,8 @@ def _constraint_error(values: Mapping[str, object], fact: Constraint) -> str | N
         return _all_or_none_error(values, fact)
     if isinstance(fact, Forbids):
         return _forbids_error(values, fact)
+    if isinstance(fact, Unsupported):
+        return fact.message if fact.attr in values else None
     if isinstance(fact, ForbidsWhenValue):
         return _forbids_when_value_error(values, fact)
     if isinstance(fact, ValidValues):
