@@ -1,5 +1,5 @@
 <setup rngSeed="38">
-    <database id="bank" dbms="sqlite" database="s38_bank"/>
+    <database id="bank" dbms="sqlite" database="s40_bank"/>
     <include uri="delivery/90_clear.xml"/>
     <include uri="delivery/91_load.xml"/>
     <include uri="delivery/92_verify.xml"/>

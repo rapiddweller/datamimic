@@ -2,7 +2,7 @@
   "title": "Clear, load, verify, run again on SQLite",
   "proves": [
     "one project does three delivery steps in order: clear the accounts table, load 8 accounts, verify by reading the database back",
-    "the table holds the rows of an earlier load (db/s38_bank.sqlite); a normal run needs the clear, because the load would meet the same primary keys, and the run can repeat with the same result",
+    "the table holds the rows of an earlier load (db/s40_bank.sqlite); a normal run needs the clear, because the load would meet the same primary keys, and the run can repeat with the same result",
     "the verify step has one product for each check: the rows of the table, the total of the accounts table, the total of the audit table",
     "clear empties one table: the audit table is not touched and keeps its 3 rows",
     "Build runs the model against the table as it is on disk: it skips the clear (not_executed) and isolates the load, so it does not prove that the clear removed rows or that the load wrote them",
