@@ -1,0 +1,12 @@
+{
+  "title": "A ClassVar in a script dataclass stays a class variable",
+  "proves": [
+    "a script runs without the future flags of the engine, so an annotation is not a string",
+    "a dataclass in a script keeps a ClassVar out of its fields"
+  ],
+  "products": {"shapes": 3},
+  "negatives": [
+    {"name": "classvar_becomes_field", "diagnostic": "assert_failed", "expected": "A ClassVar is not a dataclass field", "run_error": "A ClassVar is not a dataclass field",
+     "patch": {"file": "lib/shapes.scr.py", "old": "kind: ClassVar[str] = \"polygon\"", "new": "kind: str = \"polygon\""}}
+  ]
+}
