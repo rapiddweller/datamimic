@@ -1,689 +1,256 @@
-# DATAMIMIC — Governed Test Data for Regulated Enterprises
-
-> **This repository contains the DATAMIMIC Community Edition (CE).** MIT-licensed, Python-native, MCP-ready.
->
-> CE is fully usable standalone for deterministic synthetic data generation and model-based pseudonymization. The Enterprise Platform adds governed workflows, PII scanning, role-based access, audit logging, scheduling, multi-system execution, and the operational layer for governed enterprise workflows.
->
-> 👉 **Enterprise Platform:** [datamimic.io](https://datamimic.io) &nbsp;|&nbsp; 📘 **Docs:** [docs.datamimic.io](https://docs.datamimic.io) &nbsp;|&nbsp; 📅 **Book a strategy call:** [datamimic.io/contact](https://datamimic.io/contact)
->
-> 🤖 **AI agent?** Install the [DATAMIMIC plugin for Codex or Claude Code](docs/agent_plugin.md), or read the [consumer skill](plugins/datamimic/skills/generate-test-data/SKILL.md). Repository contributors also use [`AGENTS.md`](AGENTS.md).
-
----
+# DATAMIMIC Community Edition
 
 [![CI](https://github.com/rapiddweller/datamimic/actions/workflows/main.yml/badge.svg?branch=development)](https://github.com/rapiddweller/datamimic/actions)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=rapiddweller_datamimic&metric=coverage)](https://sonarcloud.io/summary/new_code?id=rapiddweller_datamimic)
-[![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=rapiddweller_datamimic&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=rapiddweller_datamimic)
-[![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
+[![Python](https://img.shields.io/badge/Python-3.11%20to%203.13-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/rapiddweller/datamimic/blob/development/LICENSE)
-[![MCP Ready](https://img.shields.io/badge/MCP-ready-8A2BE2.svg)](https://github.com/rapiddweller/datamimic/blob/development/docs/mcp_quickstart.md)
 
-[**Current development architecture**](https://rapiddweller.github.io/datamimic/) — explore the observed structure, target and differences with ArchKeel.
+**DATAMIMIC Community Edition (CE) is an open-source Python library and command line tool for test data, made by rapiddweller and released under the MIT license.**
+You describe the data in an XML model. CE generates synthetic data from the model, or replaces personal data in an existing export. With a seed, the same model gives the same data again.
 
----
+- **Model-driven.** One XML project describes tables, nested records, references between records, and conditions. CE writes CSV, JSON, XML, XLSX, DbUnit and fixed-width files, and writes to PostgreSQL, MySQL, Oracle, MS SQL Server, SQLite and MongoDB.
+- **Repeatable.** Set `<setup rngSeed="7">`. The same CE version, project files and seed give the same rows on the tested platforms. CI compares seeded output across Linux and Windows and Python 3.11 to 3.13 on each run.
+- **Checked before you use it.** `datamimic authoring build` runs the project with a row limit and checks it against the expectations in `acceptance/build.json`. The result is `ready` or `rejected`. Build is the only proof; a successful run without Build proves nothing about the data.
+- **Made for coding agents.** One plugin for Claude Code and Codex installs the skills and a local MCP server. The MCP tools have the same names and results as the CLI commands.
+- **Pseudonymization.** Replace names, addresses and account numbers in a staging export with generated values or keyed hashes. You name the fields; CE does not scan for personal data.
 
-## What is DATAMIMIC?
+> **Pre-release.** CE 5.0 is not on PyPI yet. PyPI has 4.3.0, which does not have the commands on this page. Until 5.0.0 is released, install from the GitHub branch `development` as shown below.
 
-**DATAMIMIC CE is the open-source deterministic data engine at the core of the DATAMIMIC Enterprise Platform.** It is usable standalone for synthetic data generation and model-based pseudonymization in local, CI, or agent-driven workflows.
+## Quick start: command line
 
-The Enterprise Platform adds the governed workflows, scanners, dashboards, and execution layer that regulated enterprises require for production-scale test-data operations.
-
-**Available in CE (this repo):**
-
-- **Generate** fully synthetic, deterministic datasets — model-driven, no source data required
-- **Pseudonymize** staging/QA exports — seeded, repeatable or run-specific (non-seeded) field transformation; PII fields identified and modeled manually in the XML pipeline
-- **Execute** single-system pipelines against PostgreSQL · MySQL · Oracle · MS SQL · SQLite · MongoDB · CSV · JSON · XML · XLSX · DbUnit · fixed-width (`.fcw`)
-- **Model behavior** — weighted state machines, composite multi-field references, control flow (`<while>`, `<assert>`), and a scriptable memstore for staged aggregation
-- **Emit provenance** — execution logs plus a SHA-256 content hash on `generate_domain` facade outputs, so two runs can be checked for identical output
-- **Guide agents** — machine-readable capabilities, progressive reference queries, and one canonical CLI project Build; an optional MCP adapter exposes the same authoring service
-
-**The Enterprise Platform adds:**
-
-- **PII scanner** — probability-scored field suggestions with configurable thresholds; users confirm mappings in DataWorkbench
-- **Multi-system execution** — Oracle / MongoDB / Kafka in coordinated workflows with referential integrity
-- **Industry message templates** — EDIFACT / SWIFT MT / HL7 v2.x / HL7 FHIR generated as deterministic test/training artefacts
-- **Governance layer** — role-based dashboards, audit trails, approval flows, reusable enterprise templates, scheduler
-- **Performance core** — Rust fastpath, ML/auto-regressive engine for complex distributions, keyset and manifest building, optimised distributed execution
-- **On-premise / air-gapped deployment** — podman-compose or Helm, with consulting-led rollout
-
-> Deployed in regulated EU banking environments for deterministic test data across Oracle, MongoDB, and Kafka pipelines. Reference customers available under NDA — see also [datamimic.io case studies](https://datamimic.io).
-
----
-
-## AI agents: author, verify, and run data models
-
-The [agent plugin](docs/agent_plugin.md) prepares CE in your project environment
-when needed. These instructions describe CE 5.0.
-
-> **Pre-release.** CE 5.0 is not on PyPI yet. Until 5.0.0, install from GitHub `development`. Use Python 3.11 to 3.13. PyPI has 4.3.0, which does not have the commands on this page.
-
-For manual installation, run:
+You need Python 3.11 to 3.13.
 
 ```bash
+python3.11 -m venv .venv && source .venv/bin/activate
 python -m pip install "datamimic-ce @ git+https://github.com/rapiddweller/datamimic@development"
 ```
 
-XML is the persisted executable project: a `datamimic.xml` entry and the steps it
-includes. Expectations and role declarations live beside it in
-`acceptance/build.json`. DM JSON is a transient agent representation of one XML file.
+Make a project directory `shop` with two files.
 
-| Need | Command |
-|---|---|
-| Discover the running contracts | `datamimic authoring schema` / `datamimic authoring schema --name build_request_v5` |
-| Discover CE vocabulary | `datamimic authoring capabilities` / `datamimic authoring capabilities --full` |
-| Inspect one element | `datamimic authoring capability --domain element --name generate` |
-| Read focused guidance | `datamimic authoring reference --topic assembly --name model` |
-| Compile/decompile supported syntax | `datamimic authoring compile -` / `datamimic authoring decompile model.xml` |
-| Prove a project | `datamimic authoring build <project>` |
-| Inspect existing XML safely | `datamimic authoring lint model.xml` / `datamimic authoring dry-run model.xml` |
-| Execute the persisted project | `datamimic run datamimic.xml` |
+`shop/datamimic.xml`:
 
-Authoring commands default to JSON and accept files or `-` for stdin. A ready
-compile/decompile proves syntax. A ready Build also requires complete bounded
-capture and the declared acceptance checks. Include every business requirement in
-`acceptance/build.json`; request smoke/replay through its `verification` fields when
-needed. A ready Build lists every project file it read with its digest. Target
-isolation does not prove delivery to an external database.
+```xml
+<setup rngSeed="7">
+    <generate name="customers" count="25" target="CSV">
+        <variable name="person" entity="Person" dataset="DE"/>
+        <key name="id" type="int" generator="IncrementGenerator"/>
+        <key name="name" script="person.name"/>
+        <key name="email" script="person.email"/>
+    </generate>
+</setup>
+```
 
-### Prompt to paste into an agent
+`shop/acceptance/build.json`:
+
+```json
+{
+  "version": "5.0",
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "customers"}, "count": 25}
+  ]
+}
+```
+
+Check the project, then run it:
+
+```bash
+datamimic authoring build shop     # prints JSON; "outcome": "ready" and exit code 0
+datamimic run shop/datamimic.xml   # writes shop/output/<task id>/customers.csv
+```
+
+| Build outcome | Exit code | Meaning |
+|---|---|---|
+| `ready` | 0 | All declared expectations passed on a complete, bounded capture. |
+| `rejected` | 1 | Read the first entry in `diagnostics`, correct the project, build again. |
+
+## Quick start: coding agents
+
+The plugin gives the agent two skills and a local MCP server. You need [`uv`](https://docs.astral.sh/uv/) for the MCP server.
+
+Claude Code:
+
+```bash
+claude plugin marketplace add https://github.com/rapiddweller/datamimic.git
+claude plugin install datamimic@datamimic
+```
+
+Codex:
+
+```bash
+codex plugin marketplace add https://github.com/rapiddweller/datamimic.git
+codex plugin add datamimic@datamimic
+```
+
+Start a new session in your project and ask:
 
 ```text
-Create the dataset I describe with the DATAMIMIC plugin's generate-test-data
-skill and the project CLI. Write the project as datamimic.xml plus
-acceptance/build.json with expectations for my stated requirements and identifier/FK
-roles where needed, then run datamimic authoring build on the project directory.
-Repair the reported paths before retrying. Stop on outcome=ready and return the
-project path with the bounded verification evidence. Execute the XML only if I
-requested real execution.
+Use DATAMIMIC. In ./shop make a project that generates 25 customers
+(id, name, email) as CSV with seed 7. Build until the outcome is ready,
+then run it. Show me the model and the Build evidence.
 ```
 
-[Worked projects](docs/examples/authoring.md) cover nested foreign keys,
-memstore readback and time series. Return a [human-readable model review](plugins/datamimic/skills/generate-test-data/references/review.md)
-with the XML and verification evidence.
+The first start of the MCP server downloads CE from GitHub and takes about 7 s. Later starts take about 1 s. We measured both on one machine.
+If the server does not connect, the skills still work with the command line.
 
-### Optional MCP adapter
+What the agent can and cannot do:
 
-`python -m pip install "datamimic-ce[mcp] @ git+https://github.com/rapiddweller/datamimic@development"` adds the same application as typed MCP tools:
-Build, compile/decompile, discovery, lint and bounded execution. Registration and
-request mapping are in the [MCP quickstart](docs/mcp_quickstart.md).
+- The MCP tools mirror the CLI: `datamimic_build` is `datamimic authoring build`, and so on.
+- `datamimic_run_project` builds the project first, then runs it. It does not write to a database or another external target unless the call sets `allow_side_effects`. Give that permission only after you checked the named targets.
+- A `ready` Build does not prove delivery to an external system.
 
----
+More: [agent plugin guide](https://github.com/rapiddweller/datamimic/blob/development/docs/agent_plugin.md), [MCP guide](https://github.com/rapiddweller/datamimic/blob/development/docs/mcp_quickstart.md).
 
-## CE vs Enterprise Platform
+## What can CE do?
 
-CE and EE are **not the same engine with a feature flag**. They share the DSL, while EE is an independently optimised execution engine built for enterprise-scale throughput and operational control.
+- **Generate.** `<generate>`, nested keys, lists, references between records, `<if>` and `<while>`, `<state-machine>`, `<assert>` and a memstore. [Worked projects](https://github.com/rapiddweller/datamimic/blob/development/docs/examples/authoring.md) show nested foreign keys, memstore readback and time series.
+- **Read sources.** CSV, JSON, XML, XLSX, DbUnit, fixed-width files, SQL databases and MongoDB. For database connections use [connection profiles](https://github.com/rapiddweller/datamimic/blob/development/docs/developer_guide.md#database-and-mongodb-connection-profiles).
+- **Time series.** Give `<generate>` the attributes `start`, `end` and `interval`. See the [time-series guide](https://github.com/rapiddweller/datamimic/blob/development/docs/guides/time-series.md).
 
-### Engine comparison
+```xml
+<generate name="readings" start="2026-01-01T00:00:00+00:00"
+          end="2026-01-02T00:00:00+00:00" interval="PT1H" target="CSV">
+    <key name="timestamp" script="ts.now.isoformat()"/>
+    <key name="value" script="20 - 10 * math.cos(ts.now.hour * math.pi / 12)"/>
+</generate>
+```
 
-| Capability | Community Edition (CE) | Enterprise Platform (EE) |
-|---|---|---|
-| Deterministic data generation | ✅ | ✅ |
-| Deterministic seeding in the DSL (`<setup rngSeed>`) | ✅ entities, generators and script expressions | Separate engine; not covered by the CE test matrix |
-| **Pseudonymization — seeded** | ✅ manual model | ✅ scanner-assisted, user-confirmed model |
-| **Pseudonymization — non-seeded** | ✅ manual model | ✅ scanner-assisted, user-confirmed model |
-| Python API + XML pipelines | ✅ | ✅ |
-| Domain models: Finance, Healthcare, Demographics | ✅ | ✅ |
-| Time-series generation (`<generate start/end/interval>`, ISO 8601, prefix-stable) | ✅ | ✅ |
-| MCP server for AI agent integration | ✅ | ✅ |
-| CLI + local execution | ✅ | ✅ |
-| **Scale** | millions of records via Python multiprocessing (and optional Ray) | **designed for billion-record workloads** — Rust fastpath, optimised multi-process execution, and keyset/manifest building on top of the shared Ray distribution layer |
-| **PII scanner** | ❌ | ✅ probability-scored field suggestions, configurable threshold, user confirmation in DataWorkbench |
-| **Runtime configuration profiles** | ❌ | ✅ Performance · Balanced · Flexibility |
-| **Memory management** | standard | optimised for high-volume batch and streaming |
-| **Logging granularity** | flat execution log | configurable: minimal · standard · deep nested tracing |
-| **Nested structure evaluation** | basic | deep nested generation with extended condition + ruleset evaluation |
-| **Importer / exporter logging** | ❌ | per-stage logging for importers and exporters |
-| **Error handling** | structured catalog, typed errors and guidance | structured catalog with recovery strategies |
-| **Rust fastpath** | ❌ | performance-critical paths in Rust |
-| **Keyset and manifest building** | ❌ | reads live DB schemas to build coordinated multi-table generation plans |
-| **ML / auto-regressive engine** | ❌ | combine statistical models with conditions, rulesets, validators for complex distributions |
+- **Domain data.** Ready-made services for these domains:
 
-### Platform capabilities (EE only)
-
-| Capability | EE |
+| Domain | Services |
 |---|---|
-| Multi-user collaboration | ✅ |
-| Role-based access control (RBAC) | ✅ |
-| Audit logs + provenance dashboards | ✅ |
-| **PII scanner — probability scoring, threshold-based suggestions for user-confirmed field mapping** | ✅ |
-| **DataWorkbench — visual field mapping and pseudonymization model builder** | ✅ |
-| Reusable enterprise template library | ✅ |
-| Scheduled execution + task runner | ✅ |
-| CI/CD pipeline integration (Tosca, Jenkins, GitLab) | ✅ |
-| Multi-system execution: Oracle, MongoDB, Kafka | ✅ |
-| **Template engine: schema-aware editors for EDIFACT, SWIFT MT, HL7 v2.x, and HL7 FHIR — customer-uploadable specs, further industry formats built per engagement on the same framework** | ✅ |
-| Audit-evidence artefacts for GDPR Art. 30 records, PCI DSS 4.0.1 Req. 6.5.5 (test data) reviews, and HIPAA Security Rule reviews | ✅ |
-| On-premise deployment + air-gapped environments | ✅ |
-| LSP-powered IDE tooling for DSL authoring | ✅ |
+| Healthcare | Patient, Doctor, Hospital, MedicalDevice, MedicalProcedure |
+| Finance | Bank, BankAccount, CreditCard, Transaction |
+| Insurance | InsuranceCompany, InsuranceProduct, InsurancePolicy, InsuranceCoverage |
+| E-commerce | Order, Product |
+| Public sector | AdministrationOffice, EducationalInstitution, PoliceOfficer |
+| Demographics | Person (DE, US and VN locale packs), Address, City, Country |
+| Common | Company |
 
-👉 [Explore the Enterprise Platform](https://datamimic.io) &nbsp;|&nbsp; [Book a platform demo](https://datamimic.io/contact)
+## Is the output reproducible?
 
----
+Yes, under these conditions: the same CE version, the same project files and the same seed, on the tested platforms. Without a seed the output is not repeatable.
 
-## EE runtime profiles
+- `datamimic authoring build` replays a seeded project and reports `deterministic_replay`.
+- CI replays a committed model in two separate processes on each run. It covers 4 of 4 facade domains, 23 of 23 entities and 34 of 35 literal generators.
+- The evidence is for CE only. See the [determinism evidence](https://github.com/rapiddweller/datamimic/blob/development/docs/determinism.md) for the test matrix and its limits.
 
-The EE core supports three runtime configuration profiles, selectable per execution context:
+## How do I pseudonymize an export?
 
-| Profile | Optimises for | Typical use case |
-|---|---|---|
-| **Performance** | Maximum throughput via Rust fastpath, optimised multi-process execution, and Ray-based distribution | Bulk generation for PostgreSQL, Oracle, and Kafka, designed for billion-record workloads |
-| **Balanced** | Throughput + full audit logging | Standard enterprise pipeline runs with compliance requirements |
-| **Flexibility** | Deep nested evaluation, extended condition and ruleset processing | Complex domain models with ML engine combinations, multi-level referential structures |
-
-Logging depth is independently configurable per profile — from minimal (throughput-optimised) to full nested tracing across importers, exporters, and generation stages.
-
----
-
-## EE template engine
-
-The EE template engine generates industry-standard financial messages from DATAMIMIC models. The workbench parses uploaded message samples, auto-detects the message type, and validates edits against the registered spec version in real time.
-
-### Capabilities
-
-- **Spec-aware form editing** — segments and elements rendered as structured forms with mandatory/optional indicators, per-field value suggestions, and inline custom-extension support
-- **Strict validation** against baked spec versions, with segment- and element-level error reporting
-- **Advisory mode** when a spec is unregistered or in draft — editing stays enabled, validation continues as guidance
-- **Round-trip** between the structured form view and the authoritative template text — no fidelity loss
-- **Download / adjust / upload your own spec** — customers can extend or override the baked spec catalogue without waiting for a release
-- **Live structure tree + preview** for every edit
-- **File auto-detection** — upload an existing message, the editor identifies the type and loads the matching spec
-
-### Format coverage
-
-| Format | Coverage |
-|---|---|
-| **UN/EDIFACT** | Schema-aware form editor; spec versions and subsets per engagement |
-| **SWIFT MT** | Schema-aware form editor; categories and SR versions per engagement |
-| **HL7 v2.x** | Schema-aware form editor; versions per engagement |
-| **HL7 FHIR** | Schema-aware form editor for FHIR resources (Patient, Observation, Encounter, …); profiles per engagement |
-| **Further industry formats** (ISO 20022 / MX, vertical dialects) | Built into the editor catalogue per customer engagement, on the same framework |
-
-Customers can extend the spec catalogue between releases by downloading, adjusting, and uploading their own spec files directly.
-
-Generated messages are traceable to their source model and syntactically valid against the registered spec. They are intended for **test and training environments only** — they are not network-validated and must not be transmitted on production SWIFTNet or EDI networks. See the [SWIFT CSP note](#supported-systems) below.
-
----
-
-## Who is DATAMIMIC for?
-
-### Enterprise Platform (EE)
-| Role | What DATAMIMIC solves |
-|---|---|
-| **QA / Test Manager** | Eliminate manual test data requests. Self-service, governed, always ready. |
-| **Business Analyst** | Define data requirements in business-readable models — no scripting needed. |
-| **Platform / DevOps Engineer** | Integrate deterministic test data generation into CI/CD and scheduled pipelines. |
-| **Compliance / Audit** | Full audit trail for every generation run. Regulator-ready logs, no production data exposure. |
-| **Enterprise Architect** | One governed standard across Oracle, MongoDB, Kafka, flat files, and custom systems. |
-
-### Community Edition (CE)
-Developers and data engineers who need deterministic synthetic data generation or model-based pseudonymization in local environments, CI pipelines, or agent-driven workflows. PII field identification is manual in CE; the EE DataWorkbench assists review and users confirm mappings.
-
----
-
-## Why deterministic generation matters
-
-Most test data tools produce random output. That breaks regression tests, audit trails, and cross-team reproducibility.
-
-**How it works in CE:**
-
-- Set `<setup rngSeed="N">` and seeded generation replays on the tested runtime profiles, including generator, entity, and script-expression paths. Seeded date-derived values use the deterministic clock anchor; without a seed, generation is not replay-stable.
-- `distribution="ordered"` reads a source in file order; `distribution="random"` shuffles it, reproducibly with a seed.
-- The Python facade `generate_domain(...)` returns `determinism_proof.content_hash`: the same hash means the same data.
-- The committed replay model covers every registered literal generator except the database-backed `SequenceTableGenerator`, plus the supported dynamic script-global families. It is replayed in two separate processes on each CI run ([`test_determinism_seed_scenarios`](https://github.com/rapiddweller/datamimic/tree/development/tests_ce/integration_tests/test_determinism_seed_scenarios)).
-
-The CE seeded-runtime guarantee is scoped to the tested profiles. CI runs seven x64 cells: `ubuntu-22.04` with Python 3.11, 3.12, and 3.13 in `Etc/UTC`; Python 3.11 in `America/Los_Angeles`; and `windows-latest` with Python 3.11 in `UTC` and `Pacific Standard Time`. These six cells use `uv sync --resolution highest`; a representative `ubuntu-22.04`/Python 3.11/`Etc/UTC` cell uses `uv sync --resolution lowest-direct`. Each cell records its exact interpreter and installed package versions in the uploaded artifact and job log. Other Python versions and dependency resolutions are outside this matrix. `uv.lock` is intentionally untracked. The committed goldens and cross-cell fan-in, rather than production dependency pinning, define the byte-identical gate.
-
-**EE** behavior is outside this CE evidence.
-
-```python
-from datamimic_ce.domains.facade import generate_domain
-
-request = {
-    "domain": "person",
-    "version": "v1",
-    "count": 1,
-    "seed": "regression-suite-42",       # same seed → replayable on the tested profiles
-    "locale": "en_US",
-    "clock": "2025-01-01T00:00:00Z"      # fixed clock = stable time context
-}
-
-response = generate_domain(request)
-# response["determinism_proof"]["content_hash"] is stable for the same CE version, request,
-# seed, and clock within the tested compatibility boundary.
-```
-
-Direct service use is deterministic for repeated runs with the same seeded RNG and configuration:
-
-```python
-import random
-from datamimic_ce.domains.finance.services import CreditCardService
-
-# Same seeded Random → same CreditCard fields for the same configuration.
-card_a = CreditCardService(rng=random.Random(42)).generate()
-card_b = CreditCardService(rng=random.Random(42)).generate()
-assert card_a.bic == card_b.bic and card_a.card_number == card_b.card_number
-```
-
-### Determinism evidence — CE
-
-The CI gate compares seeded runtime manifests and committed goldens across the seven
-matrix cells above. Its coverage is:
-
-| Scope | Evidence |
-|---|---|
-| Facade API | 4/4 registered domains |
-| Entities | 23/23 entities, selected attributes |
-| Literal generators | 34/35; database-backed `SequenceTableGenerator` is excluded from this byte hash and covered by external-service DSL tests |
-| Seeded Safe Globals | 27 representative paths across `datetime`, `fake`, `math`, `numpy`, `pandas`, `random`, and `uuid` |
-| Rejected entropy | 5 committed negative DSL descriptors |
-| Encoding | 1 canonical UTF-8 probe |
-
-Arbitrary exporter bytes/encodings and Enterprise Platform behavior are outside this
-CE gate.
-
----
-
-## How DATAMIMIC differs from Faker and generic generators
-
-| | Faker / Random generators | DATAMIMIC CE | DATAMIMIC EE |
-|---|---|---|---|
-| Reproducible output | ❌ | ✅ | separate engine; outside CE evidence |
-| Domain-aware relationships | ❌ | ✅ | ✅ |
-| Business logic constraints | ❌ | ✅ | ✅ |
-| Per-output provenance hash | ❌ | ✅ | ✅ |
-| Source data pseudonymization | ❌ | ✅ manual | ✅ scanner-assisted, user-confirmed |
-| PII field detection | ❌ | ❌ | ✅ probability-scored suggestions |
-| Enterprise governance layer | ❌ | ❌ | ✅ |
-| Multi-system execution | ❌ | ❌ | ✅ |
-| Role-based workflows | ❌ | ❌ | ✅ |
-| Designed for regulated-industry deployment (governance, audit, RBAC) | ❌ | ❌ | ✅ |
-
-```python
-# Faker — broken relationships
-from faker import Faker
-fake = Faker()
-patient_age = fake.random_int(1, 99)
-conditions  = [fake.word()]
-# "25-year-old with Alzheimer's" — meaningless for any real test
-
-# DATAMIMIC — domain-aware, deterministic with a seed
-import random
-from datamimic_ce.domains.healthcare.services import PatientService
-patient = PatientService(rng=random.Random(42)).generate()
-print(f"{patient.full_name}, {patient.age}, {patient.conditions}")
-# Age-appropriate, domain-consistent — and identical every run with a fixed seed
-```
-
----
-
-## Quickstart — Community Edition
-
-> **Pre-release.** CE 5.0 is not on PyPI yet. Until 5.0.0, install from GitHub `development`. Use Python 3.11 to 3.13.
-
-```bash
-python -m pip install "datamimic-ce @ git+https://github.com/rapiddweller/datamimic@development"
-```
-
-For database and MongoDB connections, prefer [connection profiles](docs/developer_guide.md#database-and-mongodb-connection-profiles).
-The guide explains client references, profile selection, and how profile values override XML attributes.
-
-### Healthcare domain
-
-```python
-import random
-from datamimic_ce.domains.healthcare.services import PatientService
-
-patient = PatientService(rng=random.Random(42)).generate()
-print(patient.full_name, patient.age, patient.conditions)
-# Age-appropriate conditions, demographically realistic; deterministic with a seed
-```
-
-### Finance domain
-
-```python
-import random
-from datamimic_ce.domains.finance.services import BankAccountService
-
-account = BankAccountService(rng=random.Random(42)).generate()
-print(account.account_number, account.balance)
-# Balance-consistent, locale-correct; reproducible with a seed
-```
-
-### Pseudonymization — CE (manual model)
-
-DATAMIMIC supports two pseudonymization modes with different repeatability properties:
-
-| Mode | How | Compliance note | Use case |
-|---|---|---|---|
-| **Seeded** (`rngSeed` set) | Deterministic on the tested profiles | May form part of a pseudonymisation approach. Whether the result qualifies as pseudonymised under GDPR Art. 4(5) depends on whether attribution requires additional information that is kept separately and protected. | Regression testing, stable CI/CD pipelines |
-| **Non-seeded** (no `rngSeed`) | Not replay-stable | — | One-time data delivery |
-
-> **Note on GDPR:** Pseudonymisation does not make data anonymous or establish GDPR compliance. Under Recital 26, anonymity depends on whether a person remains identifiable considering means reasonably likely to be used.
-
-In CE, PII fields are identified and modeled manually in the XML pipeline. The source is a
-pipe-separated project data file; the scenario `tests_ce/scenarios/s28_pseudonymize_source` runs this model:
+Name the fields and give each one a generated replacement. This model replaces the personal data in a pipe-separated export:
 
 ```xml
 <setup rngSeed="42">
   <generate name="customers" source="data/entity/customers.ent.csv" target="CSV" distribution="ordered">
-    <!-- rngSeed makes seeded runs produce the same pseudonyms; remove it for a new
-         mapping per run. distribution="ordered" keeps source row N mapped to the
-         same pseudonym. -->
     <variable name="p"   entity="Person"      dataset="DE" />
     <variable name="acc" entity="BankAccount" dataset="DE" />
-
     <key name="customer_id" script="customer_id" />
     <key name="first_name" script="p.given_name" />
-    <key name="last_name"  script="p.family_name" />
     <key name="email"      script="p.email" />
-    <key name="iban"       script="acc.iban" />
-    <key name="birth_date" script="p.birthdate" />
+    <key name="iban"       script="acc.iban" converter="MiddleMask(8, 4)" />
   </generate>
 </setup>
 ```
 
-Built-in converters can additionally transform a key's value — e.g. replace the original
-with a keyed hash, or partially mask it. `Hash` derives its HMAC key from `<setup rngSeed>`;
-the same input + seed + algorithm + output format + optional salt gives the same token across
-runs. Without a seed each run gets a new random key:
+- You name the fields. CE does not scan for personal data.
+- With a seed and the same row order, the replacements repeat.
+- For tokens that stay stable across runs, use the `Hash` converter with an external key. Pass the key with `--param-env`.
+- Pseudonymized data is still personal data ([GDPR Art. 4(5)](https://eur-lex.europa.eu/eli/reg/2016/679/oj#d1e1888-1-1), [Recital 26](https://eur-lex.europa.eu/eli/reg/2016/679/oj#rct_26)).
 
-```xml
-<key name="email" script="p.email" converter="Hash('sha256','hex')" />
-<key name="iban"  script="acc.iban" converter="MiddleMask(8, 4)" />
-```
+Use a controlled export or staging input, not a live production source. Key management and the converter list are in the [pseudonymization guide](https://github.com/rapiddweller/datamimic/blob/development/docs/guides/pseudonymization.md).
 
-For pseudonymization, keep a random key outside the descriptor and separate from the generation
-seed. Reference a runtime property in the converter:
+## How is DATAMIMIC CE different from Faker?
 
-```xml
-<key name="email" script="p.email"
-     converter="Hash('sha256','hex',key=pseudonym_key.encode('utf-8'))" />
-```
-
-Supply it from an access-controlled environment variable:
-
-```bash
-# Generate once, store securely, and reuse for stable tokens.
-export DATAMIMIC_PSEUDONYM_KEY="$(python -c 'import secrets; print(secrets.token_hex(32))')"
-datamimic run datamimic.xml --param-env pseudonym_key=DATAMIMIC_PSEUDONYM_KEY
-```
-
-`--param NAME=VALUE` and `--param-env NAME=ENV_NAME` are repeatable and override properties
-from `conf/environment.env.properties`. Property names must be Python identifiers; duplicate names
-are rejected. Use `--param-env` for secrets because command-line values can appear in process
-listings and shell history. Runtime properties remain available to descriptor scripts; use trusted
-descriptors and control access to the key and source data.
-
-Hash keys must contain at least 32 bytes before adding an optional salt. Length alone does not
-prove entropy: use a cryptographic random source, rather than a password, date or generation seed.
-Rotating the external key changes tokens for the same input; retain the prior key securely only
-when old mappings must be reproduced. An external key keeps tokens stable when `rngSeed` changes
-and leaves seeded data generation unchanged. Existing `Hash(...)` calls without an explicit key
-retain their seed-derived behavior and its weak-seed limitations.
-
-Available converters (13): `Mask`, `MiddleMask(start, end)`, `CutLength(n)`, `Substring(start, end)`, `JavaHash`, `RemoveNoneOrEmptyElement`,
-`Hash(type, format[, salt])`, `DateFormat(fmt)`, `Append`, `UpperCase`,
-`LowerCase`, `Date2Timestamp`, `Timestamp2Date`.
-
-```bash
-datamimic run ./pseudonymize-customers/datamimic.xml
-```
-
-Use a controlled export or staging input. Do not point this workflow at a live production source.
-
-With `rngSeed`: the same descriptor, seed, and ordered source rows reproduce the same replacement sequence; this is not a subject-keyed mapping across reordered exports.
-
-Without `rngSeed`: random/entity replacements use a new run-specific mapping, and hash converters use a new random key; outputs are not replay-stable.
-
-> **In the Enterprise Platform (EE):** the DataWorkbench PII scanner assists source-schema review by assigning probability scores and flagging candidates above a configurable threshold. Users confirm the fields and model before execution.
-
-
-
-```xml
-<setup rngSeed="42">
-  <generate name="patients" count="1000" target="CSV">
-    <variable name="patient" entity="Patient" dataset="US" ageMin="60" ageMax="80" />
-    <key name="full_name"   script="patient.full_name" />
-    <key name="age"         script="patient.age" />
-    <array name="conditions" script="patient.conditions" />
-  </generate>
-</setup>
-```
-
-```bash
-datamimic run ./patient-scenario/datamimic.xml
-```
-
-### Time-series generation — CE
-
-Any `<generate>` becomes a time-series loop when given strict ISO 8601 `start`/`end`/`interval` attributes. Per iteration the script context exposes a `ts` namespace:
-
-| Variable | Type | Meaning |
+| | Faker | DATAMIMIC CE |
 |---|---|---|
-| `ts.now` | `datetime` | Current tick |
-| `ts.step` | `int` | Position within one series (`0..N-1`) |
-| `ts.series` | `int` | Which series this row belongs to (`0..count-1`) |
+| Related fields in one record (for example age and conditions) | You write the rules | Domain services keep the fields consistent |
+| References between tables | You write them | Models declare them |
+| Seed for a full project | One seed for one generator object | One seed in `<setup>` for the whole project |
+| Check against expectations | No | `datamimic authoring build` |
 
-Output column names — including whether to even emit a timestamp or series-id column — are entirely the user's choice via `<key>`. The primitive is domain-agnostic; the same DSL covers IoT readings, financial ticks, log streams, smart meters, anything time-indexed.
+CE uses Faker as a dependency for some generators.
 
-```xml
-<setup>
-  <!-- Stock ticks: three symbols, 5-min interval, 30-min window (writes ticks.csv) -->
-  <generate name="ticks" count="3"
-            start="2026-01-01T09:30:00+00:00"
-            end="2026-01-01T10:00:00+00:00"
-            interval="PT5M"
-            target="CSV">
-    <key name="timestamp" script="ts.now.isoformat()"/>
-    <key name="symbol"    script="['AAPL','MSFT','GOOG'][ts.series]"/>
-    <key name="price"     script="100 + ts.step * 0.25"/>
-  </generate>
+## Command reference
 
-  <!-- Sensor with diurnal seasonality, single series (count defaults to 1; writes readings.csv) -->
-  <generate name="readings"
-            start="2026-01-01T00:00:00+00:00"
-            end="2026-01-08T00:00:00+00:00"
-            interval="PT1H"
-            target="CSV">
-    <key name="timestamp" script="ts.now.isoformat()"/>
-    <key name="value"     script="20 - 10 * math.cos(ts.now.hour * math.pi / 12)"/>
-  </generate>
-</setup>
+Authoring commands print JSON and accept a file or `-` for standard input.
+
+| Command | MCP tool | Use |
+|---|---|---|
+| `datamimic authoring build <project>` | `datamimic_build` | Check a project against `acceptance/build.json` |
+| `datamimic authoring run-project <project>` | `datamimic_run_project` | Build, then run for real data |
+| `datamimic run <datamimic.xml>` | none | Run a model |
+| `datamimic authoring lint <file>` | `datamimic_lint` | Check one XML file |
+| `datamimic authoring dry-run <file>` | `datamimic_dry_run` | Run one XML file with a bounded capture |
+| `datamimic authoring run <file>` | `datamimic_run` | Run one XML file with limits |
+| `datamimic authoring version` | `datamimic_version` | Show the CE version and contracts |
+| `datamimic authoring schema [--name <name>]` | `datamimic_schema` | Show a contract schema |
+| `datamimic authoring capabilities` | `datamimic_capabilities` | List the DSL vocabulary |
+| `datamimic authoring capability --domain element --name generate` | `datamimic_capability` | Show one element |
+| `datamimic authoring reference --topic assembly --name model` | `datamimic_reference` | Read focused guidance |
+| `datamimic authoring compile -` / `decompile <file>` | `datamimic_compile` / `datamimic_decompile` | Convert between DM JSON and XML |
+| `datamimic init`, `demo list`, `demo create`, `info`, `version` | none | Project and demo helpers |
+
+Exit codes: 0 for success, 1 for a rejected result, 2 for a usage error.
+
+## Python API
+
+```python
+import random
+from datamimic_ce.domains.healthcare.services import PatientService
+
+patient = PatientService(rng=random.Random(42)).generate()
+print(patient.full_name, patient.age, patient.conditions)  # the same values for seed 42
 ```
-
-Guarantees:
-
-* **Prefix-stable by construction** — the first N ticks of series 0 are byte-identical regardless of total window length, because each row's `ts.now` is a pure function of `start + interval * step`.
-* **Loop order is contiguous per series** — series 0's full sequence, then series 1's, etc. Makes downstream grouping trivial.
-* **Strict ISO 8601** — `start`/`end` via `datetime.fromisoformat` (Z-suffix supported); `interval` via the [`isodate`](https://pypi.org/project/isodate/) library (`PT1H`, `PT15M`, `PT5S`, `P1D`, `P1W`, `P1DT12H`, fractional seconds for sub-second precision). Resolution: `PT0.001S` = 1 ms, `PT0.000001S` = 1 µs (Python `datetime.timedelta` microsecond floor; sub-µs intervals and constant-length-undefined units like months/years are rejected with a clear error).
-* **`count` is orthogonal**, not overloaded — it means "outer-loop iterations of this `<generate>`" in **all** modes (same as nested `<generate count=…>`). In time-series mode each outer iteration is one series of N ticks, so total rows = `count × ticks_per_series`. Default `count="1"` keeps single-series fixtures terse.
-* **Naming caveat** — a `<key name="ts">` output column would shadow the namespace (`current_product` overrides `current_variables` in script scope), and a `<variable name="ts">` is rejected at parse time. Use a different name, e.g. `timestamp` for the column.
-
-Composes with the existing `<variable>` mechanism for multi-source merges (e.g. join each tick with a sensor-metadata CSV via `<variable source="meta.csv" cyclic="True">` inside the same `<generate>`), with `<key condition="...">` filtering, and with `<nestedKey>` sub-scopes — the `ts` namespace is visible everywhere a `<key script>` runs. See `tests_ce/integration_tests/test_timeseries/` for committed DSL fixtures + proofs (including pagination invariance).
-
----
-
-## Where CE fits on its own
-
-Most teams adopt CE for one of three reasons. EE is not required for any of them.
-
-**1. Reproducible test data for CI/CD pipelines.** Pin a seed against the `generate_domain` facade — or hand a seeded `random.Random` to any domain service — and you get replay-identical output within the tested compatibility boundary above. Both layers are replay-tested on every CI run by [`tests_ce/architecture/`](https://github.com/rapiddweller/datamimic/tree/development/tests_ce/architecture/). Regression tests stop being flaky because the input data is stable across runs.
 
 ```python
 from datamimic_ce.domains.facade import generate_domain
 
 response = generate_domain({
     "domain": "person", "version": "v1", "count": 1,
-    "seed": "ci-pipeline-42", "locale": "en_US",
-    "clock": "2026-01-01T00:00:00Z",
+    "seed": "ci-42", "locale": "en_US", "clock": "2026-01-01T00:00:00Z",
 })
-# Same CE version + request + seed + clock → same output within the tested boundary.
+print(response["determinism_proof"]["content_hash"])
 ```
 
-**2. Deterministic data backend for AI agents and LLM tooling.** The CLI and Python API are the baseline surfaces for seeded, verifiable generation. The optional [MCP adapter](docs/mcp_quickstart.md) exposes the canonical Build, codec, discovery, lint, and bounded-run authoring operations. Domain-facade outputs include a `determinism_proof.content_hash`, so Python callers can re-execute within the tested compatibility boundary and check whether the data is identical — useful for agent regression tests and any workflow where the data an agent saw must be reconstructable.
+The content hash is on the results of `generate_domain` (person, address, patient, doctor). Files from `datamimic run` have no such hash.
 
-**3. Pseudonymization of staging and QA exports.** Manual model in CE (XML pipeline), no scanner license required. Seeded mode for stable regression test data; non-seeded mode for one-time deliveries that are not replay-stable. See the [Pseudonymization section above](#pseudonymization--ce-manual-model).
+## Where can CE support a compliance program?
 
----
+DATAMIMIC provides test data and run evidence that can support compliance work. It does not replace your data protection officer, your security officer or your auditor. The [compliance pointers](https://github.com/rapiddweller/datamimic/blob/development/docs/guides/compliance-pointers.md) show where CE output fits for DORA, ISO/IEC 27701, HIPAA, GDPR and PCI DSS 4.0.1. They are not attestations.
 
-## Where DATAMIMIC fits in your compliance program
+## What is the difference between DATAMIMIC CE and the Enterprise Platform?
 
-DATAMIMIC provides test-data and execution evidence that can support compliance work. It does not replace your DPO, your CISO, or your auditor. The following are pointers for where DATAMIMIC outputs commonly slot into established programs:
+DATAMIMIC has two editions. Both use the same XML model language.
 
-> CE's reproducible, rule-based artefacts are within the tested boundary above. EE adds multi-system audit evidence and role-based dashboards; the CE matrix does not verify EE execution.
+**Community Edition (this repository)** is a Python library and a command line tool. Your team installs it, keeps the project files, and runs it on a workstation or in CI. It has no web UI, no source scanner, no scheduler, no access control, no Kafka or RabbitMQ target and no message template engine.
 
-| Regulation / standard | Where DATAMIMIC contributes |
-|---|---|
-| **DORA (Reg. 2022/2554)** — Arts. 24–25, digital operational resilience testing | Reproducible test data can support scenario-based, compatibility, performance, and end-to-end testing |
-| **ISO/IEC 27701:2025** — Privacy Information Management System (PIMS) | Synthetic data can reduce PII use in non-production; model and execution evidence can support privacy-management processes |
-| **HIPAA Security Rule** — 45 CFR Part 164, Subpart C *(US Covered Entity / Business Associate scope)* | Synthetic healthcare data can reduce the need to copy ePHI into dev/test; safeguards still apply where ePHI exists |
-| **GDPR** — Arts. 4(5), 25, 32 | May contribute to a pseudonymisation approach and related privacy-by-design and security measures; whether requirements are met depends on the dataset, additional information, and safeguards |
-| **PCI DSS 4.0.1** — Req. 6.5.5 (live PANs not used in pre-production except where the environment is part of the CDE and protected by applicable PCI DSS requirements) | Synthetic card-number test data can reduce the need to use live PANs in pre-production |
+**The DATAMIMIC Enterprise Platform** is a commercial, self-managed product for teams. It runs on a separate engine, the Enterprise Core. It adds a web UI, shared projects with access control, a Workbench that scans data sources, tasks with a scheduler, and IDE extensions for [VS Code](https://docs.datamimic.io/tutorial/install-ide-extension/) and [JetBrains IDEs](https://plugins.jetbrains.com/plugin/34581-datamimic). ([Release notes](https://docs.datamimic.io/release-notes/))
 
-> These mappings show where DATAMIMIC can contribute; they are not attestations and do not establish that a dataset or processing activity satisfies the reference.
+What a team gets from the Platform, and where the proof is:
 
----
+- **Scale.** The Enterprise Core is designed for billion-record workloads: it works in pages, and memory does not grow with the record count. The largest published measurement is 100 million records for each connected system, with 4 workers and a peak process memory of 1.45 GiB or less. ([Release notes 4.0.0](https://docs.datamimic.io/release-notes/))
+- **Runtime profiles (Performance, Balanced, Flexibility).** You set logging, paging and connector tuning for each project in Runtime Configuration. ([Runtime Configuration](https://docs.datamimic.io/reference/ui/settings/runtime-config/))
+- **CI/CD and Tosca.** A pipeline uses the REST API with a project access token to change project files, start runs and get artifacts. The documentation names GitHub Actions, GitLab CI, Jenkins and Azure Pipelines. ([API](https://docs.datamimic.io/reference/api/), [Workspace API](https://docs.datamimic.io/reference/api/workspace-api/)) One bank connected DATAMIMIC to Tosca DI in a project. ([Case study](https://datamimic.io/case-study/tier-1-european-bank-deterministic-test-data-across-oracle-mongodb-kafka/))
+- **Message formats and HL7 FHIR.** The Platform has templates for EDIFACT, SWIFT MT and HL7 messages, for test and training systems only. ([Release notes 2.3.0 and 2.6.0](https://docs.datamimic.io/release-notes/)) The [Demo Store](https://docs.datamimic.io/reference/ui/demostore/) has a FHIR R4 project, "Payer Claims in FHIR R4". Its Bundles pass the HL7 Validator against FHIR R4 Core 4.0.1 for structure and cardinality, without terminology or profile validation. (Project: "Payer Claims in FHIR R4" in the Demo Store.)
+- **Approval flows.** A person reviews the PII preselection before a model is created, sets a reviewed ML generator version as default, and gives consent before an agent starts a run that can write to external systems. ([Database Workbench](https://docs.datamimic.io/reference/ui/database/), [ML Generator View](https://docs.datamimic.io/reference/ui/ml-generator-view/), [MCP client](https://docs.datamimic.io/advanced/connect-mcp-client/))
+- **Audit-evidence artifacts for GDPR Art. 30, PCI DSS 4.0.1 Req. 6.5.5, HIPAA Security Rule reviews.** For each run the Platform keeps the actor, the time, the status, the log, a snapshot of the project and the artifacts. ([Tasks](https://docs.datamimic.io/reference/ui/tasks/)) A team can attach these records to its GDPR Art. 30 documentation, to a PCI DSS 4.0.1 Req. 6.5.5 review, or to a HIPAA Security Rule review. DATAMIMIC does not certify compliance.
 
-## Architecture
+The two editions use different engines. Do not expect the same output bytes from CE and from the Platform for the same model and seed. The determinism evidence in this repository is for CE only.
 
-The 5.0 refactoring target is documented in the [shared CE/EE core structure](docs/architecture/inner/target.md),
-including nested boundaries and the source-to-target map. It is a target, not a claim
-that the current implementation conforms; see the [verification status](docs/architecture/refactoring-study/experiment-2/amendment-19.md).
+The agent plugin works with both: with a local CE project, or with a project on a connected Platform.
 
-CE and EE share the DATAMIMIC DSL. The execution layer is separate: CE is a Python execution engine using multiprocessing (with optional Ray for distribution); EE is an independently-optimised execution engine with a Rust fastpath, ML/auto-regressive generation, keyset and manifest building from live schemas, and execution designed for billion-record workloads.
+Comparison: https://datamimic.io
 
-```
-╔══════════════════════════════════════════════════════════════════╗
-║              DATAMIMIC ENTERPRISE PLATFORM (EE)                  ║
-║                                                                  ║
-║  ┌──────────────────────────────────────────────────────────┐    ║
-║  │  PLATFORM LAYER                                          │    ║
-║  │  UI · RBAC · Governance · Audit Dashboards               │    ║
-║  │  DataWorkbench · PII Scanner · Pseudonymization Builder  │    ║
-║  │  Scheduler · Task Runner · CI/CD · Template Engine       │    ║
-║  └──────────────────────────────────────────────────────────┘    ║
-║                                                                  ║
-║  ┌──────────────────────────────────────────────────────────┐    ║
-║  │  EE CORE  (separately maintained, more advanced than CE) │    ║
-║  │                                                          │    ║
-║  │  Rust fastpath for performance-critical paths            │    ║
-║  │  ML / auto-regressive engine for complex distributions   │    ║
-║  │  Keyset and manifest building from live DB schemas       │    ║
-║  │  Execution designed for billion-record workloads         │    ║
-║  │  Runtime profiles: Performance · Balanced · Flexibility  │    ║
-║  │  Deep nested evaluation · Conditions · Rulesets          │    ║
-║  │  Structured error catalog · Per-stage execution logging  │    ║
-║  └──────────────────────────────────────────────────────────┘    ║
-╚══════════════════════════════════════════════════════════════════╝
+## Documentation and help
 
-╔══════════════════════════════════════════════════════════════════╗
-║              DATAMIMIC COMMUNITY EDITION (CE)  — this repo       ║
-║                                                                  ║
-║  Determinism Kit · Domain Services · Schema Validators           ║
-║  Synthetic Generation · Pseudonymization (manual model)          ║
-║  Python API · XML Pipelines · CLI · MCP Server                   ║
-╚══════════════════════════════════════════════════════════════════╝
-
-         ↓              ↓              ↓              ↓
-    PostgreSQL       Oracle         MongoDB      CSV / JSON / XML
-```
-
-EE adds Kafka, EDIFACT, SWIFT MT, HL7 v2.x, and HL7 FHIR as additional targets — see [Supported systems](#supported-systems) below. Both editions share the DATAMIMIC DSL.
-
----
-
-## Supported systems
-
-| System | CE | EE | Notes |
-|---|---|---|---|
-| PostgreSQL | ✅ | ✅ | EE adds schema introspection and referential integrity |
-| MySQL | ✅ | ✅ | |
-| Oracle | ✅ | ✅ | EE production-validated in regulated banking environments |
-| MS SQL Server | ✅ | ✅ | |
-| SQLite | ✅ | ✅ | Lightweight CI/CD fixtures |
-| MongoDB | ✅ | ✅ | EE adds nested document generation |
-| CSV / JSON / XML | ✅ | ✅ | Flat file pipelines |
-| XLSX | ✅ | ✅ | Spreadsheet read + write (first row = header) |
-| DbUnit XML | ✅ | ✅ | `.dbunit.xml` dataset read + write |
-| Fixed-width (`.fcw`) | ✅ | ✅ | Self-describing column files, read + write |
-| Apache Kafka | — | ✅ | Real-time streaming, payment scenarios |
-| HL7 v2.x | — | ✅ | Test/training output via template engine |
-| HL7 FHIR | — | ✅ | Test/training output via template engine |
-| EDIFACT / SWIFT MT | — | ✅ | Test/training output only; does not satisfy SWIFT CSCF v2025 secure-zone controls (1.1 environment protection, 1.4 internet restriction). Generated messages must not be transmitted from a CSP-attested secure zone. |
-
----
-
-## CE domains
-
-| Domain | Services available |
-|---|---|
-| **Healthcare** | Patient, Doctor, Hospital, MedicalDevice, MedicalProcedure |
-| **Finance** | Bank, BankAccount, CreditCard, Transaction |
-| **Insurance** | InsuranceCompany, InsuranceProduct, InsurancePolicy, InsuranceCoverage |
-| **E-commerce** | Order, Product |
-| **Public sector** | AdministrationOffice, EducationalInstitution, PoliceOfficer |
-| **Demographics** | Person (DE / US / VN locale packs), Address, City, Country |
-| **Common** | Company |
-
-All services are versioned and seeded; facade outputs carry a content hash that shows whether two generations are identical. Domain services can be used directly via constructor injection, or driven through the higher-level `generate_domain({...})` facade for seed/locale/clock/count parameterisation (currently supports `person`, `address`, `patient`, `doctor` at `v1`).
-
----
-
-## CLI reference
-
-```bash
-# Typed discovery and project Build
-datamimic authoring schema --name build_request_v5
-datamimic authoring capabilities
-datamimic authoring capability --domain element --name generate
-datamimic authoring reference --topic assembly --name model
-datamimic authoring build my-scenario
-
-# Inspect/edit persisted XML through its transient DM JSON view
-datamimic authoring decompile my-scenario/datamimic.xml
-datamimic authoring lint my-scenario/datamimic.xml
-datamimic authoring dry-run my-scenario/datamimic.xml
-
-# Normal production execution and project tools
-datamimic run my-scenario/datamimic.xml
-datamimic init my-scenario
-datamimic demo list
-datamimic demo create demo-healthcare
-datamimic info
-datamimic version
-```
-
----
-
-## Documentation
-
-| Resource | Link |
-|---|---|
-| Full documentation | [docs.datamimic.io](https://docs.datamimic.io) |
-| MCP quickstart | [docs/mcp_quickstart.md](https://github.com/rapiddweller/datamimic/blob/development/docs/mcp_quickstart.md) |
-| Developer guide | [docs/developer_guide.md](https://github.com/rapiddweller/datamimic/blob/development/docs/developer_guide.md) |
-| Enterprise platform | [datamimic.io](https://datamimic.io) |
-| GitHub Discussions | [Discussions](https://github.com/rapiddweller/datamimic/discussions) |
-| Issue tracker | [Issues](https://github.com/rapiddweller/datamimic/issues) |
-| Email support | support@rapiddweller.com |
-
----
+- [Documentation](https://docs.datamimic.io)
+- [Agent plugin guide](https://github.com/rapiddweller/datamimic/blob/development/docs/agent_plugin.md) and [MCP guide](https://github.com/rapiddweller/datamimic/blob/development/docs/mcp_quickstart.md)
+- [Developer guide](https://github.com/rapiddweller/datamimic/blob/development/docs/developer_guide.md) and [worked examples](https://github.com/rapiddweller/datamimic/blob/development/docs/examples/authoring.md)
+- [GitHub Discussions](https://github.com/rapiddweller/datamimic/discussions) and [Issues](https://github.com/rapiddweller/datamimic/issues)
+- Email: support@rapiddweller.com
 
 ## Contributing
 
-See [CONTRIBUTING.md](https://github.com/rapiddweller/datamimic/blob/development/CONTRIBUTING.md). CE is MIT licensed and community contributions are welcome.
-
-The CE engine is the foundation. If you are building integrations, domain extensions, or MCP tooling on top of DATAMIMIC, we want to hear from you.
-
----
+See [CONTRIBUTING.md](https://github.com/rapiddweller/datamimic/blob/development/CONTRIBUTING.md). The [current architecture report](https://rapiddweller.github.io/datamimic/) shows the observed structure and the target. Agents that work on this repository read [AGENTS.md](https://github.com/rapiddweller/datamimic/blob/development/AGENTS.md).
 
 ## License
 
-MIT — see [LICENSE](https://github.com/rapiddweller/datamimic/blob/development/LICENSE).
-
-The DATAMIMIC Enterprise Platform (EE) is a commercial product. [Contact us](https://datamimic.io/contact) for licensing.
-
----
-
-**DATAMIMIC — Deterministic, governed test data for regulated enterprises.**
-
-[datamimic.io](https://datamimic.io) &nbsp;|&nbsp; [Book a demo](https://datamimic.io/contact) &nbsp;|&nbsp; [LinkedIn](https://linkedin.com/company/rapiddweller)
+MIT. See [LICENSE](https://github.com/rapiddweller/datamimic/blob/development/LICENSE). The DATAMIMIC Enterprise Platform is a separate commercial product of rapiddweller. [Contact rapiddweller](https://datamimic.io/contact).
