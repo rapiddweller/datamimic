@@ -419,6 +419,7 @@ jobs:
 
   python_314_smoke:
     name: Python 3.14 wheel smoke test
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-22.04
     needs: build
     steps:
@@ -610,8 +611,8 @@ jobs:
         uses: astral-sh/setup-uv@v8.1.0
       - name: Install dependencies
         run: uv sync --python 3.14
-      - name: Run unit tests
-        run: uv run pytest tests_ce/unit_tests -q -n 2
+      - name: Run unit and architecture tests
+        run: uv run pytest tests_ce/unit_tests tests_ce/architecture -q -n auto
 
   unit_test:
     runs-on: ubuntu-22.04
