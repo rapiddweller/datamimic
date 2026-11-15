@@ -62,7 +62,7 @@ def build_contract_bundle_files(*, package_version: str, commit_sha: str) -> dic
 def write_contract_bundle(output: Path, *, package_version: str, commit_sha: str) -> Path:
     files = build_contract_bundle_files(package_version=package_version, commit_sha=commit_sha)
     tar_buffer = io.BytesIO()
-    with tarfile.open(fileobj=tar_buffer, mode="w", format=tarfile.PAX_FORMAT) as archive:
+    with tarfile.TarFile(fileobj=tar_buffer, mode="w", format=tarfile.PAX_FORMAT) as archive:
         for name, content in files.items():
             info = tarfile.TarInfo(name)
             info.size = len(content)

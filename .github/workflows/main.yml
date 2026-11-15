@@ -513,6 +513,8 @@ jobs:
           git config --global --add safe.directory $(realpath .)
       - name: Checkout repository
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - name: Install uv
         uses: astral-sh/setup-uv@v8.1.0
       - name: Load venv cache
@@ -524,7 +526,7 @@ jobs:
         run: |
           . .venv/bin/activate
           uv run make coverage-unit
-          uv run pytest tests_ce/architecture/test_facade_determinism.py tests_ce/architecture/test_runtime_determinism_manifest.py tests_ce/architecture/test_installed_domain_resources.py
+          uv run make test-architecture
         shell: bash
       - name: Package agent plugin
         run: uv run make agent-plugin-package
