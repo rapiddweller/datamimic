@@ -1,0 +1,11 @@
+{
+  "version": "5.0",
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "customers"}, "count": 25},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "orders"}, "count": 50},
+    {"kind": "unique", "subject": {"kind": "product", "product": "customers"}, "field": "id"},
+    {"kind": "foreign_key",
+     "child": {"subject": {"kind": "product", "product": "orders"}, "field": "customer_id"},
+     "parent": {"subject": {"kind": "product", "product": "customers"}, "field": "id"}}
+  ]
+}

@@ -1,17 +1,43 @@
-# DATAMIMIC Community Edition
+<p align="center">
+  <a href="https://datamimic.io">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/rapiddweller/datamimic/development/docs/assets/datamimic-logo-dark.svg">
+      <img alt="DATAMIMIC" width="370" src="https://raw.githubusercontent.com/rapiddweller/datamimic/development/docs/assets/datamimic-logo-light.svg">
+    </picture>
+  </a>
+</p>
 
-[![CI](https://github.com/rapiddweller/datamimic/actions/workflows/main.yml/badge.svg?branch=development)](https://github.com/rapiddweller/datamimic/actions)
-[![Python](https://img.shields.io/badge/Python-3.11%20to%203.13-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/rapiddweller/datamimic/blob/development/LICENSE)
+<h1 align="center">DATAMIMIC Community Edition</h1>
 
-**DATAMIMIC Community Edition (CE) is an open-source Python library and command line tool for test data, made by rapiddweller and released under the MIT license.**
-You describe the data in an XML model. CE generates synthetic data from the model, or replaces personal data in an existing export. With a seed, the same model gives the same data again.
+<p align="center"><b>Test data must agree with itself.</b></p>
 
-- **Model-driven.** One XML project describes tables, nested records, references between records, and conditions. CE writes CSV, JSON, XML, XLSX, DbUnit and fixed-width files, and writes to PostgreSQL, MySQL, Oracle, MS SQL Server, SQLite and MongoDB.
+<p align="center">
+  <a href="https://docs.datamimic.io">Docs</a> |
+  <a href="https://github.com/rapiddweller/datamimic/blob/development/docs/agent_plugin.md">Agent plugin</a> |
+  <a href="https://datamimic.io/case-study/">Case studies</a> |
+  <a href="https://github.com/rapiddweller/datamimic/discussions">Discussions</a> |
+  <a href="https://datamimic.io">Enterprise Platform</a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/rapiddweller/datamimic/actions"><img alt="CI" src="https://github.com/rapiddweller/datamimic/actions/workflows/main.yml/badge.svg?branch=development"></a>
+  <a href="https://sonarcloud.io/summary/new_code?id=rapiddweller_datamimic"><img alt="Coverage" src="https://sonarcloud.io/api/project_badges/measure?project=rapiddweller_datamimic&metric=coverage"></a>
+  <a href="https://sonarcloud.io/summary/new_code?id=rapiddweller_datamimic"><img alt="Maintainability" src="https://sonarcloud.io/api/project_badges/measure?project=rapiddweller_datamimic&metric=sqale_rating"></a>
+  <a href="https://www.python.org/downloads/"><img alt="Python 3.11 to 3.13" src="https://img.shields.io/badge/Python-3.11%20to%203.13-blue.svg"></a>
+  <a href="https://github.com/rapiddweller/datamimic/blob/development/LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-green.svg"></a>
+  <a href="https://github.com/rapiddweller/datamimic/blob/development/docs/agent_plugin.md"><img alt="MCP Ready" src="https://img.shields.io/badge/MCP-ready-8A2BE2.svg"></a>
+</p>
+
+Independent random values do not agree with each other: an order points to a customer that does not exist, a postal code does not belong to its city, and the next run gives different rows.
+
+**DATAMIMIC Community Edition (CE) is an open-source Python library and command line tool, made by rapiddweller and released under the MIT license, that generates connected test data from one XML model.** Records reference each other, domain values come from data files, and the same seed gives the same rows again. CE can also replace personal data in an existing export.
+
+<!-- Recording placeholder: docs/assets/build-ready.gif, made from docs/assets/build-ready.tape after #514 merges. Caption: what the GIF shows, the CE commit, a link to the tape and to the scenario s50_readme_shop. -->
+
+- **Connected.** One XML project describes tables, nested records, references between records and conditions. CE writes CSV, JSON, XML, XLSX, DbUnit and fixed-width files, and writes to PostgreSQL, MySQL, Oracle, MS SQL Server, SQLite and MongoDB.
 - **Repeatable.** Set `<setup rngSeed="7">`. The same CE version, project files and seed give the same rows on the tested platforms. CI compares seeded output on Linux with Python 3.11 to 3.13 and on Windows with Python 3.11, on each run.
-- **Checked before you use it.** `datamimic authoring build` runs the project with a row limit and checks it against the expectations in `acceptance/build.json`. The result is `ready` or `rejected`. A ready Build lists every project file it read with its SHA-256. Build is the only proof; a successful run without Build proves nothing about the data.
+- **Proven, not only generated.** `datamimic authoring build` runs the project with a row limit, checks each rule in `acceptance/build.json`, and replays the seeded run. The result is `ready` or `rejected`. `ready` is your proof that the data follows your rules. A ready Build lists every project file it read with its SHA-256. For a coding agent, `ready` is the signal that the work is done.
 - **Made for coding agents.** One plugin for Claude Code and Codex installs the skills and a local MCP server. The MCP tools mirror the CLI commands.
-- **Pseudonymization.** Replace names, addresses and account numbers in a staging export with generated values or keyed hashes. You name the fields; CE does not scan for personal data.
 
 > **Pre-release.** CE 5.0 is not on PyPI yet. PyPI has 4.3.0, which does not have the commands on this page. Until 5.0.0 is released, install from the GitHub branch `development` as shown below.
 
@@ -24,7 +50,7 @@ python3.11 -m venv .venv && source .venv/bin/activate
 python -m pip install "datamimic-ce @ git+https://github.com/rapiddweller/datamimic@development"
 ```
 
-Make a project directory `shop` with two files.
+Make a project directory `shop` with these two files.
 
 `shop/datamimic.xml`:
 
@@ -32,35 +58,87 @@ Make a project directory `shop` with two files.
 <setup rngSeed="7">
     <generate name="customers" count="25" target="CSV">
         <variable name="person" entity="Person" dataset="DE"/>
-        <key name="id" type="int" generator="IncrementGenerator"/>
+        <variable name="address" entity="Address" dataset="DE"/>
+        <key name="id" generator="IncrementGenerator"/>
         <key name="name" script="person.name"/>
-        <key name="email" script="person.email"/>
+        <key name="postal_code" script="address.postal_code"/>
+        <key name="city" script="address.city"/>
+        <generate name="orders" count="2" target="CSV">
+            <key name="customer_id" script="parent.id"/>
+            <key name="line_no" generator="IncrementGenerator"/>
+            <key name="amount" type="int" min="5" max="500"/>
+        </generate>
     </generate>
 </setup>
 ```
 
-`shop/acceptance/build.json`:
+<details><summary><code>shop/acceptance/build.json</code> (the rules that Build checks)</summary>
 
 ```json
 {
   "version": "5.0",
   "expectations": [
-    {"kind": "exact_count", "subject": {"kind": "product", "product": "customers"}, "count": 25}
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "customers"}, "count": 25},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "orders"}, "count": 50},
+    {"kind": "unique", "subject": {"kind": "product", "product": "customers"}, "field": "id"},
+    {"kind": "foreign_key",
+     "child": {"subject": {"kind": "product", "product": "orders"}, "field": "customer_id"},
+     "parent": {"subject": {"kind": "product", "product": "customers"}, "field": "id"}}
   ]
 }
 ```
+
+</details>
 
 Check the project, then run it:
 
 ```bash
 datamimic authoring build shop     # prints JSON; "outcome": "ready" and exit code 0
-datamimic run shop/datamimic.xml   # writes shop/output/<task id>/customers.csv
+datamimic run shop/datamimic.xml   # writes shop/output/<task id>/customers.csv and orders.csv
 ```
+
+A run generates the data. Build is the step that checks it. Thus use Build as the gate, and use a run for the full output.
+
+### What you get
+
+`customers.csv`:
+
+```text
+id|name|postal_code|city
+1|Marion Abraham|36419|Schleid
+2|Peter Bayer|24161|Levensau
+3|Ludmila Jehle|56368|Katzenelnbogen
+```
+
+`orders.csv`:
+
+```text
+customer_id|line_no|amount
+1|1|237
+1|2|207
+2|1|373
+```
+
+- Each order has the `id` of a customer in `customers.csv`. Build checks this with the `foreign_key` expectation. If you change `customer_id` to a random number, Build gives `rejected`.
+- Each postal code belongs to its city: 36419 is Schleid. CE reads both values from one row of its German city data.
+- Run it again, on your machine or in CI: seed 7 gives these rows again with this CE version.
 
 | Build outcome | Exit code | Meaning |
 |---|---|---|
 | `ready` | 0 | All declared expectations passed on a complete, bounded capture. |
 | `rejected` | 1 | Read the first entry in `diagnostics`, correct the project, build again. |
+
+## Why not only Faker?
+
+Faker gives single values, and CE uses Faker as a dependency. CE adds the model around the values.
+
+| You need | With Faker | With CE |
+|---|---|---|
+| Records that reference each other | You write the code that keeps the keys correct. | A nested `<generate>` copies the key of its parent. Build checks the reference with a `foreign_key` expectation. |
+| The same data again | You call `Faker.seed()` or `seed_instance()` in your code. | The seed is in the model: `<setup rngSeed="7">`. Build replays the seeded run, and CI compares seeded output on Linux and Windows. |
+| A check that the data follows your rules | Faker has no check. You write tests. | `acceptance/build.json` holds the rules. Build gives `ready` or `rejected`. |
+
+Use Faker for a few values in a unit test. Use CE when the data has a structure that must be correct each time.
 
 ## Quick start: coding agents
 
@@ -88,6 +166,20 @@ Use DATAMIMIC. In ./shop make a project that generates 25 customers
 then run it. Show me the model and the Build evidence.
 ```
 
+What the agent does (from a recorded session with Claude Code, 2026-11-15; shortened, file reads left out):
+
+```text
+datamimic_reference      topic=assembly name=starter   -> project layout
+datamimic_capabilities                                 -> entities, generators, exporters
+datamimic_capability     domain=entity name=Person     -> fields of Person
+Write                    datamimic.xml, acceptance/build.json
+datamimic_build          project=./shop                -> outcome: ready
+datamimic_run_project    project=./shop                -> completed, exit 0, 1.4 s
+                                                          output/<id>/customers_csv.csv, 25 rows
+```
+
+<!-- Recording placeholder: docs/assets/agent-quick-start.gif, at most 30 seconds, recorded after P4a. Keep the text block above. -->
+
 The first start of the MCP server downloads CE from GitHub and takes about 7 s. Later starts take about 1 s. We measured both on one machine.
 If the server does not connect, the skills still work with the command line.
 To use the MCP server without the plugin, install `python -m pip install "datamimic-ce[mcp] @ git+https://github.com/rapiddweller/datamimic@development"`.
@@ -98,7 +190,16 @@ What the agent can and cannot do:
 - `datamimic_run_project` builds the project first, then runs it. It does not write to a database or another external target unless the call sets `allow_side_effects`. Give that permission only after you checked the named targets.
 - A `ready` Build does not prove delivery to an external system.
 
-More: [agent plugin guide](https://github.com/rapiddweller/datamimic/blob/development/docs/agent_plugin.md), [MCP guide](https://github.com/rapiddweller/datamimic/blob/development/docs/mcp_quickstart.md).
+More: [agent plugin guide](https://github.com/rapiddweller/datamimic/blob/development/docs/agent_plugin.md), [MCP guide](https://github.com/rapiddweller/datamimic/blob/development/docs/mcp_quickstart.md), the [consumer skill](https://github.com/rapiddweller/datamimic/blob/development/plugins/datamimic/skills/generate-test-data/SKILL.md) and the [model review format](https://github.com/rapiddweller/datamimic/blob/development/plugins/datamimic/skills/generate-test-data/references/review.md).
+
+## Engineering you can check
+
+- **More than 7,900 automated tests.** Count them: `pytest tests_ce --collect-only -q`. [CI](https://github.com/rapiddweller/datamimic/actions/workflows/main.yml) runs on each push and pull request.
+- **More than 40 complete projects as tests.** Each [scenario](https://github.com/rapiddweller/datamimic/tree/development/tests_ce/scenarios) is a project as a user writes it. The test builds it, runs it two times and compares the rows. Then it breaks one rule at a time and checks that Build rejects the project.
+- **Seeded output is compared on 7 CI configurations.** Linux with Python 3.11, 3.12 and 3.13, Windows with Python 3.11, two time zones, and the lowest permitted dependency versions. See the job [`runtime_determinism_matrix`](https://github.com/rapiddweller/datamimic/blob/development/.github/workflows/main.yml).
+- **The architecture is a contract that CI checks.** 25 contract files give the permitted dependencies. The list of accepted violations is empty. [Read the current report](https://rapiddweller.github.io/datamimic/).
+- **Code quality is public.** Coverage and maintainability are on [SonarCloud](https://sonarcloud.io/summary/new_code?id=rapiddweller_datamimic); the badges at the top show the current values.
+- **Released on PyPI since December 2024.** 14 releases from 1.0.0 to 4.3.0. CE is made by [rapiddweller GmbH](https://rapiddweller.com), which also makes the DATAMIMIC Enterprise Platform.
 
 ## What can CE do?
 
@@ -164,17 +265,6 @@ Name the fields and give each one a generated replacement. This model is the tes
 
 Use a controlled export or staging input, not a live production source. Key management and the converter list are in the [pseudonymization guide](https://github.com/rapiddweller/datamimic/blob/development/docs/guides/pseudonymization.md).
 
-## How is DATAMIMIC CE different from Faker?
-
-| | Faker | DATAMIMIC CE |
-|---|---|---|
-| Related fields | `profile()` and `simple_profile()` return related personal fields | Patient conditions are weighted by age (`PatientService`); `ageMin` and `ageMax` limit the age range |
-| References between records | You write the code | Nested `<generate>` and the `<reference>` element in the model |
-| Seed | `Faker.seed()` seeds the shared generator for all instances in the process | `rngSeed` in `<setup>` seeds a full project, including references between tables; CI replays seeded projects |
-| Check against expectations | No | `datamimic authoring build` |
-
-CE uses Faker as a dependency for some generators.
-
 ## Command reference
 
 Authoring commands print JSON and accept a file or `-` for standard input.
@@ -223,6 +313,17 @@ The content hash is on the results of `generate_domain` (person, address, patien
 
 DATAMIMIC provides test data and run evidence that can support compliance work. It does not replace your data protection officer, your security officer or your auditor. The [compliance pointers](https://github.com/rapiddweller/datamimic/blob/development/docs/guides/compliance-pointers.md) show where CE output fits for DORA, ISO/IEC 27701, HIPAA, GDPR and PCI DSS 4.0.1. They are not attestations.
 
+## Where DATAMIMIC is used
+
+These projects used DATAMIMIC with the Enterprise Platform and services from rapiddweller, and the case studies describe the Enterprise Platform. The model language of these projects is the XML DSL that you use in CE.
+
+| Sector | What was done, in the words of the case study |
+|---|---|
+| Payments | "Records anonymised inline at millions per hour" in Kafka streams, for records with "140-180 columns". [ACI Worldwide](https://datamimic.io/case-study/aci-worldwide-real-time-anonymisation-of-streaming-payment-data/) |
+| Banking | Test data across Oracle, MongoDB and Kafka. Lead time: "Before 20-28 days After 6-12 hours". [Tier-1 European bank](https://datamimic.io/case-study/tier-1-european-bank-deterministic-test-data-across-oracle-mongodb-kafka/) |
+| Public sector, statutory insurance | After a public tender, "DATAMIMIC replaced these legacy tools with model-driven test-data generation integrated into the client's CI/CD pipeline". [Public-sector body in German statutory accident insurance](https://datamimic.io/case-study/case-study-german-statutory-accident-insurance/) |
+| Education | "Replaced the ~10,000-line custom generator with about 1,200 lines of DATAMIMIC models" for about 30 PostgreSQL schemas with more than 200 tables. [School management system](https://datamimic.io/case-study/school-management-system-consultancy-for-synthetic-data-in-hyper-sensitive-environments/) |
+
 ## What is the difference between DATAMIMIC CE and the Enterprise Platform?
 
 DATAMIMIC has two editions. Both use the same XML model language.
@@ -246,18 +347,17 @@ The agent plugin works with both: with a local CE project, or with a project on 
 
 Comparison: https://datamimic.io
 
-## Documentation and help
+## Get help and contribute
 
-- [Documentation](https://docs.datamimic.io)
-- [Agent plugin guide](https://github.com/rapiddweller/datamimic/blob/development/docs/agent_plugin.md) and [MCP guide](https://github.com/rapiddweller/datamimic/blob/development/docs/mcp_quickstart.md)
-- [Developer guide](https://github.com/rapiddweller/datamimic/blob/development/docs/developer_guide.md) and [worked examples](https://github.com/rapiddweller/datamimic/blob/development/docs/examples/authoring.md)
+- [Documentation](https://docs.datamimic.io), [agent plugin guide](https://github.com/rapiddweller/datamimic/blob/development/docs/agent_plugin.md), [MCP guide](https://github.com/rapiddweller/datamimic/blob/development/docs/mcp_quickstart.md), [developer guide](https://github.com/rapiddweller/datamimic/blob/development/docs/developer_guide.md)
 - [GitHub Discussions](https://github.com/rapiddweller/datamimic/discussions) and [Issues](https://github.com/rapiddweller/datamimic/issues)
+- Release notes: [GitHub releases](https://github.com/rapiddweller/datamimic/releases) and [CE 5.0](https://github.com/rapiddweller/datamimic/blob/development/docs/releases/5.0.md)
+- Security: [SECURITY.md](https://github.com/rapiddweller/datamimic/blob/development/SECURITY.md). Do not report a vulnerability in a public issue.
+- Contributing: [CONTRIBUTING.md](https://github.com/rapiddweller/datamimic/blob/development/CONTRIBUTING.md). The [current architecture report](https://rapiddweller.github.io/datamimic/) shows the observed structure and the target. Agents that work on this repository read [AGENTS.md](https://github.com/rapiddweller/datamimic/blob/development/AGENTS.md).
 - Email: support@rapiddweller.com
-
-## Contributing
-
-See [CONTRIBUTING.md](https://github.com/rapiddweller/datamimic/blob/development/CONTRIBUTING.md). The [current architecture report](https://rapiddweller.github.io/datamimic/) shows the observed structure and the target. Agents that work on this repository read [AGENTS.md](https://github.com/rapiddweller/datamimic/blob/development/AGENTS.md).
 
 ## License
 
 MIT. See [LICENSE](https://github.com/rapiddweller/datamimic/blob/development/LICENSE). The DATAMIMIC Enterprise Platform is a separate commercial product of rapiddweller. [Contact rapiddweller](https://datamimic.io/contact).
+
+The DATAMIMIC name and logo are trademarks of rapiddweller and are not covered by the MIT license.

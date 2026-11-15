@@ -1,0 +1,15 @@
+{
+  "title": "README quick start: customers and their orders",
+  "proves": [
+    "each order copies the identifier of a customer that exists",
+    "every customer has exactly two orders",
+    "the project in the README builds ready and gives the same rows on a second run"
+  ],
+  "products": {"customers": 25, "orders": 50},
+  "negatives": [
+    {"name": "random_child_key", "diagnostic": "foreign_key",
+     "patch": {"file": "datamimic.xml", "old": "<key name=\"customer_id\" script=\"parent.id\"/>", "new": "<key name=\"customer_id\" type=\"int\" min=\"100\" max=\"200\"/>"}},
+    {"name": "wrong_order_count", "diagnostic": "exact_count",
+     "patch": {"file": "acceptance/build.json", "old": "\"count\": 50", "new": "\"count\": 40"}}
+  ]
+}
