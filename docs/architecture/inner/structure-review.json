@@ -2574,6 +2574,10 @@
       "reason": "Defines the request and result records of a real project run."
     },
     {
+      "target": "authoring/domain/project_scaffold.py",
+      "reason": "Describes a starter project as plain files and its one pattern, without writing anything."
+    },
+    {
       "target": "authoring/domain/proof.py",
       "reason": "Defines product roles, requirement origins and independent optional verification evidence."
     },
@@ -3342,6 +3346,10 @@
     {
       "target": "authoring/domain/project_run.py",
       "responsibility": "Defines the request and result records of a real project run."
+    },
+    {
+      "target": "authoring/domain/project_scaffold.py",
+      "responsibility": "Describes a starter project as plain files and its one pattern, without writing anything."
     },
     {
       "target": "authoring/domain/proof.py",

@@ -26,6 +26,7 @@ same application. See `docs/agent_plugin.md`.
 | Discover the document/acceptance schema | `datamimic authoring schema` / `datamimic authoring schema --name build_request_v5` |
 | Read a focused reference | `datamimic authoring reference --topic assembly --name starter` |
 | Compile/decompile syntax | `datamimic authoring compile -` / `datamimic authoring decompile model.xml` |
+| Start a project (flat starter, never overwrites) | `datamimic authoring init <project>` |
 | Prove a project | `datamimic authoring build <project>` |
 | Validate/inspect existing XML | `datamimic authoring lint model.xml` / `datamimic authoring dry-run model.xml` |
 | Run bounded XML with explicit write opt-in | `datamimic authoring run model.xml --allow-side-effects` |
@@ -33,7 +34,8 @@ same application. See `docs/agent_plugin.md`.
 | Export editor/authoring contracts | `datamimic authoring export-contract contracts.zip` |
 
 Authoring commands default to JSON. File input and `-` for stdin are supported.
-Exit codes: `0` succeeds, `1` rejects an input/operation, `2` is CLI usage error.
+Exit codes: `0` succeeds, `1` rejects an input/operation, `2` is CLI usage error. `authoring build` adds `3` for
+`ready_with_gaps`: the proof passed, but `coverage` names what it did not check; fix each gap before you report success.
 `compile`/`decompile` readiness proves syntax only; Build readiness additionally
 requires complete bounded evidence and the declared acceptance checks.
 
