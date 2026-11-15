@@ -28,7 +28,7 @@ Each example provides:
 3. Tips for customization
 4. Integration patterns
 
-> **Pre-release.** CE 5.0 is not on PyPI yet. Until 5.0.0, install from GitHub `development`. Use Python 3.11 to 3.13.
+> **Pre-release.** CE 5.0 is not on PyPI yet. Until 5.0.0, install from GitHub `development`. Use Python 3.11 to 3.14.
 
 The examples use the `datamimic-ce` package:
 

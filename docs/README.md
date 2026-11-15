@@ -71,7 +71,7 @@ For detailed information on DATAMIMIC's architecture and model descriptions, ple
 
 ### Installation
 
-> **Pre-release.** CE 5.0 is not on PyPI yet. Until 5.0.0, install from GitHub `development`. Use Python 3.11 to 3.13.
+> **Pre-release.** CE 5.0 is not on PyPI yet. Until 5.0.0, install from GitHub `development`. Use Python 3.11 to 3.14.
 
 Install DATAMIMIC CE in your project environment:
 
