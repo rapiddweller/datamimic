@@ -2534,6 +2534,10 @@
       "reason": "Owns strict shared Authoring primitives and workspace-relative descriptor path validation."
     },
     {
+      "target": "authoring/domain/coverage.py",
+      "reason": "Counts what a passed Build did not check and states each open coverage gap as a warning."
+    },
+    {
       "target": "authoring/domain/dm_json.py",
       "reason": "Defines immutable canonical DM JSON documents, node content and precise codec error paths."
     },
@@ -3438,6 +3442,10 @@
     {
       "target": "authoring/__init__.py",
       "responsibility": "Publishes only the canonical application and lazy factory without importing Runtime or adapters."
+    },
+    {
+      "target": "authoring/domain/coverage.py",
+      "responsibility": "Counts what a passed Build did not check and states each open coverage gap as a warning."
     },
     {
       "target": "authoring/domain/diagnostics.py",

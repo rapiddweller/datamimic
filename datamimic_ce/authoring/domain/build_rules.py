@@ -122,6 +122,28 @@ AUTHORING_RULE_CATALOG: tuple[RuleCatalogEntry, ...] = (
         remediation="Add an expectation whose subject names the declared sink and the required cross-product rule.",
     ),
     RuleCatalogEntry(
+        rule_id=AuthoringRuleId.MISSING_EXPECTATION,
+        category="expectation",
+        severity="error",
+        description="A project that generates a product needs at least one expectation in acceptance/build.json.",
+        applicability="Every Build of a project with at least one generated product.",
+        owner=RuleOwner.EXPECTATION,
+        remediation=(
+            "Add an expectation to acceptance/build.json, for example "
+            '{"kind": "exact_count", "subject": {"kind": "product", "product": "orders"}, "count": 10}.'
+        ),
+    ),
+    RuleCatalogEntry(
+        rule_id=AuthoringRuleId.COVERAGE_GAP,
+        category="expectation",
+        severity="warning",
+        description="A passed Build names what the run did not check: products without expectation, unread data "
+        "files, unchecked declared sinks, or a missing seed. An open gap gives the outcome ready_with_gaps.",
+        applicability="Every ready and ready_with_gaps Build; the typed facts are in the coverage field of the result.",
+        owner=RuleOwner.EXPECTATION,
+        remediation="Close or explain each listed gap before you report the project as done.",
+    ),
+    RuleCatalogEntry(
         rule_id=AuthoringRuleId.UNEVALUABLE_SINK_EXPECTATION,
         category="expectation",
         severity="error",
