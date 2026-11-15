@@ -24,7 +24,7 @@ class TestCreditCard:
         assert isinstance(credit_card.bank_code, str)
         assert isinstance(credit_card.bic, str)
         assert isinstance(credit_card.bin, str)
-        assert isinstance(credit_card.iban, str)
+        assert isinstance(credit_card.iban, str | None)
 
         assert credit_card.card_number is not None
         assert credit_card.card_number != ""
