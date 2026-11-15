@@ -12,7 +12,7 @@ class TestBankAccount:
     def _test_single_bank_account(self, bank_account: BankAccount):
         assert isinstance(bank_account, BankAccount)
         assert isinstance(bank_account.account_number, str)
-        assert isinstance(bank_account.iban, str)
+        assert isinstance(bank_account.iban, str | None)
         assert isinstance(bank_account.account_type, str)
         assert isinstance(bank_account.balance, float)
         assert isinstance(bank_account.currency, str)
@@ -25,7 +25,8 @@ class TestBankAccount:
 
         assert bank_account.account_number is not None
         assert bank_account.account_number != ""
-        assert bank_account.iban is not None
+        # The US has no IBAN scheme; a German account has an IBAN.
+        assert (bank_account.iban is None) == (bank_account.dataset == "US")
         assert bank_account.iban != ""
         assert bank_account.account_type is not None
         assert bank_account.account_type != ""

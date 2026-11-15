@@ -16,7 +16,7 @@ BANK_ACCOUNT_SCHEMA = EntitySchema(
     "BankAccount",
     (
         field("account_number", str, "Account number."),
-        field("iban", str, "International bank account number."),
+        field("iban", str, "International bank account number, if the country has one.", optional=True),
         field("account_type", str, "Account type."),
         field("balance", float, "Current account balance."),
         field("currency", str, "Account currency code."),

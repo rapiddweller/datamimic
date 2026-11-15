@@ -42,25 +42,8 @@ class BankAccount(BaseEntity):
 
     @property
     @property_cache
-    def iban(self) -> str:
-        def checksum(iban_temp):
-            tmp = (iban_temp[4:] + iban_temp[0:4]).upper()
-            digits = ""
-            for c in tmp:
-                if "0" <= c <= "9":
-                    digits += c
-                elif "A" <= c <= "Z":
-                    n = ord(c) - ord("A") + 10
-                    digits += str(n // 10) + str(n % 10)
-                else:
-                    return -1
-            n = int(digits)
-            return n % 97
-
-        template = f"{self._bank_account_generator.dataset}00{self.bank_code}{self.account_number.zfill(10)}"
-        remainer = checksum(template)
-        pp = str(98 - remainer).zfill(2)
-        return template[:2] + pp + template[4:]
+    def iban(self) -> str | None:
+        return self._bank_account_generator.generate_iban()
 
     @property
     @property_cache
