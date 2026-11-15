@@ -6,7 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 README = (ROOT / "README.md").read_text(encoding="utf-8")
-SHOP = ROOT / "tests_ce/scenarios/s50_readme_shop"
+SHOP = ROOT / "tests_ce/scenarios/s53_readme_shop"
 
 
 def test_readme_shop_project_is_the_scenario_project() -> None:
