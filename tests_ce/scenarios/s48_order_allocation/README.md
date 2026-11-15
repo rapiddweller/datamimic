@@ -1,6 +1,6 @@
 # S48 order allocation (X4)
 
-This project allocates stock lots to seven orders for one week. A lot has a quantity and an expiry date. An order
+This project allocates stock lots to eight orders for one week. A lot has a quantity and an expiry date. An order
 ships on one day. All names and data are synthetic.
 
 ## Run the tests
@@ -50,8 +50,8 @@ directory for each run.
 | A1 the expiry date is a valid ship day, the day after is not | the `excluded_by` key of `lot_decisions` in step 20 | `days_to_expiry >= 0` on `allocation_checks` |
 | A2 no lot ships more than its quantity | `fill` in `allocate_orders` | `lot_allocated <= lot_quantity` |
 | A3 a lot serves only its product | the `excluded_by` key in step 20 | `same_product` |
-| A4 an order without `allow_partial` is filled completely; a partial order ships all valid stock | `solve` and the partial pass | `allow_partial == 'yes' or backordered == 0`, `backordered == 0 or valid_left == 0` on `order_checks` |
-| A5 an order uses at most `max_lots_per_order` lots | `sets` in `allocate_orders` | `lots_of_order <= 2`; the caller requirement `max_lots_per_order <= 2` on `policy` |
+| A4 an order without `allow_partial` is filled completely; a partial order ships all valid stock | `solve` and the partial pass | `allow_partial == 'yes' or backordered == 0`, `backordered == 0 or valid_left == 0 or lots_used == max_lots` on `order_checks` |
+| A5 an order uses at most `max_lots_per_order` lots | `sets` and the partial pass in `allocate_orders` | `lots_of_order <= max_lots`, read from the policy; the caller requirement `max_lots_per_order <= 2` on `policy`; the pin that O8 ships 6 of 8 |
 
 The output checks read the orders, the lots and the allocation again. They do not read the eligibility step or the
 search evidence, so a defect in either is caught.
@@ -82,6 +82,7 @@ With the data of this project the search needs 5 steps and 1 backtrack; the call
 | A lot ships on its expiry date | O4 ships on 2026-03-05, L5 expires on 2026-03-05 | allocation `A04` has `days_to_expiry == 0` |
 | A lot does not ship the day after | O6 ships on 2026-03-06, L6 expired on 2026-03-05 | O6 ships 0 and has 4 back-ordered |
 | A partial order ships what is left | O7 asks 4 of P2, 2 are left after O5 | O7 ships 2 and has 2 back-ordered |
+| The lot limit stops a partial order | O8 asks 8 of P3; three lots hold 3 each | O8 ships 6 from two lots and has 2 back-ordered; the third lot has reason `A5` |
 
 ## Negatives
 
@@ -93,7 +94,10 @@ Each negative is one text patch in `scenario.json`. Build rejects the variant wi
 | `a3_product_ignored` | A lot of another product may serve an order. |
 | `a2_oversell` | An allocation line takes the whole order from a lot. |
 | `a4_partial_ships_nothing` | A partial order ships nothing. |
-| `a5_lot_limit_raised` | `max_lots_per_order` is 3; the caller requires at most 2. |
+| `a5_lot_limit_raised` | `max_lots_per_order` is 3: O8 ships all 8 from three lots, and the O8 pin fails. The caller also requires at most 2. |
+| `a5_search_ignores_limit` | The partial pass takes any number of lots: O8 uses three and `lots_of_order <= max_lots` fails. |
+| `infeasible_three_lots_needed` | O8 does not allow a partial shipment: it needs three lots and no allocation exists. |
+| `evidence_reason_unnamed` | The evidence leaves the reason word of a used lot empty. |
 | `infeasible_order_too_large` | O4 asks 40 and no lot set holds it. |
 | `budget_exhausted` | `search_budget` is 2. |
 | `policy_not_whole` | `max_lots_per_order` is `two`; step 10 stops (`child_execution`). |
@@ -103,5 +107,5 @@ Each negative is one text patch in `scenario.json`. Build rejects the variant wi
 
 - Build reports two DM214 warnings: the `nestedKey` elements `lot_decisions` and `lots` have no `defaultValue`. A
   fallback would hide a failure in the decision evidence.
-- Every product that goes to the store needs a readback and an identifier, so step 93 exports each of them.
+- A product that goes to the store needs a readback and an identifier, so step 93 exports each of them. The nested key of `order_decisions` is `lot_reasons`: the name `lots` would hit the product `lots`.
 - The search tries lot sets by expiry order only. It is exact, but it grows with more orders and lots.

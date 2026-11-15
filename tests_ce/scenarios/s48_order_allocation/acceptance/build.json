@@ -18,6 +18,7 @@
     {"product": "allocations", "field": "lot_id", "role": {"kind": "foreign_key", "parent_product": "lots", "parent_field": "lot_id"}},
     {"product": "order_decisions", "field": "order_id", "role": {"kind": "identifier"}},
     {"product": "order_decisions", "field": "order_id", "role": {"kind": "foreign_key", "parent_product": "order_lots", "parent_field": "order_id"}},
+    {"product": "decision_checks", "field": "order_id", "role": {"kind": "foreign_key", "parent_product": "order_decisions", "parent_field": "order_id"}},
     {"product": "lot_checks", "field": "lot_id", "role": {"kind": "foreign_key", "parent_product": "lots", "parent_field": "lot_id"}},
     {"product": "order_checks_input", "field": "order_id", "role": {"kind": "foreign_key", "parent_product": "orders", "parent_field": "order_id"}},
     {"product": "allocation_checks", "field": "allocation_id", "role": {"kind": "foreign_key", "parent_product": "allocations", "parent_field": "allocation_id"}},
@@ -42,13 +43,16 @@
     {"kind": "row_condition", "subject": {"kind": "product", "product": "allocation_checks"}, "condition": "same_product"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "allocation_checks"}, "condition": "days_to_expiry >= 0"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "allocation_checks"}, "condition": "lot_allocated <= lot_quantity"},
-    {"kind": "row_condition", "subject": {"kind": "product", "product": "allocation_checks"}, "condition": "lots_of_order <= 2"},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "allocation_checks"}, "condition": "lots_of_order <= max_lots"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "order_checks"}, "condition": "allow_partial == 'yes' or backordered == 0"},
-    {"kind": "row_condition", "subject": {"kind": "product", "product": "order_checks"}, "condition": "backordered == 0 or valid_left == 0"}
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "order_checks"}, "condition": "backordered == 0 or valid_left == 0 or lots_used == max_lots"},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "decision_checks"}, "condition": "unexplained == 0"}
   ],
   "acceptance_requirements": [
     {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "policy"}, "condition": "max_lots_per_order <= 2"}},
     {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "plan"}, "condition": "backtracks >= 1"}},
+    {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "order_checks"}, "condition": "order_id != 'O8' or (shipped == 6 and backordered == 2)"}},
+    {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "decision_checks"}, "condition": "order_id != 'O8' or a5_lots == 1"}},
     {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "allocation_checks"}, "condition": "allocation_id != 'A04' or days_to_expiry == 0"}},
     {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "order_checks"}, "condition": "order_id != 'O6' or shipped == 0"}},
     {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "order_checks"}, "condition": "order_id != 'O7' or (shipped == 2 and backordered == 2)"}},

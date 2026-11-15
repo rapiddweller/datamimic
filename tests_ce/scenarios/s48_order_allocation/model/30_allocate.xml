@@ -19,7 +19,7 @@
         </generate>
         <generate name="order_decisions" script="result['decisions']" count="{len(result['decisions'])}" distribution="ordered" target="mem">
             <key name="order_id" script="order_id"/>
-            <nestedKey name="lots" script="lots"/>
+            <nestedKey name="lot_reasons" script="lots"/>
         </generate>
     </generate>
 </setup>

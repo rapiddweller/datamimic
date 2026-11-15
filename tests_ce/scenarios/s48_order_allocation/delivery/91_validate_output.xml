@@ -4,6 +4,7 @@
         <variable name="allocations" source="mem" sourceEntity="allocations" storage="data" distribution="ordered"/>
         <variable name="orders" source="mem" sourceEntity="orders" storage="data" distribution="ordered"/>
         <variable name="lots" source="mem" sourceEntity="lots" storage="data" distribution="ordered"/>
+        <variable name="policy" source="mem" sourceEntity="policy" storage="data" distribution="ordered"/>
         <key name="allocation_id" script="allocation_id"/>
         <key name="order_id" script="order_id"/>
         <key name="lot_id" script="lot_id"/>
@@ -13,16 +14,28 @@
         <key name="lot_quantity" script="{row.lot_id: row.quantity for row in lots}[lot_id]"/>
         <key name="lot_allocated" script="sum(row.quantity for row in allocations if row.lot_id == lot_id)"/>
         <key name="lots_of_order" script="len({row.lot_id for row in allocations if row.order_id == order_id})"/>
+        <!-- A5: the limit is the policy value, not a number in this file. -->
+        <key name="max_lots" script="policy[0].max_lots_per_order"/>
     </generate>
     <generate name="order_checks" source="mem" sourceEntity="orders" distribution="ordered" target="CSV">
         <variable name="allocations" source="mem" sourceEntity="allocations" storage="data" distribution="ordered"/>
         <variable name="lots" source="mem" sourceEntity="lots" storage="data" distribution="ordered"/>
+        <variable name="policy" source="mem" sourceEntity="policy" storage="data" distribution="ordered"/>
         <key name="order_id" script="order_id"/>
         <key name="quantity" script="quantity"/>
         <key name="allow_partial" script="allow_partial"/>
         <key name="shipped" script="sum(row.quantity for row in allocations if row.order_id == order_id)"/>
         <key name="backordered" script="quantity - shipped"/>
+        <key name="lots_used" script="len({row.lot_id for row in allocations if row.order_id == order_id})"/>
+        <key name="max_lots" script="policy[0].max_lots_per_order"/>
         <!-- A4: the stock that was still good on the ship date after the whole allocation. -->
         <key name="valid_left" script="sum(lot.quantity - sum(row.quantity for row in allocations if row.lot_id == lot.lot_id) for lot in lots if lot.product_id == product_id and ship_on &lt;= lot.expires_on)"/>
+    </generate>
+    <generate name="decision_checks" source="mem" sourceEntity="order_decisions" distribution="ordered" target="CSV">
+        <key name="order_id" script="order_id"/>
+        <!-- Each eligible lot of an order has one reason word and a detail. -->
+        <key name="lots_seen" script="len(lots)"/>
+        <key name="a5_lots" script="sum(row['reason'] == 'A5' for row in lots)"/>
+        <key name="unexplained" script="sum(row['reason'] not in ('used', 'A2', 'A5', 'not_needed') or row['detail'] == '' for row in lots)"/>
     </generate>
 </setup>
