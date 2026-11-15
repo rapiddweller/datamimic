@@ -4,6 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import copy
 import logging
 import sys
 from contextlib import suppress
@@ -26,7 +27,7 @@ from datamimic_ce.engine.io.clients.database_client import DatabaseClient
 from datamimic_ce.engine.io.clients.entity_serialization import stringify_entity_value
 from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig, sqlite_database_path
 from datamimic_ce.engine.io.contracts import DataSourcePagination
-from datamimic_ce.errors import IssueCode, NormalizedDbError, client_config_error, operation_error
+from datamimic_ce.errors import IssueCode, NormalizedDbError, OperationError, client_config_error, operation_error
 
 logger = logging.getLogger("DATAMIMIC")
 
@@ -303,11 +304,8 @@ class RdbmsClient(DatabaseClient):
 
             return rows
         except sqlalchemy.exc.SQLAlchemyError as error:
-            raise operation_error(
-                code=IssueCode.OPERATION_EXECUTION_FAILED,
-                target="database read",
-                error=_database_error_facts(error),
-            ) from error
+            failure = _operation_failure("database read", error)
+        raise failure
 
     def execute_sql_script(self, query: str) -> None:
         """
@@ -318,16 +316,15 @@ class RdbmsClient(DatabaseClient):
         self._require_write("execute_sql_script")
         if query is None:
             return
+        failure: OperationError | None = None
         try:
             with self._create_engine().connect() as connection, connection.begin():
                 for command in sql_dialect.split_script(query, self._credential.dbms):
                     connection.exec_driver_sql(command, execution_options=_RAW_SCRIPT)
         except sqlalchemy.exc.SQLAlchemyError as error:
-            raise operation_error(
-                code=IssueCode.OPERATION_EXECUTION_FAILED,
-                target="SQL script",
-                error=_database_error_facts(error),
-            ) from error
+            failure = _operation_failure("SQL script", error)
+        if failure is not None:
+            raise failure
 
     def count_table_length(self, table_name: str) -> int:
         """
@@ -343,11 +340,8 @@ class RdbmsClient(DatabaseClient):
                 result = connection.execute(count_query)
                 return result.scalar_one()
         except sqlalchemy.exc.SQLAlchemyError as error:
-            raise operation_error(
-                code=IssueCode.OPERATION_EXECUTION_FAILED,
-                target="database source count",
-                error=_database_error_facts(error),
-            ) from error
+            failure = _operation_failure("database source count", error)
+        raise failure
 
     def count_query_length(self, query: str) -> int:
         """
@@ -480,14 +474,10 @@ class RdbmsClient(DatabaseClient):
         with engine.begin() as connection:
             try:
                 connection.execute(table.insert(), data_list)
-            except Exception as err:
-                if isinstance(err, sqlalchemy.exc.SQLAlchemyError):
-                    raise operation_error(
-                        code=IssueCode.OPERATION_EXECUTION_FAILED,
-                        target="database write",
-                        error=_database_error_facts(err),
-                    ) from err
-                raise
+                return
+            except sqlalchemy.exc.SQLAlchemyError as err:
+                failure = _operation_failure("database write", err)
+            raise failure
 
     def _table_and_pk(self, engine, table_name: str):
         """Reflected table + its primary-key column names. update/upsert/delete key on the PK;
@@ -563,12 +553,13 @@ class RdbmsClient(DatabaseClient):
         self._require_write("clear")
         engine = self._create_engine()
         table = self._get_metadata(engine).tables[self._get_actual_table_name(table_name)]
+        failure: OperationError | None = None
         try:
             backend_action, deleted = self._truncate_or_delete_all(engine, table)
         except sqlalchemy.exc.SQLAlchemyError as err:
-            raise operation_error(
-                code=IssueCode.OPERATION_EXECUTION_FAILED, target="rdbms.clear", error=_database_error_facts(err)
-            ) from err
+            failure = _operation_failure("rdbms.clear", err)
+        if failure is not None:
+            raise failure
         logger.info(
             "OPERATION | rdbms.clear | table=%s | action=clear | backend_action=%s | deleted_count=%s",
             table.name,
@@ -897,6 +888,39 @@ _SQLITE_CATEGORIES = {
     14: "connection_failed",
     19: "constraint",
 }
+
+
+class DriverFailure(Exception):
+    """A native driver error without its message: its class name and native code, never SQL or a value."""
+
+    driver_class: str
+    native_code: str | None
+
+
+def _statement_free_cause(
+    error: sqlalchemy.exc.SQLAlchemyError, facts: NormalizedDbError
+) -> sqlalchemy.exc.SQLAlchemyError:
+    """The SQLAlchemy class without its SQL text, parameters or driver message; the driver class and code stay."""
+    if isinstance(error, sqlalchemy.exc.DBAPIError):
+        cause = copy.copy(error)
+        cause.statement = None
+        cause.params = None
+        driver_failure = DriverFailure(type(error.orig).__name__)
+        driver_failure.driver_class = type(error.orig).__name__
+        driver_failure.native_code = facts.code
+        cause.orig = driver_failure
+        cause.args = (type(error).__name__,)
+        return cause
+    return sqlalchemy.exc.SQLAlchemyError(type(error).__name__)
+
+
+def _operation_failure(target: str, error: sqlalchemy.exc.SQLAlchemyError) -> OperationError:
+    """The typed failure with its statement-free cause. The caller raises it outside the except block, so the
+    original error, which holds the SQL text, is neither the cause nor the context."""
+    facts = _database_error_facts(error)
+    failure = operation_error(code=IssueCode.OPERATION_EXECUTION_FAILED, target=target, error=facts)
+    failure.__cause__ = _statement_free_cause(error, facts)
+    return failure
 
 
 def _database_error_facts(error: sqlalchemy.exc.SQLAlchemyError) -> NormalizedDbError:

@@ -78,7 +78,8 @@ def test_insert_conflicting_with_existing_primary_key_fails_without_rekey(
         _descriptor(tmp_path, target="db")
     assert rejected.value.issue_code is IssueCode.OPERATION_EXECUTION_FAILED
     assert isinstance(rejected.value.__cause__, IntegrityError)
-    assert isinstance(rejected.value.__cause__.orig, sqlite3.IntegrityError)
+    assert rejected.value.__cause__.statement is None
+    assert str(rejected.value.__cause__.orig) == "IntegrityError"
 
     assert _stored_rows(database) == [(candidate_id, "existing", None)]
 

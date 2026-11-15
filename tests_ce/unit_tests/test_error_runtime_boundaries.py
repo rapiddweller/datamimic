@@ -230,7 +230,8 @@ def test_sql_native_codes_keep_normalized_facts_without_statement_data(monkeypat
     assert category in str(caught.value)
     assert code in str(caught.value)
     assert "private" not in str(caught.value)
-    assert caught.value.__cause__ is failure
+    assert isinstance(caught.value.__cause__, sqlalchemy.exc.ProgrammingError)
+    assert "private" not in str(caught.value.__cause__)
 
 
 def test_domain_error_through_key_expression_keeps_domain_contract(tmp_path):
