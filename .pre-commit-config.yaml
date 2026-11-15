@@ -1,0 +1,23 @@
+# Local hooks run the versions that uv.lock pins, the same as CI. Install once: make install-pre-commit
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format
+        language: system
+        types: [python]
+        files: ^datamimic_ce/
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check
+        language: system
+        types: [python]
+        files: ^datamimic_ce/
+      - id: mypy
+        name: mypy datamimic_ce
+        entry: uv run mypy datamimic_ce
+        language: system
+        pass_filenames: false
+        types: [python]
+        files: ^datamimic_ce/

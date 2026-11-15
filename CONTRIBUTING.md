@@ -23,6 +23,7 @@ Ensure you have Python ≥3.11 installed. Then set up your environment:
 ```bash
 pip install uv
 uv sync
+make install-pre-commit  # ruff format, ruff check and mypy run before each commit
 ```
 
 ### 3. 🌟 Make Your Changes
@@ -65,6 +66,12 @@ git push origin my-feature-or-fix
 - **Stay Relevant**: Ensure your contribution aligns with the DATAMIMIC roadmap.
 - **Keep Quality High**: Maintain code quality, readability, and test coverage.
 - **Discuss Major Changes**: Open an issue or discussion to propose significant changes before investing substantial effort.
+
+---
+
+## 🚦 CI
+
+A pull request runs a short lane: ruff, mypy, the ArchKeel contract check, `tests_ce/unit_tests` and the Python 3.11 wheel smoke test. A pull request that changes only `*.md` or `docs/**` runs the documentation tests. The full run (integration, functional, external services, Windows, determinism matrix, all wheel smoke tests, Sonar) starts when a change with code is merged into `development`, and on a release tag. To start it for a branch before a risky merge, run `gh workflow run main.yml --ref <branch>`.
 
 ---
 
