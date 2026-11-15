@@ -1224,6 +1224,21 @@ def _export_capture_value(value: CaptureValue) -> object:
     return value
 
 
+class _PathRemovedDirectory(tempfile.TemporaryDirectory[str]):
+    """Removes its tree by absolute path: shutil.rmtree deletes by descriptor, which the bounded child's audit hook
+    refuses for a non-empty tree."""
+
+    @classmethod
+    def _rmtree(cls, name: str, *_args: object, **_kwargs: object) -> None:
+        for directory, subdirectories, files in os.walk(name, topdown=False):
+            for entry in files + [sub for sub in subdirectories if os.path.islink(os.path.join(directory, sub))]:
+                os.remove(os.path.join(directory, entry))
+            for entry in subdirectories:
+                if not os.path.islink(os.path.join(directory, entry)):
+                    os.rmdir(os.path.join(directory, entry))
+        os.rmdir(name)
+
+
 def _smoke_export(
     captured: Mapping[str, Sequence[object]],
     stripped: _StrippedTargets,
@@ -1236,7 +1251,7 @@ def _smoke_export(
     applicable_exporters = sum(len(file_targets) for _basename, file_targets, _, _ in stripped.values())
     attempted_exporters = 0
     failed_exporters = 0
-    with tempfile.TemporaryDirectory(prefix="datamimic_smoke_") as tmp:
+    with _PathRemovedDirectory(prefix="datamimic_smoke_") as tmp:
         descriptor_dir = Path(tmp).resolve()
         task_id = f"smoke_{uuid.uuid4().hex}"
         # Export readback is contained in its own private artifact directory.

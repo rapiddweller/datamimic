@@ -568,3 +568,19 @@ def test_smoke_artifact_scope_keeps_caller_resources_contained(tmp_path: Path, m
         with pytest.raises(ValueError, match="outside"):
             read_resource_bytes(outside)
     assert attempted == ["FixedWidth"]
+
+
+def test_smoke_directory_is_removed_without_descriptor_based_deletion(monkeypatch) -> None:
+    """The bounded child's audit hook refuses shutil.rmtree's descriptor-relative removals (seen as root on Linux)."""
+
+    def refuse_rmtree(*_args: object, **_kwargs: object) -> None:
+        raise AssertionError("shutil.rmtree deletes by descriptor")
+
+    monkeypatch.setattr("shutil.rmtree", refuse_rmtree)
+    with dryrun_module._PathRemovedDirectory(prefix="datamimic_test_") as tmp:
+        root = Path(tmp)
+        (root / "nested" / "deeper").mkdir(parents=True)
+        (root / "items.xml").write_text("x", encoding="utf-8")
+        (root / "nested" / "deeper" / "rows.csv").write_text("y", encoding="utf-8")
+
+    assert not root.exists()
