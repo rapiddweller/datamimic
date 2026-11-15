@@ -1,0 +1,9 @@
+<setup rngSeed="52">
+    <!-- Mongo to Postgres pipeline (X6): clean both targets, load raw documents, transform them into the table, read it back. -->
+    <mongodb id="mongodb"/>
+    <database id="warehouse" system="postgresql"/>
+    <include uri="delivery/90_clear.xml"/>
+    <include uri="model/10_raw_orders.xml"/>
+    <include uri="model/20_transform.xml"/>
+    <include uri="delivery/92_readback.xml"/>
+</setup>

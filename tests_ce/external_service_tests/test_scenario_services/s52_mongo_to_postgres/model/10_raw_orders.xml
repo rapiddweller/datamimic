@@ -1,0 +1,9 @@
+<setup>
+    <!-- Purpose: make the raw documents of a source system: a text amount with a decimal point, and a status with case and space noise. -->
+    <generate name="dm_x6_raw_orders" count="12" target="mongodb">
+        <key name="order_id" generator="IncrementGenerator"/>
+        <key name="cents" type="int" min="100" max="99999"/>
+        <key name="amount_text" script="f'{this.cents // 100}.{this.cents % 100:02d}'"/>
+        <key name="status_raw" values="('NEW', ' Paid', 'shipped ')"/>
+    </generate>
+</setup>

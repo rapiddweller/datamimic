@@ -1,0 +1,8 @@
+<setup>
+    <!-- Purpose: make the orders and write them to the orders table. -->
+    <generate name="orders" targetEntity="dm_s50_orders" count="12" target="shop">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="status" values="('new', 'paid', 'shipped')"/>
+        <key name="amount_cents" type="int" min="100" max="9900"/>
+    </generate>
+</setup>

@@ -1,0 +1,5 @@
+<setup>
+    <!-- Purpose: empty both targets, so a second run does not meet the rows of the first run. The tables stay. -->
+    <generate name="clear_raw" targetEntity="dm_x6_raw_orders" target="mongodb.clear"/>
+    <generate name="clear_orders" targetEntity="dm_x6_orders" target="warehouse.clear"/>
+</setup>
