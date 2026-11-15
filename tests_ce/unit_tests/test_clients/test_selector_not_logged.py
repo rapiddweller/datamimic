@@ -13,7 +13,7 @@ from sqlalchemy.exc import OperationalError
 
 from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
 from datamimic_ce.engine.io.clients.operations import rdbms_count_source_query
-from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
+from datamimic_ce.engine.io.clients.rdbms_client import DriverFailure, RdbmsClient
 from datamimic_ce.engine.io.clients.sql_dialect import _parse_selector
 from datamimic_ce.errors import IssueCode, OperationError
 
@@ -55,14 +55,29 @@ def test_unpaged_query_read_log_has_no_selector_value(caplog) -> None:
     _assert_token_absent(caplog)
 
 
-def _chain_text(error: BaseException) -> str:
-    return "".join(traceback.format_exception(error))
+class NativePgError(Exception):
+    pgcode = "23505"
+
+
+def _chain(error: BaseException) -> list[BaseException]:
+    """Every exception reachable through __cause__, __context__ or a database error's orig."""
+    seen: list[BaseException] = []
+    pending: list[BaseException | None] = [error]
+    while pending:
+        current = pending.pop()
+        if current is None or any(current is known for known in seen):
+            continue
+        seen.append(current)
+        pending += [current.__cause__, current.__context__, getattr(current, "orig", None)]
+    return seen
 
 
 def _failing_engine():
+    native = NativePgError(f"duplicate key value violates unique constraint, Key (name)=({TOKEN})")
+    failure = OperationalError(f"SELECT '{TOKEN}' FROM items", {"name": TOKEN}, native)
     connection = MagicMock()
-    connection.execute.side_effect = OperationalError(f"SELECT '{TOKEN}' FROM items", {}, Exception("db down"))
-    connection.exec_driver_sql.side_effect = connection.execute.side_effect
+    connection.execute.side_effect = failure
+    connection.exec_driver_sql.side_effect = failure
     engine = MagicMock()
     engine.connect.return_value.__enter__.return_value = connection
     return engine
@@ -84,8 +99,17 @@ def test_database_operation_error_chain_has_no_selector_value(call) -> None:
         getattr(RdbmsClient, call)(client, f"SELECT '{TOKEN}' FROM items")
     assert caught.value.issue_code == IssueCode.OPERATION_EXECUTION_FAILED
     assert "OperationalError" in str(caught.value)
-    assert isinstance(caught.value.__cause__, OperationalError)
-    assert caught.value.__cause__.statement is None
-    assert TOKEN not in _chain_text(caught.value)
-    assert TOKEN not in repr(caught.value.__cause__)
-    assert TOKEN not in str(caught.value)
+    assert "23505" in str(caught.value)
+
+    assert caught.value.__context__ is None
+    cause = caught.value.__cause__
+    assert isinstance(cause, OperationalError)
+    assert cause.statement is None
+    assert cause.params is None
+    assert isinstance(cause.orig, DriverFailure)
+    assert (cause.orig.driver_class, cause.orig.native_code) == ("NativePgError", "23505")
+    for link in _chain(caught.value):
+        assert TOKEN not in str(link)
+        assert TOKEN not in repr(link)
+        assert TOKEN not in repr(link.args)
+    assert TOKEN not in "".join(traceback.format_exception(caught.value))
