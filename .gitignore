@@ -99,6 +99,8 @@ QODER.md
 .gemini/
 .kiro/
 .mcp.json
+# The plugin ships its own server entry.
+!plugins/datamimic/.mcp.json
 .opencode.json
 .qoder/
 .windsurfrules
