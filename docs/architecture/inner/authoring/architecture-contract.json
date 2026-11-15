@@ -35,6 +35,10 @@
         "responsibility": "The package marks the authoring vocabulary and rules without adding domain behavior."
       },
       {
+        "path": "datamimic_ce/authoring/domain/coverage.py",
+        "responsibility": "Counts what a passed Build did not check and states each open coverage gap as a warning."
+      },
+      {
         "path": "datamimic_ce/authoring/domain/diagnostics.py",
         "responsibility": "Defines canonical safe diagnostics, error identities and typed Build/XML rule catalog entries."
       },
@@ -302,6 +306,7 @@
         "datamimic_ce.authoring.domain.capabilities",
         "datamimic_ce.authoring.domain.capture",
         "datamimic_ce.authoring.domain.common",
+        "datamimic_ce.authoring.domain.coverage",
         "datamimic_ce.authoring.domain.diagnostics",
         "datamimic_ce.authoring.domain.dm_json",
         "datamimic_ce.authoring.domain.document_identity",
@@ -561,6 +566,7 @@
         "datamimic_ce.authoring.domain.capabilities",
         "datamimic_ce.authoring.domain.capture",
         "datamimic_ce.authoring.domain.common",
+        "datamimic_ce.authoring.domain.coverage",
         "datamimic_ce.authoring.domain.diagnostics",
         "datamimic_ce.authoring.domain.dm_json",
         "datamimic_ce.authoring.domain.document_identity",

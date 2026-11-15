@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import PurePosixPath
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Self
 
 from pydantic import (
     Field,
@@ -30,6 +30,7 @@ from .common import (
     NonNegativeStrictInt,
     WorkspaceDescriptorPath,
 )
+from .coverage import BuildCoverage
 from .diagnostics import AuthoringRuleId, Diagnostic, DiagnosticPhase
 from .dm_json import DmJsonDocumentV1
 from .environments import ConfiguredEnvironmentBinding
@@ -399,6 +400,54 @@ class ReadyBuild(AuthoringModel):
             for item in self.evidence
         ):
             raise ValueError("ready builds require complete capture provenance for every product")
+        return self
+
+
+class _ProvenBuild(AuthoringModel):
+    """What a passed proof carries; the coverage decides the outcome (`ready` or `ready_with_gaps`)."""
+
+    artifact: BuildArtifact
+    assurance: BuildAssurance
+    evidence: tuple[ProductEvidence, ...] = Field(min_length=1)
+    coverage: BuildCoverage = Field(
+        description=(
+            "What this Build did not check. Close each gap, and each warning in diagnostics, before you report success."
+        )
+    )
+    verification: BuildVerificationEvidence = Field(default_factory=BuildVerificationEvidence)
+    diagnostics: tuple[Diagnostic, ...] = ()
+
+    @model_validator(mode="after")
+    def reject_error_diagnostics(self) -> Self:
+        if any(diagnostic.severity == "error" for diagnostic in self.diagnostics):
+            raise ValueError("ready builds cannot contain error diagnostics")
+        if any(
+            gate.status in {VerificationGateStatus.FAILED, VerificationGateStatus.BLOCKED}
+            for gate in (self.verification.smoke_export, self.verification.deterministic_replay)
+        ):
+            raise ValueError("ready builds cannot contain failed or blocked verification")
+        if any(
+            item.capture is None or not item.capture.complete or item.capture.observed != item.count
+            for item in self.evidence
+        ):
+            raise ValueError("ready builds require complete capture provenance for every product")
+        return self
+
+
+class ReadyWithGapsBuild(_ProvenBuild):
+    """A passed proof whose coverage has open gaps; success is not reported until each gap is fixed or explained."""
+
+    outcome: Literal["ready_with_gaps"] = "ready_with_gaps"
+    action_required: str = Field(
+        description="The count and the name of each open coverage gap. Do not report success until each is fixed."
+    )
+
+    @model_validator(mode="after")
+    def coverage_has_gaps(self) -> Self:
+        if not self.coverage.has_gaps:
+            raise ValueError("a build without an open coverage gap is ready, not ready_with_gaps")
+        if self.action_required != self.coverage.action_required():
+            raise ValueError("action_required must state the open gaps of coverage")
         return self
 
 

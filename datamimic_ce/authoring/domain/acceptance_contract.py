@@ -7,12 +7,14 @@
 from __future__ import annotations
 
 import ast
+from pathlib import PurePosixPath
 from typing import Literal
 
 from pydantic import model_validator
 
 from .build_rules import catalog_diagnostic
 from .common import MAX_AUTHORING_MAX_COUNT, AuthoringModel, NonEmptyStrictStr, NonNegativeStrictInt
+from .coverage import BuildCoverage, ProductCoverage
 from .diagnostics import AuthoringRuleId, Diagnostic, DiagnosticPhase
 from .expectations import (
     DeclaredSinkIdentity,
@@ -288,3 +290,26 @@ def validate_acceptance_check(spec: AcceptanceSpecV1, check: AcceptanceCheckV1) 
                     )
     elif not isinstance(expectation, (ExactCountExpectation, PerParentCountExpectation, FieldAbsentExpectation)):
         validate_acceptance_subject(spec, expectation.subject, check.path, expectation.field)
+
+
+def build_coverage(
+    spec: AcceptanceSpecV1, *, seeded: bool, unread_data_files: tuple[PurePosixPath, ...]
+) -> BuildCoverage:
+    counts = {product.name: 0 for product in spec.products}
+    assured_sinks: set[DeclaredSinkIdentity] = set()
+    for check in spec.checks:
+        for subject in expectation_subjects(check.expectation):
+            if isinstance(subject, DeclaredSinkRowsSubject):
+                assured_sinks.add(subject.sink)
+            else:
+                product = subject.child_product if isinstance(subject, PerParentRowsSubject) else subject.product
+                if product in counts:
+                    counts[product] += 1
+    return BuildCoverage(
+        expectation_count=len(spec.checks),
+        products=tuple(ProductCoverage(product=name, expectations=count) for name, count in counts.items()),
+        products_without_expectation=tuple(name for name, count in counts.items() if count == 0),
+        unread_data_files=unread_data_files,
+        unchecked_declared_sinks=tuple(sink for sink in spec.declared_sink_contributors() if sink not in assured_sinks),
+        seeded=seeded,
+    )

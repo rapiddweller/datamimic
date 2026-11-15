@@ -35,6 +35,8 @@ class AuthoringRuleId(StrEnum):
 
     UNASSURED_MULTI_CONTRIBUTOR_SINK = "unassured_multi_contributor_sink"
     UNEVALUABLE_SINK_EXPECTATION = "unevaluable_sink_expectation"
+    MISSING_EXPECTATION = "missing_expectation"
+    COVERAGE_GAP = "coverage_gap"
     LIMIT = "limit"
     SIDE_EFFECT = "side_effect"
     INPUT = "input"
