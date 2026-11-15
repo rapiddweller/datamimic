@@ -36,17 +36,18 @@ Start a new session in your data project and invoke
 ## Automatic project setup
 
 The shared [setup skill](../plugins/datamimic/skills/setup-datamimic/SKILL.md)
-uses the project's Python 3.11+ environment and dependency manager. If CE is
-missing or incompatible, it installs published `datamimic-ce>=5.0.0,<6` from
-PyPI, checks the live authoring contract and continues your original task.
+uses the project's Python 3.11 to 3.13 environment and dependency manager. If CE is
+missing or incompatible, it installs CE from GitHub `development` (CE 5.0 is not on PyPI
+yet), checks the live authoring contract and continues your original task.
 An already compatible environment is reused. Existing dependency conflicts are
 reported rather than silently replacing pins. A connected Platform project uses
 its remote service and needs no local CE install.
 
-For manual CLI installation, use your project environment:
+For manual CLI installation, use your project environment. CE 5.0 is not on
+PyPI yet, so install from GitHub `development` until 5.0.0:
 
 ```bash
-python -m pip install "datamimic-ce>=5.0.0,<6"
+python -m pip install "datamimic-ce @ git+https://github.com/rapiddweller/datamimic@development"
 ```
 
 The optional MCP transport has its own [registration guide](mcp_quickstart.md).

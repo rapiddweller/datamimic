@@ -152,10 +152,12 @@ with `datamimic authoring reference --topic overview`, then query a narrow topic
 ## Install the CLI
 
 ```bash
-pip install datamimic-ce
+pip install "datamimic-ce @ git+https://github.com/rapiddweller/datamimic@development"
 ```
 
-The MCP adapter is optional. Install it with `pip install "datamimic-ce[mcp]"`
+CE 5.0 is not on PyPI yet. Until 5.0.0, install from GitHub `development`.
+
+The MCP adapter is optional. Install it with `pip install "datamimic-ce[mcp] @ git+https://github.com/rapiddweller/datamimic@development"`
 only when the calling environment uses MCP; see `docs/mcp_quickstart.md` for
 registration details.
 

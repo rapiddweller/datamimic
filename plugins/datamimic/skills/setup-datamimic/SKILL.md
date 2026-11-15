@@ -32,12 +32,12 @@ If that contract is already available, setup is complete: record the resolved
 paths/version and continue the data task. Do not invoke pip or another dependency
 manager, even to request an already satisfied package.
 
-Only if CE is absent or incompatible, install the published CE 5 dependency through
+Only if CE is absent or incompatible, install CE 5 (from GitHub `development` until 5.0.0) through
 the project's dependency manager and record it in the existing dependency/lock
 files. For an unmanaged virtual environment, use its Python directly:
 
 ```bash
-python -m pip install "datamimic-ce>=5.0.0,<6"
+python -m pip install "datamimic-ce @ git+https://github.com/rapiddweller/datamimic@development"
 ```
 
 Here `python` means the absolute selected environment interpreter. Complete this
@@ -46,9 +46,9 @@ you can execute it. Respect host permissions. An existing incompatible explicit
 pin needs a reported dependency conflict, not silently removing the pin or
 replacing the environment. CLI authoring needs no MCP extra.
 
-If the published version cannot be resolved, installation fails, or the live
+If the install cannot be resolved, installation fails, or the live
 contract remains incompatible, preserve the project and report the exact stage
-and error. Do not substitute an old API, source checkout or local wheel. An
+and error. Do not substitute an old API, local checkout or local wheel. An
 access/configuration failure is not an authoring result.
 
 ## Verify and continue

@@ -4,7 +4,7 @@
 > XML is the persisted executable project; DM JSON is its transient agent view.
 > A project is a datamimic.xml entry plus acceptance/build.json, which holds its expectations and proof declarations.
 
-Install CE 5.0 from PyPI: `python -m pip install datamimic-ce`.
+CE 5.0 is not on PyPI yet. Until 5.0.0, install from GitHub `development` with Python 3.11 to 3.13: `python -m pip install "datamimic-ce @ git+https://github.com/rapiddweller/datamimic@development"`.
 For dataset tasks use the [consumer skill](plugins/datamimic/skills/generate-test-data/SKILL.md).
 Its [setup skill](plugins/datamimic/skills/setup-datamimic/SKILL.md) installs CE in the project when needed.
 Repository contributors read [AGENTS.md](AGENTS.md) and use `.venv/bin/datamimic`.
