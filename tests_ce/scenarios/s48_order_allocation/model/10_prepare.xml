@@ -1,0 +1,30 @@
+<setup>
+    <!-- Prepare: read each data file and give each column its type. -->
+    <generate name="policy" count="1" target="mem">
+        <!-- The rule parameters as whole numbers; a missing or not whole value stops the run. -->
+        <key name="policy_id" script="1"/>
+        <key name="max_lots_per_order" script="int(max_lots_per_order)"/>
+        <key name="search_budget" script="int(search_budget)"/>
+    </generate>
+    <generate name="products" source="data/entity/products.ent.csv" distribution="ordered" target="mem">
+        <key name="product_id" script="product_id"/>
+    </generate>
+    <generate name="customers" source="data/entity/customers.ent.csv" distribution="ordered" target="mem">
+        <key name="customer_id" script="customer_id"/>
+    </generate>
+    <generate name="lots" source="data/entity/lots.ent.csv" distribution="ordered" target="mem">
+        <key name="lot_id" script="lot_id"/>
+        <key name="product_id" script="product_id"/>
+        <key name="quantity" script="int(quantity)"/>
+        <!-- The last day on which the lot may ship: the expiry date itself is a valid day (A1). -->
+        <key name="expires_on" script="datetime.date.fromisoformat(expires_on)"/>
+    </generate>
+    <generate name="orders" source="data/entity/orders.ent.csv" distribution="ordered" target="mem">
+        <key name="order_id" script="order_id"/>
+        <key name="customer_id" script="customer_id"/>
+        <key name="product_id" script="product_id"/>
+        <key name="quantity" script="int(quantity)"/>
+        <key name="ship_on" script="datetime.date.fromisoformat(ship_on)"/>
+        <key name="allow_partial" script="allow_partial"/>
+    </generate>
+</setup>

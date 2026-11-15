@@ -1,0 +1,16 @@
+<setup>
+    <!-- Eligibility: for each order, decide which lots may serve it: A3 the product, A1 the expiry date; and say why not. -->
+    <generate name="order_lots" source="mem" sourceEntity="orders" distribution="ordered" target="mem">
+        <variable name="lots" source="mem" sourceEntity="lots" storage="data" distribution="ordered"/>
+        <key name="order_id" script="order_id"/>
+        <key name="product_id" script="product_id"/>
+        <key name="quantity" script="quantity"/>
+        <key name="ship_on" script="ship_on"/>
+        <key name="allow_partial" script="allow_partial"/>
+        <!-- One decision for each lot: A3 excludes a lot of another product, A1 one that expired before the ship date. -->
+        <nestedKey name="lot_decisions" script="[{'lot_id': row.lot_id, 'lot_product': row.product_id, 'lot_expires_on': row.expires_on} for row in lots]">
+            <key name="excluded_by" script="'A3' if lot_product != parent.product_id else 'A1' if parent.ship_on &gt; lot_expires_on else None"/>
+        </nestedKey>
+        <array name="eligible_lots" script="[row['lot_id'] for row in lot_decisions if row['excluded_by'] is None]"/>
+    </generate>
+</setup>

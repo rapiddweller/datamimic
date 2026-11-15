@@ -1,0 +1,25 @@
+<setup>
+    <!-- Allocate: search for one allocation of lots to orders (A2, A4, A5) and keep the evidence of each decision. -->
+    <generate name="plan" count="1" target="mem">
+        <variable name="orders" source="mem" sourceEntity="order_lots" storage="data" distribution="ordered"/>
+        <variable name="lots" source="mem" sourceEntity="lots" storage="data" distribution="ordered"/>
+        <variable name="policy" source="mem" sourceEntity="policy" storage="data" distribution="ordered"/>
+        <variable name="result" script="allocate_orders(orders, lots, policy[0].max_lots_per_order, policy[0].search_budget)"/>
+        <key name="plan_id" script="1"/>
+        <key name="outcome" script="result['outcome']"/>
+        <key name="search_complete" script="result['search_complete']"/>
+        <key name="message" script="result['message']"/>
+        <key name="steps" script="result['steps']"/>
+        <key name="backtracks" script="result['backtracks']"/>
+        <generate name="allocations" script="result['entries']" count="{len(result['entries'])}" distribution="ordered" target="mem">
+            <key name="allocation_id" script="allocation_id"/>
+            <key name="order_id" script="order_id"/>
+            <key name="lot_id" script="lot_id"/>
+            <key name="quantity" script="quantity"/>
+        </generate>
+        <generate name="order_decisions" script="result['decisions']" count="{len(result['decisions'])}" distribution="ordered" target="mem">
+            <key name="order_id" script="order_id"/>
+            <nestedKey name="lot_reasons" script="lots"/>
+        </generate>
+    </generate>
+</setup>

@@ -1,0 +1,30 @@
+<setup>
+    <!-- Export: write each product to CSV, read back from the store. -->
+    <generate name="export_policy" source="mem" sourceEntity="policy" distribution="ordered" target="CSV" targetEntity="policy">
+        <key name="policy_id" script="policy_id"/>
+    </generate>
+    <generate name="export_products" source="mem" sourceEntity="products" distribution="ordered" target="CSV" targetEntity="products">
+        <key name="product_id" script="product_id"/>
+    </generate>
+    <generate name="export_customers" source="mem" sourceEntity="customers" distribution="ordered" target="CSV" targetEntity="customers">
+        <key name="customer_id" script="customer_id"/>
+    </generate>
+    <generate name="export_lots" source="mem" sourceEntity="lots" distribution="ordered" target="CSV" targetEntity="lots">
+        <key name="lot_id" script="lot_id"/>
+    </generate>
+    <generate name="export_orders" source="mem" sourceEntity="orders" distribution="ordered" target="CSV" targetEntity="orders">
+        <key name="order_id" script="order_id"/>
+    </generate>
+    <generate name="export_order_lots" source="mem" sourceEntity="order_lots" distribution="ordered" target="CSV" targetEntity="order_lots">
+        <key name="order_id" script="order_id"/>
+    </generate>
+    <generate name="export_order_decisions" source="mem" sourceEntity="order_decisions" distribution="ordered" target="CSV" targetEntity="order_decisions">
+        <key name="order_id" script="order_id"/>
+    </generate>
+    <generate name="export_plan" source="mem" sourceEntity="plan" distribution="ordered" target="CSV" targetEntity="plan">
+        <key name="plan_id" script="plan_id"/>
+    </generate>
+    <generate name="export_allocations" source="mem" sourceEntity="allocations" distribution="ordered" target="CSV" targetEntity="allocations">
+        <key name="allocation_id" script="allocation_id"/>
+    </generate>
+</setup>
