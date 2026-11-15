@@ -21,13 +21,13 @@ def test_readme_determinism_matrix_size_equals_the_workflow() -> None:
     workflow = (ROOT / ".github/workflows/main.yml").read_text(encoding="utf-8")
     matrix = workflow.split("runtime_determinism_matrix:", 1)[1]
     cells = len(re.findall(r"^\s+cell: ", matrix, re.MULTILINE))
-    stated = int(re.search(r"compared on (\d+) CI configurations", README).group(1))
+    stated = int(re.search(r"compares seeded output on (\d+) configurations", README).group(1))
 
     assert stated == cells
 
 
-def test_readme_scenario_count_is_a_true_lower_bound() -> None:
-    stated = int(re.search(r"More than (\d+) complete projects", README).group(1))
+def test_readme_scenario_count_is_not_above_the_repository() -> None:
+    stated = int(re.search(r"Each of the (\d+) \[scenarios\]", README).group(1))
     scenarios = [p for p in (ROOT / "tests_ce/scenarios").iterdir() if re.match(r"s\d+_", p.name)]
 
-    assert len(scenarios) > stated
+    assert len(scenarios) >= stated
