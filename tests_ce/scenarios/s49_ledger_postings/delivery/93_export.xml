@@ -1,0 +1,42 @@
+<setup>
+    <!-- Export: write each product to CSV, read back from the store. -->
+    <generate name="export_policy" source="mem" sourceEntity="policy" distribution="ordered" target="CSV" targetEntity="policy">
+        <key name="policy_id" script="policy_id"/>
+    </generate>
+    <generate name="export_customers" source="mem" sourceEntity="customers" distribution="ordered" target="CSV" targetEntity="customers">
+        <key name="customer_id" script="customer_id"/>
+    </generate>
+    <generate name="export_accounts" source="mem" sourceEntity="accounts" distribution="ordered" target="CSV" targetEntity="accounts">
+        <key name="account_id" script="account_id"/>
+    </generate>
+    <generate name="export_invoices" source="mem" sourceEntity="invoices" distribution="ordered" target="CSV" targetEntity="invoices">
+        <key name="invoice_id" script="invoice_id"/>
+    </generate>
+    <generate name="export_payments" source="mem" sourceEntity="payments" distribution="ordered" target="CSV" targetEntity="payments">
+        <key name="payment_id" script="payment_id"/>
+    </generate>
+    <generate name="export_invoice_amounts" source="mem" sourceEntity="invoice_amounts" distribution="ordered" target="CSV" targetEntity="invoice_amounts">
+        <key name="invoice_id" script="invoice_id"/>
+    </generate>
+    <generate name="export_plan" source="mem" sourceEntity="plan" distribution="ordered" target="CSV" targetEntity="plan">
+        <key name="plan_id" script="plan_id"/>
+    </generate>
+    <generate name="export_allocations" source="mem" sourceEntity="allocations" distribution="ordered" target="CSV" targetEntity="allocations">
+        <key name="allocation_id" script="allocation_id"/>
+    </generate>
+    <generate name="export_split_evidence" source="mem" sourceEntity="split_evidence" distribution="ordered" target="CSV" targetEntity="split_evidence">
+        <key name="split_id" script="split_id"/>
+    </generate>
+    <generate name="export_invoice_entries" source="mem" sourceEntity="invoice_entries" distribution="ordered" target="CSV" targetEntity="invoice_entries">
+        <key name="entry_id" script="entry_id"/>
+    </generate>
+    <generate name="export_invoice_lines" source="mem" sourceEntity="invoice_lines" distribution="ordered" target="CSV" targetEntity="invoice_lines">
+        <key name="line_id" script="line_id"/>
+    </generate>
+    <generate name="export_payment_entries" source="mem" sourceEntity="payment_entries" distribution="ordered" target="CSV" targetEntity="payment_entries">
+        <key name="entry_id" script="entry_id"/>
+    </generate>
+    <generate name="export_payment_lines" source="mem" sourceEntity="payment_lines" distribution="ordered" target="CSV" targetEntity="payment_lines">
+        <key name="line_id" script="line_id"/>
+    </generate>
+</setup>

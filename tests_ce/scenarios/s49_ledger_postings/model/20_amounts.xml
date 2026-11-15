@@ -1,0 +1,11 @@
+<setup>
+    <!-- Amounts: the tax of an invoice is rounded half up to a whole cent; the gross is net plus tax. -->
+    <generate name="invoice_amounts" source="mem" sourceEntity="invoices" distribution="ordered" target="mem">
+        <key name="invoice_id" script="invoice_id"/>
+        <key name="customer_id" script="customer_id"/>
+        <key name="invoice_date" script="invoice_date"/>
+        <key name="net_cents" script="net_cents"/>
+        <key name="tax_cents" script="(net_cents * tax_rate_bp + 5000) // 10000"/>
+        <key name="gross_cents" script="net_cents + tax_cents"/>
+    </generate>
+</setup>

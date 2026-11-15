@@ -1,0 +1,22 @@
+<setup>
+    <!-- Allocate: split each payment over the open invoices of its customer, in proportion to the open amounts (L6). -->
+    <generate name="plan" count="1" target="mem">
+        <variable name="invoices" source="mem" sourceEntity="invoice_amounts" storage="data" distribution="ordered"/>
+        <variable name="payments" source="mem" sourceEntity="payments" storage="data" distribution="ordered"/>
+        <variable name="result" script="allocate_payments(invoices, payments)"/>
+        <key name="plan_id" script="1"/>
+        <key name="outcome" script="result['outcome']"/>
+        <key name="message" script="result['message']"/>
+        <generate name="allocations" script="result['entries']" count="{len(result['entries'])}" distribution="ordered" target="mem">
+            <key name="allocation_id" script="allocation_id"/>
+            <key name="payment_id" script="payment_id"/>
+            <key name="invoice_id" script="invoice_id"/>
+            <key name="amount_cents" script="amount_cents"/>
+        </generate>
+        <generate name="split_evidence" script="result['splits']" count="{len(result['splits'])}" distribution="ordered" target="mem">
+            <key name="split_id" script="f'{payment_id}/{invoice_id}'"/>
+            <key name="floor_cents" script="floor_cents"/>
+            <key name="extra_cent" script="extra_cent"/>
+        </generate>
+    </generate>
+</setup>

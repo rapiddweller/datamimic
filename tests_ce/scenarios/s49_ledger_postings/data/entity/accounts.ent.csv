@@ -1,0 +1,5 @@
+account_id|kind|normal_side|currency|opened_on|closed_on|allow_negative
+A100|cash|debit|EUR|2026-01-01||no
+A200|receivable|debit|EUR|2026-01-01||no
+A300|revenue|credit|EUR|2026-01-01||no
+A310|tax_payable|credit|EUR|2026-01-01|2026-03-31|no

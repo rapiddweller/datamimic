@@ -1,0 +1,4 @@
+payment_id|customer_id|amount_cents|currency|paid_on
+P1|K1|3000|EUR|2026-03-12
+P2|K2|5950|EUR|2026-03-20
+P3|K1|2500|EUR|2026-03-31

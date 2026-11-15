@@ -1,0 +1,38 @@
+<setup>
+    <!-- Post: one journal entry for each invoice (receivable, revenue, tax) and one for each payment (cash, receivable). -->
+    <generate name="invoice_entries" source="mem" sourceEntity="invoice_amounts" distribution="ordered" target="mem">
+        <key name="invoice_id" script="invoice_id"/>
+        <key name="entry_id" script="f'JE-{invoice_id}'"/>
+        <key name="posted_on" script="invoice_date"/>
+        <key name="gross_cents" script="gross_cents"/>
+        <key name="net_cents" script="net_cents"/>
+        <key name="tax_cents" script="tax_cents"/>
+        <generate name="invoice_lines" script="[{'line_no': 1, 'account_id': 'A200', 'debit_cents': gross_cents, 'credit_cents': 0}, {'line_no': 2, 'account_id': 'A300', 'debit_cents': 0, 'credit_cents': net_cents}, {'line_no': 3, 'account_id': 'A310', 'debit_cents': 0, 'credit_cents': tax_cents}]" count="3" distribution="ordered" target="mem">
+            <key name="line_id" script="f'{parent.entry_id}/{line_no}'"/>
+            <key name="entry_id" script="parent.entry_id"/>
+            <key name="account_id" script="account_id"/>
+            <key name="debit_cents" script="debit_cents"/>
+            <key name="credit_cents" script="credit_cents"/>
+            <key name="posted_on" script="parent.posted_on"/>
+            <key name="currency" script="'EUR'"/>
+        </generate>
+    </generate>
+    <generate name="payment_entries" source="mem" sourceEntity="payments" distribution="ordered" target="mem">
+        <variable name="allocations" source="mem" sourceEntity="allocations" storage="data" distribution="ordered"/>
+        <key name="payment_id" script="payment_id"/>
+        <key name="entry_id" script="f'JE-{payment_id}'"/>
+        <key name="posted_on" script="paid_on"/>
+        <key name="payment_currency" script="currency"/>
+        <key name="amount_cents" script="amount_cents"/>
+        <variable name="shares" script="[row for row in allocations if row.payment_id == payment_id]"/>
+        <generate name="payment_lines" script="[{'line_no': 1, 'account_id': 'A100', 'debit_cents': amount_cents, 'credit_cents': 0}] + [{'line_no': position + 2, 'account_id': 'A200', 'debit_cents': 0, 'credit_cents': shares[position].amount_cents} for position in range(len(shares))]" count="{1 + len(shares)}" distribution="ordered" target="mem">
+            <key name="line_id" script="f'{parent.entry_id}/{line_no}'"/>
+            <key name="entry_id" script="parent.entry_id"/>
+            <key name="account_id" script="account_id"/>
+            <key name="debit_cents" script="debit_cents"/>
+            <key name="credit_cents" script="credit_cents"/>
+            <key name="posted_on" script="parent.posted_on"/>
+            <key name="currency" script="parent.payment_currency"/>
+        </generate>
+    </generate>
+</setup>

@@ -1,0 +1,35 @@
+<setup>
+    <!-- Prepare: read each data file and give each column its type. -->
+    <generate name="policy" count="1" target="mem">
+        <!-- The last day on which a line may be posted (L6); a missing or invalid date stops the run. -->
+        <key name="policy_id" script="1"/>
+        <key name="period_close" script="datetime.date.fromisoformat(period_close)"/>
+    </generate>
+    <generate name="customers" source="data/entity/customers.ent.csv" distribution="ordered" target="mem">
+        <key name="customer_id" script="customer_id"/>
+    </generate>
+    <generate name="accounts" source="data/entity/accounts.ent.csv" distribution="ordered" target="mem">
+        <key name="account_id" script="account_id"/>
+        <key name="kind" script="kind"/>
+        <key name="normal_side" script="normal_side"/>
+        <key name="currency" script="currency"/>
+        <key name="opened_on" script="datetime.date.fromisoformat(opened_on)"/>
+        <!-- An empty cell is an account that is not closed; the closing day itself is still open (L2). -->
+        <key name="closed_on" script="None if closed_on == '' else datetime.date.fromisoformat(closed_on)"/>
+        <key name="allow_negative" script="allow_negative"/>
+    </generate>
+    <generate name="invoices" source="data/entity/invoices.ent.csv" distribution="ordered" target="mem">
+        <key name="invoice_id" script="invoice_id"/>
+        <key name="customer_id" script="customer_id"/>
+        <key name="net_cents" script="int(net_cents)"/>
+        <key name="tax_rate_bp" script="int(tax_rate_bp)"/>
+        <key name="invoice_date" script="datetime.date.fromisoformat(invoice_date)"/>
+    </generate>
+    <generate name="payments" source="data/entity/payments.ent.csv" distribution="ordered" target="mem">
+        <key name="payment_id" script="payment_id"/>
+        <key name="customer_id" script="customer_id"/>
+        <key name="amount_cents" script="int(amount_cents)"/>
+        <key name="currency" script="currency"/>
+        <key name="paid_on" script="datetime.date.fromisoformat(paid_on)"/>
+    </generate>
+</setup>
