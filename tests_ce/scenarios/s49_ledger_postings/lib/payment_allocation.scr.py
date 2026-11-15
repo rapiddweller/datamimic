@@ -43,7 +43,12 @@ def allocate_payments(invoices: Sequence[Row], payments: Sequence[Row]) -> dict[
                 f"payment {payment['payment_id']} of {payment['amount_cents']} cents is above the "
                 f"{total_open} cents that {payment['customer_id']} owes on {payment['paid_on']}"
             )
-            return {"outcome": Outcome.INFEASIBLE.value, "message": f"no allocation exists: {message}", "entries": [], "splits": []}
+            return {
+                "outcome": Outcome.INFEASIBLE.value,
+                "message": f"no allocation exists: {message}",
+                "entries": [],
+                "splits": [],
+            }
         floors = {
             invoice["invoice_id"]: payment["amount_cents"] * open_cents[invoice["invoice_id"]] // total_open
             for invoice in due

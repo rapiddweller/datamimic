@@ -51,12 +51,12 @@ directory for each run.
 | Rule | Decided in | Checked in the output |
 |---|---|---|
 | L1 each entry balances | the lines of step 40 | `entry_debits == entry_credits` on the line checks |
-| L2 the account is open on the posting day; the closing day is open | step 40 and `accounts.ent.csv` | `days_since_open >= 0 and (days_to_close == None or days_to_close >= 0)` |
+| L2 the account is open on the posting day; the closing day is open | step 40 and `accounts.ent.csv` | `days_since_open >= 0`, `days_to_close == None or days_to_close >= 0` |
 | L3 a line has one positive side | step 40 | `one_sided` |
-| L4 the currency of a line is the currency of its account | step 40 | `currency_matches` |
-| L5 the balance of an account is not below zero on its normal side | the order of the lines | `allow_negative == 'yes' or balance_after >= 0` |
-| L6 a payment is split in proportion to the open amounts, to the cent; it pays only invoices dated on or before it | `allocate_payments` | `payment_allocated == payment_amount`, `invoice_allocated <= invoice_gross`, `days_after_invoice >= 0` on `allocation_checks` |
-| L7 the tax is rounded to the nearest cent, half up; gross is net plus tax | step 20 | `tax_error_tenth_basis <= 5000 and gross_is_net_plus_tax`; the pin `tax_cents == 200` for I1 |
+| L4 the currency of a line is the currency of its account; an invoice has a currency | `invoices.ent.csv` and step 40 | `currency_matches` |
+| L5 the balance of an account is not below zero on its normal side; on one day the invoices post before the payments | `posting_rank` of the lines (1 invoice, 2 payment) | `allow_negative == 'yes' or balance_after >= 0`, with the lines in order day, `posting_rank`, line id |
+| L6 a payment is split in proportion to the open amounts, to the cent; it pays only invoices dated on or before it | `allocate_payments` | on `allocation_checks`: `payment_allocated == payment_amount`, `proportion_error < due_total`, `same_customer`, `days_after_invoice >= 0`, `invoice_allocated <= invoice_gross`; the pins AL01 = 719 and AL02 = 2281 |
+| L7 the tax is rounded to the nearest cent, half up; gross is net plus tax | step 20 | `tax_error_tenth_basis <= 5000`, `gross_is_net_plus_tax`; the pin `tax_cents == 200` for I1 |
 | L8 no line after the period close; the close day is open | step 40 and `conf/policy.properties` | `days_to_period_close >= 0` |
 
 The trial balance (`total_debits == total_credits` on `ledger_checks`) follows from L1 and is measured on all lines.
@@ -102,11 +102,14 @@ Each negative is one text patch in `scenario.json`. Build rejects the variant wi
 |---|---|
 | `l1_gross_off_by_one_cent` | The gross is one cent above net plus tax: entries do not balance. |
 | `l2_account_closed_a_day_early` | A310 closes on 2026-03-30; I3 posts to it on 03-31. |
+| `l2_account_not_yet_open` | A200 opens on 2026-03-05; I1 posts to it on 03-02. |
 | `l3_line_on_both_sides` | The revenue line has a debit of 1 and a credit. |
-| `l4_payment_currency_differs` | P3 is in USD; the cash account is in EUR. |
-| `l5_invoice_posted_after_payment_on_same_day` | The invoice entry id sorts after the payment entry id on 2026-03-31: the receivable goes below zero. |
+| `l4_payment_currency_differs`, `l4_invoice_currency_differs` | P3 or I2 is in USD; the accounts are in EUR. |
+| `l5_payments_post_before_invoices` | The invoice lines get `posting_rank` 3, after the payment lines: on 2026-03-31 the receivable goes below zero. |
 | `l6_remainder_cents_dropped` | The left cents go to nobody: P1 allocates 2999 of 3000. |
 | `l6_payment_before_invoice_date` | The allocation ignores the invoice date: P1 pays I3 before it exists. |
+| `l6_extra_cent_to_smallest_remainder` | The extra cent goes to the smallest fraction: AL01 is 718, not 719. |
+| `l6_other_customers_invoices_paid` | The allocation ignores the customer: P2 would pay invoices of K1. |
 | `l7_tax_truncated` | The tax rounds down: I1 has 199 instead of 200. |
 | `l8_invoice_after_close` | I3 is dated 2026-04-01, after the period close. |
 | `infeasible_overpayment` | P2 is 6000 and I4 is 5950. |
@@ -117,4 +120,5 @@ Each negative is one text patch in `scenario.json`. Build rejects the variant wi
 
 - Every product that goes to the store needs a readback and an identifier, so step 93 exports each of them.
 - The ledger has one receivable account for all customers; L5 checks that account, not the balance of each customer.
-- The invoice lines and the payment lines are two products, so each line rule is a check product twice.
+- The lines of the invoice entries and the payment entries are two products. Step 40 joins them in the product `ledger_lines`, so each line rule is one check.
+- `invoice_allocated <= invoice_gross` has no negative of its own: the split cannot give more than the open amount without making a later payment infeasible.

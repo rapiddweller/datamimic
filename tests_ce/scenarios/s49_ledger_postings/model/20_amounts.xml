@@ -4,6 +4,7 @@
         <key name="invoice_id" script="invoice_id"/>
         <key name="customer_id" script="customer_id"/>
         <key name="invoice_date" script="invoice_date"/>
+        <key name="currency" script="currency"/>
         <key name="net_cents" script="net_cents"/>
         <key name="tax_cents" script="(net_cents * tax_rate_bp + 5000) // 10000"/>
         <key name="gross_cents" script="net_cents + tax_cents"/>

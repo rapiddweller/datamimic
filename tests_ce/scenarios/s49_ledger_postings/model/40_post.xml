@@ -4,6 +4,7 @@
         <key name="invoice_id" script="invoice_id"/>
         <key name="entry_id" script="f'JE-{invoice_id}'"/>
         <key name="posted_on" script="invoice_date"/>
+        <key name="invoice_currency" script="currency"/>
         <key name="gross_cents" script="gross_cents"/>
         <key name="net_cents" script="net_cents"/>
         <key name="tax_cents" script="tax_cents"/>
@@ -14,7 +15,9 @@
             <key name="debit_cents" script="debit_cents"/>
             <key name="credit_cents" script="credit_cents"/>
             <key name="posted_on" script="parent.posted_on"/>
-            <key name="currency" script="'EUR'"/>
+            <key name="currency" script="parent.invoice_currency"/>
+            <!-- On one day the invoices post before the payments (L5). -->
+            <key name="posting_rank" script="1"/>
         </generate>
     </generate>
     <generate name="payment_entries" source="mem" sourceEntity="payments" distribution="ordered" target="mem">
@@ -33,6 +36,23 @@
             <key name="credit_cents" script="credit_cents"/>
             <key name="posted_on" script="parent.posted_on"/>
             <key name="currency" script="parent.payment_currency"/>
+            <key name="posting_rank" script="2"/>
+        </generate>
+    </generate>
+    <!-- The ledger: all lines of the invoice entries and the payment entries in one product, for the checks. -->
+    <generate name="ledger" count="1" target="mem">
+        <variable name="invoice_lines" source="mem" sourceEntity="invoice_lines" storage="data" distribution="ordered"/>
+        <variable name="payment_lines" source="mem" sourceEntity="payment_lines" storage="data" distribution="ordered"/>
+        <key name="ledger_id" script="1"/>
+        <generate name="ledger_lines" script="list(invoice_lines) + list(payment_lines)" count="{len(invoice_lines) + len(payment_lines)}" distribution="ordered" target="mem">
+            <key name="line_id" script="line_id"/>
+            <key name="entry_id" script="entry_id"/>
+            <key name="account_id" script="account_id"/>
+            <key name="debit_cents" script="debit_cents"/>
+            <key name="credit_cents" script="credit_cents"/>
+            <key name="posted_on" script="posted_on"/>
+            <key name="currency" script="currency"/>
+            <key name="posting_rank" script="posting_rank"/>
         </generate>
     </generate>
 </setup>
