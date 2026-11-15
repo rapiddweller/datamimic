@@ -13,7 +13,7 @@ Without a seed, generated data differs on every run, so a regression test cannot
 - The Python facade `generate_domain(...)` returns `determinism_proof.content_hash`: the same hash means the same data.
 - The committed replay model covers every registered literal generator except the database-backed `SequenceTableGenerator`, plus the supported dynamic script-global families. It is replayed in two separate processes on each CI run ([`test_determinism_seed_scenarios`](https://github.com/rapiddweller/datamimic/tree/development/tests_ce/integration_tests/test_determinism_seed_scenarios)).
 
-The CE seeded-runtime guarantee is scoped to the tested profiles. CI runs seven x64 cells: `ubuntu-22.04` with Python 3.11, 3.12, and 3.13 in `Etc/UTC`; Python 3.11 in `America/Los_Angeles`; and `windows-latest` with Python 3.11 in `UTC` and `Pacific Standard Time`. These six cells use `uv sync --resolution highest`; a representative `ubuntu-22.04`/Python 3.11/`Etc/UTC` cell uses `uv sync --resolution lowest-direct`. Each cell records its exact interpreter and installed package versions in the uploaded artifact and job log. Other Python versions and dependency resolutions are outside this matrix. `uv.lock` is intentionally untracked. The committed goldens and cross-cell fan-in, rather than production dependency pinning, define the byte-identical gate.
+The CE seeded-runtime guarantee is scoped to the tested profiles. CI runs eight x64 cells: `ubuntu-22.04` with Python 3.11, 3.12, 3.13, and 3.14 in `Etc/UTC`; Python 3.11 in `America/Los_Angeles`; and `windows-latest` with Python 3.11 in `UTC` and `Pacific Standard Time`. These seven cells use `uv sync --resolution highest`; a representative `ubuntu-22.04`/Python 3.11/`Etc/UTC` cell uses `uv sync --resolution lowest-direct`. Each cell records its exact interpreter and installed package versions in the uploaded artifact and job log. Other Python versions and dependency resolutions are outside this matrix. `uv.lock` is intentionally untracked. The committed goldens and cross-cell fan-in, rather than production dependency pinning, define the byte-identical gate.
 
 The DATAMIMIC Enterprise Platform behavior is outside this CE evidence.
 
@@ -48,7 +48,7 @@ assert card_a.bic == card_b.bic and card_a.card_number == card_b.card_number
 
 ## Determinism evidence
 
-The CI gate compares seeded runtime manifests and committed goldens across the seven
+The CI gate compares seeded runtime manifests and committed goldens across the eight
 matrix cells above. Its coverage is:
 
 | Scope | Evidence |

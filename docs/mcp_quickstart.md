@@ -5,7 +5,7 @@ Code: install the plugin and the `datamimic_*` tools appear. Use this page for a
 without the plugin, or to run the server yourself. The CLI works without it.
 
 CE 5.0 is not on PyPI yet. Until 5.0.0, install it from GitHub `development` in a
-Python 3.11 to 3.13 environment, with the MCP extra:
+Python 3.11 to 3.14 environment, with the MCP extra:
 
 ```bash
 python -m pip install "datamimic-ce[mcp] @ git+https://github.com/rapiddweller/datamimic@development"
@@ -15,7 +15,7 @@ datamimic-mcp --transport stdio
 Without a local environment, `uvx` runs the same command in an isolated one:
 
 ```bash
-uvx --python ">=3.11,<3.14" --from "datamimic-ce[mcp] @ git+https://github.com/rapiddweller/datamimic@development" datamimic-mcp --transport stdio
+uvx --python ">=3.11,<3.15" --from "datamimic-ce[mcp] @ git+https://github.com/rapiddweller/datamimic@development" datamimic-mcp --transport stdio
 ```
 
 Both transports use the same typed Authoring application. Every tool that works on
