@@ -1,0 +1,6 @@
+<setup rngSeed="50">
+    <database id="shop" system="postgresql"/>
+    <include uri="delivery/90_clear.xml"/>
+    <include uri="delivery/91_load.xml"/>
+    <include uri="delivery/92_readback.xml"/>
+</setup>

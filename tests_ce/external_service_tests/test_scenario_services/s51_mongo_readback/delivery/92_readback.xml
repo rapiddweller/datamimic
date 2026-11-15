@@ -1,0 +1,10 @@
+<setup>
+    <!-- Purpose: read the documents back and check their values in the run. The literal count="12" works around #493 (DM211 in an included step): remove it when #493 is fixed. -->
+    <generate name="orders_back" type="dm_s51_orders" source="mongodb" distribution="ordered" count="12" target="">
+        <key name="id" script="this.id"/>
+        <key name="status" script="this.status"/>
+        <key name="amount_cents" script="this.amount_cents"/>
+        <assert condition="this.status in ('new', 'paid', 'shipped')" message="The collection holds a status that the load does not write"/>
+        <assert condition="100 &lt;= this.amount_cents &lt;= 9900" message="The collection holds an amount that the load does not write"/>
+    </generate>
+</setup>

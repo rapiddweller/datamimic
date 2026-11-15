@@ -1,0 +1,18 @@
+<setup>
+    <!-- Purpose: read the table back and check the values in the run; the test compares each row with its Mongo document. -->
+    <generate name="orders_back" source="warehouse" selector="SELECT order_id, amount_cents, status FROM dm_x6_orders ORDER BY order_id" distribution="ordered" count="12" target="">
+        <key name="order_id" script="this.order_id"/>
+        <key name="amount_cents" script="this.amount_cents"/>
+        <key name="status" script="this.status"/>
+        <assert condition="this.status in ('new', 'paid', 'shipped')" message="The table holds a status that the transform does not write"/>
+        <assert condition="100 &lt;= this.amount_cents &lt;= 9999999" message="The table holds an amount that the load does not write"/>
+    </generate>
+    <!-- The amount sum belongs to rngSeed 52: a new seed needs a new sum. -->
+    <generate name="orders_check" source="warehouse" selector="SELECT COUNT(*) AS total, SUM(order_id) AS id_sum, SUM(amount_cents) AS amount_sum, COUNT(DISTINCT status) AS statuses FROM dm_x6_orders" distribution="ordered" count="1" target="">
+        <key name="total" script="this.total"/>
+        <key name="id_sum" script="this.id_sum"/>
+        <key name="amount_sum" script="this.amount_sum"/>
+        <key name="statuses" script="this.statuses"/>
+        <assert condition="this.total == 12 and this.id_sum == 78 and this.amount_sum == 33706924 and this.statuses == 3" message="The table does not hold the 12 transformed orders"/>
+    </generate>
+</setup>

@@ -1,0 +1,20 @@
+{
+  "version": "5.0",
+  "environment_bindings": [
+    {"environment": "shop", "family": "database"}
+  ],
+  "product_roles": [
+    {"product": "orders", "field": "id", "role": {"kind": "identifier"}},
+    {"product": "orders_back", "field": "id", "role": {"kind": "identifier"}}
+  ],
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "orders"}, "count": 12},
+    {"kind": "unique", "subject": {"kind": "product", "product": "orders"}, "field": "id"},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "orders"}, "field": "status", "values": ["new", "paid", "shipped"]},
+    {"kind": "range", "subject": {"kind": "product", "product": "orders"}, "field": "amount_cents", "minimum": 100, "maximum": 9900},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "orders_back"}, "count": 12},
+    {"kind": "unique", "subject": {"kind": "product", "product": "orders_back"}, "field": "id"},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "orders_back"}, "field": "status", "values": ["new", "paid", "shipped"]},
+    {"kind": "range", "subject": {"kind": "product", "product": "orders_back"}, "field": "amount_cents", "minimum": 100, "maximum": 9900}
+  ]
+}

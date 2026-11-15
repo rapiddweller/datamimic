@@ -1,0 +1,14 @@
+DROP TABLE IF EXISTS dm_x6_orders;
+CREATE TABLE dm_x6_orders (order_id INTEGER PRIMARY KEY, amount_cents INTEGER, status TEXT);
+INSERT INTO dm_x6_orders VALUES (1, 1958200, 'paid');
+INSERT INTO dm_x6_orders VALUES (2, 738508, 'new');
+INSERT INTO dm_x6_orders VALUES (3, 2000645, 'new');
+INSERT INTO dm_x6_orders VALUES (4, 2223413, 'paid');
+INSERT INTO dm_x6_orders VALUES (5, 437869, 'shipped');
+INSERT INTO dm_x6_orders VALUES (6, 9627460, 'shipped');
+INSERT INTO dm_x6_orders VALUES (7, 2053195, 'paid');
+INSERT INTO dm_x6_orders VALUES (8, 1270799, 'paid');
+INSERT INTO dm_x6_orders VALUES (9, 505809, 'shipped');
+INSERT INTO dm_x6_orders VALUES (10, 398022, 'shipped');
+INSERT INTO dm_x6_orders VALUES (11, 4053937, 'new');
+INSERT INTO dm_x6_orders VALUES (12, 8439067, 'paid');

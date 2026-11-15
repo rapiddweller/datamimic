@@ -1,0 +1,14 @@
+DROP TABLE IF EXISTS dm_s50_orders;
+CREATE TABLE dm_s50_orders (id INTEGER PRIMARY KEY, status TEXT, amount_cents INTEGER);
+INSERT INTO dm_s50_orders VALUES (1, 'shipped', 8539);
+INSERT INTO dm_s50_orders VALUES (2, 'new', 1077);
+INSERT INTO dm_s50_orders VALUES (3, 'new', 8547);
+INSERT INTO dm_s50_orders VALUES (4, 'shipped', 9223);
+INSERT INTO dm_s50_orders VALUES (5, 'shipped', 4471);
+INSERT INTO dm_s50_orders VALUES (6, 'new', 2308);
+INSERT INTO dm_s50_orders VALUES (7, 'new', 5183);
+INSERT INTO dm_s50_orders VALUES (8, 'paid', 3461);
+INSERT INTO dm_s50_orders VALUES (9, 'paid', 7753);
+INSERT INTO dm_s50_orders VALUES (10, 'new', 1408);
+INSERT INTO dm_s50_orders VALUES (11, 'new', 7855);
+INSERT INTO dm_s50_orders VALUES (12, 'new', 4429);
