@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path, PurePosixPath
 from typing import Annotated
@@ -12,6 +13,7 @@ from pydantic import ValidationError
 from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.domain.capabilities import CapabilityDomain
 from datamimic_ce.authoring.domain.dm_json import DmJsonDocumentV1
+from datamimic_ce.authoring.domain.project_run import ProjectParam, ProjectRunRequest, ProjectRunResult
 from datamimic_ce.authoring.domain.requests import (
     PROJECT_ENTRY_PATH,
     AuthoringSchemaId,
@@ -203,6 +205,39 @@ def build(
     application = create_authoring_application(workspace_root=project, descriptor_path=PROJECT_ENTRY_PATH)
     result = application.build()
     emit_authoring(result, output_format, exit_code=0 if isinstance(result, ReadyBuild) else 1)
+
+
+@app.command("run-project", help="Build the project, then run it for its real data.")
+def run_project(
+    project: Annotated[
+        Path,
+        typer.Argument(exists=True, file_okay=False, readable=True, help="Project directory holding datamimic.xml."),
+    ] = Path("."),
+    allow_side_effects: Annotated[bool, typer.Option("--allow-side-effects")] = False,
+    params: Annotated[
+        list[str] | None, typer.Option("--param", help="Runtime property NAME=VALUE; repeatable.")
+    ] = None,
+    timeout: Annotated[int, typer.Option("--timeout")] = 600,
+    output_format: OutputFormat = CliOutputFormat.JSON,
+) -> None:
+    try:
+        pairs = [re.split("=", item, maxsplit=1) for item in params or []]
+        if any(len(pair) != 2 for pair in pairs):
+            raise ValueError("--param needs NAME=VALUE")
+        request = ProjectRunRequest(
+            allow_side_effects=allow_side_effects,
+            params=tuple(ProjectParam(name=pair[0], value=pair[1]) for pair in pairs),
+            timeout_seconds=timeout,
+        )
+    except (ValueError, ValidationError):
+        emit_authoring(
+            ProjectRunResult.from_input_error("Run options are invalid: check --param NAME=VALUE and --timeout."),
+            output_format,
+            exit_code=1,
+        )
+    application = create_authoring_application(workspace_root=project, descriptor_path=PROJECT_ENTRY_PATH)
+    result = application.run_project(request)
+    emit_authoring(result, output_format, exit_code=0 if result.outcome == "completed" else 1)
 
 
 @app.command("lint")

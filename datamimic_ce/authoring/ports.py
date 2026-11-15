@@ -13,6 +13,7 @@ from typing import Protocol
 from .domain.capabilities import DslCatalogSnapshot
 from .domain.diagnostics import Diagnostic
 from .domain.dm_json import DmJsonCompilation, DmJsonDocumentV1
+from .domain.project_run import ExternalEffect, ProjectParam, ProjectRunExecution
 from .domain.reference import ReferenceResult
 from .domain.requests import (
     BoundedExecutionEvidence,
@@ -52,3 +53,13 @@ class BoundedExecutionPolicy(Protocol):
     def diagnostics(
         self, document: DmJsonDocumentV1, project: tuple[DmJsonDocumentV1, ...] = ()
     ) -> tuple[Diagnostic, ...]: ...
+
+
+class ExternalEffectsDetector(Protocol):
+    def effects(self) -> tuple[ExternalEffect, ...]:
+        """The statements of the bound project that reach outside its directory."""
+        ...
+
+
+class ProjectRunner(Protocol):
+    def run(self, params: tuple[ProjectParam, ...], timeout_seconds: int) -> ProjectRunExecution: ...

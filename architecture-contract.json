@@ -131,13 +131,21 @@
         "datamimic_ce.authoring.domain.requests:RejectedBuild",
         "datamimic_ce.authoring.domain.requests:ReadyBuild",
         "datamimic_ce.authoring.domain.requests:BuildResult",
+        "datamimic_ce.authoring.domain.project_run:ExternalEffect",
+        "datamimic_ce.authoring.domain.project_run:ExternalEffectKind",
+        "datamimic_ce.authoring.domain.project_run:ProjectArtifact",
+        "datamimic_ce.authoring.domain.project_run:ProjectParam",
+        "datamimic_ce.authoring.domain.project_run:ProjectRunRequest",
+        "datamimic_ce.authoring.domain.project_run:ProjectRunResult",
         "datamimic_ce.authoring.domain.requests:DEFAULT_AUTHORING_DESCRIPTOR_PATH",
         "datamimic_ce.authoring.ports:DmJsonDescriptorContract",
         "datamimic_ce.authoring.ports:DslCatalog",
         "datamimic_ce.authoring.ports:DescriptorValidator",
         "datamimic_ce.authoring.ports:ProjectFiles",
         "datamimic_ce.authoring.ports:BoundedExecutor",
-        "datamimic_ce.authoring.ports:BoundedExecutionPolicy"
+        "datamimic_ce.authoring.ports:BoundedExecutionPolicy",
+        "datamimic_ce.authoring.ports:ExternalEffectsDetector",
+        "datamimic_ce.authoring.ports:ProjectRunner"
       ],
       "decided_by": "agent"
     },

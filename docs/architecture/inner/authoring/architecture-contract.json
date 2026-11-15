@@ -19,8 +19,16 @@
         "responsibility": "After rule lint succeeds, the adapter runs the engine parser as a second validation authority."
       },
       {
+        "path": "datamimic_ce/authoring/adapters/external_effects.py",
+        "responsibility": "Finds the statements of a project and its included steps that reach outside the project directory."
+      },
+      {
         "path": "datamimic_ce/authoring/adapters/linter.py",
         "responsibility": "The adapter loads XML, aggregates registered diagnostics, and calls the engine parser only when rule checks pass."
+      },
+      {
+        "path": "datamimic_ce/authoring/adapters/project_runner.py",
+        "responsibility": "Runs the project entry in a child process and reports its exit, log tail and written files."
       },
       {
         "path": "datamimic_ce/authoring/adapters/xml_loader.py",
@@ -29,6 +37,10 @@
       {
         "path": "datamimic_ce/authoring/application/__init__.py",
         "responsibility": "The package marks the authoring use cases without adding execution logic."
+      },
+      {
+        "path": "datamimic_ce/authoring/application/project_run.py",
+        "responsibility": "Coordinates Build, the external-effect check and one real project run."
       },
       {
         "path": "datamimic_ce/authoring/domain/__init__.py",
@@ -41,6 +53,10 @@
       {
         "path": "datamimic_ce/authoring/domain/diagnostics.py",
         "responsibility": "Defines canonical safe diagnostics, error identities and typed Build/XML rule catalog entries."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/project_run.py",
+        "responsibility": "Defines the request and result records of a real project run."
       },
       {
         "path": "datamimic_ce/authoring/domain/rule_catalog.py",
@@ -313,6 +329,7 @@
         "datamimic_ce.authoring.domain.environment_bindings",
         "datamimic_ce.authoring.domain.environments",
         "datamimic_ce.authoring.domain.expectations",
+        "datamimic_ce.authoring.domain.project_run",
         "datamimic_ce.authoring.domain.proof",
         "datamimic_ce.authoring.domain.reference",
         "datamimic_ce.authoring.domain.requests",
@@ -395,6 +412,8 @@
         "datamimic_ce.authoring.adapters.bounded_executor:CeBoundedExecutor",
         "datamimic_ce.authoring.adapters.catalog:CeDslCatalog",
         "datamimic_ce.authoring.adapters.dm_json_codec:CeDmJsonCodec",
+        "datamimic_ce.authoring.adapters.external_effects:CeExternalEffectsDetector",
+        "datamimic_ce.authoring.adapters.project_runner:CeProjectRunner",
         "datamimic_ce.authoring.adapters.validator:CeDescriptorValidator",
         "datamimic_ce.authoring.adapters.workspace:AuthoringWorkspaceContext"
       ],
@@ -468,7 +487,9 @@
         "datamimic_ce.authoring.ports:DescriptorValidator",
         "datamimic_ce.authoring.ports:BoundedExecutor",
         "datamimic_ce.authoring.ports:BoundedExecutionPolicy",
-        "datamimic_ce.authoring.ports:ProjectFiles"
+        "datamimic_ce.authoring.ports:ProjectFiles",
+        "datamimic_ce.authoring.ports:ExternalEffectsDetector",
+        "datamimic_ce.authoring.ports:ProjectRunner"
       ],
       "decided_by": "agent"
     }
@@ -525,7 +546,9 @@
         "datamimic_ce.authoring.adapters.dm_json_codec",
         "datamimic_ce.authoring.adapters.dryrun",
         "datamimic_ce.authoring.adapters.engine_check",
+        "datamimic_ce.authoring.adapters.external_effects",
         "datamimic_ce.authoring.adapters.linter",
+        "datamimic_ce.authoring.adapters.project_runner",
         "datamimic_ce.authoring.adapters.validator",
         "datamimic_ce.authoring.adapters.windows_snapshot",
         "datamimic_ce.authoring.adapters.workspace",
@@ -544,6 +567,7 @@
       "allowed_children": [
         "datamimic_ce.authoring.application.app",
         "datamimic_ce.authoring.application.build",
+        "datamimic_ce.authoring.application.project_run",
         "datamimic_ce.authoring.application.raw_xml",
         "datamimic_ce.authoring.application.schema",
         "datamimic_ce.authoring.application.use_cases"
@@ -573,6 +597,7 @@
         "datamimic_ce.authoring.domain.environment_bindings",
         "datamimic_ce.authoring.domain.environments",
         "datamimic_ce.authoring.domain.expectations",
+        "datamimic_ce.authoring.domain.project_run",
         "datamimic_ce.authoring.domain.proof",
         "datamimic_ce.authoring.domain.reference",
         "datamimic_ce.authoring.domain.requests",

@@ -2470,6 +2470,14 @@
       "reason": "Normalizes and converts DM JSON and XML without losing semantics using the CE element registry."
     },
     {
+      "target": "authoring/adapters/external_effects.py",
+      "reason": "Finds the statements of a project and its included steps that reach outside the project directory."
+    },
+    {
+      "target": "authoring/adapters/project_runner.py",
+      "reason": "Runs the project entry in a child process and reports its exit, log tail and written files."
+    },
+    {
       "target": "authoring/adapters/validator.py",
       "reason": "Validates in-memory XML through the normal CE parser and projects raw lint diagnostics with logical paths."
     },
@@ -2488,6 +2496,10 @@
     {
       "target": "authoring/application/build.py",
       "reason": "Coordinates one Build transaction over normalized documents, full capture and all requested proof gates."
+    },
+    {
+      "target": "authoring/application/project_run.py",
+      "reason": "Coordinates Build, the external-effect check and one real project run."
     },
     {
       "target": "authoring/application/raw_xml.py",
@@ -2556,6 +2568,10 @@
     {
       "target": "authoring/domain/expectations.py",
       "reason": "Defines the closed expectation and subject vocabulary shared by Build and acceptance."
+    },
+    {
+      "target": "authoring/domain/project_run.py",
+      "reason": "Defines the request and result records of a real project run."
     },
     {
       "target": "authoring/domain/proof.py",
@@ -3228,6 +3244,14 @@
       "responsibility": "Normalizes and converts DM JSON and XML without losing semantics using the CE element registry."
     },
     {
+      "target": "authoring/adapters/external_effects.py",
+      "responsibility": "Finds the statements of a project and its included steps that reach outside the project directory."
+    },
+    {
+      "target": "authoring/adapters/project_runner.py",
+      "responsibility": "Runs the project entry in a child process and reports its exit, log tail and written files."
+    },
+    {
       "target": "authoring/adapters/validator.py",
       "responsibility": "Validates in-memory XML through the normal CE parser and projects raw lint diagnostics with logical paths."
     },
@@ -3246,6 +3270,10 @@
     {
       "target": "authoring/application/build.py",
       "responsibility": "Coordinates one Build transaction over normalized documents, full capture and all requested proof gates."
+    },
+    {
+      "target": "authoring/application/project_run.py",
+      "responsibility": "Coordinates Build, the external-effect check and one real project run."
     },
     {
       "target": "authoring/application/raw_xml.py",
@@ -3310,6 +3338,10 @@
     {
       "target": "authoring/domain/expectations.py",
       "responsibility": "Defines the closed expectation and subject vocabulary shared by Build and acceptance."
+    },
+    {
+      "target": "authoring/domain/project_run.py",
+      "responsibility": "Defines the request and result records of a real project run."
     },
     {
       "target": "authoring/domain/proof.py",
