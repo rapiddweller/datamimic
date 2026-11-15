@@ -13,6 +13,7 @@ from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.adapters.bounded_executor import CeBoundedExecutor
 from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
 from datamimic_ce.authoring.domain.capabilities import CapabilityDomain
+from datamimic_ce.authoring.domain.coverage import CoverageGapKind
 from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId
 from datamimic_ce.authoring.domain.proof import VerificationGateStatus
 from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest
@@ -37,7 +38,8 @@ def _rows(result) -> list[dict]:
 @pytest.mark.parametrize("filename", ["library_inline.xml", "library_unseeded.xml"])
 def test_library_function_reaches_ready_without_replay_when_unseeded(tmp_path: Path, filename: str) -> None:
     result = _build(tmp_path, filename)
-    assert result.outcome == "ready", result
+    assert result.outcome == "ready_with_gaps", result
+    assert CoverageGapKind.SEEDED in result.coverage.open_gaps
     assert [row["person_id"] for row in _rows(result)] == [2]
     assert result.verification.deterministic_replay.status is VerificationGateStatus.NOT_REQUESTED
 

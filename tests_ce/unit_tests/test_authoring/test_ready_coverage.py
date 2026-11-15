@@ -1,0 +1,243 @@
+# DATAMIMIC
+# Copyright (c) 2023-2026 Rapiddweller Asia Co., Ltd.
+# This software is licensed under the MIT License. See LICENSE.
+
+"""Build names what it did not check (ready_with_gaps) and refuses a project that checks nothing."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path, PurePosixPath
+
+import pytest
+from typer.testing import CliRunner
+
+from datamimic_ce.authoring import create_authoring_application
+from datamimic_ce.authoring.domain.coverage import CoverageGapKind
+from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId, DiagnosticPhase
+from datamimic_ce.authoring.domain.requests import (
+    PROJECT_ACCEPTANCE_PATH,
+    PROJECT_ENTRY_PATH,
+    ReadyBuild,
+    ReadyWithGapsBuild,
+    RejectedBuild,
+)
+from datamimic_ce.interfaces.cli import app
+from datamimic_ce.interfaces.cli.presenter import EXIT_READY_WITH_GAPS
+from tests_ce.authoring_project import build_project, write_project
+
+_SEEDED = (
+    '<setup rngSeed="7"><generate name="cities" count="3">'
+    '<key name="id" generator="IncrementGenerator"/></generate></setup>'
+)
+_UNSEEDED = _SEEDED.replace(' rngSeed="7"', "")
+_CITIES = {"kind": "exact_count", "subject": {"kind": "product", "product": "cities"}, "count": 3}
+_SHOPS = '<generate name="shops" count="{1 + 1}"><key name="id" generator="IncrementGenerator"/></generate>'
+
+
+def test_an_acceptance_without_expectation_is_refused_with_a_real_example(tmp_path: Path) -> None:
+    xml = '<setup rngSeed="7"><generate name="rows" count="{1 + 1}"><key name="id" constant="1"/></generate></setup>'
+
+    result = build_project(tmp_path, xml)
+
+    assert isinstance(result, RejectedBuild)
+    assert result.phase is DiagnosticPhase.EXPECTATION
+    (diagnostic,) = result.diagnostics
+    assert diagnostic.code == AuthoringRuleId.MISSING_EXPECTATION
+    assert diagnostic.path == ("acceptance/build.json", "expectations")
+    assert diagnostic.actual == 0
+    assert diagnostic.remediation is not None
+    assert '"kind": "exact_count"' in diagnostic.remediation
+    assert "<" not in diagnostic.remediation
+
+
+def test_a_project_without_acceptance_file_is_told_to_write_one_expectation(tmp_path: Path) -> None:
+    (tmp_path / PROJECT_ENTRY_PATH).write_text(_SEEDED, encoding="utf-8")
+
+    result = create_authoring_application(tmp_path, descriptor_path=PROJECT_ENTRY_PATH).build()
+
+    assert isinstance(result, RejectedBuild)
+    remediation = result.diagnostics[0].remediation
+    assert remediation is not None
+    assert '"expectations": [{"kind": "exact_count"' in remediation
+    assert "datamimic authoring init" in remediation
+    assert '"expectations": []' not in remediation
+
+
+def test_a_check_derived_from_a_literal_count_avoids_missing_expectation(tmp_path: Path) -> None:
+    result = build_project(tmp_path, _SEEDED)
+
+    assert isinstance(result, ReadyBuild), result
+    assert result.coverage.expectation_count >= 1
+
+
+def test_a_seeded_checked_project_is_ready_with_clean_coverage(tmp_path: Path) -> None:
+    result = build_project(tmp_path, _SEEDED, expectations=[_CITIES])
+
+    assert isinstance(result, ReadyBuild), result
+    assert not result.coverage.has_gaps
+    assert result.coverage.seeded
+    assert not [item for item in result.diagnostics if item.code == AuthoringRuleId.COVERAGE_GAP]
+    assert "action_required" not in result.model_dump(mode="json")
+
+
+def test_an_unseeded_project_is_ready_with_gaps_and_names_the_seed(tmp_path: Path) -> None:
+    result = build_project(tmp_path, _UNSEEDED, expectations=[_CITIES])
+
+    assert isinstance(result, ReadyWithGapsBuild), result
+    assert result.outcome == "ready_with_gaps"
+    assert result.coverage.open_gaps == (CoverageGapKind.SEEDED,)
+    assert result.action_required == (
+        "Ready with 1 open coverage gap (seeded). Do not report success until each gap is fixed or explained."
+    )
+    assert [(item.path, item.severity) for item in result.diagnostics if item.code == AuthoringRuleId.COVERAGE_GAP] == [
+        (("coverage", "seeded"), "warning")
+    ]
+
+
+def test_a_product_without_expectation_is_a_gap_with_counted_facts(tmp_path: Path) -> None:
+    entry = _SEEDED.replace("</setup>", f"{_SHOPS}</setup>")
+
+    result = build_project(tmp_path, entry, expectations=[_CITIES])
+
+    assert isinstance(result, ReadyWithGapsBuild), result
+    assert {item.product: item.expectations for item in result.coverage.products}["shops"] == 0
+    assert result.coverage.products_without_expectation == ("shops",)
+    assert result.coverage.open_gaps == (CoverageGapKind.PRODUCTS_WITHOUT_EXPECTATION,)
+
+
+def _with_data_file(tmp_path: Path, *, read: bool) -> None:
+    (tmp_path / "data").mkdir()
+    (tmp_path / "data" / "regions.csv").write_text("id|name\n1|north\n2|south\n", encoding="utf-8")
+    entry = (
+        '<setup rngSeed="7"><generate name="regions" source="data/regions.csv" distribution="ordered"/></setup>'
+        if read
+        else _SEEDED
+    )
+    expectation = (
+        {"kind": "exact_count", "subject": {"kind": "product", "product": "regions"}, "count": 2} if read else _CITIES
+    )
+    write_project(tmp_path, entry, expectations=[expectation])
+
+
+def test_a_data_file_that_no_run_read_is_a_coverage_gap(tmp_path: Path) -> None:
+    _with_data_file(tmp_path, read=False)
+
+    result = create_authoring_application(tmp_path, descriptor_path=PROJECT_ENTRY_PATH).build()
+
+    assert isinstance(result, ReadyWithGapsBuild), result
+    assert result.coverage.unread_data_files == (PurePosixPath("data/regions.csv"),)
+    assert ("coverage", "unread_data_files") in {item.path for item in result.diagnostics}
+
+
+def test_a_data_file_that_the_run_read_is_not_a_gap(tmp_path: Path) -> None:
+    _with_data_file(tmp_path, read=True)
+
+    result = create_authoring_application(tmp_path, descriptor_path=PROJECT_ENTRY_PATH).build()
+
+    assert isinstance(result, ReadyBuild), result
+    assert result.coverage.unread_data_files == ()
+
+
+def test_documentation_and_library_files_are_not_unread_data(tmp_path: Path) -> None:
+    for folder in ("docs", "lib"):
+        (tmp_path / folder).mkdir()
+        (tmp_path / folder / "table.csv").write_text("id\n1\n", encoding="utf-8")
+    (tmp_path / "README.txt").write_text("notes", encoding="utf-8")
+
+    result = build_project(tmp_path, _SEEDED, expectations=[_CITIES])
+
+    assert isinstance(result, ReadyBuild), result
+
+
+def test_the_coverage_is_part_of_the_ready_json(tmp_path: Path) -> None:
+    result = build_project(tmp_path, _UNSEEDED, expectations=[_CITIES])
+
+    assert isinstance(result, ReadyWithGapsBuild), result
+    coverage = result.model_dump(mode="json")["coverage"]
+    assert coverage["seeded"] is False
+    assert coverage["products_without_expectation"] == []
+    assert set(coverage) == {
+        "expectation_count",
+        "products",
+        "products_without_expectation",
+        "unread_data_files",
+        "unchecked_declared_sinks",
+        "seeded",
+    }
+
+
+def test_the_workspace_lists_only_regular_files_sorted_and_relative(tmp_path: Path) -> None:
+    from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
+
+    (tmp_path / "b").mkdir()
+    (tmp_path / "b" / "two.csv").write_text("x", encoding="utf-8")
+    (tmp_path / "a.csv").write_text("x", encoding="utf-8")
+    (tmp_path / "link.csv").symlink_to(tmp_path / "a.csv")
+    (tmp_path / "linked_dir").symlink_to(tmp_path / "b", target_is_directory=True)
+
+    listed = AuthoringWorkspaceContext(tmp_path).list_project_files()
+
+    assert listed == (PurePosixPath("a.csv"), PurePosixPath("b/two.csv"))
+
+
+def _cli_build(tmp_path: Path, *extra: str):
+    return CliRunner().invoke(app, ["authoring", "build", str(tmp_path), *extra])
+
+
+def test_the_cli_exits_0_for_ready_and_3_for_ready_with_gaps_and_1_for_rejected(tmp_path: Path) -> None:
+    ready, gaps, rejected = (tmp_path / name for name in ("ready", "gaps", "rejected"))
+    for root in (ready, gaps, rejected):
+        root.mkdir()
+    write_project(ready, _SEEDED, expectations=[_CITIES])
+    write_project(gaps, _UNSEEDED, expectations=[_CITIES])
+    write_project(rejected, _SEEDED.replace('count="3"', 'count="{1 + 2}"'))
+
+    results = {name: _cli_build(root) for name, root in (("ready", ready), ("gaps", gaps), ("rejected", rejected))}
+
+    assert {name: result.exit_code for name, result in results.items()} == {
+        "ready": 0,
+        "gaps": EXIT_READY_WITH_GAPS,
+        "rejected": 1,
+    }
+    assert EXIT_READY_WITH_GAPS == 3
+    assert {name: json.loads(result.stdout)["outcome"] for name, result in results.items()} == {
+        "ready": "ready",
+        "gaps": "ready_with_gaps",
+        "rejected": "rejected",
+    }
+
+
+def test_the_text_format_names_the_gaps_and_the_action(tmp_path: Path) -> None:
+    write_project(tmp_path, _UNSEEDED, expectations=[_CITIES])
+
+    result = _cli_build(tmp_path, "--format", "text")
+
+    assert result.exit_code == EXIT_READY_WITH_GAPS
+    assert "Status: Ready with gaps" in result.stdout
+    assert "Action required: Ready with 1 open coverage gap (seeded)." in result.stdout
+
+
+def test_the_build_help_documents_the_exit_codes() -> None:
+    result = CliRunner().invoke(app, ["authoring", "build", "--help"])
+
+    assert "ready_with_gaps" in result.stdout
+    assert "Exit code 3: ready_with_gaps" in result.stdout
+
+
+def test_the_published_build_result_schema_has_all_three_outcomes() -> None:
+    result = CliRunner().invoke(app, ["authoring", "schema", "--name", "build_result"])
+
+    schema = json.loads(result.stdout)
+    assert set(schema["discriminator"]["mapping"]) == {"ready", "ready_with_gaps", "rejected"}
+    gaps = schema["$defs"]["ReadyWithGapsBuild"]
+    assert {"action_required", "coverage", "artifact", "evidence"} <= set(gaps["required"])
+
+
+@pytest.mark.parametrize("name", ["acceptance/build.json"])
+def test_the_acceptance_file_is_never_counted_as_unread_data(tmp_path: Path, name: str) -> None:
+    result = build_project(tmp_path, _SEEDED, expectations=[_CITIES])
+
+    assert isinstance(result, ReadyBuild), result
+    assert PurePosixPath(name) == PROJECT_ACCEPTANCE_PATH
+    assert PurePosixPath(name) not in result.coverage.unread_data_files

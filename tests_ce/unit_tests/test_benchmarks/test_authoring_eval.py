@@ -278,11 +278,11 @@ _BROKEN = [
     *[
         Broken(case, "missing_seed", {_XML: [(f' rngSeed="{seed}"', "")]}, fails)
         for case, seed, fails in [
-            ("e01", "10421", frozenset({"seed_is", "repeatable"})),
-            ("e02", "30517", frozenset({"seed_is", "repeatable"})),
-            ("e03", "56606", frozenset({"seed_is"})),  # no random draw, so unseeded runs still agree
-            ("e04", "51110", frozenset({"seed_is"})),
-            ("e05", "77031", frozenset({"seed_is", "repeatable"})),
+            ("e01", "10421", frozenset({"seed_is", "repeatable", "build_ready"})),
+            ("e02", "30517", frozenset({"seed_is", "repeatable", "build_ready"})),
+            ("e03", "56606", frozenset({"seed_is", "build_ready"})),  # no random draw, so unseeded runs still agree
+            ("e04", "51110", frozenset({"seed_is", "build_ready"})),
+            ("e05", "77031", frozenset({"seed_is", "repeatable", "build_ready"})),
         ]
     ],
     *[
@@ -532,7 +532,7 @@ _BROKEN = [
         "e06",
         "functions_typed_into_the_project",
         {_XML: [(_E06_FUNCTION, "values=\"'OPERATOR', 'INSPECTOR', 'PLANNER'\" weights=\"80, 15, 5\"")]},
-        frozenset({"value_in:employments.function:fixtures_changed"}),
+        frozenset({"value_in:employments.function:fixtures_changed", "build_ready"}),
     ),
     Broken(
         "e06",
@@ -585,7 +585,9 @@ _BROKEN = [
         {_XML: [("script=\"given + ' ' + family\"", "script=\"''\"")]},
         frozenset({"text:people.full_name"}),
     ),
-    Broken("e06", "missing_seed", {_XML: [(' rngSeed="61423"', "")]}, frozenset({"seed_is", "repeatable"})),
+    Broken(
+        "e06", "missing_seed", {_XML: [(' rngSeed="61423"', "")]}, frozenset({"seed_is", "repeatable", "build_ready"})
+    ),
     Broken("e06", "wrong_seed", {_XML: [('rngSeed="61423"', 'rngSeed="1"')]}, frozenset({"seed_is"})),
     Broken(
         "e06",
@@ -782,7 +784,9 @@ _BROKEN = [
         {"fixtures/customers.ent.csv": [("C-104|Dune Parts|GOLD|PT", "C-104|Dune Parts|SILVER|PT")]},
         frozenset({"fixtures_unchanged"}),
     ),
-    Broken("e07", "missing_seed", {_XML: [(' rngSeed="40961"', "")]}, frozenset({"seed_is"})),  # no random draw
+    Broken(
+        "e07", "missing_seed", {_XML: [(' rngSeed="40961"', "")]}, frozenset({"seed_is", "build_ready"})
+    ),  # no random draw
     Broken("e07", "wrong_seed", {_XML: [('rngSeed="40961"', 'rngSeed="1"')]}, frozenset({"seed_is"})),
     Broken(
         "e07",
@@ -894,7 +898,7 @@ _CHEATS = {
     # the six rows typed into scripts: the input file is never read
     ("e04", "typed_rows"): (
         _typed_rows("e04", "priced_orders"),
-        frozenset({"output_rows:priced_orders:fixtures_changed"}),
+        frozenset({"output_rows:priced_orders:fixtures_changed", "build_ready"}),
     ),
     # every foreign key drawn at random from the right set: each one exists, but the rules across tables break;
     # the functions are typed, so the hidden weighted file fails them
@@ -934,20 +938,21 @@ _CHEATS = {
                 "unique_together:employments.person_id+company_id",
                 "row_exists_in:assignments->employments",
                 "value_in:employments.function:fixtures_changed",
+                "build_ready",
             }
         ),
     ),
     # the kept rows typed into scripts: the input files are never read
     ("e07", "typed_rows"): (
         _typed_rows("e07", "order_report"),
-        frozenset({"output_rows:order_report:fixtures_changed"}),
+        frozenset({"output_rows:order_report:fixtures_changed", "build_ready"}),
     ),
     # a flat copy of the orders file: every order and every column
     ("e07", "flat_copy"): (
         """<setup rngSeed="40961">
     <generate name="order_report" source="fixtures/orders.ent.csv" distribution="ordered" target="JSON"/>
 </setup>""",
-        _E07_OUTPUTS,
+        _E07_OUTPUTS_AND_BUILD,
     ),
 }
 
@@ -992,11 +997,32 @@ _OTHER_STYLES = {
 }
 
 
-def _whole_project(tmp_path: Path, case: str, xml: str) -> Path:
+def _acceptance(*expectations: dict[str, object]) -> str:
+    return json.dumps({"version": "5.0", "max_count": 200, "expectations": list(expectations)})
+
+
+def _product(name: str) -> dict[str, object]:
+    return {"kind": "product", "product": name}
+
+
+def _unique(product: str, field: str) -> dict[str, object]:
+    return {"kind": "unique", "subject": _product(product), "field": field}
+
+
+# A whole valid project must leave no coverage gap: each of its products carries an expectation.
+_OTHER_ACCEPTANCE = {
+    "e04": _acceptance(_unique("priced_orders", "order_id")),
+    "e07": _acceptance(
+        {"kind": "exact_count", "subject": _product("orders"), "count": 13}, _unique("order_report", "order_id")
+    ),
+}
+
+
+def _whole_project(tmp_path: Path, case: str, xml: str, acceptance: str = _CHEAT_ACCEPTANCE) -> Path:
     project = _start_dir(tmp_path, case)
     (project / "acceptance").mkdir(parents=True)
     (project / _XML).write_text(xml, encoding="utf-8")
-    (project / _ACCEPTANCE).write_text(_CHEAT_ACCEPTANCE, encoding="utf-8")
+    (project / _ACCEPTANCE).write_text(acceptance, encoding="utf-8")
     return project
 
 
@@ -1009,7 +1035,7 @@ def test_cheat_project_fails_the_oracle(case: str, name: str, tmp_path: Path) ->
 
 @pytest.mark.parametrize("case", sorted(_OTHER_STYLES))
 def test_a_valid_project_in_another_style_passes(case: str, tmp_path: Path) -> None:
-    assert _failed(_whole_project(tmp_path, case, _OTHER_STYLES[case]), case) == set()
+    assert _failed(_whole_project(tmp_path, case, _OTHER_STYLES[case], _OTHER_ACCEPTANCE[case]), case) == set()
 
 
 def _failed(project: Path, case: str) -> set[str]:

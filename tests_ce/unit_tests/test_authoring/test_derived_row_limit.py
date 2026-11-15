@@ -121,6 +121,10 @@ def test_explicit_max_count_is_checked_against_the_declared_total(tmp_path: Path
         assert set(_limits(result).values()) == {max_count}
 
 
+def _exact(product: str, count: int) -> dict[str, object]:
+    return {"kind": "exact_count", "subject": {"kind": "product", "product": product}, "count": count}
+
+
 def _with_source(tmp_path: Path, generated: int) -> str:
     (tmp_path / "rows.csv").write_text("id\n" + "".join(f"{row}\n" for row in range(1, 7)), encoding="utf-8")
     return (
@@ -132,7 +136,7 @@ def _with_source(tmp_path: Path, generated: int) -> str:
 
 
 def test_a_product_without_literal_count_keeps_the_default_limit(tmp_path: Path) -> None:
-    result = build_project(tmp_path, _with_source(tmp_path, 4))
+    result = build_project(tmp_path, _with_source(tmp_path, 4), expectations=[_exact("read", 6)])
 
     assert result.outcome == "ready", result.diagnostics
     assert set(_limits(result).values()) == {10}
@@ -201,7 +205,7 @@ def test_file_source_with_a_literal_count_counts_into_the_derived_limit(tmp_path
         '<key name="copy" script="id"/></generate></setup>'
     )
 
-    result = build_project(tmp_path, xml)
+    result = build_project(tmp_path, xml, expectations=[_exact("generated", 8), _exact("read", 6)])
 
     assert result.outcome == "ready", result.diagnostics
     assert set(_limits(result).values()) == {14}

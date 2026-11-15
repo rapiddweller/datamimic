@@ -378,31 +378,6 @@ class RejectedBuild(AuthoringModel):
         )
 
 
-class ReadyBuild(AuthoringModel):
-    outcome: Literal["ready"] = "ready"
-    artifact: BuildArtifact
-    assurance: BuildAssurance
-    evidence: tuple[ProductEvidence, ...] = Field(min_length=1)
-    verification: BuildVerificationEvidence = Field(default_factory=BuildVerificationEvidence)
-    diagnostics: tuple[Diagnostic, ...] = ()
-
-    @model_validator(mode="after")
-    def reject_error_diagnostics(self) -> ReadyBuild:
-        if any(diagnostic.severity == "error" for diagnostic in self.diagnostics):
-            raise ValueError("ready builds cannot contain error diagnostics")
-        if any(
-            gate.status in {VerificationGateStatus.FAILED, VerificationGateStatus.BLOCKED}
-            for gate in (self.verification.smoke_export, self.verification.deterministic_replay)
-        ):
-            raise ValueError("ready builds cannot contain failed or blocked verification")
-        if any(
-            item.capture is None or not item.capture.complete or item.capture.observed != item.count
-            for item in self.evidence
-        ):
-            raise ValueError("ready builds require complete capture provenance for every product")
-        return self
-
-
 class _ProvenBuild(AuthoringModel):
     """What a passed proof carries; the coverage decides the outcome (`ready` or `ready_with_gaps`)."""
 
@@ -434,6 +409,18 @@ class _ProvenBuild(AuthoringModel):
         return self
 
 
+class ReadyBuild(_ProvenBuild):
+    """A passed proof whose coverage has no open gap."""
+
+    outcome: Literal["ready"] = "ready"
+
+    @model_validator(mode="after")
+    def coverage_has_no_gap(self) -> Self:
+        if self.coverage.has_gaps:
+            raise ValueError("a ready build has no open coverage gap; the outcome is ready_with_gaps")
+        return self
+
+
 class ReadyWithGapsBuild(_ProvenBuild):
     """A passed proof whose coverage has open gaps; success is not reported until each gap is fixed or explained."""
 
@@ -451,7 +438,38 @@ class ReadyWithGapsBuild(_ProvenBuild):
         return self
 
 
-BuildResult = Annotated[ReadyBuild | RejectedBuild, Field(discriminator="outcome")]
+def proven_build(
+    *,
+    artifact: BuildArtifact,
+    assurance: BuildAssurance,
+    evidence: tuple[ProductEvidence, ...],
+    coverage: BuildCoverage,
+    verification: BuildVerificationEvidence,
+    diagnostics: tuple[Diagnostic, ...],
+) -> ReadyBuild | ReadyWithGapsBuild:
+    """The outcome of a passed proof: `ready` for a clean coverage, `ready_with_gaps` for an open gap."""
+    action_required = coverage.action_required()
+    if action_required is None:
+        return ReadyBuild(
+            artifact=artifact,
+            assurance=assurance,
+            evidence=evidence,
+            coverage=coverage,
+            verification=verification,
+            diagnostics=diagnostics,
+        )
+    return ReadyWithGapsBuild(
+        artifact=artifact,
+        assurance=assurance,
+        evidence=evidence,
+        coverage=coverage,
+        verification=verification,
+        diagnostics=diagnostics,
+        action_required=action_required,
+    )
+
+
+BuildResult = Annotated[ReadyBuild | ReadyWithGapsBuild | RejectedBuild, Field(discriminator="outcome")]
 
 
 class BoundedExecutionRequest(AuthoringModel):

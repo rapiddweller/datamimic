@@ -26,7 +26,7 @@ _PROJECT = Path(__file__).resolve().parents[2] / "scenarios" / "s13_file_project
 
 def _copy(tmp_path: Path, negative: str | None = None) -> Path:
     project = tmp_path / "project"
-    shutil.copytree(_PROJECT, project)
+    shutil.copytree(_PROJECT, project, ignore=shutil.ignore_patterns("scenario.json"))
     if negative is not None:  # the scenario.json patch is the single source of the variant
         negatives = json.loads((_PROJECT / "scenario.json").read_text(encoding="utf-8"))["negatives"]
         [patch] = [item["patch"] for item in negatives if item["name"] == negative]
@@ -79,7 +79,11 @@ def test_a_default_build_with_a_target_says_where_datamimic_run_writes(tmp_path:
     """The blind e04 run built without smoke export first; that Build must already name the output place."""
     project = _copy(tmp_path, "generate_source_copies_columns")
     acceptance = project / PROJECT_ACCEPTANCE_PATH
-    acceptance.write_text('{"version": "5.0"}', encoding="utf-8")
+    acceptance.write_text(
+        '{"version": "5.0", "expectations": [{"kind": "exact_count", '
+        '"subject": {"kind": "product", "product": "priced_orders"}, "count": 6}]}',
+        encoding="utf-8",
+    )
 
     result = create_authoring_application(project, descriptor_path=PROJECT_ENTRY_PATH).build()
 

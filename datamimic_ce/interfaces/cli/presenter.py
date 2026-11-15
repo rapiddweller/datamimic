@@ -15,7 +15,16 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from datamimic_ce.authoring.domain.requests import ReadyBuild, ReadyCompileDocument, ReadyDecompileDocument
+from datamimic_ce.authoring.domain.requests import (
+    BuildResult,
+    ReadyBuild,
+    ReadyCompileDocument,
+    ReadyDecompileDocument,
+    ReadyWithGapsBuild,
+)
+
+EXIT_FAILED = 1
+EXIT_READY_WITH_GAPS = 3
 
 
 class CliOutputFormat(StrEnum):
@@ -116,6 +125,12 @@ def emit_project_created(project_name: str, project_dir: Path) -> None:
     )
 
 
+def build_exit_code(result: BuildResult) -> int:
+    if isinstance(result, ReadyBuild):
+        return 0
+    return EXIT_READY_WITH_GAPS if isinstance(result, ReadyWithGapsBuild) else EXIT_FAILED
+
+
 def emit_authoring(
     result: BaseModel | Mapping[str, object], output_format: CliOutputFormat, *, exit_code: int = 0
 ) -> NoReturn:
@@ -123,11 +138,14 @@ def emit_authoring(
         for diagnostic in result.diagnostics:
             typer.echo(f"{diagnostic.severity}: {diagnostic.message}", err=True)
         typer.echo(result.artifact.compiled_xml)
-    elif output_format is CliOutputFormat.TEXT and isinstance(result, ReadyBuild):
+    elif output_format is CliOutputFormat.TEXT and isinstance(result, (ReadyBuild, ReadyWithGapsBuild)):
         for diagnostic in result.diagnostics:
             typer.echo(f"{diagnostic.severity}: {diagnostic.message}", err=True)
         for item in result.artifact.files:
             typer.echo(f"{item.sha256}  {item.path}")
+        if isinstance(result, ReadyWithGapsBuild):
+            typer.echo("Status: Ready with gaps")
+            typer.echo(f"Action required: {result.action_required}")
     elif output_format is CliOutputFormat.TEXT and isinstance(result, ReadyDecompileDocument):
         for diagnostic in result.diagnostics:
             typer.echo(f"{diagnostic.severity}: {diagnostic.message}", err=True)

@@ -86,6 +86,18 @@ class AuthoringWorkspaceContext:
         """One project file by its workspace path, through the same contained reader."""
         return self.read_resource_bytes(self.resolve_descriptor_path(path))
 
+    def list_project_files(self) -> tuple[PurePosixPath, ...]:
+        """Every regular file of the workspace, relative and sorted; a link is neither listed nor followed."""
+        found: list[PurePosixPath] = []
+        for directory, _, names in os.walk(self.root, followlinks=False):
+            folder = Path(directory)
+            found.extend(
+                PurePosixPath(folder.relative_to(self.root).joinpath(name).as_posix())
+                for name in names
+                if stat.S_ISREG(os.lstat(folder / name).st_mode)
+            )
+        return tuple(sorted(found))
+
     def read_resource_bytes(self, path: Path) -> bytes:
         # Resolve lexical parents without following links before opening the rooted walk.
         absolute = Path(os.path.abspath(path))

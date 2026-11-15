@@ -17,7 +17,7 @@ from datamimic_ce.authoring.domain.diagnostics import (
     DiagnosticPhase,
 )
 from datamimic_ce.authoring.domain.project_run import ProjectRunRequest, ProjectRunResult
-from datamimic_ce.authoring.domain.requests import BuildResult, ReadyBuild
+from datamimic_ce.authoring.domain.requests import BuildResult, ReadyBuild, ReadyWithGapsBuild
 from datamimic_ce.authoring.ports import ExternalEffectsDetector, ProjectRunner
 
 
@@ -31,7 +31,7 @@ class ProjectRunWorkflow:
 
     def execute(self, request: ProjectRunRequest) -> ProjectRunResult:
         build = self._build()
-        if not isinstance(build, ReadyBuild):
+        if not isinstance(build, (ReadyBuild, ReadyWithGapsBuild)):
             return ProjectRunResult(outcome="not_run", build=build)
         effects = self._effects.effects()
         if effects and not request.allow_side_effects:

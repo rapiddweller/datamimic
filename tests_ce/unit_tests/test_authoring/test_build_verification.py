@@ -16,6 +16,7 @@ from datamimic_ce.authoring.domain.capture import (
     ProductCaptureEvidence,
     SmokeExportCapture,
 )
+from datamimic_ce.authoring.domain.coverage import CoverageGapKind
 from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId, DiagnosticPhase
 from datamimic_ce.authoring.domain.dm_json import DmJsonDocumentV1
 from datamimic_ce.authoring.domain.proof import ReplayMismatchKind, VerificationGateStatus
@@ -24,6 +25,7 @@ from datamimic_ce.authoring.domain.requests import (
     BoundedExecutionEvidence,
     LintResult,
     ReadyBuild,
+    ReadyWithGapsBuild,
     RejectedBuild,
 )
 from datamimic_ce.interfaces.cli import app
@@ -88,7 +90,8 @@ def executions(monkeypatch):
 
 def test_default_build_uses_one_real_capture_and_unrequested_gates(tmp_path: Path, executions) -> None:
     result = build_project(tmp_path, _document(seed=None))
-    assert isinstance(result, ReadyBuild), result
+    assert isinstance(result, ReadyWithGapsBuild), result
+    assert result.coverage.open_gaps == (CoverageGapKind.SEEDED,)
     assert len(executions) == 1
     assert result.verification.smoke_export.status is VerificationGateStatus.NOT_REQUESTED
     assert result.verification.deterministic_replay.status is VerificationGateStatus.NOT_REQUESTED
@@ -225,6 +228,7 @@ def test_capped_acceptance_cannot_be_rescued_by_replay(tmp_path: Path, execution
         DmJsonDocumentV1.model_validate(document),
         max_count=1,
         sample_rows=1,
+        expectations=[{"kind": "exact_count", "subject": {"kind": "product", "product": "items"}, "count": 2}],
         verification={"deterministic_replay": True},
     )
     assert isinstance(result, RejectedBuild)

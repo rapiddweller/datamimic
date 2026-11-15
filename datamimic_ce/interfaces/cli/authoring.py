@@ -21,7 +21,6 @@ from datamimic_ce.authoring.domain.requests import (
     DecompileDocumentRequest,
     LintRequest,
     LintResult,
-    ReadyBuild,
     ReadyCompileDocument,
     ReadyDecompileDocument,
     ReferenceRequest,
@@ -33,7 +32,7 @@ from datamimic_ce.authoring.domain.requests import (
     RunResult,
 )
 from datamimic_ce.domains.api import get_datamimic_lib_version
-from datamimic_ce.interfaces.cli.presenter import CliOutputFormat, emit_authoring
+from datamimic_ce.interfaces.cli.presenter import CliOutputFormat, build_exit_code, emit_authoring
 
 app = typer.Typer(no_args_is_help=True, help="Compile, inspect and verify DATAMIMIC descriptors.")
 OutputFormat = Annotated[CliOutputFormat, typer.Option("--format", "-f")]
@@ -202,9 +201,18 @@ def build(
     ] = Path("."),
     output_format: OutputFormat = CliOutputFormat.JSON,
 ) -> None:
+    """Prove a project: its datamimic.xml entry and steps against its acceptance/build.json.
+
+    Only outcome ready is a clean proof. Outcome ready_with_gaps passed the run but has open coverage
+    gaps: see action_required and the coverage_gap warnings, and fix every one before you report success.
+
+    \b
+    Exit code 0: ready. Exit code 3: ready_with_gaps.
+    Exit code 1: rejected, or input that Build cannot read.
+    """
     application = create_authoring_application(workspace_root=project, descriptor_path=PROJECT_ENTRY_PATH)
     result = application.build()
-    emit_authoring(result, output_format, exit_code=0 if isinstance(result, ReadyBuild) else 1)
+    emit_authoring(result, output_format, exit_code=build_exit_code(result))
 
 
 @app.command("run-project", help="Build the project, then run it for its real data.")

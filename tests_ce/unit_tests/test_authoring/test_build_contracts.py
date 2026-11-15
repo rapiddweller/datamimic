@@ -128,6 +128,14 @@ def test_ready_build_cannot_erase_a_failed_verification_gate() -> None:
                 },
                 "assurance": {"mode": "local_bounded"},
                 "evidence": [{"name": "cities", "count": 1, "rows": [{"id": 1}]}],
+                "coverage": {
+                    "expectation_count": 1,
+                    "products": [{"product": "cities", "expectations": 1}],
+                    "products_without_expectation": [],
+                    "unread_data_files": [],
+                    "unchecked_declared_sinks": [],
+                    "seeded": True,
+                },
                 "verification": {"smoke_export": {"status": "failed", "reason": "corrupt finalized file"}},
             }
         )

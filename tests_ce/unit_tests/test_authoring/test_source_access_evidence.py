@@ -14,6 +14,7 @@ def test_file_access_is_produced_by_real_bounded_run_and_does_not_leak_between_b
         tmp_path,
         '<setup rngSeed="7"><generate name="rows" source="private-source.csv" distribution="ordered">'
         '<key name="id" script="int(this.id)"/></generate></setup>',
+        expectations=[{"kind": "exact_count", "subject": {"kind": "product", "product": "rows"}, "count": 3}],
     )
     result = application.build()
     assert isinstance(result, ReadyBuild), result
@@ -21,6 +22,7 @@ def test_file_access_is_produced_by_real_bounded_run_and_does_not_leak_between_b
     assert [item.model_dump() for item in result.assurance.source_accesses] == [
         {"source_type": "file_csv", "requests": 1}
     ]
+    (tmp_path / "private-source.csv").unlink()
     starter = application.reference(ReferenceRequest(topic=ReferenceTopic.ASSEMBLY, name="starter")).entries[0].starter
     write_project(tmp_path, starter.entry_xml, **starter.acceptance.model_dump())
     next_result = application.build()

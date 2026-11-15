@@ -60,6 +60,7 @@ def test_dynamic_child_count_builds_ready_with_replay(tmp_path: Path) -> None:
         expectations=[
             {"kind": "exact_count", "subject": {"kind": "product", "product": "employees"}, "count": 12},
             {"kind": "unique", "subject": {"kind": "product", "product": "employees"}, "field": "employee_id"},
+            {"kind": "exact_count", "subject": {"kind": "product", "product": "departments"}, "count": 4},
         ],
         verification={"deterministic_replay": True},
     )
