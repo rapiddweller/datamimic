@@ -13,6 +13,7 @@ import pytest
 from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr
 
 from datamimic_ce.authoring import create_authoring_application
+from datamimic_ce.authoring.domain.coverage import CoverageGapKind
 from datamimic_ce.authoring.domain.requests import (
     PROJECT_ENTRY_PATH,
     BuildResult,
@@ -68,6 +69,9 @@ class Scenario(BaseModel):
     title: StrictStr
     proves: list[StrictStr]
     products: dict[StrictStr, StrictInt]
+    # The coverage gaps that Build must report. Absent: Build is ready, with no open gap. A gap is declared only when
+    # a fixture is read by a negative or an equivalent and not by the base project.
+    gaps: list[CoverageGapKind] = []
     negatives: list[Negative] = []
     equivalents: list[Equivalent] = []
 
@@ -94,6 +98,14 @@ def _apply(patch: Patch, project: Path) -> None:
     target.write_text(text.replace(patch.old, patch.new), encoding="utf-8")
 
 
+def _assert_outcome(built: BuildResult, scenario: Scenario) -> None:
+    """Ready, or ready_with_gaps with exactly the gaps that scenario.json declares; nothing else passes."""
+    diagnostics = [(str(item.code), item.message) for item in built.diagnostics]
+    assert isinstance(built, (ReadyBuild, ReadyWithGapsBuild)), diagnostics
+    assert list(built.coverage.open_gaps) == scenario.gaps, diagnostics
+    assert built.outcome == ("ready_with_gaps" if scenario.gaps else "ready"), diagnostics
+
+
 def _build(project: Path) -> BuildResult:
     return create_authoring_application(project, descriptor_path=PROJECT_ENTRY_PATH).build()
 
@@ -111,9 +123,7 @@ def test_scenario_builds_runs_and_replays(directory: Path, tmp_path: Path, monke
     monkeypatch.chdir(project)  # file and SQLite products resolve against the working directory
 
     built = _build(project)
-    assert isinstance(built, (ReadyBuild, ReadyWithGapsBuild)), [
-        (str(item.code), item.message) for item in built.diagnostics
-    ]
+    _assert_outcome(built, scenario)
 
     first = _run(project)
     counts = {name: len(rows) for name, rows in first.items() if name in scenario.products}
@@ -262,9 +272,7 @@ def test_equivalent_spelling_gives_the_same_rows(
     variant = _copy(directory, tmp_path / "variant")
     _apply(equivalent.patch, variant)
     built = _build(variant)
-    assert isinstance(built, (ReadyBuild, ReadyWithGapsBuild)), [
-        (str(item.code), item.message) for item in built.diagnostics
-    ]
+    _assert_outcome(built, _load(directory))
 
     monkeypatch.chdir(project)
     rows = _run(project)

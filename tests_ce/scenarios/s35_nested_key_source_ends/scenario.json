@@ -9,6 +9,7 @@
     "in that run, the list ends with the last source row and holds no empty element (test_nested_key_source_ends.py)"
   ],
   "products": {"baskets": 2},
+  "gaps": ["unread_data_files"],
   "negatives": [
     {"name": "literal_count_above_source_rows", "diagnostic": "validation",
      "patch": {"file": "datamimic.xml", "old": "<nestedKey name=\"items\" type=\"list\" count=\"2\">", "new": "<nestedKey name=\"items\" type=\"list\" count=\"3\">"}},
