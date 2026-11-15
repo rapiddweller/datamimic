@@ -118,7 +118,7 @@ def test_serial_number_keeps_pre_2010_value_error(model_number_first):
 
     if model_number_first:
         assert device.model_number == "WR1067"
-    with pytest.raises(ValueError, match="empty range for randrange"):
+    with pytest.raises(ValueError, match="empty range"):
         _ = device.serial_number
 
 

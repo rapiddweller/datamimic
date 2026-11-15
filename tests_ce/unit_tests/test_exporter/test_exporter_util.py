@@ -132,7 +132,7 @@ class TestExporterUtil(unittest.TestCase):
         self.assertEqual(parse_function_string("[1, 2]"), [{"function_name": "[1, 2]", "params": None}])
 
     def test_invalid_syntax_is_rejected(self):
-        with self.assertRaisesRegex(ValueError, "Error parsing function string: invalid syntax"):
+        with self.assertRaisesRegex(ValueError, "Error parsing function string: "):
             parse_function_string("JSON(chunk_size=)")
 
     def test_large_nested_data_structure(self):

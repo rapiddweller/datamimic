@@ -320,7 +320,7 @@ def test_dm401_uses_adapter_exporter_names_and_reports_parse_errors() -> None:
 
     malformed = lint_source('<setup rngSeed="1"><generate name="g" count="1" target="CSV(chunk_size=)"/></setup>')
     malformed_diag = next(diagnostic for diagnostic in malformed.diagnostics if diagnostic.rule == "DM401")
-    assert "target parser returned: Error parsing function string: invalid syntax" in malformed_diag.message
+    assert "target parser returned: Error parsing function string: " in malformed_diag.message
 
 
 @pytest.mark.parametrize("target", ("123", "True", "None"))

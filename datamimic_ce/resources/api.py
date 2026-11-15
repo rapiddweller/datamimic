@@ -1,8 +1,8 @@
 """Public access to packaged demo resources."""
 
 from collections.abc import Iterator
-from importlib.abc import Traversable
 from importlib.resources import files
+from importlib.resources.abc import Traversable
 
 
 def demo_root() -> Traversable:

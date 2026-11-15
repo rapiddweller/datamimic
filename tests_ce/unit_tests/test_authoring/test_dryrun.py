@@ -324,7 +324,7 @@ def test_smoke_export_rejects_multichar_setup_csv_separator_like_runtime(tmp_pat
     assert smoked.smoke_export.failed_exporters == 1
     descriptor = tmp_path / "descriptor.xml"
     descriptor.write_text(xml, encoding="utf-8")
-    with pytest.raises(ValueError, match="delimiter.*1-character"):
+    with pytest.raises(ValueError, match="delimiter.*(1-character|unicode character)"):
         create_run_session(RunRequest(descriptor_path=descriptor, task_id="real_export")).execute()
     assert not list(tmp_path.glob("output/*/*.csv"))
 

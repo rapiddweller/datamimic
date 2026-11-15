@@ -417,6 +417,30 @@ jobs:
           "$RUNNER_TEMP/authoring-wheel/bin/python" -m pip install dist/*.whl
           make installed-authoring-check PYTHON="$RUNNER_TEMP/authoring-wheel/bin/python"
 
+  python_314_smoke:
+    name: Python 3.14 wheel smoke test
+    runs-on: ubuntu-22.04
+    needs: build
+    steps:
+      - name: Set Up Python 3.14
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+      - name: Checkout installed-package probe
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Download wheel
+        uses: actions/download-artifact@v7
+        with:
+          name: artifact
+          path: dist
+      - name: Install and check built wheel
+        run: |
+          python -m venv "$RUNNER_TEMP/authoring-wheel"
+          "$RUNNER_TEMP/authoring-wheel/bin/python" -m pip install dist/*.whl
+          make installed-authoring-check PYTHON="$RUNNER_TEMP/authoring-wheel/bin/python"
+
   runtime_determinism_matrix:
     name: Seeded runtime determinism on ${{ matrix.os }} Python ${{ matrix.python-version }} (${{ matrix.timezone }}, ${{ matrix.resolution }})
     if: github.event_name != 'pull_request'
@@ -441,6 +465,11 @@ jobs:
             timezone: Etc/UTC
             python-version: '3.13'
             cell: ubuntu-py313-utc
+            resolution: highest
+          - os: ubuntu-22.04
+            timezone: Etc/UTC
+            python-version: '3.14'
+            cell: ubuntu-py314-utc
             resolution: highest
           - os: ubuntu-22.04
             timezone: America/Los_Angeles
@@ -562,7 +591,7 @@ jobs:
           merge-multiple: false
 
       - name: Compare actual hashes across jobs and with committed goldens
-        run: python -m tests_ce.architecture.runtime_determinism_manifest compare --root runtime-manifests --expected-count 7
+        run: python -m tests_ce.architecture.runtime_determinism_manifest compare --root runtime-manifests --expected-count 8
 
   unit_test:
     runs-on: ubuntu-22.04
