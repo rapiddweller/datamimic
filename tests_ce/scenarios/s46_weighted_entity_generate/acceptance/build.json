@@ -1,0 +1,11 @@
+{
+  "version": "5.0",
+  "product_roles": [
+    {"product": "members", "field": "member_id", "role": {"kind": "identifier"}}
+  ],
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "members"}, "count": 60},
+    {"kind": "unique", "subject": {"kind": "product", "product": "members"}, "field": "member_id"},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "members"}, "field": "tier_name", "values": ["GOLD", "SILVER"]}
+  ]
+}

@@ -237,7 +237,17 @@ Before, the reader took that line for a header and dropped the value `A` without
 A `<variable>` over a `*.wgt.ent.csv` file draws one row by its weight column. Such a variable
 with `distribution="ordered"` (or any other value but `random`) now fails with `I830`. Before, the attribute had no
 effect and the draws did not follow the file order. Remove `distribution`, or read the file as an `.ent.csv` to get
-the file order. A `<generate source="*.wgt.ent.csv">` still reads the file as plain CSV with its weight column.
+the file order.
+
+### `<generate source="*.wgt.ent.csv">` draws by weight (#452)
+
+A `<generate>` over a `*.wgt.ent.csv` file now draws `count` rows by the weights of its `weightColumn`, with
+replacement, as EE does. Before, it read the file as a plain CSV: every row once, in file order, with the weight
+column as data. The output rows now have no weight column. The statement needs `weightColumn` and an explicit
+`count`, and refuses `distribution` other than `random`, `unique`, `cyclic`, `offset`, `where`, `columns` and
+`sourceScripted` with `I983`. A file without that column, without rows or without a weight above 0 fails with
+`I865`, `I867` or `I868`. `weightColumn` on another `<generate>` source fails with `I983`. To keep the old result,
+rename the file to `.ent.csv`. Case: `tests_ce/scenarios/s46_weighted_entity_generate`.
 
 ### One product name at every depth (#442 T4)
 

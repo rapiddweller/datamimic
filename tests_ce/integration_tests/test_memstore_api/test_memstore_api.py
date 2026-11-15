@@ -17,10 +17,9 @@ from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 _dir = Path(__file__).resolve().parent
 
 
-def test_wgt_ent_csv_reads_via_iterate():
-    """'.wgt.ent.csv' despite the name is a normal headered CSV (test_id|flag|count), NOT the
-    headerless value|weight '.wgt.csv' format - already readable via <iterate> today, verified
-    directly rather than assumed. This is a regression test, not a fix."""
+def test_ent_csv_reads_via_iterate():
+    """A headered '.ent.csv' (test_id|flag|count) reads row by row via <iterate>. The same file named
+    '.wgt.ent.csv' is drawn by weight and needs weightColumn and count (#452), so it is not a plain read."""
     engine = DataMimicTest(_dir, "test_wgt_ent_csv_iterate.xml", capture_test_result=True)
     engine.test_with_timer()
     rows = engine.capture_result()["test_file"]

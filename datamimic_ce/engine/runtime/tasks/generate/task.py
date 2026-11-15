@@ -143,6 +143,7 @@ class GenerateTask(CommonSubTask):
             or not (isinstance(stmt.count, str) and stmt.count.isdigit())
             or stmt.cyclic
             or stmt.distribution == SourceDistribution.CUMULATED
+            or stmt.weight_column is not None
         ):
             return
         ds_len = context.root.data_source_len.get(data_source_cache_key(stmt))

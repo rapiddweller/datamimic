@@ -57,6 +57,7 @@ from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import (
     ATTR_UNIQUE,
     ATTR_VARIABLE_PREFIX,
     ATTR_VARIABLE_SUFFIX,
+    ATTR_WEIGHT_COLUMN,
     ATTR_WHERE,
 )
 from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_GENERATE
@@ -223,6 +224,14 @@ class GenerateModel(BaseModel):
         "(bell-shaped weighted draw; loads the whole pool).",
         examples=["random", "ordered", "cumulated"],
     )
+    weight_column: str | None = Field(
+        None,
+        alias=ATTR_WEIGHT_COLUMN,
+        description="Weight column of a '.wgt.ent.csv' source; required with that source and refused with any "
+        "other. The statement draws 'count' rows from the file by this column, with replacement, and the output "
+        "rows do not carry the column.",
+        examples=["weight", "population"],
+    )
     variable_prefix: str | None = Field(
         None,
         alias=ATTR_VARIABLE_PREFIX,
@@ -308,6 +317,7 @@ class GenerateModel(BaseModel):
                 ATTR_DISTRIBUTION,
                 ATTR_VARIABLE_PREFIX,
                 ATTR_VARIABLE_SUFFIX,
+                ATTR_WEIGHT_COLUMN,
                 ATTR_CONVERTER,
                 ATTR_NUM_PROCESS,
                 ATTR_SCRIPT,

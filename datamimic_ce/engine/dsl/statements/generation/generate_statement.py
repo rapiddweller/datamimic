@@ -41,6 +41,7 @@ class GenerateStatement(CompositeStatement):
         self._export_uri = model.export_uri
         # Real type at the boundary (absent = RANDOM). <generate> accepts random/ordered/cumulated.
         self._distribution = SourceDistribution.coerce(model.distribution)
+        self._weight_column = model.weight_column
         self._variable_prefix = model.variable_prefix
         self._variable_suffix = model.variable_suffix
         self._converter = model.converter
@@ -241,6 +242,11 @@ class GenerateStatement(CompositeStatement):
     @property
     def distribution(self) -> SourceDistribution:
         return self._distribution
+
+    @property
+    def weight_column(self) -> str | None:
+        """The weight column of a .wgt.ent.csv source; None when the statement sets none."""
+        return self._weight_column
 
     @property
     def variable_prefix(self) -> str | None:
