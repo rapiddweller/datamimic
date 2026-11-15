@@ -6,7 +6,12 @@
 
 from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import SourceDistribution
 from datamimic_ce.engine.io.contracts import DataSourcePagination
-from datamimic_ce.engine.io.data_sources.selection import get_distributed_data, get_unique_data, select_rows
+from datamimic_ce.engine.io.data_sources.selection import (
+    get_distributed_data,
+    get_unique_data,
+    get_weighted_data,
+    select_rows,
+)
 
 
 class ChunkSourceWindow:
@@ -22,8 +27,11 @@ class ChunkSourceWindow:
         distribution: SourceDistribution,
         seed: int,
         label: str,
+        weight_column: str | None = None,
     ) -> None:
-        if unique:
+        if weight_column is not None:
+            self._rows = get_weighted_data(pool, weight_column, chunk, seed)
+        elif unique:
             self._rows = get_unique_data(pool, chunk, seed, label)
         elif distribution is SourceDistribution.ORDERED:
             # A where= pool arrives in file order: it is filtered once per chunk, then paged as an ordered read.

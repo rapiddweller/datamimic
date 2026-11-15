@@ -4,8 +4,14 @@ from collections.abc import Sized
 
 from datamimic_ce.engine.dsl.api import (
     ATTR_COLUMNS,
+    ATTR_COUNT,
+    ATTR_CYCLIC,
+    ATTR_DISTRIBUTION,
+    ATTR_OFFSET,
     ATTR_SOURCE,
     ATTR_SOURCE_SCRIPTED,
+    ATTR_UNIQUE,
+    ATTR_WEIGHT_COLUMN,
     ATTR_WHERE,
     EL_GENERATE,
     EL_NESTED_KEY,
@@ -16,8 +22,10 @@ from datamimic_ce.engine.dsl.api import (
     Statement,
     VariableStatement,
 )
+from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import SourceDistribution
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import (
     SourceFileFormat,
+    source_file_format,
     source_file_format_for,
 )
 from datamimic_ce.engine.io.api import (
@@ -68,6 +76,46 @@ def refuse_row_selection(
             stmt_name=stmt.full_name,
             location=DescriptorLocation(EL_GENERATE, attribute=ATTR_SOURCE_SCRIPTED),
         )
+
+
+def _refuse_weighted_entity(stmt: GenerateStatement, source: str, requirement: str, attribute: str) -> None:
+    raise invalid_source_error(
+        code=IssueCode.SOURCE_GENERATE_WEIGHTED_ENTITY_CONTRACT,
+        stmt_name=stmt.full_name,
+        source_str=source,
+        requirement=requirement,
+        location=DescriptorLocation(EL_GENERATE, attribute=attribute),
+    )
+
+
+def refuse_weighted_entity_contract(stmt: GenerateStatement, source: str) -> None:
+    """A .wgt.ent.csv source draws count rows by weightColumn with replacement. The statement must name both and
+    set nothing that the draw ignores; weightColumn on any other source is ignored too. Same contract as EE."""
+    if source_file_format(source) is not SourceFileFormat.WEIGHTED_ENTITY_CSV:
+        if stmt.weight_column is not None:
+            _refuse_weighted_entity(
+                stmt, source, "sets weightColumn, which applies to a .wgt.ent.csv source only", ATTR_WEIGHT_COLUMN
+            )
+        return
+    if stmt.weight_column is None:
+        _refuse_weighted_entity(stmt, source, "requires the weightColumn attribute", ATTR_WEIGHT_COLUMN)
+    if stmt.count is None:
+        _refuse_weighted_entity(stmt, source, "requires an explicit count: the draw has no end of its own", ATTR_COUNT)
+    if stmt.distribution is not SourceDistribution.RANDOM:
+        _refuse_weighted_entity(
+            stmt, source, "draws by weight: remove distribution, it cannot select another order", ATTR_DISTRIBUTION
+        )
+    ignored = (
+        (ATTR_UNIQUE, bool(stmt.unique)),
+        (ATTR_CYCLIC, bool(stmt.cyclic)),
+        (ATTR_OFFSET, bool(stmt.offset)),
+        (ATTR_WHERE, stmt.where is not None),
+        (ATTR_COLUMNS, stmt.columns is not None),
+        (ATTR_SOURCE_SCRIPTED, bool(stmt.source_script)),
+    )
+    for attribute, is_set in ignored:
+        if is_set:
+            _refuse_weighted_entity(stmt, source, f"draws by weight: the draw ignores {attribute}", attribute)
 
 
 def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) -> None:
@@ -131,8 +179,7 @@ def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) 
         source_format = source_file_format_for(source_element, source_str, stmt.type)
         memstore = (
             root_ctx.memstore_manager.get_memstore(source_str)
-            if source_format is None
-            and root_ctx.memstore_manager.contain(source_str)
+            if source_format is None and root_ctx.memstore_manager.contain(source_str)
             else None
         )
         client = None
@@ -149,6 +196,7 @@ def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) 
                     location=DescriptorLocation(source_element, attribute=blank),
                 )
         if isinstance(stmt, GenerateStatement):
+            refuse_weighted_entity_contract(stmt, source_str)
             refuse_row_selection(
                 stmt,
                 source_str,
@@ -157,9 +205,7 @@ def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) 
                 default_scripted=bool(root_ctx.default_source_scripted),
             )
         selector = (
-            stmt.selector
-            if client is not None and isinstance(stmt, GenerateStatement | VariableStatement)
-            else None
+            stmt.selector if client is not None and isinstance(stmt, GenerateStatement | VariableStatement) else None
         )
         iteration_selector = (
             stmt.iteration_selector if client is not None and isinstance(stmt, VariableStatement) else None

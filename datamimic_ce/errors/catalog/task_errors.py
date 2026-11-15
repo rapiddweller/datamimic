@@ -255,6 +255,32 @@ ISSUES: list[IssueDefinition] = [
         resolution="Correct the source to a valid value or configuration.",
     ),
     IssueDefinition(
+        code=IssueCode.TASK_WEIGHTED_ENTITY_WEIGHT_COLUMN_MISSING,
+        name="TASK_WEIGHTED_ENTITY_WEIGHT_COLUMN_MISSING",
+        title="Task Weighted Entity Weight Column Missing",
+        template="the weighted entity file has no weight column '{weight_column}'",
+        cause="A required weight values is missing in the task configuration.",
+        resolution=(
+            "Add the weight column to the weighted entity file, or set weightColumn to the name of its weight column."
+        ),
+    ),
+    IssueDefinition(
+        code=IssueCode.TASK_WEIGHTED_ENTITY_EMPTY,
+        name="TASK_WEIGHTED_ENTITY_EMPTY",
+        title="Task Weighted Entity Empty",
+        template="the weighted entity file has no rows",
+        cause="A required weight values is empty in the task configuration.",
+        resolution="Add rows to the weighted entity file, or remove the weighted source.",
+    ),
+    IssueDefinition(
+        code=IssueCode.TASK_WEIGHTED_ENTITY_NO_WEIGHT_VALUES,
+        name="TASK_WEIGHTED_ENTITY_NO_WEIGHT_VALUES",
+        title="Task Weighted Entity No Weight Values",
+        template="the weight column '{weight_column}' of the weighted entity file has no numeric weights",
+        cause="An error occurred during task configuration.",
+        resolution="Fill the weight column with numbers above 0, or remove the weighted source.",
+    ),
+    IssueDefinition(
         code=IssueCode.TASK_PATTERN_MISSING,
         name="TASK_PATTERN_MISSING",
         title="Task Pattern Missing",

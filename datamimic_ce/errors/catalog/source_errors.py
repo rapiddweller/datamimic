@@ -60,6 +60,20 @@ ISSUES: list[IssueDefinition] = [
         resolution="Start the file with a '# name[width],...' line; a column reads name[width] or name[width r pad].",
     ),
     IssueDefinition(
+        code=IssueCode.SOURCE_GENERATE_WEIGHTED_ENTITY_CONTRACT,
+        name="SOURCE_GENERATE_WEIGHTED_ENTITY_CONTRACT",
+        title="Weighted Entity Source Contract Violated",
+        template="<generate> '{stmt_name}' over the weighted entity file '{source_str}' {requirement}.",
+        cause=(
+            "A weighted entity file (.wgt.ent.csv) draws count rows by the weights of its weightColumn, with "
+            "replacement. The statement misses an attribute of that draw or sets one that the draw ignores."
+        ),
+        resolution=(
+            "Set weightColumn and count, and remove distribution, unique, cyclic, offset, where, columns and "
+            "sourceScripted. To read the file rows as they are, rename the file to .ent.csv."
+        ),
+    ),
+    IssueDefinition(
         code=IssueCode.GENERATE_ROW_SELECTION_FILE_ONLY,
         name="GENERATE_ROW_SELECTION_FILE_ONLY",
         title="Row Selection Needs a File Source",

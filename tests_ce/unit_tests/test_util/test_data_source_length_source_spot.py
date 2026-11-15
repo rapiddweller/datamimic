@@ -52,6 +52,7 @@ def _statement(
         statement._offset = None
         statement._where = None
         statement._columns = None
+        statement._weight_column = None
     return statement
 
 

@@ -12,6 +12,7 @@ from typing import TypeVar
 
 from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import SourceDistribution
 from datamimic_ce.engine.io.contracts import DataSourcePagination
+from datamimic_ce.errors import IssueCode, task_config_error
 from datamimic_ce.randomness import RandomSource, cumulated_index
 
 T = TypeVar("T")
@@ -134,3 +135,33 @@ def get_cumulated_data(data: Iterable[T], pagination: DataSourcePagination | Non
     rng = Random(seed)
     picks = [rows[cumulated_index(rng, source_len - 1)] for _ in range(start_idx + span)]
     return picks[start_idx:]
+
+
+def get_weighted_data(
+    rows: Iterable[dict[str, object]], weight_column: str, pagination: DataSourcePagination | None, seed: int
+) -> list[dict[str, object]]:
+    """Return a paginated seeded draw sequence sampled with replacement by a weight column, without that column."""
+    pool = list(rows)
+    if not pool:
+        raise task_config_error(code=IssueCode.TASK_WEIGHTED_ENTITY_EMPTY)
+    if weight_column not in pool[0]:
+        raise task_config_error(code=IssueCode.TASK_WEIGHTED_ENTITY_WEIGHT_COLUMN_MISSING, weight_column=weight_column)
+    try:
+        weights = [float(str(row[weight_column])) for row in pool]
+    except (KeyError, TypeError, ValueError) as error:
+        raise task_config_error(
+            code=IssueCode.TASK_WEIGHTED_ENTITY_NO_WEIGHT_VALUES, weight_column=weight_column
+        ) from error
+    if any(weight < 0 or weight != weight for weight in weights) or not any(weight > 0 for weight in weights):
+        raise task_config_error(code=IssueCode.TASK_WEIGHTED_ENTITY_NO_WEIGHT_VALUES, weight_column=weight_column)
+
+    start = 0 if pagination is None else pagination.skip
+    end = len(pool) if pagination is None else pagination.skip + pagination.limit
+    rng = Random(seed)
+    picks: list[dict[str, object]] = rng.choices(pool, weights=weights, k=end)[start:]
+    drawn: list[dict[str, object]] = []
+    for pick in picks:
+        row = dict(pick)
+        del row[weight_column]
+        drawn.append(row)
+    return drawn

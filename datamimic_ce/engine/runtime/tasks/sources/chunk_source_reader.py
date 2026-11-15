@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from datamimic_ce.engine.dsl.api import GenerateStatement, SourceDistribution
+from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat, source_file_format
 from datamimic_ce.engine.io.api import ChunkSourceWindow, DataSourcePagination
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
@@ -31,7 +32,17 @@ class ChunkSourceReader:
         )
         self._separator = stmt.separator or root.default_separator
         # A where= condition runs once per chunk on the whole file, not once per page.
-        self._loads_all = stmt.distribution.loads_all or bool(stmt.unique) or stmt.where is not None
+        self._weight_column = (
+            stmt.weight_column
+            if stmt.source is not None and source_file_format(stmt.source) is SourceFileFormat.WEIGHTED_ENTITY_CSV
+            else None
+        )
+        self._loads_all = (
+            stmt.distribution.loads_all
+            or bool(stmt.unique)
+            or stmt.where is not None
+            or self._weight_column is not None
+        )
         self._window: ChunkSourceWindow | None = None
         self._build_from_source = True
 
@@ -68,6 +79,7 @@ class ChunkSourceReader:
                 distribution=stmt.distribution,
                 seed=seed,
                 label=f"<generate> '{stmt.name}'",
+                weight_column=self._weight_column,
             )
 
         return self._window.read_page(page_start, page_end), self._build_from_source

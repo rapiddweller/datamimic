@@ -1,0 +1,73 @@
+{
+  "title": "A <generate> over a weighted entity file draws count rows by weight, and refuses the attributes that the draw cannot honor",
+  "proves": [
+    "<generate source=\"*.wgt.ent.csv\" weightColumn=\"weight\" count=\"60\"> draws 60 rows by the weights of the file, with replacement, as EE does (#452)",
+    "a row with weight 0 is never drawn (BRONZE), and a row with weight 80 is drawn far more often than one with weight 20",
+    "the output rows carry the file columns without the weight column; the same seed gives the same rows",
+    "a missing weightColumn, a missing count, a distribution, cyclic and a weightColumn that the file does not have stop with a typed error (I983, I865)"
+  ],
+  "products": {
+    "members": 60
+  },
+  "negatives": [
+    {
+      "name": "weight_column_attribute_missing",
+      "diagnostic": "child_execution",
+      "issue": "I983",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "weightColumn=\"weight\" ",
+        "new": ""
+      }
+    },
+    {
+      "name": "count_missing",
+      "diagnostic": "child_execution",
+      "issue": "I983",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": " count=\"60\"",
+        "new": ""
+      }
+    },
+    {
+      "name": "distribution_ordered",
+      "diagnostic": "child_execution",
+      "issue": "I983",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "count=\"60\"",
+        "new": "count=\"60\" distribution=\"ordered\""
+      }
+    },
+    {
+      "name": "cyclic_is_ignored_by_the_draw",
+      "diagnostic": "child_execution",
+      "issue": "I983",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "count=\"60\"",
+        "new": "count=\"60\" cyclic=\"true\""
+      }
+    },
+    {
+      "name": "weight_column_not_in_the_file",
+      "diagnostic": "child_execution",
+      "issue": "I865",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "weightColumn=\"weight\"",
+        "new": "weightColumn=\"weights\""
+      }
+    },
+    {
+      "name": "zero_weight_value_is_not_drawn",
+      "diagnostic": "allowed_values",
+      "patch": {
+        "file": "data/weighting/tiers.wgt.ent.csv",
+        "old": "BRONZE|1|0",
+        "new": "BRONZE|1|500"
+      }
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+<setup rngSeed="46">
+    <generate name="members" source="data/weighting/tiers.wgt.ent.csv" weightColumn="weight" count="60">
+        <key name="member_id" generator="IncrementGenerator"/>
+        <key name="tier_name" script="tier"/>
+    </generate>
+</setup>
