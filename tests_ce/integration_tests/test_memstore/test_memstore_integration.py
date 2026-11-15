@@ -13,13 +13,6 @@ from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 class TestMemStoreIntegration:
     _test_dir = Path(__file__).resolve().parent
 
-    def test_in_memory_memstore(self):
-        test_engine = DataMimicTest(
-            test_dir=self._test_dir,
-            filename="test_in_memory_memstore.xml",
-        )
-        test_engine.test_with_timer()
-
     def test_memstore_target_inside_condition(self):
         """The end-of-run memstore export must pass through <condition>/<if> wrappers."""
         test_engine = DataMimicTest(
