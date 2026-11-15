@@ -11,16 +11,11 @@ from datamimic_ce.domains.public_sector.generators.educational_institution_gener
     EducationalInstitutionGenerator,
 )
 from datamimic_ce.domains.public_sector.models.educational_institution import EducationalInstitution
+from tests_ce.unit_tests.educational_institution_builder import build_institution
 
 
 def _fingerprint(rng: Random) -> str:
     return sha256(repr(rng.getstate()).encode()).hexdigest()
-
-
-def _institution(seed: int) -> tuple[EducationalInstitution, EducationalInstitutionGenerator, Random]:
-    rng = Random(seed)
-    generator = EducationalInstitutionGenerator(dataset="US", rng=rng)
-    return EducationalInstitution(generator), generator, rng
 
 
 @pytest.mark.parametrize(
@@ -227,7 +222,7 @@ def test_program_sampling_failure_retries_without_caching(monkeypatch: pytest.Mo
 
 
 def test_seeded_programs_first_and_level_first_keep_outputs_and_rng_state() -> None:
-    programs_first, _, programs_first_rng = _institution(144)
+    programs_first, _, programs_first_rng = build_institution(144)
     assert _fingerprint(programs_first_rng) == (
         "87cfc7f9c52def3dc6fd669b7b2e6bd400aaaf567ebaad719f36fbe6a03888b6"
     )
@@ -247,7 +242,7 @@ def test_seeded_programs_first_and_level_first_keep_outputs_and_rng_state() -> N
         "e9bd27fe73b7208e7f4749036caea0f8263b69f0cdabaeed0d413d04d2654e40"
     )
 
-    level_first, _, level_first_rng = _institution(144)
+    level_first, _, level_first_rng = build_institution(144)
     assert level_first.level == "Elementary"
     assert level_first.programs == programs_first.programs
     assert _fingerprint(level_first_rng) == (

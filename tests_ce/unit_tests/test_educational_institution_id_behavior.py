@@ -15,6 +15,7 @@ from datamimic_ce.domains.public_sector.models.educational_institution import Ed
 from datamimic_ce.domains.public_sector.services.educational_institution_service import (
     EDUCATIONAL_INSTITUTION_SCHEMA,
 )
+from tests_ce.unit_tests.educational_institution_builder import build_institution
 
 _T = TypeVar("_T")
 _HEX = "0123456789ABCDEF"
@@ -22,12 +23,6 @@ _HEX = "0123456789ABCDEF"
 
 def _fingerprint(rng: Random) -> str:
     return sha256(repr(rng.getstate()).encode()).hexdigest()
-
-
-def _institution(seed: int) -> tuple[EducationalInstitution, EducationalInstitutionGenerator, Random]:
-    rng = Random(seed)
-    generator = EducationalInstitutionGenerator(dataset="US", rng=rng)
-    return EducationalInstitution(generator), generator, rng
 
 
 class _ChoiceRandom(Random):
@@ -171,7 +166,7 @@ def test_claim_failure_retries_candidate_generation_without_caching() -> None:
 
 
 def test_seeded_id_first_and_name_programs_first_preserve_outputs_and_rng_states() -> None:
-    id_first, _, id_first_rng = _institution(148)
+    id_first, _, id_first_rng = build_institution(148)
     address = id_first.address
     assert _fingerprint(id_first_rng) == "6c8a57841a7522a975c909309c0abc344ddd653e358925a1e3df82914fc0e041"
     assert _fingerprint(address._row.city_generator.rng) == (
@@ -194,7 +189,7 @@ def test_seeded_id_first_and_name_programs_first_preserve_outputs_and_rng_states
         "6fc64d5b3ab438e334e017f7ab6751567d0058ea81e64f452b6dff772dee4a6e"
     )
 
-    fields_first, _, fields_first_rng = _institution(148)
+    fields_first, _, fields_first_rng = build_institution(148)
     fields_address = fields_first.address
     assert fields_first.name == "Minneapolis Middle School"
     assert fields_first.programs == [

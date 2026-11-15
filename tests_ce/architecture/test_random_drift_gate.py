@@ -40,6 +40,8 @@ from pathlib import Path
 
 import pytest
 
+from tests_ce.architecture.production_modules import production_modules
+
 PROD_ROOT = Path(__file__).resolve().parents[2] / "datamimic_ce"
 
 # Files allowed to draw from the bare ``random`` module. Keep this list
@@ -101,14 +103,7 @@ def _collect_callsites(tree: ast.AST) -> list[tuple[int, str]]:
     return hits
 
 
-def _production_modules() -> list[Path]:
-    """Return every .py file under datamimic_ce/, sorted, excluding
-    demos and any test/__pycache__ paths."""
-    skip_segments = {"demos", "__pycache__"}
-    return sorted(p for p in PROD_ROOT.rglob("*.py") if not any(seg in p.parts for seg in skip_segments))
-
-
-@pytest.mark.parametrize("module_path", _production_modules(), ids=lambda p: str(p.relative_to(PROD_ROOT.parent)))
+@pytest.mark.parametrize("module_path", production_modules(), ids=lambda p: str(p.relative_to(PROD_ROOT.parent)))
 def test_no_raw_random_module_in_production(module_path: Path) -> None:
     """Every CE production module draws randomness through a resolved RNG
     or is on the explicit allow-list."""

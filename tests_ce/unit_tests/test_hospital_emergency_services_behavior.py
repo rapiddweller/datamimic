@@ -5,17 +5,7 @@ import pytest
 
 from datamimic_ce.domains.healthcare.generators.hospital_generator import HospitalGenerator
 from datamimic_ce.domains.healthcare.models.hospital import Hospital
-
-
-class _ScriptedRandom(Random):
-    def __init__(self, values: list[float]):
-        super().__init__(0)
-        self.values = iter(values)
-        self.draw_count = 0
-
-    def random(self) -> float:
-        self.draw_count += 1
-        return next(self.values)
+from tests_ce.unit_tests.scripted_randoms import ScriptedRandom
 
 
 class _PublicRngHospitalGenerator(HospitalGenerator):
@@ -73,7 +63,7 @@ class _OrderedHospitalGenerator(_PublicRngHospitalGenerator):
 def test_emergency_services_preserves_strict_threshold_and_type_override(
     hospital_type: str, draw: float, expected: bool
 ) -> None:
-    rng = _ScriptedRandom([draw])
+    rng = ScriptedRandom([draw])
     hospital = _FixedTypeHospital(_PublicRngHospitalGenerator(rng), hospital_type)
 
     assert hospital.emergency_services is expected
@@ -84,7 +74,7 @@ def test_emergency_services_preserves_strict_threshold_and_type_override(
 
 def test_emergency_services_resolves_type_before_public_rng() -> None:
     events: list[str] = []
-    rng = _ScriptedRandom([0.2])
+    rng = ScriptedRandom([0.2])
     hospital = Hospital(_OrderedHospitalGenerator(events, rng))
 
     assert hospital.emergency_services is True
@@ -93,7 +83,7 @@ def test_emergency_services_resolves_type_before_public_rng() -> None:
 
 
 def test_shared_generator_keeps_independent_emergency_service_caches() -> None:
-    rng = _ScriptedRandom([0.2, 0.95])
+    rng = ScriptedRandom([0.2, 0.95])
     generator = _PublicRngHospitalGenerator(rng)
     specialty = _FixedTypeHospital(generator, "Specialty")
     unknown = _FixedTypeHospital(generator, "Unlisted")
@@ -132,7 +122,7 @@ def test_seeded_hospital_type_and_emergency_sequence_preserves_type_anti_repeat(
 def test_teaching_status_preserves_strict_thresholds_and_cache(
     hospital_type: str, draw: float, expected: bool
 ) -> None:
-    rng = _ScriptedRandom([draw])
+    rng = ScriptedRandom([draw])
     generator = _PublicRngHospitalGenerator(rng)
     hospital = _FixedTypeHospital(generator, hospital_type)
 
@@ -153,7 +143,7 @@ def test_teaching_type_returns_true_without_public_rng_access() -> None:
 
 def test_teaching_status_resolves_type_before_rng_and_uses_public_accessor() -> None:
     events: list[str] = []
-    rng = _ScriptedRandom([0.2])
+    rng = ScriptedRandom([0.2])
     hospital = Hospital(_OrderedHospitalGenerator(events, rng))
 
     assert hospital.teaching_status is False
@@ -162,7 +152,7 @@ def test_teaching_status_resolves_type_before_rng_and_uses_public_accessor() -> 
 
 
 def test_shared_generator_keeps_independent_teaching_status_caches() -> None:
-    rng = _ScriptedRandom([0.2, 0.95])
+    rng = ScriptedRandom([0.2, 0.95])
     generator = _PublicRngHospitalGenerator(rng)
     general = _FixedTypeHospital(generator, "General")
     unknown = _FixedTypeHospital(generator, "Unlisted")

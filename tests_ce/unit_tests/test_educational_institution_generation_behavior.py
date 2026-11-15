@@ -9,20 +9,15 @@ from datamimic_ce.domains.public_sector.generators.educational_institution_gener
     EducationalInstitutionGenerator,
 )
 from datamimic_ce.domains.public_sector.models.educational_institution import EducationalInstitution
+from tests_ce.unit_tests.educational_institution_builder import build_institution
 
 
 def _rng_fingerprint(rng: Random) -> str:
     return sha256(repr(rng.getstate()).encode()).hexdigest()
 
 
-def _institution(seed: int) -> tuple[EducationalInstitution, EducationalInstitutionGenerator, Random]:
-    rng = Random(seed)
-    generator = EducationalInstitutionGenerator(dataset="US", rng=rng)
-    return EducationalInstitution(generator), generator, rng
-
-
 def test_student_and_staff_count_order_preserves_seeded_values_and_rng_state() -> None:
-    students_first, _, students_first_rng = _institution(44)
+    students_first, _, students_first_rng = build_institution(44)
     assert _rng_fingerprint(students_first_rng) == "092d529825b02dd3c7fdb06cc222d08f5df8c09d343b24154991ffea64fd6bad"
     assert students_first.type == "Public School"
     assert students_first.level == "Elementary"
@@ -31,7 +26,7 @@ def test_student_and_staff_count_order_preserves_seeded_values_and_rng_state() -
     assert students_first.staff_count == 18
     assert _rng_fingerprint(students_first_rng) == "9fe5a70450a522bb0aa3cdf4e99633a63b3b082adfebd046090f8a982a3245a8"
 
-    staff_first, _, staff_first_rng = _institution(44)
+    staff_first, _, staff_first_rng = build_institution(44)
     assert _rng_fingerprint(staff_first_rng) == "092d529825b02dd3c7fdb06cc222d08f5df8c09d343b24154991ffea64fd6bad"
     assert staff_first.staff_count == 18
     assert staff_first.type == "Public School"

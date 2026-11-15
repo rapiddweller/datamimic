@@ -27,6 +27,8 @@ from pathlib import Path
 
 import pytest
 
+from tests_ce.architecture.production_modules import production_modules
+
 PROD_ROOT = Path(__file__).resolve().parents[2] / "datamimic_ce"
 
 TEXT_IO_METHODS = {"read_text", "write_text"}
@@ -105,12 +107,7 @@ def _collect_callsites(tree: ast.AST) -> list[tuple[int, str]]:
     return hits
 
 
-def _production_modules() -> list[Path]:
-    skip_segments = {"demos", "__pycache__"}
-    return sorted(p for p in PROD_ROOT.rglob("*.py") if not any(seg in p.parts for seg in skip_segments))
-
-
-@pytest.mark.parametrize("module_path", _production_modules(), ids=lambda p: str(p.relative_to(PROD_ROOT.parent)))
+@pytest.mark.parametrize("module_path", production_modules(), ids=lambda p: str(p.relative_to(PROD_ROOT.parent)))
 def test_text_io_declares_encoding(module_path: Path) -> None:
     rel = str(module_path.relative_to(PROD_ROOT.parent))
     hits = _collect_callsites(ast.parse(module_path.read_text(encoding="utf-8"), filename=str(module_path)))

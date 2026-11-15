@@ -10,24 +10,11 @@ from datamimic_ce.domains.insurance.generators.insurance_policy_generator import
 from datamimic_ce.domains.insurance.models.insurance_coverage import InsuranceCoverage
 from datamimic_ce.domains.insurance.models.insurance_policy import InsurancePolicy
 from datamimic_ce.domains.insurance.services.insurance_policy_service import INSURANCE_POLICY_SCHEMA
+from tests_ce.unit_tests.scripted_randoms import FixedBitsRandom
 
 
 def _rng_fingerprint(rng: Random) -> str:
     return sha256(repr(rng.getstate()).encode()).hexdigest()
-
-
-class _FixedBitsRandom(Random):
-    def __init__(self) -> None:
-        super().__init__(1)
-        self.bit_requests: list[int] = []
-        self.fail_next_uuid = False
-
-    def getrandbits(self, k: int) -> int:
-        self.bit_requests.append(k)
-        if k == 128 and self.fail_next_uuid:
-            self.fail_next_uuid = False
-            raise RuntimeError("scripted UUID draw failure")
-        return 0
 
 
 class _CoverageCountRandom(Random):
@@ -92,7 +79,7 @@ def test_policy_id_is_lazy_cached_and_reads_public_rng_once() -> None:
 
 
 def test_unbound_policies_may_keep_duplicate_id_candidates() -> None:
-    rng = _FixedBitsRandom()
+    rng = FixedBitsRandom()
     generator = InsurancePolicyGenerator(dataset="US", rng=rng)
     rng.bit_requests.clear()
     first, second = InsurancePolicy(generator), InsurancePolicy(generator)
@@ -103,7 +90,7 @@ def test_unbound_policies_may_keep_duplicate_id_candidates() -> None:
 
 
 def test_bound_policy_id_collision_is_claimed_without_redraw() -> None:
-    rng = _FixedBitsRandom()
+    rng = FixedBitsRandom()
     generator = InsurancePolicyGenerator(dataset="US", rng=rng)
     rng.bit_requests.clear()
     registry = IdentifierRegistry()
@@ -117,7 +104,7 @@ def test_bound_policy_id_collision_is_claimed_without_redraw() -> None:
 
 
 def test_policy_id_retries_after_generation_failure_without_caching_partial_result() -> None:
-    rng = _FixedBitsRandom()
+    rng = FixedBitsRandom()
     generator = InsurancePolicyGenerator(dataset="US", rng=rng)
     rng.bit_requests.clear()
     rng.fail_next_uuid = True
@@ -141,7 +128,7 @@ def test_policy_id_retries_after_claim_failure() -> None:
                 raise RuntimeError("scripted claim failure")
             return super()._claim_identifier(name, candidate)
 
-    rng = _FixedBitsRandom()
+    rng = FixedBitsRandom()
     generator = InsurancePolicyGenerator(dataset="US", rng=rng)
     rng.bit_requests.clear()
     policy = ClaimFailsOncePolicy(generator)
