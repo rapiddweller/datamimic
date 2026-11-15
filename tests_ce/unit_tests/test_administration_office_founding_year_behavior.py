@@ -160,17 +160,6 @@ def test_founding_year_uses_public_reference_now_override_not_private_clock() ->
     ]
 
 
-def test_existing_generator_founding_year_helper_uses_private_clock_and_rng_path() -> None:
-    events: list[object] = []
-    rng = _EndpointRandom(upper=False, events=events)
-    generator = _ObservedOfficeGenerator(rng, events, [])
-    generator._public_reference_now = datetime(2040, 3, 4)
-
-    assert generator.pick_founding_year("Federal") == REFERENCE_NOW.year - 20
-    assert events == [("randint", 20, 200)]
-    assert generator.rng_reads == 0
-
-
 def test_model_resolves_founding_year_inputs_before_generator_delegation() -> None:
     events: list[object] = []
     rng = _EndpointRandom(upper=False, events=events)

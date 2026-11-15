@@ -57,15 +57,15 @@ class TestAcademicTitleGenerator:
         generator_3 = AcademicTitleGenerator(quota=None)
         assert generator_3._quota == 0.5
 
-    def test_invalid_dataset(self, caplog):
-        from datamimic_ce.domains.domain_core.datasets.path import reset_dataset_fallback_log
+    def test_invalid_dataset(self, caplog, monkeypatch):
+        from datamimic_ce.domains.domain_core.datasets import path as dataset_path_module
         from datamimic_ce.engine.runtime.logging import logger as dm_logger
 
         # The US-fallback is logged once per process per dataset code, and a prior
         # full-engine run leaves the DATAMIMIC logger with propagate=False (so
         # caplog, which captures via root propagation, would miss it). Reset both
         # so this assertion is independent of test ordering.
-        reset_dataset_fallback_log()
+        monkeypatch.setattr(dataset_path_module, "_logged_dataset_fallbacks", set())
         prev_propagate = dm_logger.propagate
         dm_logger.propagate = True
         try:

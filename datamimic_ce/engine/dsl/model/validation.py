@@ -420,19 +420,6 @@ class ModelUtil:
         return value
 
     @staticmethod
-    def check_valid_data_constructor(value: str, valid_values: set[str]) -> str:
-        """
-        Check if data type is in valid set for constructor class
-        :param value:
-        :param valid_values:
-        :return:
-        """
-        converter_name = value.partition("(")[0]
-        if converter_name not in valid_values:
-            raise ValueError(f"must be one of following values {valid_values}, get unexpected value: '{value}'")
-        return value
-
-    @staticmethod
     def check_valid_pattern(value: str) -> str:
         """
         Check if attribute "pattern" is valid regex pattern

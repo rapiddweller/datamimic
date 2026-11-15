@@ -15,7 +15,6 @@ class Memstore(Exporter):
     """
 
     def __init__(self, memstore_id: str):
-        self._memstore_id = memstore_id
         self._storage: dict = {}
 
     def get_all_data_by_type(self, product_type: str):

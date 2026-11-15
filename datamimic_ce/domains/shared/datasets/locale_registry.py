@@ -8,8 +8,6 @@ place to extend dataset behaviour.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
-
 DEFAULT_POSTAL_CODE_FORMAT = "#####"
 
 # Map locale identifiers to dataset codes when they do not follow the
@@ -33,13 +31,6 @@ PATIENT_CONDITION_OVERRIDES: dict[str, list[str]] = {
     "DE": ["I10"],
     "US": ["I10"],
 }
-
-
-def get_dataset_code_override(locale: str) -> str | None:
-    """Return the dataset override for the given locale, if defined."""
-
-    normalized = locale.replace("-", "_")
-    return LOCALE_DATASET_OVERRIDES.get(normalized)
 
 
 def dataset_code_for_locale(locale: str) -> str:
@@ -66,9 +57,3 @@ def get_patient_condition_overrides(dataset: str) -> list[str]:
     overrides = PATIENT_CONDITION_OVERRIDES.get(dataset.upper(), [])
     # Copy to prevent callers from mutating internal state.
     return list(overrides)
-
-
-def iter_locale_dataset_overrides() -> Iterable[tuple[str, str]]:
-    """Yield locale → dataset override pairs (used for documentation/tests)."""
-
-    return LOCALE_DATASET_OVERRIDES.items()
