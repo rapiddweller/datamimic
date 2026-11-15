@@ -593,6 +593,26 @@ jobs:
       - name: Compare actual hashes across jobs and with committed goldens
         run: python -m tests_ce.architecture.runtime_determinism_manifest compare --root runtime-manifests --expected-count 8
 
+  unit_test_py314:
+    name: Unit tests on Python 3.14
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-22.04
+    container: python:3.14-slim-bookworm
+    steps:
+      - name: Setup git
+        run: |
+          apt-get update
+          apt-get install -y git make
+          git config --global --add safe.directory $(realpath .)
+      - name: Checkout repository
+        uses: actions/checkout@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.1.0
+      - name: Install dependencies
+        run: uv sync --python 3.14
+      - name: Run unit tests
+        run: uv run pytest tests_ce/unit_tests -q -n 2
+
   unit_test:
     runs-on: ubuntu-22.04
     needs: install_dependencies
