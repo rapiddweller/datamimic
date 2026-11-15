@@ -413,6 +413,8 @@ class ReadyBuild(_ProvenBuild):
     """A passed proof whose coverage has no open gap."""
 
     outcome: Literal["ready"] = "ready"
+    # Redeclared: ArchKeel does not follow a field that a public class inherits from the private base.
+    assurance: BuildAssurance
 
     @model_validator(mode="after")
     def coverage_has_no_gap(self) -> Self:
