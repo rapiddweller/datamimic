@@ -98,7 +98,12 @@ def test_generate_source_wgt_ent_csv_refuses_what_the_draw_cannot_honor(tmp_path
 
 @pytest.mark.parametrize(
     "products,issue",
-    [("id,name,weight\n", "I867"), ("id,name,weight\n1,Cheap,0\n", "I868"), ("id,name,weight\n1,Cheap,x\n", "I868")],
+    [
+        ("id,name,weight\n", "I867"),
+        ("id,name,weight\n1,Cheap,0\n", "I868"),
+        ("id,name,weight\n1,Cheap,x\n", "I868"),
+        ("id,name,weight\n1,Cheap,nan\n", "I868"),
+    ],
 )
 def test_generate_source_wgt_ent_csv_refuses_unusable_weights(tmp_path, products, issue):
     setup = (

@@ -152,7 +152,8 @@ def get_weighted_data(
         raise task_config_error(
             code=IssueCode.TASK_WEIGHTED_ENTITY_NO_WEIGHT_VALUES, weight_column=weight_column
         ) from error
-    if any(weight < 0 or weight != weight for weight in weights) or not any(weight > 0 for weight in weights):
+    total = sum(weights)  # NaN and infinity fail the range test
+    if any(weight < 0 for weight in weights) or not 0 < total < float("inf"):
         raise task_config_error(code=IssueCode.TASK_WEIGHTED_ENTITY_NO_WEIGHT_VALUES, weight_column=weight_column)
 
     start = 0 if pagination is None else pagination.skip
