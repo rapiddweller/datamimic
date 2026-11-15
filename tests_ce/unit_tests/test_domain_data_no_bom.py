@@ -43,3 +43,13 @@ def test_loaded_domain_values_carry_no_zero_width_no_break_space(name: str) -> N
 
     assert rows
     assert [cell for row in rows for cell in row if cell.startswith("﻿")] == []
+
+
+def test_no_domain_csv_header_cell_contains_a_zero_width_no_break_space() -> None:
+    marked = [
+        path.relative_to(DOMAINS_ROOT).as_posix()
+        for path in sorted(DOMAINS_ROOT.rglob("*.csv"))
+        if "﻿" in path.read_bytes().split(b"\n", 1)[0].decode("utf-8")
+    ]
+
+    assert marked == []
