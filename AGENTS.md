@@ -173,6 +173,7 @@ see `docs/mcp_quickstart.md` for registration details.
 - Before you write code, read `.github/pull_request_template.md`. Every change
   needs its equivalence-class table, a checked-in DSL descriptor for each class
   and a negative control. The PR body carries the table.
+- Run `make install-pre-commit` once per clone: the commit hook runs `ruff format`, `ruff check` and `mypy` on `datamimic_ce`.
 - Before committing: the targeted test, `pytest tests_ce/scenarios`,
   `ruff check datamimic_ce` and `mypy datamimic_ce` (full package; single-file
   mypy disagrees with CI). When `datamimic_ce/` changed, also run

@@ -1,16 +1,26 @@
 name: Github Datamimic CE CI
 run-name: ${{ github.actor || 'unknown' }} is running ${{ github.workflow || 'workflow' }} on ${{ github.repository || 'repo' }}
 on:
+  # A pull request runs the short lane. The full run starts when a change with code is merged
+  # into development (or a release tag is pushed), or by hand: gh workflow run main.yml --ref <branch>
   push:
     branches:
       - development
       - experiment/target-architecture-v2
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
     tags:
       - '[0-9]+.[0-9]+.[0-9]+'
   pull_request:
     branches:
       - '*'
   workflow_dispatch:
+
+# A new push to a pull request cancels its running lane. Every other run keeps its own group.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -19,6 +29,30 @@ env:
   RUNTIME_ENVIRONMENT: production
 
 jobs:
+  changes:
+    name: Changed files
+    runs-on: ubuntu-22.04
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Find out whether the change has code
+        id: filter
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # Only a pull request can be docs-only; every other event runs the whole workflow.
+          if [ "$EVENT" != "pull_request" ] || git diff --name-only "$BASE_SHA...$HEAD_SHA" | grep -qvE '\.md$|^docs/'; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "code=false" >> "$GITHUB_OUTPUT"
+          fi
+
   setup:
     runs-on: ubuntu-22.04
     steps:
@@ -54,6 +88,8 @@ jobs:
 
   archkeel_check:
     name: ArchKeel architecture contract
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
@@ -71,6 +107,7 @@ jobs:
 
   architecture_report:
     name: Architecture review report
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -159,10 +196,30 @@ jobs:
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
+  docs_tests:
+    name: Documentation tests
+    needs: changes
+    if: github.event_name == 'pull_request' && needs.changes.outputs.code != 'true'
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.1.0
+      - name: Run documentation tests
+        run: |
+          uv sync --python 3.11
+          uv run pytest tests_ce/unit_tests/test_docs -q
+
   install_dependencies:
     runs-on: ubuntu-22.04
     container: python:3.11-slim-bookworm
-    needs: setup
+    needs: [setup, changes]
+    if: needs.changes.outputs.code == 'true'
     permissions:
       contents: read
     steps:
@@ -247,6 +304,8 @@ jobs:
 
   build:
     name: Build
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout Repository
@@ -310,6 +369,7 @@ jobs:
 
   python_312_smoke:
     name: Python 3.12 wheel smoke test
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-22.04
     needs: build
     steps:
@@ -334,6 +394,7 @@ jobs:
 
   python_313_smoke:
     name: Python 3.13 wheel smoke test
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-22.04
     needs: build
     steps:
@@ -358,6 +419,7 @@ jobs:
 
   runtime_determinism_matrix:
     name: Seeded runtime determinism on ${{ matrix.os }} Python ${{ matrix.python-version }} (${{ matrix.timezone }}, ${{ matrix.resolution }})
+    if: github.event_name != 'pull_request'
     runs-on: ${{ matrix.os }}
     env:
       UV_RESOLUTION: ${{ matrix.resolution }}
@@ -480,6 +542,7 @@ jobs:
 
   runtime_determinism_fan_in:
     name: Compare seeded runtime determinism hashes across matrix cells
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-22.04
     needs: runtime_determinism_matrix
     steps:
@@ -522,7 +585,15 @@ jobs:
         with:
           path: .venv
           key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml', './uv.lock') }}
+      - name: Run unit tests in parallel
+        if: github.event_name == 'pull_request'
+        run: |
+          . .venv/bin/activate
+          uv run pytest tests_ce/unit_tests -n 4 -q
+          uv run make test-architecture
+        shell: bash
       - name: Run unit tests with coverage
+        if: github.event_name != 'pull_request'
         run: |
           . .venv/bin/activate
           uv run make coverage-unit
@@ -537,12 +608,14 @@ jobs:
           path: test-artifacts/agent-plugin/datamimic.zip
           if-no-files-found: error
       - name: Upload coverage report
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v6
         with:
           name: coverage-unit
           path: coverage.xml
 
   functional_test:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-22.04
     needs: install_dependencies
     container: python:3.11-slim-bookworm
@@ -592,6 +665,7 @@ jobs:
           path: coverage.xml
 
   integration_test:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-22.04
     needs: install_dependencies
     container: python:3.11-slim-bookworm
@@ -622,6 +696,7 @@ jobs:
           path: coverage.xml
 
   external_service_test:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-22.04
     needs: install_dependencies
     services:
@@ -770,6 +845,7 @@ jobs:
           path: coverage.xml
 
   factory_test:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-22.04
     needs: install_dependencies
     container: python:3.11-slim-bookworm
@@ -800,6 +876,7 @@ jobs:
           path: coverage.xml
 
   api_test:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-22.04
     needs: install_dependencies
     container: python:3.11-slim-bookworm
@@ -830,6 +907,7 @@ jobs:
           path: coverage.xml
 
   sonarcloud_analysis:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-22.04
     needs:
       [
