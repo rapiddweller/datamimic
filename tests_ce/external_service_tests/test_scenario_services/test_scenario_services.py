@@ -10,6 +10,7 @@ diagnostic. A project holds db/seed.sql (PostgreSQL) and db/seed.json (MongoDB):
 because Build refuses an <execute> step and reads the tables as they are. The state checks read the services."""
 
 import json
+import re
 import shutil
 from collections.abc import Iterator
 from pathlib import Path
@@ -25,6 +26,7 @@ from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, BuildResult, ReadyBuild, RejectedBuild
 from datamimic_ce.engine.dsl.api import parse_properties
 from datamimic_ce.engine.runtime.lifecycle.config import get_settings
+from datamimic_ce.errors.base import TaskConfigError
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 _ROOT = Path(__file__).resolve().parent
@@ -123,11 +125,13 @@ def _assert_state(project: Path, pg: Engine, mongo: Database) -> None:
             delivered = rows.all()
         assert len(raw) == len(delivered) == 12
         for document, (order_id, cents, status) in zip(raw, delivered, strict=True):
+            # `cents` is the amount before it became a noisy text: the transform must give it back
             assert (document["order_id"], document["cents"], document["status_raw"].strip().lower()) == (
                 order_id,
                 cents,
                 status,
             )
+            assert document["amount_text"] != str(cents), "the source text must be noisy"
 
 
 @pytest.fixture
@@ -174,3 +178,6 @@ def test_negative_is_rejected_with_named_diagnostic(project: Path, negative: dic
     if "expected" in negative:
         named = [str(item.expected) for item in rejected.diagnostics if str(item.code) == negative["diagnostic"]]
         assert negative["expected"] in named, f"expected {negative['expected']!r}, Build reported {named}"
+    if "run_error" in negative:  # the variant must also stop a normal run, with the message of its <assert>
+        with pytest.raises(TaskConfigError, match=re.escape(negative["run_error"])):
+            _run(project)

@@ -3,7 +3,7 @@
   "proves": [
     "a project declares one PostgreSQL client in the entry and uses it in three steps: clear the table, write the orders, read them back",
     "a normal run writes 12 rows to the table and the readback returns 12 rows; a second run clears first and gives the same rows",
-    "the run checks values: an <assert> on every readback row and an <assert> on a totals row (row count, id sum, amount sum, status count)",
+    "the run checks values: an <assert> on every readback row and an <assert> on a totals row (row count, id sum, amount sum, status count); a failed assert stops a normal run (negative run_assert_total_wrong)",
     "Build reads the table (seed.sql, the 12 rows that the seed writes) and proves the readback product against it; it isolates the write and skips the clear, so it does not prove that the load wrote the rows",
     "the table comes from db/seed.sql, which the test runs before Build and the runs, because Build refuses an <execute> step (unsupported_bounded_operation)",
     "the literal count on the readback works around #493 and is marked in the XML",
@@ -15,6 +15,7 @@
     {"name": "client_binding_missing", "diagnostic": "unknown_environment", "patch": {"file": "acceptance/build.json", "old": "{\"environment\": \"shop\", \"family\": \"database\"}", "new": "{\"environment\": \"other\", \"family\": \"database\"}"}},
     {"name": "readback_status_outside_set", "diagnostic": "allowed_values", "patch": {"file": "acceptance/build.json", "old": "\"product\": \"orders_back\"}, \"field\": \"status\", \"values\": [\"new\", ", "new": "\"product\": \"orders_back\"}, \"field\": \"status\", \"values\": [\"void\", "}},
     {"name": "readback_amount_above_range", "diagnostic": "range", "patch": {"file": "acceptance/build.json", "old": "\"product\": \"orders_back\"}, \"field\": \"amount_cents\", \"minimum\": 100, \"maximum\": 9900", "new": "\"product\": \"orders_back\"}, \"field\": \"amount_cents\", \"minimum\": 100, \"maximum\": 1000"}},
-    {"name": "readback_count_above_table_rows", "diagnostic": "DM316", "patch": {"file": "delivery/92_readback.xml", "old": "ORDER BY id\" distribution=\"ordered\" count=\"12\"", "new": "ORDER BY id\" distribution=\"ordered\" count=\"13\""}}
+    {"name": "readback_count_above_table_rows", "diagnostic": "DM316", "patch": {"file": "delivery/92_readback.xml", "old": "ORDER BY id\" distribution=\"ordered\" count=\"12\"", "new": "ORDER BY id\" distribution=\"ordered\" count=\"13\""}},
+    {"name": "run_assert_total_wrong", "diagnostic": "assert_failed", "expected": "The table does not hold the rows that the load writes", "run_error": "The table does not hold the rows that the load writes", "patch": {"file": "delivery/92_readback.xml", "old": "this.id_sum == 78", "new": "this.id_sum == 79"}}
   ]
 }

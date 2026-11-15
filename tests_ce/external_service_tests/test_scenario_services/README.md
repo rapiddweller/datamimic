@@ -11,7 +11,7 @@ file, SQLite and targetless projects, so these live here, with the other externa
 
 `test_scenario_services.py` has the contract of `tests_ce/scenarios/test_scenarios.py`: Build is `ready`, a run gives the
 rows in `scenario.json`, a second run gives the same rows, and each negative is rejected with its diagnostic. It adds a
-state check that reads the services directly.
+state check that reads the services directly, and a `run_error` for the negatives where a failed `<assert>` must also stop a normal run (`run_assert_*`).
 
 ## Run
 

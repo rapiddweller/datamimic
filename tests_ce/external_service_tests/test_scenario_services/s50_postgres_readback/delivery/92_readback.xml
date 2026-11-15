@@ -6,7 +6,7 @@
         <key name="amount_cents" script="this.amount_cents"/>
         <assert condition="this.status in ('new', 'paid', 'shipped')" message="The table holds a status that the load does not write"/>
     </generate>
-    <!-- The totals are the sums of the rows that the seed writes: a wrong load or a stale table fails the run. -->
+    <!-- The totals are the sums of the rows that the seed writes: a wrong load or a stale table fails the run. They belong to rngSeed 50: a new seed needs new sums and a new db/seed.sql. -->
     <generate name="orders_check" source="shop" selector="SELECT COUNT(*) AS total, SUM(id) AS id_sum, SUM(amount_cents) AS amount_sum, COUNT(DISTINCT status) AS statuses FROM dm_s50_orders" distribution="ordered" count="1" target="">
         <key name="total" script="this.total"/>
         <key name="id_sum" script="this.id_sum"/>

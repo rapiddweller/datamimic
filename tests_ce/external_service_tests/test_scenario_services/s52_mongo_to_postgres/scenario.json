@@ -2,8 +2,8 @@
   "title": "Mongo to Postgres pipeline: clean, load, transform, deliver, read back",
   "proves": [
     "a project cleans a MongoDB collection and a PostgreSQL table, writes 12 raw documents to Mongo, reads them back and writes the transformed rows to Postgres, then reads the table back",
-    "the transform turns a text amount into whole cents and a noisy status (case, space) into a lower case status; the table keeps the source text, so the run checks each row against its source",
-    "the run checks values: an <assert> on every readback row (status set, cents equal to the source text, amount range) and on a totals row (count, id sum, status count)",
+    "the transform turns a noisy text amount (thousands commas, decimal point, spaces) into whole cents and a noisy status (case, space) into a lower case status; the test compares each row of the table with its Mongo document (the cents before they became text)",
+    "the run checks values: an <assert> on every readback row (status set, amount range) and on a totals row (count, id sum, amount sum, status count); a failed assert stops a normal run (negative run_assert_amount_sum_wrong)",
     "a normal run twice gives the same rows: the clear of both targets runs first",
     "Build reads the raw documents (seed.json) and the table (seed.sql) and proves the products against them; it isolates the writes and skips the clears, so it does not prove the delivery",
     "the tables come from db/seed.sql, which the test runs before Build and the runs, because Build refuses an <execute> step",
@@ -17,7 +17,8 @@
     {"name": "mongo_binding_missing", "diagnostic": "unknown_environment", "patch": {"file": "acceptance/build.json", "old": "{\"environment\": \"mongodb\", \"family\": \"mongodb\"}", "new": "{\"environment\": \"other\", \"family\": \"mongodb\"}"}},
     {"name": "postgres_binding_missing", "diagnostic": "unknown_environment", "patch": {"file": "acceptance/build.json", "old": "{\"environment\": \"warehouse\", \"family\": \"database\"}", "new": "{\"environment\": \"other\", \"family\": \"database\"}"}},
     {"name": "status_not_normalised", "diagnostic": "allowed_values", "patch": {"file": "acceptance/build.json", "old": "\"product\": \"orders\"}, \"field\": \"status\", \"values\": [\"new\", ", "new": "\"product\": \"orders\"}, \"field\": \"status\", \"values\": [\"void\", "}},
-    {"name": "readback_amount_above_range", "diagnostic": "range", "patch": {"file": "acceptance/build.json", "old": "\"product\": \"orders_back\"}, \"field\": \"amount_cents\", \"minimum\": 100, \"maximum\": 99999", "new": "\"product\": \"orders_back\"}, \"field\": \"amount_cents\", \"minimum\": 100, \"maximum\": 1000"}},
-    {"name": "readback_count_above_table_rows", "diagnostic": "DM316", "patch": {"file": "delivery/92_readback.xml", "old": "ORDER BY order_id\" distribution=\"ordered\" count=\"12\"", "new": "ORDER BY order_id\" distribution=\"ordered\" count=\"13\""}}
+    {"name": "readback_amount_above_range", "diagnostic": "range", "patch": {"file": "acceptance/build.json", "old": "\"product\": \"orders_back\"}, \"field\": \"amount_cents\", \"minimum\": 100, \"maximum\": 9999999", "new": "\"product\": \"orders_back\"}, \"field\": \"amount_cents\", \"minimum\": 100, \"maximum\": 1000"}},
+    {"name": "readback_count_above_table_rows", "diagnostic": "DM316", "patch": {"file": "delivery/92_readback.xml", "old": "ORDER BY order_id\" distribution=\"ordered\" count=\"12\"", "new": "ORDER BY order_id\" distribution=\"ordered\" count=\"13\""}},
+    {"name": "run_assert_amount_sum_wrong", "diagnostic": "assert_failed", "expected": "The table does not hold the 12 transformed orders", "run_error": "The table does not hold the 12 transformed orders", "patch": {"file": "delivery/92_readback.xml", "old": "this.amount_sum == 33706924", "new": "this.amount_sum == 33706925"}}
   ]
 }

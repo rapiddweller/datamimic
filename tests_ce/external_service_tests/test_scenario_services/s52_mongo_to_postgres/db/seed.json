@@ -1,16 +1,16 @@
 {
   "dm_x6_raw_orders": [
-    {"order_id": 1, "cents": 15397, "amount_text": "153.97", "status_raw": " Paid"},
-    {"order_id": 2, "cents": 5868, "amount_text": "58.68", "status_raw": "NEW"},
-    {"order_id": 3, "cents": 15729, "amount_text": "157.29", "status_raw": "NEW"},
-    {"order_id": 4, "cents": 17469, "amount_text": "174.69", "status_raw": " Paid"},
-    {"order_id": 5, "cents": 93476, "amount_text": "934.76", "status_raw": "shipped "},
-    {"order_id": 6, "cents": 3520, "amount_text": "35.20", "status_raw": "shipped "},
-    {"order_id": 7, "cents": 75313, "amount_text": "753.13", "status_raw": " Paid"},
-    {"order_id": 8, "cents": 16139, "amount_text": "161.39", "status_raw": " Paid"},
-    {"order_id": 9, "cents": 10027, "amount_text": "100.27", "status_raw": "shipped "},
-    {"order_id": 10, "cents": 97293, "amount_text": "972.93", "status_raw": "shipped "},
-    {"order_id": 11, "cents": 4050, "amount_text": "40.50", "status_raw": "NEW"},
-    {"order_id": 12, "cents": 3208, "amount_text": "32.08", "status_raw": " Paid"}
+    {"order_id": 1, "cents": 1958200, "amount_text": " 19,582.00 ", "status_raw": " Paid"},
+    {"order_id": 2, "cents": 738508, "amount_text": " 7,385.08 ", "status_raw": "NEW"},
+    {"order_id": 3, "cents": 2000645, "amount_text": " 20,006.45 ", "status_raw": "NEW"},
+    {"order_id": 4, "cents": 2223413, "amount_text": " 22,234.13 ", "status_raw": " Paid"},
+    {"order_id": 5, "cents": 437869, "amount_text": " 4,378.69 ", "status_raw": "shipped "},
+    {"order_id": 6, "cents": 9627460, "amount_text": " 96,274.60 ", "status_raw": "shipped "},
+    {"order_id": 7, "cents": 2053195, "amount_text": " 20,531.95 ", "status_raw": " Paid"},
+    {"order_id": 8, "cents": 1270799, "amount_text": " 12,707.99 ", "status_raw": " Paid"},
+    {"order_id": 9, "cents": 505809, "amount_text": " 5,058.09 ", "status_raw": "shipped "},
+    {"order_id": 10, "cents": 398022, "amount_text": " 3,980.22 ", "status_raw": "shipped "},
+    {"order_id": 11, "cents": 4053937, "amount_text": " 40,539.37 ", "status_raw": "NEW"},
+    {"order_id": 12, "cents": 8439067, "amount_text": " 84,390.67 ", "status_raw": " Paid"}
   ]
 }

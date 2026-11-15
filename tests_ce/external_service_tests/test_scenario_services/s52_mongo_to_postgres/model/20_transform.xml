@@ -1,9 +1,8 @@
 <setup>
-    <!-- Purpose: read the raw documents from Mongo and write the clean rows to the Postgres table: whole cents, a lower case status without space. -->
+    <!-- Purpose: read the raw documents from Mongo and write the clean rows to the Postgres table: whole cents from the text amount, a lower case status without space. -->
     <generate name="orders" targetEntity="dm_x6_orders" type="dm_x6_raw_orders" source="mongodb" distribution="ordered" count="12" target="warehouse">
         <key name="order_id" script="this.order_id"/>
-        <key name="amount_cents" script="int(this.amount_text.replace('.', ''))"/>
+        <key name="amount_cents" script="int(this.amount_text.strip().replace(',', '').replace('.', ''))"/>
         <key name="status" script="this.status_raw.strip().lower()"/>
-        <key name="source_amount_text" script="this.amount_text"/>
     </generate>
 </setup>

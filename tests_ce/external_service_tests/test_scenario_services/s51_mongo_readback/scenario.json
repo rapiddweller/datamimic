@@ -3,7 +3,7 @@
   "proves": [
     "a project declares one MongoDB client in the entry and uses it in three steps: clear the collection, write the orders, read them back",
     "a normal run writes 12 documents and the readback returns 12 rows; a second run clears first and gives the same rows",
-    "the run checks values: an <assert> on every readback row (status set and amount range)",
+    "the run checks values: an <assert> on every readback row (status set and amount range); a failed assert stops a normal run (negative run_assert_status_set_too_small)",
     "Build reads the collection (seed.json, 12 documents) and proves the readback product against it; it isolates the write and skips the clear, so it does not prove that the load wrote the documents",
     "the collection needs no schema: the test only fills it from db/seed.json before Build",
     "the literal count on the readback works around #493 and is marked in the XML",
@@ -14,6 +14,7 @@
     {"name": "readback_count_wrong", "diagnostic": "exact_count", "expected": "11", "patch": {"file": "acceptance/build.json", "old": "\"product\": \"orders_back\"}, \"count\": 12", "new": "\"product\": \"orders_back\"}, \"count\": 11"}},
     {"name": "client_binding_missing", "diagnostic": "unknown_environment", "patch": {"file": "acceptance/build.json", "old": "{\"environment\": \"mongodb\", \"family\": \"mongodb\"}", "new": "{\"environment\": \"other\", \"family\": \"mongodb\"}"}},
     {"name": "readback_status_outside_set", "diagnostic": "allowed_values", "patch": {"file": "acceptance/build.json", "old": "\"product\": \"orders_back\"}, \"field\": \"status\", \"values\": [\"new\", ", "new": "\"product\": \"orders_back\"}, \"field\": \"status\", \"values\": [\"void\", "}},
-    {"name": "readback_amount_above_range", "diagnostic": "range", "patch": {"file": "acceptance/build.json", "old": "\"product\": \"orders_back\"}, \"field\": \"amount_cents\", \"minimum\": 100, \"maximum\": 9900", "new": "\"product\": \"orders_back\"}, \"field\": \"amount_cents\", \"minimum\": 100, \"maximum\": 1000"}}
+    {"name": "readback_amount_above_range", "diagnostic": "range", "patch": {"file": "acceptance/build.json", "old": "\"product\": \"orders_back\"}, \"field\": \"amount_cents\", \"minimum\": 100, \"maximum\": 9900", "new": "\"product\": \"orders_back\"}, \"field\": \"amount_cents\", \"minimum\": 100, \"maximum\": 1000"}},
+    {"name": "run_assert_status_set_too_small", "diagnostic": "assert_failed", "expected": "The collection holds a status that the load does not write", "run_error": "The collection holds a status that the load does not write", "patch": {"file": "delivery/92_readback.xml", "old": "this.status in ('new', 'paid', 'shipped')", "new": "this.status in ('new', 'paid')"}}
   ]
 }
