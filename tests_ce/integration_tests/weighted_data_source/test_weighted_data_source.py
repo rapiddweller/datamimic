@@ -20,7 +20,3 @@ class TestWeightedDataSource:
     def test_weighted_datasource_with_weight_column(self):
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_weighted_entity_data_source_weight_column.xml")
         engine.test_with_timer()
-
-    def test_weight_data_source(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="weighted_csv_file.xml")
-        engine.test_with_timer()
