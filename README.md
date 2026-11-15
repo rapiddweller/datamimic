@@ -23,7 +23,7 @@
   <a href="https://github.com/rapiddweller/datamimic/actions"><img alt="CI" src="https://github.com/rapiddweller/datamimic/actions/workflows/main.yml/badge.svg?branch=development"></a>
   <a href="https://sonarcloud.io/summary/new_code?id=rapiddweller_datamimic"><img alt="Coverage" src="https://sonarcloud.io/api/project_badges/measure?project=rapiddweller_datamimic&metric=coverage"></a>
   <a href="https://sonarcloud.io/summary/new_code?id=rapiddweller_datamimic"><img alt="Maintainability" src="https://sonarcloud.io/api/project_badges/measure?project=rapiddweller_datamimic&metric=sqale_rating"></a>
-  <a href="https://www.python.org/downloads/"><img alt="Python 3.11 to 3.13" src="https://img.shields.io/badge/Python-3.11%20to%203.13-blue.svg"></a>
+  <a href="https://www.python.org/downloads/"><img alt="Python 3.11 to 3.14" src="https://img.shields.io/badge/Python-3.11%20to%203.14-blue.svg"></a>
   <a href="https://github.com/rapiddweller/datamimic/blob/development/LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-green.svg"></a>
   <a href="https://github.com/rapiddweller/datamimic/blob/development/docs/agent_plugin.md"><img alt="MCP Ready" src="https://img.shields.io/badge/MCP-ready-8A2BE2.svg"></a>
 </p>
@@ -35,7 +35,7 @@ Independent random values do not agree with each other: an order points to a cus
 <!-- Recording placeholder: docs/assets/build-ready.gif, made from docs/assets/build-ready.tape after #514 merges. Caption: what the GIF shows, the CE commit, a link to the tape and to the scenario s53_readme_shop. -->
 
 - **Connected.** One XML project describes tables, nested records, references between records and conditions. CE writes CSV, JSON, XML, XLSX, DbUnit and fixed-width files, and writes to PostgreSQL, MySQL, Oracle, MS SQL Server, SQLite and MongoDB.
-- **Repeatable.** Set `<setup rngSeed="7">`. The same CE version, project files and seed give the same rows on the tested platforms. CI compares seeded output on Linux with Python 3.11 to 3.13 and on Windows with Python 3.11, on each run.
+- **Repeatable.** Set `<setup rngSeed="7">`. The same CE version, project files and seed give the same rows on the tested platforms. CI compares seeded output on Linux with Python 3.11 to 3.14 and on Windows with Python 3.11, on each run.
 - **Proven, not only generated.** `datamimic authoring build` runs the project with a row limit, checks each rule in `acceptance/build.json`, and replays the seeded run. The result is `ready` or `rejected`. `ready` is your proof that the data follows your rules. A ready Build lists every project file it read with its SHA-256. For a coding agent, `ready` is the signal that the work is done.
 - **Made for coding agents.** One plugin for Claude Code and Codex installs the skills and a local MCP server. The MCP tools mirror the CLI commands.
 
@@ -43,7 +43,7 @@ Independent random values do not agree with each other: an order points to a cus
 
 ## Quick start: command line
 
-You need Python 3.11 to 3.13.
+You need Python 3.11 to 3.14.
 
 ```bash
 python3.11 -m venv .venv && source .venv/bin/activate
@@ -197,7 +197,7 @@ More: [agent plugin guide](https://github.com/rapiddweller/datamimic/blob/develo
 - **The architecture contract is checked in public.** In each CI run, ArchKeel compares the observed structure of the code with the declared target contracts. The job `archkeel_check` must pass before a release. The [report](https://rapiddweller.github.io/datamimic/) is public. The budgets for accepted violations are ratchets: a raise needs an argued and verified amendment. A change to a contract needs an independent architecture review, recorded in a review note or in an approving review on the pull request ([how](https://github.com/rapiddweller/datamimic/blob/development/CONTRIBUTING.md)). There are 25 contract files, for example [`architecture-contract.json`](https://github.com/rapiddweller/datamimic/blob/development/architecture-contract.json), and the list of accepted violations in [`known-violations.json`](https://github.com/rapiddweller/datamimic/blob/development/known-violations.json) is empty.
 - **The DSL is specified by checked-in projects.** Each of the 43 [scenarios](https://github.com/rapiddweller/datamimic/tree/development/tests_ce/scenarios) is a real `datamimic.xml` with an `acceptance/build.json`, a list of what it proves, and negatives that must fail. CI builds every scenario with `datamimic authoring build`.
 - **CE and Enterprise compatibility is recorded.** The [parity matrix](https://github.com/rapiddweller/datamimic/blob/development/docs/architecture/inner/ce-ee-parity.md) lists each difference between the two editions with its status. CE runs the 8 shared [conformance cases](https://github.com/rapiddweller/datamimic/tree/development/tests_ce/conformance/cases) in CI; the Enterprise Core runner follows.
-- **Seeded output is measured.** CI compares seeded output on 7 configurations: Linux with Python 3.11 (UTC, Los Angeles, lowest permitted dependency versions), 3.12 and 3.13 (UTC), and Windows with Python 3.11 (UTC, Pacific). See the job [`runtime_determinism_matrix`](https://github.com/rapiddweller/datamimic/blob/development/.github/workflows/main.yml).
+- **Seeded output is measured.** CI compares seeded output on 8 configurations: Linux with Python 3.11 (UTC, Los Angeles, lowest permitted dependency versions), 3.12, 3.13 and 3.14 (UTC), and Windows with Python 3.11 (UTC, Pacific). See the job [`runtime_determinism_matrix`](https://github.com/rapiddweller/datamimic/blob/development/.github/workflows/main.yml).
 
 ## What can CE do?
 

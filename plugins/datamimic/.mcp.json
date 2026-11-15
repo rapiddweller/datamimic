@@ -5,7 +5,7 @@
       "command": "uvx",
       "args": [
         "--python",
-        ">=3.11,<3.14",
+        ">=3.11,<3.15",
         "--from",
         "datamimic-ce[mcp] @ git+https://github.com/rapiddweller/datamimic@development",
         "datamimic-mcp",

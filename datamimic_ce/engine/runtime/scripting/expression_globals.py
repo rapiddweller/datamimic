@@ -118,6 +118,9 @@ class _EvalProxy:
         self._overrides = overrides
 
     def __getattr__(self, name: str) -> object:
+        # An unpickled copy has no state yet; its own fields must read as missing, not recurse.
+        if name in ("_target", "_overrides"):
+            raise AttributeError(name)
         if name in self._overrides:
             return self._overrides[name]
         return getattr(self._target, name)
@@ -154,6 +157,9 @@ class _Uncontrolled:
         return task_config_error(code=IssueCode.TASK_EXPRESSION_EVAL_FAILED, expr=self._name, error=self._error)
 
     def __getattr__(self, attr: str) -> object:
+        # An unpickled copy has no state yet; its own fields must read as missing, not recurse into the refusal.
+        if attr in ("_name", "_error"):
+            raise AttributeError(attr)
         raise self._refuse()
 
     def __call__(self, *args: object, **kwargs: object) -> object:

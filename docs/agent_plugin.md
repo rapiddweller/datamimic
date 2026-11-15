@@ -15,7 +15,7 @@ names the published `datamimic-ce[mcp]>=5.0.0,<6`. It is the only file that hold
 the install reference.
 
 Requirements: [uv](https://docs.astral.sh/uv/) on the PATH. `uvx` picks a Python
-from `>=3.11,<3.14` by itself; it does not use your project's virtual environment.
+from `>=3.11,<3.15` by itself; it does not use your project's virtual environment.
 The tools take the absolute path of the data project (the directory that holds
 `datamimic.xml`) on every call, so the server works from any start directory.
 

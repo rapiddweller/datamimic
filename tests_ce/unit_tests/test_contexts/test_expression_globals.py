@@ -9,13 +9,20 @@ uncontrolled entropy. Every known entropy source either replays with the seed or
 than DSL because each rejected source aborts a run; the positive replay is covered by the DSL model
 tests_ce/integration_tests/test_determinism_seed_scenarios/script_globals_seeded.xml."""
 
+import pickle
+from decimal import Decimal
 from random import Random
 from types import SimpleNamespace
 
 import pytest
 from faker import Faker
 
-from datamimic_ce.engine.runtime.scripting.expression_globals import SAFE_GLOBALS, expression_globals
+from datamimic_ce.engine.runtime.scripting.expression_globals import (
+    SAFE_GLOBALS,
+    _EvalProxy,
+    _Uncontrolled,
+    expression_globals,
+)
 
 # Every name reviewed for entropy and external state (policy: expression_globals module docstring).
 # A new SAFE_GLOBALS name fails this gate until it is classified there.
@@ -204,3 +211,18 @@ def test_every_public_random_member_imported_by_name_is_rebound() -> None:
     namespace: dict[str, object] = {name: vars(random)[name] for name in random.__all__}
     rebind_seeded_script_names(namespace, Random(7), Faker)
     assert [name for name in random.__all__ if namespace[name] is vars(random)[name]] == []
+
+
+def test_an_unpickled_uncontrolled_name_still_refuses_use() -> None:
+    """dill pickles a script class by value on Python 3.14, so the refusing names in its globals must unpickle."""
+    restored = pickle.loads(pickle.dumps(_Uncontrolled("random.SystemRandom")))
+
+    with pytest.raises(ValueError, match="random.SystemRandom"):
+        _ = restored.anything
+
+
+def test_an_unpickled_eval_proxy_still_forwards_and_overrides() -> None:
+    restored = pickle.loads(pickle.dumps(_EvalProxy(Decimal, {"quantize": "override"})))
+
+    assert restored.quantize == "override"
+    assert restored.is_nan is Decimal.is_nan
