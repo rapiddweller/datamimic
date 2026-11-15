@@ -1,4 +1,4 @@
-.PHONY: help install test test-unit test-integration test-functional coverage coverage-unit typecheck lint format check architecture-check architecture-definition-check architecture-version architecture-report architecture-validation-receipt architecture-cycle-check installed-authoring-check agent-plugin-check agent-plugin-package clean
+.PHONY: help install test test-unit test-architecture test-integration test-functional coverage coverage-unit typecheck lint format check architecture-check architecture-definition-check architecture-version architecture-report architecture-validation-receipt architecture-cycle-check installed-authoring-check agent-plugin-check agent-plugin-package clean
 
 PYTHON ?= python
 INSTALLED_AUTHORING_ARGS ?=
@@ -28,6 +28,7 @@ help:
 	@echo "  lint              Run ruff against $(PACKAGE)"
 	@echo "  format            Auto-format code with ruff"
 	@echo "  check             Run lint, typecheck, and tests"
+	@echo "  test-architecture Run the whole tests_ce/architecture folder (no file is excluded)"
 	@echo "  architecture-check Validate the physical, dependency, and ArchKeel architecture gates"
 	@echo "  architecture-definition-check Validate recursive target coverage and move-map consistency"
 	@echo "  architecture-report Generate the current ArchKeel HTML and JSON report"
@@ -52,6 +53,9 @@ test:
 
 test-unit:
 	pytest -q $(TESTS)/unit_tests
+
+test-architecture:
+	pytest -q $(TESTS)/architecture
 
 test-integration:
 	pytest -q $(TESTS)/integration_tests
