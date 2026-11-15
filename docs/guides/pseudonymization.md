@@ -9,7 +9,7 @@ DATAMIMIC supports two pseudonymization modes with different repeatability prope
 | Mode | How | Compliance note | Use case |
 |---|---|---|---|
 | **Seeded** (`rngSeed` set) | Deterministic on the tested profiles | May form part of a pseudonymisation approach. Whether the result qualifies as pseudonymised under GDPR Art. 4(5) depends on whether attribution requires additional information that is kept separately and protected. | Regression testing, stable CI/CD pipelines |
-| **Non-seeded** (no `rngSeed`) | Not replay-stable | — | One-time data delivery |
+| **Non-seeded** (no `rngSeed`) | Not replay-stable | None |  One-time data delivery |
 
 > **Note on GDPR:** Pseudonymisation does not make data anonymous or establish GDPR compliance. Under Recital 26, anonymity depends on whether a person remains identifiable considering means reasonably likely to be used.
 
@@ -35,7 +35,7 @@ pipe-separated project data file; the scenario `tests_ce/scenarios/s28_pseudonym
 </setup>
 ```
 
-Built-in converters can additionally transform a key's value — e.g. replace the original
+Built-in converters can additionally transform a key's value, e.g. replace the original
 with a keyed hash, or partially mask it. `Hash` derives its HMAC key from `<setup rngSeed>`;
 the same input + seed + algorithm + output format + optional salt gives the same token across
 runs. Without a seed each run gets a new random key:
@@ -74,12 +74,12 @@ when old mappings must be reproduced. An external key keeps tokens stable when `
 and leaves seeded data generation unchanged. Existing `Hash(...)` calls without an explicit key
 retain their seed-derived behavior and its weak-seed limitations.
 
-Available converters (13): `Mask`, `MiddleMask(start, end)`, `CutLength(n)`, `Substring(start, end)`, `JavaHash`, `RemoveNoneOrEmptyElement`,
+Available converters: `Mask`, `MiddleMask(start, end)`, `CutLength(n)`, `Substring(start, end)`, `JavaHash`, `RemoveNoneOrEmptyElement`,
 `Hash(type, format[, salt])`, `DateFormat(fmt)`, `Append`, `UpperCase`,
-`LowerCase`, `Date2Timestamp`, `Timestamp2Date`.
+`LowerCase`, `Date2Timestamp`, `Timestamp2Date`. The package has 14 converter modules: these 13 and `custom_converter.py`, which this list does not cover.
 
 ```bash
-datamimic run ./pseudonymize-customers/datamimic.xml
+datamimic run <project>/datamimic.xml
 ```
 
 Use a controlled export or staging input. Do not point this workflow at a live production source.

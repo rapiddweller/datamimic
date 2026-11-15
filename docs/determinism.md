@@ -4,7 +4,7 @@ This page moved from the README. The evidence is for CE only. The DATAMIMIC Ente
 
 ## Why deterministic generation matters
 
-Most test data tools produce random output. That breaks regression tests, audit trails, and cross-team reproducibility.
+Without a seed, generated data differs on every run, so a regression test cannot compare two runs.
 
 **How it works in CE:**
 

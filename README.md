@@ -8,9 +8,9 @@
 You describe the data in an XML model. CE generates synthetic data from the model, or replaces personal data in an existing export. With a seed, the same model gives the same data again.
 
 - **Model-driven.** One XML project describes tables, nested records, references between records, and conditions. CE writes CSV, JSON, XML, XLSX, DbUnit and fixed-width files, and writes to PostgreSQL, MySQL, Oracle, MS SQL Server, SQLite and MongoDB.
-- **Repeatable.** Set `<setup rngSeed="7">`. The same CE version, project files and seed give the same rows on the tested platforms. CI compares seeded output across Linux and Windows and Python 3.11 to 3.13 on each run.
-- **Checked before you use it.** `datamimic authoring build` runs the project with a row limit and checks it against the expectations in `acceptance/build.json`. The result is `ready` or `rejected`. Build is the only proof; a successful run without Build proves nothing about the data.
-- **Made for coding agents.** One plugin for Claude Code and Codex installs the skills and a local MCP server. The MCP tools have the same names and results as the CLI commands.
+- **Repeatable.** Set `<setup rngSeed="7">`. The same CE version, project files and seed give the same rows on the tested platforms. CI compares seeded output on Linux with Python 3.11 to 3.13 and on Windows with Python 3.11, on each run.
+- **Checked before you use it.** `datamimic authoring build` runs the project with a row limit and checks it against the expectations in `acceptance/build.json`. The result is `ready` or `rejected`. A ready Build lists every project file it read with its SHA-256. Build is the only proof; a successful run without Build proves nothing about the data.
+- **Made for coding agents.** One plugin for Claude Code and Codex installs the skills and a local MCP server. The MCP tools mirror the CLI commands.
 - **Pseudonymization.** Replace names, addresses and account numbers in a staging export with generated values or keyed hashes. You name the fields; CE does not scan for personal data.
 
 > **Pre-release.** CE 5.0 is not on PyPI yet. PyPI has 4.3.0, which does not have the commands on this page. Until 5.0.0 is released, install from the GitHub branch `development` as shown below.
@@ -90,6 +90,7 @@ then run it. Show me the model and the Build evidence.
 
 The first start of the MCP server downloads CE from GitHub and takes about 7 s. Later starts take about 1 s. We measured both on one machine.
 If the server does not connect, the skills still work with the command line.
+To use the MCP server without the plugin, install `python -m pip install "datamimic-ce[mcp] @ git+https://github.com/rapiddweller/datamimic@development"`.
 
 What the agent can and cannot do:
 
@@ -113,7 +114,7 @@ More: [agent plugin guide](https://github.com/rapiddweller/datamimic/blob/develo
 </generate>
 ```
 
-- **Domain data.** Ready-made services for these domains:
+- **Domain data.** Ready-made services for these domains ([examples](https://github.com/rapiddweller/datamimic/blob/development/docs/guides/domain-examples.md)):
 
 | Domain | Services |
 |---|---|
@@ -122,7 +123,7 @@ More: [agent plugin guide](https://github.com/rapiddweller/datamimic/blob/develo
 | Insurance | InsuranceCompany, InsuranceProduct, InsurancePolicy, InsuranceCoverage |
 | E-commerce | Order, Product |
 | Public sector | AdministrationOffice, EducationalInstitution, PoliceOfficer |
-| Demographics | Person (DE, US and VN locale packs), Address, City, Country |
+| Demographics | Person (locale packs; see the [domain docs](https://github.com/rapiddweller/datamimic/blob/development/docs/data-domains/README.md)), Address, City, Country |
 | Common | Company |
 
 ## Is the output reproducible?
@@ -135,17 +136,23 @@ Yes, under these conditions: the same CE version, the same project files and the
 
 ## How do I pseudonymize an export?
 
-Name the fields and give each one a generated replacement. This model replaces the personal data in a pipe-separated export:
+Name the fields and give each one a generated replacement. This model is the tested scenario [`s28_pseudonymize_source`](https://github.com/rapiddweller/datamimic/tree/development/tests_ce/scenarios/s28_pseudonymize_source). It replaces the personal data in a pipe-separated export (`customer_id|first_name|last_name|email|iban|birth_date`):
 
 ```xml
 <setup rngSeed="42">
   <generate name="customers" source="data/entity/customers.ent.csv" target="CSV" distribution="ordered">
+    <!-- rngSeed makes seeded runs produce the same pseudonyms; remove it for a new
+         mapping per run. distribution="ordered" keeps source row N mapped to the
+         same pseudonym. -->
     <variable name="p"   entity="Person"      dataset="DE" />
     <variable name="acc" entity="BankAccount" dataset="DE" />
+
     <key name="customer_id" script="customer_id" />
     <key name="first_name" script="p.given_name" />
+    <key name="last_name"  script="p.family_name" />
     <key name="email"      script="p.email" />
-    <key name="iban"       script="acc.iban" converter="MiddleMask(8, 4)" />
+    <key name="iban"       script="acc.iban" />
+    <key name="birth_date" script="p.birthdate" />
   </generate>
 </setup>
 ```
@@ -161,9 +168,9 @@ Use a controlled export or staging input, not a live production source. Key mana
 
 | | Faker | DATAMIMIC CE |
 |---|---|---|
-| Related fields in one record (for example age and conditions) | You write the rules | Domain services keep the fields consistent |
-| References between tables | You write them | Models declare them |
-| Seed for a full project | One seed for one generator object | One seed in `<setup>` for the whole project |
+| Related fields | `profile()` and `simple_profile()` return related personal fields | Patient conditions are weighted by age (`PatientService`); `ageMin` and `ageMax` limit the age range |
+| References between records | You write the code | Nested `<generate>` and the `<reference>` element in the model |
+| Seed | `Faker.seed()` seeds the shared generator for all instances in the process | `rngSeed` in `<setup>` seeds a full project, including references between tables; CI replays seeded projects |
 | Check against expectations | No | `datamimic authoring build` |
 
 CE uses Faker as a dependency for some generators.
@@ -227,11 +234,11 @@ DATAMIMIC has two editions. Both use the same XML model language.
 What a team gets from the Platform, and where the proof is:
 
 - **Scale.** The Enterprise Core is designed for billion-record workloads: it works in pages, and memory does not grow with the record count. The largest published measurement is 100 million records for each connected system, with 4 workers and a peak process memory of 1.45 GiB or less. ([Release notes 4.0.0](https://docs.datamimic.io/release-notes/))
-- **Runtime profiles (Performance, Balanced, Flexibility).** You set logging, paging and connector tuning for each project in Runtime Configuration. ([Runtime Configuration](https://docs.datamimic.io/reference/ui/settings/runtime-config/))
+- **Runtime profiles (Performance, Balanced, Flexibility).** Today you set logging, paging and connector tuning for each project in Runtime Configuration. The three profiles are presets of these values and are planned. ([Runtime configuration per project](https://docs.datamimic.io/reference/ui/settings/runtime-config/))
 - **CI/CD and Tosca.** A pipeline uses the REST API with a project access token to change project files, start runs and get artifacts. The documentation names GitHub Actions, GitLab CI, Jenkins and Azure Pipelines. ([API](https://docs.datamimic.io/reference/api/), [Workspace API](https://docs.datamimic.io/reference/api/workspace-api/)) One bank connected DATAMIMIC to Tosca DI in a project. ([Case study](https://datamimic.io/case-study/tier-1-european-bank-deterministic-test-data-across-oracle-mongodb-kafka/))
-- **Message formats and HL7 FHIR.** The Platform has templates for EDIFACT, SWIFT MT and HL7 messages, for test and training systems only. ([Release notes 2.3.0 and 2.6.0](https://docs.datamimic.io/release-notes/)) The [Demo Store](https://docs.datamimic.io/reference/ui/demostore/) has a FHIR R4 project, "Payer Claims in FHIR R4". Its Bundles pass the HL7 Validator against FHIR R4 Core 4.0.1 for structure and cardinality, without terminology or profile validation. (Project: "Payer Claims in FHIR R4" in the Demo Store.)
-- **Approval flows.** A person reviews the PII preselection before a model is created, sets a reviewed ML generator version as default, and gives consent before an agent starts a run that can write to external systems. ([Database Workbench](https://docs.datamimic.io/reference/ui/database/), [ML Generator View](https://docs.datamimic.io/reference/ui/ml-generator-view/), [MCP client](https://docs.datamimic.io/advanced/connect-mcp-client/))
-- **Audit-evidence artifacts for GDPR Art. 30, PCI DSS 4.0.1 Req. 6.5.5, HIPAA Security Rule reviews.** For each run the Platform keeps the actor, the time, the status, the log, a snapshot of the project and the artifacts. ([Tasks](https://docs.datamimic.io/reference/ui/tasks/)) A team can attach these records to its GDPR Art. 30 documentation, to a PCI DSS 4.0.1 Req. 6.5.5 review, or to a HIPAA Security Rule review. DATAMIMIC does not certify compliance.
+- **Message formats and HL7 FHIR.** The Platform has templates for EDIFACT, SWIFT MT and HL7 messages, for test and training systems only. ([Release notes 2.3.0 and 2.6.0](https://docs.datamimic.io/release-notes/)) The [Demo Store](https://docs.datamimic.io/reference/ui/demostore/) has built-in demos that you clone into a project. One of them is a FHIR R4 project, "Payer Claims in FHIR R4".
+- **Approval flows (review and consent steps).** Today these are review and consent steps, not an approval by a second person. A person reviews the PII preselection before a model is created, sets a reviewed ML generator version as default, and gives consent before an agent starts a run that can write to external systems. ([PII review in the Database Workbench](https://docs.datamimic.io/reference/ui/database/), [ML generator versions](https://docs.datamimic.io/reference/ui/ml-generator-view/), [consent for agent runs](https://docs.datamimic.io/advanced/connect-mcp-client/))
+- **Audit-evidence artifacts for GDPR Art. 30, PCI DSS 4.0.1 Req. 6.5.5, HIPAA Security Rule reviews.** For each run the Platform keeps the actor, the time, the status, the log, a snapshot of the project and the artifacts. ([Task records](https://docs.datamimic.io/reference/ui/tasks/)) A team can attach these records to its GDPR Art. 30 documentation, to a PCI DSS 4.0.1 Req. 6.5.5 review, or to a HIPAA Security Rule review. DATAMIMIC does not certify compliance.
 
 The two editions use different engines. Do not expect the same output bytes from CE and from the Platform for the same model and seed. The determinism evidence in this repository is for CE only.
 
