@@ -590,7 +590,10 @@ jobs:
         run: |
           . .venv/bin/activate
           nproc
-          uv run pytest tests_ce/unit_tests -n auto -q --durations=40
+          # test_benchmarks (100 broken-variant runs of about 12 s each) runs in the full lane only
+          uv run pytest tests_ce/unit_tests -n auto -q --durations=0 --ignore=tests_ce/unit_tests/test_benchmarks | tee unit.log
+          echo "== seconds per test file"
+          grep -E '^[0-9.]+s (call|setup|teardown) ' unit.log | awk '{split($3,a,"::"); t[a[1]]+=$1} END {for (f in t) printf "%8.0f %s\n", t[f], f}' | sort -rn | head -25
         shell: bash
       - name: Run unit tests with coverage
         if: github.event_name != 'pull_request'
