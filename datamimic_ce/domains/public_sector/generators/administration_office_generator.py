@@ -260,12 +260,6 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
             return 10, 100
         return 5, 75
 
-    # Helper: founding year based on office type ranges (deterministic via rng)
-    def pick_founding_year(self, office_type: str) -> int:
-        year = self._reference_now.year
-        min_age, max_age = self._founding_age_bounds(office_type)
-        return year - self._rng.randint(min_age, max_age)
-
     def generate_founding_year(self, office_type: str, current_year: int) -> int:
         min_age, max_age = self._founding_age_bounds(office_type)
         return current_year - self.rng.randint(min_age, max_age)
@@ -392,25 +386,3 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
             lname = self._family_name_generator.generate()
             leadership[str(role)] = f"{fname} {lname}"
         return leadership
-
-    # Helper: website builder; choose suffix by dataset for extensibility
-    def build_website(self, jurisdiction: str) -> str:
-        # Build domain via dataset-driven DomainGenerator to avoid static TLD mappings
-        from datamimic_ce.domains.shared.literal_generators.contact.domain_generator import DomainGenerator
-
-        domain_generator = DomainGenerator(dataset=self._dataset, rng=self._derive_rng())
-        domain = domain_generator.generate().lower()
-        return f"https://www.{domain}"
-
-    # Helper: email builder from dataset roles; local-part from role slug
-    def build_email(self, office_type: str, website_url: str, *, start: Path) -> str:
-        # Use roles dataset to derive a local-part; domain is derived from dataset-driven website
-        from datamimic_ce.domains.shared.datasets.loader import load_weighted_values_try_dataset
-
-        roles, w = load_weighted_values_try_dataset(
-            "public_sector", "administration", "roles.csv", dataset=self._dataset, start=start
-        )
-        role = self._rng.choices(roles, weights=w, k=1)[0] if roles else "info"
-        local = "".join(ch for ch in str(role).lower() if ch.isalnum()) or "info"
-        domain = website_url.replace("https://www.", "")
-        return f"{local}@{domain}"

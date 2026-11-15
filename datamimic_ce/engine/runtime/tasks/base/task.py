@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from abc import ABC, abstractmethod
-from typing import Protocol
 
 from datamimic_ce.engine.dsl.api import Statement
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
@@ -25,10 +24,6 @@ class Task(ABC):
     def pre_execute(self, ctx: Context) -> None:
         """Prepare state that must be initialized before task execution."""
         return None
-
-
-class ExecutableTask(Protocol):
-    def execute(self, ctx: SetupContext | GenIterContext) -> object: ...
 
 
 class GenSubTask(Task, ABC):

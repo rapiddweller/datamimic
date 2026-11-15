@@ -23,11 +23,6 @@ class ExporterStateManager:
             self._storage_dict[key] = ExporterStateStorage(None)
         return self._storage_dict[key]
 
-    def load_exporter_state(self, key: str):
-        storage = self.get_storage(key)
-
-        return storage.global_counter, storage.current_counter, storage.chunk_index, storage.chunk_size
-
     def rotate_chunk(self, key: str):
         storage = self.get_storage(key)
 

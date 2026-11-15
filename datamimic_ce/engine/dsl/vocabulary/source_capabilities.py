@@ -123,19 +123,6 @@ def source_capabilities() -> tuple[SourceCapability, ...]:
     return _SOURCE_CAPABILITIES
 
 
-def serialize_source_capability(capability: SourceCapability) -> dict[str, object]:
-    """Project one source-capability fact to reference/capabilities JSON."""
-
-    return {
-        "element": capability.element,
-        "source_type": capability.source_type,
-        "file_suffixes": [file_format.value for file_format in capability.file_formats],
-        "allows_memstore": capability.allows_memstore,
-        "allows_client": capability.allows_client,
-        "dynamic_source": capability.dynamic_source.value if capability.dynamic_source is not None else None,
-    }
-
-
 def _source_capabilities_for(element: str, source_type: str | None = None) -> tuple[SourceCapability, ...]:
     return tuple(
         capability

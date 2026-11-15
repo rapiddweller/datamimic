@@ -179,11 +179,6 @@ class XMLExporter(UnifiedBufferedExporter):
             return ""
         return f'<?xml version="1.0" encoding="{self.encoding}"?>\n'
 
-    def _reset_state(self):
-        """Resets the exporter state for reuse."""
-        self._flattened_buffer_files.clear()
-        logger.debug("XMLExporter state has been reset.")
-
     def _is_single_item(self, buffer_file: Path) -> bool:
         """Check if the root contains one configured item with one child."""
         try:

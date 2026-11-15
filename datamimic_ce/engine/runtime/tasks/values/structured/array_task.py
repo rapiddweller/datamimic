@@ -8,11 +8,7 @@
 from decimal import Decimal
 
 from datamimic_ce.engine.dsl.api import (
-    DATA_TYPE_BOOL,
-    DATA_TYPE_FLOAT,
-    DATA_TYPE_INT,
     DATA_TYPE_LITERAL,
-    DATA_TYPE_STRING,
     ArrayStatement,
 )
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
@@ -23,12 +19,6 @@ from datamimic_ce.errors import IssueCode, task_config_error
 
 class ArrayTask(GenSubTask):
     def __init__(self, statement: ArrayStatement):
-        self._valid_element_type = {
-            DATA_TYPE_STRING,
-            DATA_TYPE_INT,
-            DATA_TYPE_BOOL,
-            DATA_TYPE_FLOAT,
-        }
         self._statement = statement
 
     @property
