@@ -4,10 +4,10 @@ The DATAMIMIC CLI provides a command-line interface for managing data generation
 
 ## Installation
 
-Install CE 5.0 from PyPI in your Python 3.11+ project environment:
+> **Pre-release.** CE 5.0 is not on PyPI yet. Until 5.0.0, install from GitHub `development`. Use Python 3.11 to 3.14.
 
 ```bash
-python -m pip install datamimic-ce
+python -m pip install "datamimic-ce @ git+https://github.com/rapiddweller/datamimic@development"
 ```
 
 ## Command Overview

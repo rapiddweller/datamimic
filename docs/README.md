@@ -71,10 +71,12 @@ For detailed information on DATAMIMIC's architecture and model descriptions, ple
 
 ### Installation
 
-Install DATAMIMIC CE from PyPI in your project environment (Python 3.11+):
+> **Pre-release.** CE 5.0 is not on PyPI yet. Until 5.0.0, install from GitHub `development`. Use Python 3.11 to 3.14.
+
+Install DATAMIMIC CE in your project environment:
 
 ```bash
-python -m pip install datamimic-ce
+python -m pip install "datamimic-ce @ git+https://github.com/rapiddweller/datamimic@development"
 ```
 
 ### Quick Start - Python API

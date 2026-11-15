@@ -73,7 +73,7 @@ and [#193](https://github.com/rapiddweller/archkeel/issues/193) are local candid
 not a published release. Re-export indexes are reused per boundary pass. No
 deadline, CE contract, baseline, Python source or descriptor was changed.
 
-The [current report](../../../../test-artifacts/architecture/ce-recursive-target/architecture.report.html)
+The current report (the public report is at https://rapiddweller.github.io/datamimic/)
 completed in 15.65 seconds on the final measured run (an earlier run: 11.46 seconds).
 It observes all 488 Python modules: 529 rule violations, 18 decisive UNKNOWN
 positions, 11 cycle edges. All 166 rule assessments have evaluator receipts.

@@ -8,10 +8,12 @@ DATAMIMIC is a powerful synthetic data generation framework built on a domain-dr
 
 ## Installation
 
+> **Pre-release.** CE 5.0 is not on PyPI yet. Until 5.0.0, install from GitHub `development`. Use Python 3.11 to 3.14.
+
 To install DATAMIMIC Community Edition:
 
 ```bash
-pip install datamimic-ce
+pip install "datamimic-ce @ git+https://github.com/rapiddweller/datamimic@development"
 ```
 
 ## Core Architecture
