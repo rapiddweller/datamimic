@@ -1,0 +1,12 @@
+{
+  "version": "5.0",
+  "max_count": 2,
+  "product_roles": [
+    {"product": "scores", "field": "id", "role": {"kind": "identifier"}}
+  ],
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "scores"}, "count": 2},
+    {"kind": "unique", "subject": {"kind": "product", "product": "scores"}, "field": "id"},
+    {"kind": "range", "subject": {"kind": "product", "product": "scores"}, "field": "score", "minimum": 0, "maximum": 10}
+  ]
+}

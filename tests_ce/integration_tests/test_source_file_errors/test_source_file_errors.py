@@ -101,7 +101,7 @@ def test_the_valid_fixed_width_neighbour_still_reads() -> None:
     assert _rows(_DIR, "fixed_width_valid") == [{"id": "1", "name": "a"}]
 
 
-# CE and EE read NaN and Infinity as floats; a catalog code for them is left out by decision (ce-ee-parity.md).
+# CE and EE read NaN and Infinity as floats in a normal run; only bounded execution refuses them (I958).
 @pytest.mark.parametrize(
     ("model", "score"),
     [

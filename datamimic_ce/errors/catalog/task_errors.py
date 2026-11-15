@@ -419,4 +419,18 @@ ISSUES: list[IssueDefinition] = [
         cause="The shell command run by <execute type='bash'> returned a non-zero exit status.",
         resolution="Fix the shell command or its environment; inspect the reported stderr/exit code.",
     ),
+    IssueDefinition(
+        code=IssueCode.TASK_CAPTURE_VALUE_NOT_FINITE,
+        name="TASK_CAPTURE_VALUE_NOT_FINITE",
+        title="Captured Value Is Not a Finite Number",
+        template="A generated row holds a number that is not finite (NaN or infinity).",
+        cause=(
+            "A source file or a script gave NaN, Infinity or a number above the largest float. "
+            "Bounded execution cannot hold such a value as evidence."
+        ),
+        resolution=(
+            "Replace the value in the source or the script with a finite number, or run the model with "
+            "datamimic run, which accepts it."
+        ),
+    ),
 ]

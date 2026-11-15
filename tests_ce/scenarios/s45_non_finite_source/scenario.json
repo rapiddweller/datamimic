@@ -1,0 +1,18 @@
+{
+  "title": "A JSON source with a non-finite number is refused by Build with a catalog code",
+  "proves": [
+    "a JSON source with finite numbers builds and replays",
+    "a JSON source with NaN, Infinity, -Infinity or a number above the largest float is refused by Build with I958, and the message holds no value"
+  ],
+  "products": {"scores": 2},
+  "negatives": [
+    {"name": "nan", "diagnostic": "child_execution", "issue": "I958",
+     "patch": {"file": "data/entity/scores.json", "old": "\"score\": 2.5", "new": "\"score\": NaN"}},
+    {"name": "infinity", "diagnostic": "child_execution", "issue": "I958",
+     "patch": {"file": "data/entity/scores.json", "old": "\"score\": 2.5", "new": "\"score\": Infinity"}},
+    {"name": "negative_infinity", "diagnostic": "child_execution", "issue": "I958",
+     "patch": {"file": "data/entity/scores.json", "old": "\"score\": 2.5", "new": "\"score\": -Infinity"}},
+    {"name": "above_max_float", "diagnostic": "child_execution", "issue": "I958",
+     "patch": {"file": "data/entity/scores.json", "old": "\"score\": 2.5", "new": "\"score\": 1e309"}}
+  ]
+}
