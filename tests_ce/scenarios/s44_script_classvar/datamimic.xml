@@ -1,0 +1,9 @@
+<setup rngSeed="44">
+    <execute uri="lib/shapes.scr.py"/>
+    <generate name="shapes" count="3">
+        <key name="shape_id" generator="IncrementGenerator"/>
+        <key name="field_count" script="field_count()"/>
+        <key name="kind" script="kind()"/>
+        <assert condition="this.field_count == 1" message="A ClassVar is not a dataclass field"/>
+    </generate>
+</setup>

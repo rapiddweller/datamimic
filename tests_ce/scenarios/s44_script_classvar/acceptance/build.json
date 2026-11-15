@@ -1,0 +1,13 @@
+{
+  "version": "5.0",
+  "max_count": 3,
+  "product_roles": [
+    {"product": "shapes", "field": "shape_id", "role": {"kind": "identifier"}}
+  ],
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "shapes"}, "count": 3},
+    {"kind": "unique", "subject": {"kind": "product", "product": "shapes"}, "field": "shape_id"},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "shapes"}, "field": "field_count", "values": [1]},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "shapes"}, "field": "kind", "values": ["polygon"]}
+  ]
+}
