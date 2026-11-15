@@ -28,6 +28,7 @@ from datamimic_ce.authoring.domain.requests import (
     PROJECT_ENTRY_PATH,
     BoundedExecutionRequest,
     ReadyBuild,
+    ReadyWithGapsBuild,
     ReferenceRequest,
     ReferenceTopic,
     RejectedBuild,
@@ -43,7 +44,7 @@ _NEGATIVES = {item["name"]: item["patch"] for item in json.loads((_PROJECT / "sc
 
 def _copy(tmp_path: Path, negative: str | None) -> Path:
     project = tmp_path / "project"
-    shutil.copytree(_PROJECT, project)
+    shutil.copytree(_PROJECT, project, ignore=shutil.ignore_patterns("scenario.json"))
     if negative is not None:  # the scenario.json patch is the single source of the variant
         patch = _NEGATIVES[negative]
         target = project / patch["file"]
@@ -284,8 +285,8 @@ def test_a_forged_stopped_capture_that_does_not_validate_is_refused(tmp_path: Pa
     assert [str(item.code) for item in evidence.diagnostics] == ["serialization"]
 
 
-def _artifact(result: ReadyBuild | RejectedBuild) -> dict[str, str]:
-    artifact = result.artifact if isinstance(result, ReadyBuild) else result.review_artifact
+def _artifact(result: ReadyBuild | ReadyWithGapsBuild | RejectedBuild) -> dict[str, str]:
+    artifact = result.review_artifact if isinstance(result, RejectedBuild) else result.artifact
     assert artifact is not None
     return {item.path.as_posix(): item.sha256 for item in artifact.files}
 
@@ -294,7 +295,7 @@ def _artifact(result: ReadyBuild | RejectedBuild) -> dict[str, str]:
 @pytest.mark.parametrize("negative", ["fails_at_middle_row", "condition_raises"])
 def test_the_review_artifact_binds_the_files_the_stopped_run_read(tmp_path: Path, negative: str) -> None:
     ready = create_authoring_application(_copy(tmp_path / "ready", None), descriptor_path=PROJECT_ENTRY_PATH).build()
-    assert isinstance(ready, ReadyBuild)
+    assert isinstance(ready, (ReadyBuild, ReadyWithGapsBuild))
     first = _build(tmp_path / "first", negative)
     project = _copy(tmp_path / "second", negative)
     items = project / "data" / "entity" / "items.json"
@@ -467,7 +468,7 @@ def test_an_assert_in_step_10_still_lists_every_check_it_could_not_evaluate(tmp_
         if item["name"] == "r4_above_maximum"
     ]
     project = tmp_path / "s12"
-    shutil.copytree(s12, project)
+    shutil.copytree(s12, project, ignore=shutil.ignore_patterns("scenario.json"))
     target = project / patch["file"]
     target.write_text(target.read_text(encoding="utf-8").replace(patch["old"], patch["new"]), encoding="utf-8")
 

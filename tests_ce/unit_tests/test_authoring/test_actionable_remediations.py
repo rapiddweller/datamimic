@@ -140,7 +140,8 @@ def test_unknown_cardinality_names_the_count_fix(tmp_path: Path) -> None:
         '<setup rngSeed="1"><variable name="rows" script="[{\'id\': 1}, {\'id\': 2}]"/>'
         '<generate name="rows_out" script="rows"><key name="id" script="id"/></generate></setup>'
     )
-    result = build_project(tmp_path, xml)
+    expectation = {"kind": "exact_count", "subject": {"kind": "product", "product": "rows_out"}, "count": 2}
+    result = build_project(tmp_path, xml, expectations=[expectation])
     messages = [item.message for item in result.diagnostics if item.severity == "error"]
     assert any("literal count" in message for message in messages), result.diagnostics
 
@@ -266,7 +267,10 @@ def test_a_missing_source_in_an_included_step_names_the_step(tmp_path: Path, cou
         f'<setup><generate name="rows"{count} source="data/missing.csv"><key name="id" constant="1"/></generate></setup>',
         encoding="utf-8",
     )
-    result = build_project(tmp_path, '<setup rngSeed="1"><include uri="steps/a.xml"/></setup>')
+    expectation = {"kind": "exact_count", "subject": {"kind": "product", "product": "rows"}, "count": 2}
+    result = build_project(
+        tmp_path, '<setup rngSeed="1"><include uri="steps/a.xml"/></setup>', expectations=[expectation]
+    )
     diagnostic = _first_error(result)
     assert diagnostic.path[:2] == ("include", "steps/a.xml")
     assert str(tmp_path) not in result.model_dump_json()

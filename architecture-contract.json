@@ -130,6 +130,7 @@
         "datamimic_ce.authoring.domain.requests:BuildAssurance",
         "datamimic_ce.authoring.domain.requests:RejectedBuild",
         "datamimic_ce.authoring.domain.requests:ReadyBuild",
+        "datamimic_ce.authoring.domain.requests:ReadyWithGapsBuild",
         "datamimic_ce.authoring.domain.requests:BuildResult",
         "datamimic_ce.authoring.domain.project_run:ExternalEffect",
         "datamimic_ce.authoring.domain.project_run:ExternalEffectKind",

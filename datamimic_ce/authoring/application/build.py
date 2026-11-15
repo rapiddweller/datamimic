@@ -11,6 +11,7 @@ from pathlib import PurePosixPath
 from pydantic import ValidationError
 
 from datamimic_ce.authoring.application.use_cases import _codec_diagnostic
+from datamimic_ce.authoring.domain.acceptance_contract import build_coverage
 from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
 from datamimic_ce.authoring.domain.build_verification import (
     blocked_verification,
@@ -19,6 +20,7 @@ from datamimic_ce.authoring.domain.build_verification import (
     unseeded_replay_evidence,
 )
 from datamimic_ce.authoring.domain.common import MAX_AUTHORING_MAX_COUNT, MAX_AUTHORING_XML_LENGTH
+from datamimic_ce.authoring.domain.coverage import unread_data_files
 from datamimic_ce.authoring.domain.diagnostics import (
     AuthoringCodecDiagnosticCode,
     AuthoringRuleId,
@@ -41,9 +43,9 @@ from datamimic_ce.authoring.domain.requests import (
     BuildRequestV5,
     BuildResult,
     ProjectFileDigest,
-    ReadyBuild,
     RejectedBuild,
     ValidatedReviewArtifact,
+    proven_build,
 )
 from datamimic_ce.authoring.domain.script_semantics import replay_causes
 from datamimic_ce.authoring.ports import (
@@ -92,8 +94,12 @@ class BuildDocumentWorkflow:
         except (OSError, ValueError):
             return RejectedBuild.from_input_error(
                 "The project has no readable acceptance/build.json.",
-                remediation='Write acceptance/build.json beside datamimic.xml, at least {"version": "5.0", '
-                '"expectations": []}; datamimic authoring reference --topic assembly shows a starter project.',
+                remediation=(
+                    "Write acceptance/build.json beside datamimic.xml with one expectation for each product, for "
+                    'example {"version": "5.0", "expectations": [{"kind": "exact_count", "subject": '
+                    '{"kind": "product", "product": "orders"}, "count": 10}]}; '
+                    "run datamimic authoring init for a starter project."
+                ),
             )
         try:
             entry_bytes = self._files.read_project_file(PROJECT_ENTRY_PATH)
@@ -202,6 +208,21 @@ class BuildDocumentWorkflow:
                 verification=blocked_verification(verification_options, "Expectation projection failed."),
             )
 
+        # Deferred behind the run: the run's own diagnostics stay first, so one pass shows every defect.
+        deferred = (
+            (
+                catalog_diagnostic(
+                    AuthoringRuleId.MISSING_EXPECTATION,
+                    "The acceptance has no expectation, so Build would check nothing about the generated products.",
+                    phase=DiagnosticPhase.EXPECTATION,
+                    path=(PROJECT_ACCEPTANCE_PATH.as_posix(), "expectations"),
+                    actual=0,
+                ),
+            )
+            if acceptance.products and not acceptance.checks
+            else ()
+        )
+
         limit = request.capture_limit(acceptance.declared_rows)
         if acceptance.declared_rows is not None and acceptance.declared_rows > limit:
             return RejectedBuild(
@@ -281,6 +302,7 @@ class BuildDocumentWorkflow:
                 catalog_diagnostic(AuthoringRuleId.VALIDATION, cause.failure_message(), phase=DiagnosticPhase.EVIDENCE)
                 for cause in causes
             )
+        diagnostics += deferred
         verification = BuildVerificationEvidence(smoke_export=smoke, deterministic_replay=replay)
         digests: dict[PurePosixPath, str] = {}
         for item in read:
@@ -331,15 +353,29 @@ class BuildDocumentWorkflow:
                 evidence=products,
                 verification=verification,
             )
-        return ReadyBuild(
+        coverage = build_coverage(
+            acceptance,
+            seeded=document.root.properties.get("rng_seed") is not None,
+            unread_data_files=unread_data_files(
+                self._files.list_project_files(),
+                (item.path for item in first.files),
+                (
+                    PROJECT_ACCEPTANCE_PATH,
+                    PROJECT_ENTRY_PATH,
+                    *(PurePosixPath(step.uri) for step in graph.descriptors),
+                ),
+            ),
+        )
+        return proven_build(
             artifact=artifact,
             assurance=BuildAssurance(
                 mode="target_isolated" if targeted else "local_bounded",
                 source_accesses=first.source_accesses,
             ),
             evidence=products,
+            coverage=coverage,
             verification=verification,
-            diagnostics=diagnostics,
+            diagnostics=(*diagnostics, *coverage.warnings()),
         )
 
 

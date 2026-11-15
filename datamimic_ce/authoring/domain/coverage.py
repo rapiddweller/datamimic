@@ -146,7 +146,11 @@ def unread_data_files(
     read_paths: Iterable[PurePosixPath],
     parent_read: Iterable[PurePosixPath],
 ) -> tuple[PurePosixPath, ...]:
-    """Data files of the private copy that neither Build nor the audit hook saw opened."""
+    """Data files of the workspace that neither Build nor the audit hook saw opened.
+
+    EE adds a `source_accesses` argument for native readers (parquet) that open files outside the audit hook. CE has
+    no such reader, so a project `.parquet` file is always reported; a later reader adds the argument here.
+    """
     used = {*read_paths, *parent_read}
     return tuple(sorted(path for path in workspace_files if _is_project_data(path) and path not in used))
 

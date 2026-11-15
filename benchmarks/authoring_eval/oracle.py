@@ -33,7 +33,7 @@ from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 
 from benchmarks.authoring_eval.capture import Capture
 from datamimic_ce.authoring import create_authoring_application
-from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, ReadyBuild
+from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, ReadyBuild, ReadyWithGapsBuild
 from datamimic_ce.engine.dsl.api import DTDForbiddenError, parse_xml_file
 
 CASES = Path(__file__).resolve().parent / "cases"
@@ -657,9 +657,12 @@ def _observe(case: str, project: Path, changed_fixtures: list[str]) -> Observed:
         except Exception as error:  # an untrusted project can make Build raise; the runs must still finish
             build_note: str | None = f"Build raised {type(error).__name__}"
         else:
-            build_note = (
-                None if isinstance(build, ReadyBuild) else f"Build {build.outcome} in phase {build.phase.value}"
-            )
+            if isinstance(build, ReadyBuild):
+                build_note = None
+            elif isinstance(build, ReadyWithGapsBuild):
+                build_note = f"Build ready_with_gaps: {build.action_required}"
+            else:
+                build_note = f"Build {build.outcome} in phase {build.phase.value}"
         first, second, *changed = [_finish(*run) for run in runs]
         outputs = {_FIXTURES: Output(first.error, json_outputs(first_copy), first.rows)} | {
             name: Output(capture.error, json_outputs(copy), capture.rows)

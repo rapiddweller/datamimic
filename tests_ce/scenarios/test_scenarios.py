@@ -13,7 +13,13 @@ import pytest
 from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr
 
 from datamimic_ce.authoring import create_authoring_application
-from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, BuildResult, ReadyBuild, RejectedBuild
+from datamimic_ce.authoring.domain.requests import (
+    PROJECT_ENTRY_PATH,
+    BuildResult,
+    ReadyBuild,
+    ReadyWithGapsBuild,
+    RejectedBuild,
+)
 from datamimic_ce.errors.base import TaskConfigError
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
@@ -76,7 +82,7 @@ _EQUIVALENTS = [(path, equivalent) for path in _DIRECTORIES for equivalent in _l
 
 
 def _copy(source: Path, destination: Path) -> Path:
-    shutil.copytree(source, destination)
+    shutil.copytree(source, destination, ignore=shutil.ignore_patterns("scenario.json"))
     return destination
 
 
@@ -105,7 +111,9 @@ def test_scenario_builds_runs_and_replays(directory: Path, tmp_path: Path, monke
     monkeypatch.chdir(project)  # file and SQLite products resolve against the working directory
 
     built = _build(project)
-    assert isinstance(built, ReadyBuild), [(str(item.code), item.message) for item in built.diagnostics]
+    assert isinstance(built, (ReadyBuild, ReadyWithGapsBuild)), [
+        (str(item.code), item.message) for item in built.diagnostics
+    ]
 
     first = _run(project)
     counts = {name: len(rows) for name, rows in first.items() if name in scenario.products}
@@ -254,7 +262,9 @@ def test_equivalent_spelling_gives_the_same_rows(
     variant = _copy(directory, tmp_path / "variant")
     _apply(equivalent.patch, variant)
     built = _build(variant)
-    assert isinstance(built, ReadyBuild), [(str(item.code), item.message) for item in built.diagnostics]
+    assert isinstance(built, (ReadyBuild, ReadyWithGapsBuild)), [
+        (str(item.code), item.message) for item in built.diagnostics
+    ]
 
     monkeypatch.chdir(project)
     rows = _run(project)

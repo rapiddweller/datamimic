@@ -192,10 +192,18 @@ def test_seeded_where_run_replays_identically_across_hash_seeds() -> None:
     assert len({row["id"] for row in rows}) == 15  # the random pool is the 20 kept rows, drawn without repeats
 
 
+_ACCEPTANCE = json.dumps(
+    {
+        "version": "5.0",
+        "expectations": [{"kind": "exact_count", "subject": {"kind": "product", "product": "rows"}, "count": 1}],
+    }
+)
+
+
 def _project(tmp_path: Path, iterate: str, setup: str = 'rngSeed="1"') -> Path:
     shutil.copytree(_DIR / "data", tmp_path / "data")
     (tmp_path / "acceptance").mkdir()
-    (tmp_path / "acceptance" / "build.json").write_text('{"version": "5.0", "expectations": []}', encoding="utf-8")
+    (tmp_path / "acceptance" / "build.json").write_text(_ACCEPTANCE, encoding="utf-8")
     (tmp_path / "datamimic.xml").write_text(f"<setup {setup}>{iterate}</setup>", encoding="utf-8")
     return tmp_path
 
@@ -300,7 +308,7 @@ def test_dry_run_and_build_report_the_same_catalog_code(tmp_path: Path, attribut
 
     shutil.copytree(_DIR / "data", tmp_path / "data")
     (tmp_path / "acceptance").mkdir()
-    (tmp_path / "acceptance" / "build.json").write_text('{"version": "5.0", "expectations": []}', encoding="utf-8")
+    (tmp_path / "acceptance" / "build.json").write_text(_ACCEPTANCE, encoding="utf-8")
     xml = (
         f'<setup rngSeed="1"><iterate name="rows" source="data/fixtures/orders.ent.csv" distribution="ordered" '
         f"{attributes} "
@@ -411,7 +419,7 @@ def test_an_empty_columns_text_names_no_column(text: str) -> None:
 def test_build_limit_boundary_for_kept_rows(tmp_path: Path, kept: int, ready: bool) -> None:
     """The default limit is 10: ten kept rows prove the capture, eleven stop the run with the count rule."""
     from datamimic_ce.authoring.bootstrap import create_authoring_application
-    from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, ReadyBuild
+    from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, ReadyBuild, ReadyWithGapsBuild
 
     iterate = (
         f'<iterate name="rows" source="data/fixtures/many.ent.csv" distribution="ordered" '
@@ -430,7 +438,8 @@ def test_build_limit_boundary_for_kept_rows(tmp_path: Path, kept: int, ready: bo
         encoding="utf-8",
     )
     built = create_authoring_application(project, descriptor_path=PROJECT_ENTRY_PATH).build()
-    assert isinstance(built, ReadyBuild) is ready, built.diagnostics
+    # The fixture folder holds files this model does not read, so a passed Build may carry that coverage gap.
+    assert isinstance(built, (ReadyBuild, ReadyWithGapsBuild)) is ready, built.diagnostics
 
 
 _KEEP = 'source="data/fixtures/orders.ent.csv" distribution="ordered" where="int(amount) &gt;= 1000"'

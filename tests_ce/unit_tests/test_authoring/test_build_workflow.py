@@ -74,6 +74,9 @@ class Files:
         files = {PROJECT_ENTRY_PATH: self.entry, PROJECT_ACCEPTANCE_PATH: self.acceptance.model_dump_json()}
         return files[path].encode()
 
+    def list_project_files(self):
+        return (PROJECT_ACCEPTANCE_PATH, PROJECT_ENTRY_PATH)
+
 
 def workflow(executor, entry=SEEDED, **acceptance):
     from datamimic_ce.authoring.adapters.dm_json_codec import CeDmJsonCodec
@@ -86,7 +89,8 @@ def workflow(executor, entry=SEEDED, **acceptance):
 def test_ready_uses_full_capture_and_one_execution():
     executor = Executor([captured()])
     result = workflow(executor, SEEDED.replace(' rngSeed="7"', ""), sample_rows=1).execute()
-    assert result.outcome == "ready"
+    assert result.outcome == "ready_with_gaps"
+    assert result.coverage.open_gaps[-1].value == "seeded"
     assert result.evidence[0].count == 3
     assert len(result.evidence[0].rows) == 1
     assert result.evidence[0].capture.complete

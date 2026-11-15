@@ -115,7 +115,7 @@ _SET_ORDER_NEGATIVES = ("set_order", "two_element_set", "sorted_key_tie", "dict_
 
 def _build_negative(name: str, tmp_path: Path) -> BuildResult:
     project = tmp_path / name
-    shutil.copytree(_S17, project)
+    shutil.copytree(_S17, project, ignore=shutil.ignore_patterns("scenario.json"))
     # scenario.json holds the one patch that makes each negative.
     (patch,) = (
         item["patch"] for item in json.loads((_S17 / "scenario.json").read_text())["negatives"] if item["name"] == name
