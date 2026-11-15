@@ -1,0 +1,55 @@
+<setup>
+    <!-- Validate output: measure the postings against every rule again, from the data; Build compares the values. -->
+    <generate name="line_checks" source="mem" sourceEntity="ledger_lines" distribution="ordered" target="CSV">
+        <variable name="lines" source="mem" sourceEntity="ledger_lines" storage="data" distribution="ordered"/>
+        <variable name="accounts" source="mem" sourceEntity="accounts" storage="data" distribution="ordered"/>
+        <variable name="policy" source="mem" sourceEntity="policy" storage="data" distribution="ordered"/>
+        <variable name="account" script="{row.account_id: row for row in accounts}[account_id]"/>
+        <key name="line_id" script="line_id"/>
+        <key name="entry_id" script="entry_id"/>
+        <key name="account_id" script="account_id"/>
+        <key name="one_sided" script="debit_cents &gt;= 0 and credit_cents &gt;= 0 and (debit_cents &gt; 0) != (credit_cents &gt; 0)"/>
+        <key name="days_since_open" script="(posted_on - account.opened_on).days"/>
+        <key name="days_to_close" script="None if account.closed_on is None else (account.closed_on - posted_on).days"/>
+        <key name="days_to_period_close" script="(policy[0].period_close - posted_on).days"/>
+        <key name="currency_matches" script="currency == account.currency"/>
+        <key name="entry_debits" script="sum(row.debit_cents for row in lines if row.entry_id == entry_id)"/>
+        <key name="entry_credits" script="sum(row.credit_cents for row in lines if row.entry_id == entry_id)"/>
+        <key name="allow_negative" script="account.allow_negative"/>
+        <!-- The balance of the account after this line, on its normal side. Posting order: day, then posting_rank (invoices before payments), then line id. -->
+        <key name="balance_after" script="sum((row.debit_cents - row.credit_cents) * (1 if account.normal_side == 'debit' else -1) for row in lines if row.account_id == account_id and (row.posted_on, row.posting_rank, row.line_id) &lt;= (posted_on, posting_rank, line_id))"/>
+    </generate>
+    <generate name="invoice_amount_checks" source="mem" sourceEntity="invoice_amounts" distribution="ordered" target="CSV">
+        <variable name="invoices" source="mem" sourceEntity="invoices" storage="data" distribution="ordered"/>
+        <key name="invoice_id" script="invoice_id"/>
+        <key name="tax_cents" script="tax_cents"/>
+        <!-- L7: the tax is within half a cent of the exact tax, from the invoice rows; the gross is net plus tax. -->
+        <key name="tax_error_tenth_basis" script="abs(tax_cents * 10000 - {row.invoice_id: row.net_cents * row.tax_rate_bp for row in invoices}[invoice_id])"/>
+        <key name="gross_is_net_plus_tax" script="gross_cents == {row.invoice_id: row.net_cents for row in invoices}[invoice_id] + tax_cents"/>
+    </generate>
+    <generate name="allocation_checks" source="mem" sourceEntity="allocations" distribution="ordered" target="CSV">
+        <variable name="allocations" source="mem" sourceEntity="allocations" storage="data" distribution="ordered"/>
+        <variable name="payments" source="mem" sourceEntity="payments" storage="data" distribution="ordered"/>
+        <variable name="invoice_amounts" source="mem" sourceEntity="invoice_amounts" storage="data" distribution="ordered"/>
+        <variable name="gross_of" script="{row.invoice_id: row.gross_cents for row in invoice_amounts}"/>
+        <key name="allocation_id" script="allocation_id"/>
+        <key name="amount_cents" script="amount_cents"/>
+        <key name="payment_allocated" script="sum(row.amount_cents for row in allocations if row.payment_id == payment_id)"/>
+        <key name="payment_amount" script="{row.payment_id: row.amount_cents for row in payments}[payment_id]"/>
+        <key name="invoice_allocated" script="sum(row.amount_cents for row in allocations if row.invoice_id == invoice_id)"/>
+        <key name="invoice_gross" script="gross_of[invoice_id]"/>
+        <key name="days_after_invoice" script="({row.payment_id: row.paid_on for row in payments}[payment_id] - {row.invoice_id: row.invoice_date for row in invoice_amounts}[invoice_id]).days"/>
+        <key name="same_customer" script="{row.payment_id: row.customer_id for row in payments}[payment_id] == {row.invoice_id: row.customer_id for row in invoice_amounts}[invoice_id]"/>
+        <!-- L6: the open amount of this invoice before this share, and the open total of the payment over its invoices. -->
+        <key name="open_before" script="invoice_gross - sum(row.amount_cents for row in allocations if row.invoice_id == invoice_id and row.allocation_id &lt; allocation_id)"/>
+        <key name="due_total" script="sum(gross_of[row.invoice_id] - sum(other.amount_cents for other in allocations if other.invoice_id == row.invoice_id and other.allocation_id &lt; row.allocation_id) for row in allocations if row.payment_id == payment_id)"/>
+        <!-- The share is the exact proportion up to one cent: the error is below the open total. -->
+        <key name="proportion_error" script="abs(amount_cents * due_total - payment_amount * open_before)"/>
+    </generate>
+    <generate name="ledger_checks" source="mem" sourceEntity="ledger" distribution="ordered" target="CSV">
+        <variable name="lines" source="mem" sourceEntity="ledger_lines" storage="data" distribution="ordered"/>
+        <key name="ledger_id" script="ledger_id"/>
+        <key name="total_debits" script="sum(row.debit_cents for row in lines)"/>
+        <key name="total_credits" script="sum(row.credit_cents for row in lines)"/>
+    </generate>
+</setup>

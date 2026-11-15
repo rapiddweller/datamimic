@@ -1,0 +1,20 @@
+<setup rngSeed="49">
+    <!-- Ledger postings for one month. README.md names the files and where each rule L1 to L7 lives. -->
+    <include uri="conf/policy.properties"/>
+    <memstore id="mem"/>
+    <execute uri="lib/payment_allocation.scr.py"/>
+    <!-- 10 prepare: read each data file and give each column its type -->
+    <include uri="model/10_prepare.xml"/>
+    <!-- 20 amounts: net, tax and gross of each invoice, in whole cents -->
+    <include uri="model/20_amounts.xml"/>
+    <!-- 30 allocate: split each payment over the open invoices of its customer, to the cent -->
+    <include uri="model/30_allocate.xml"/>
+    <!-- 40 post: write the journal entries and their lines -->
+    <include uri="model/40_post.xml"/>
+    <!-- 90 validate input: measure the input values that Build compares -->
+    <include uri="delivery/90_validate_input.xml"/>
+    <!-- 91 validate output: measure the postings against every rule again, from the data -->
+    <include uri="delivery/91_validate_output.xml"/>
+    <!-- 93 export: write each product to CSV -->
+    <include uri="delivery/93_export.xml"/>
+</setup>

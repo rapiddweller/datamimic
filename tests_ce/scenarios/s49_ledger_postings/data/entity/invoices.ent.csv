@@ -1,0 +1,5 @@
+invoice_id|customer_id|net_cents|tax_rate_bp|invoice_date|currency
+I1|K1|1050|1900|2026-03-02|EUR
+I2|K1|3333|1900|2026-03-10|EUR
+I3|K1|2000|700|2026-03-31|EUR
+I4|K2|5000|1900|2026-03-15|EUR

@@ -1,0 +1,12 @@
+<setup>
+    <!-- Validate input: measure the input values; acceptance/build.json compares them. -->
+    <generate name="invoice_checks" source="mem" sourceEntity="invoices" distribution="ordered" target="CSV">
+        <key name="invoice_id" script="invoice_id"/>
+        <key name="net_cents" script="net_cents"/>
+        <key name="tax_rate_bp" script="tax_rate_bp"/>
+    </generate>
+    <generate name="payment_checks" source="mem" sourceEntity="payments" distribution="ordered" target="CSV">
+        <key name="payment_id" script="payment_id"/>
+        <key name="amount_cents" script="amount_cents"/>
+    </generate>
+</setup>
