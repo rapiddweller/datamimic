@@ -589,8 +589,8 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           . .venv/bin/activate
-          uv run pytest tests_ce/unit_tests -n 4 -q
-          uv run make test-architecture
+          nproc
+          uv run pytest tests_ce/unit_tests -n auto -q --durations=40
         shell: bash
       - name: Run unit tests with coverage
         if: github.event_name != 'pull_request'
@@ -613,6 +613,35 @@ jobs:
         with:
           name: coverage-unit
           path: coverage.xml
+
+  architecture_tests:
+    name: Architecture tests
+    needs: install_dependencies
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-22.04
+    container: python:3.11-slim-bookworm
+    steps:
+      - name: Setup git
+        run: |
+          apt-get update
+          apt-get install -y git make
+          git config --global --add safe.directory $(realpath .)
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.1.0
+      - name: Load venv cache
+        uses: actions/cache/restore@v5
+        with:
+          path: .venv
+          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml', './uv.lock') }}
+      - name: Run architecture tests
+        run: |
+          . .venv/bin/activate
+          uv run pytest tests_ce/architecture -n auto -q --durations=15
+        shell: bash
 
   functional_test:
     if: github.event_name != 'pull_request'
