@@ -604,10 +604,12 @@ jobs:
       - name: Setup git
         run: |
           apt-get update
-          apt-get install -y git make
+          apt-get install -y git make jq
           git config --global --add safe.directory $(realpath .)
       - name: Checkout repository
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - name: Install uv
         uses: astral-sh/setup-uv@v8.1.0
       - name: Install dependencies
