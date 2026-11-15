@@ -10,8 +10,14 @@ checks those requirements. Keep their requested outputs, relationships and scale
 
 ## Choose the project
 
-- For a local project, use [CE authoring](references/ce.md). The project CLI is
-  the baseline; an existing CE MCP connection exposes the same application.
+- When `datamimic_*` tools from the server `datamimic` are connected, use them and
+  follow the instructions that server provides. Do not run the `datamimic` CLI for
+  steps those tools cover. Every project tool takes the absolute `project`
+  directory. Read [CE authoring](references/ce.md) for the project layout and
+  repair rules.
+- Without those tools, use the project CLI as described in [CE authoring](references/ce.md).
+  If the tools are missing because the server did not start, run the
+  [setup](../setup-datamimic/SKILL.md) skill.
 - For a connected DATAMIMIC Platform project, use [Platform authoring](references/platform.md).
   Its project-scoped MCP server owns the workflow and remote files.
 - If both are available and the destination is unclear, clarify the destination

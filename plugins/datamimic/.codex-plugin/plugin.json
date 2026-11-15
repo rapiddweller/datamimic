@@ -1,0 +1,20 @@
+{
+  "name": "datamimic",
+  "version": "0.4.0",
+  "description": "Author and verify synthetic test data with DATAMIMIC CE or a connected Platform project.",
+  "author": {
+    "name": "rapiddweller"
+  },
+  "repository": "https://github.com/rapiddweller/datamimic",
+  "license": "MIT",
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "requires_local_executor": true,
+  "onboardingSkill": "./skills/setup-datamimic/SKILL.md",
+  "interface": {
+    "displayName": "DATAMIMIC",
+    "shortDescription": "Author and verify test data",
+    "developerName": "rapiddweller",
+    "category": "Productivity"
+  }
+}

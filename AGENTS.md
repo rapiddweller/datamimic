@@ -15,8 +15,9 @@ See [client setup](docs/agent_plugin.md); a package installation does not includ
 
 ## Tool selection
 
-Use `.venv/bin/datamimic` in this checkout. Install the optional MCP adapter only
-when the calling environment uses MCP; both transports call the same application.
+Use `.venv/bin/datamimic` in this checkout. The agent plugin connects the MCP server
+(`datamimic_*` tools) in Codex and Claude Code through `uvx`; both transports call the
+same application. See `docs/agent_plugin.md`.
 
 | Need | Command |
 |---|---|
@@ -157,9 +158,9 @@ pip install "datamimic-ce @ git+https://github.com/rapiddweller/datamimic@develo
 
 CE 5.0 is not on PyPI yet. Until 5.0.0, install from GitHub `development`.
 
-The MCP adapter is optional. Install it with `pip install "datamimic-ce[mcp] @ git+https://github.com/rapiddweller/datamimic@development"`
-only when the calling environment uses MCP; see `docs/mcp_quickstart.md` for
-registration details.
+The agent plugin starts the MCP server through `uvx`; nothing needs installing for it.
+For a host without the plugin install `pip install "datamimic-ce[mcp] @ git+https://github.com/rapiddweller/datamimic@development"`;
+see `docs/mcp_quickstart.md` for registration details.
 
 ## Working on this repository
 
@@ -195,7 +196,7 @@ registration details.
 
 ## Pointers
 
-- Optional MCP adapter: `docs/mcp_quickstart.md`.
+- MCP server and plugin flow: `docs/agent_plugin.md`, `docs/mcp_quickstart.md`.
 - Curated doc map for LLM consumption: `llms.txt`.
 - Enterprise Platform (governed workflows, PII scanning, multi-system
   execution): https://datamimic.io

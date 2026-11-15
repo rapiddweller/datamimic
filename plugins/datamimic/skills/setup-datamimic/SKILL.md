@@ -1,60 +1,65 @@
 ---
 name: setup-datamimic
-description: Use when setting up local DATAMIMIC authoring in a project, or when its CE CLI is missing or incompatible.
+description: Use when the DATAMIMIC tools of this plugin are not connected, to start them or to set up local DATAMIMIC authoring in a project.
 ---
 
-# Set up DATAMIMIC in the project
+# Set up DATAMIMIC
 
-Prepare the selected local project for CE authoring, then continue the user's
-data task. A connected Platform project uses its existing remote service and
-does not need a local CE installation.
+The plugin starts a DATAMIMIC server through `uvx`. This skill makes sure that
+`uvx` works, warms the server once and checks the contract. A connected Platform
+project uses its existing remote service and needs none of this.
 
-## Select the environment
+## Connect the server
 
-Read the project's instructions, Makefile, dependency declarations and lockfile.
-Use its configured Python interpreter and dependency manager. Resolve absolute
-project and interpreter paths; a global CLI on PATH is not evidence that it
-belongs to this project. Preserve the existing environment and dependencies.
+1. Check `uvx`: `command -v uvx` (Windows: `where uvx`). If it is missing, tell the
+   user in one line: "Install uv to connect the DATAMIMIC tools:
+   https://docs.astral.sh/uv/". Do not install uv or any system tool yourself.
+   Then use the fallback below.
+2. Read the server entry in `../../.mcp.json` (relative to this skill's directory).
+   Its `args` hold the Python range after `--python` and the install reference
+   after `--from`. Use exactly those values; do not copy them anywhere else.
+3. Warm the server once. The first start builds an isolated environment and can
+   take minutes; a later start takes seconds:
 
-If no environment is configured, find Python 3.11+ and create `.venv` in the
-project with that interpreter's `-m venv .venv`. Keep model resources outside
-root `.venv`/`venv` directories, which bounded snapshots exclude. Use the
-environment's binaries explicitly, including `Scripts` on Windows. If Python is unavailable, report
-that prerequisite; do not install a system interpreter.
+   ```bash
+   uvx --python "<range>" --from "<install reference>" datamimic-mcp --help
+   ```
 
-## Install only when needed
+4. Ask the user to reconnect the server (Claude Code: `/mcp`, then reconnect; Codex:
+   restart the session). If the tools are still missing, report the exact output of
+   the warm-up command.
+5. Call `datamimic_version`. It must show `build_protocol` `5.0`. Another value
+   or a missing field means this package is too old for the plugin: report it.
 
-Try the selected environment's `datamimic authoring version` and
-`datamimic authoring reference --topic assembly --name starter`. A compatible
-CE 5 runtime must expose Build protocol `5.0`: a starter with `entry_xml` and an
-`acceptance` carrying expectations.
-If that contract is already available, setup is complete: record the resolved
-paths/version and continue the data task. Do not invoke pip or another dependency
-manager, even to request an already satisfied package.
-
-Only if CE is absent or incompatible, install CE 5 (from GitHub `development` until 5.0.0) through
-the project's dependency manager and record it in the existing dependency/lock
-files. For an unmanaged virtual environment, use its Python directly:
+To update to the newest `development` commit, run the warm-up command again with
+`uvx --refresh`:
 
 ```bash
-python -m pip install "datamimic-ce @ git+https://github.com/rapiddweller/datamimic@development"
+uvx --refresh --python "<range>" --from "<install reference>" datamimic-mcp --help
 ```
 
-Here `python` means the absolute selected environment interpreter. Complete this
-setup as part of the requested task; do not send the user a command to run when
-you can execute it. Respect host permissions. An existing incompatible explicit
-pin needs a reported dependency conflict, not silently removing the pin or
-replacing the environment. CLI authoring needs no MCP extra.
+Then reconnect the server.
 
-If the install cannot be resolved, installation fails, or the live
-contract remains incompatible, preserve the project and report the exact stage
-and error. Do not substitute an old API, local checkout or local wheel. An
-access/configuration failure is not an authoring result.
+## Without uv
 
-## Verify and continue
+Use the project's own CLI environment. Read the project's instructions, Makefile,
+dependency declarations and lockfile; use its configured Python 3.11+ interpreter
+and dependency manager and preserve its pins. If no environment is configured, create
+`.venv` in the project with a Python 3.11+ interpreter's `-m venv .venv`. If Python
+is unavailable, report that prerequisite; do not install a system interpreter.
 
-Run both discovery commands with the installed project's absolute CLI. Check
-the actual returned contract; installation exit status alone is insufficient.
-Record the project root, interpreter, CLI path, CE version and any dependency
-changes. A second invocation should reuse the verified environment unchanged.
-Return to the original data task using [CE authoring](../generate-test-data/references/ce.md).
+Try the environment's `datamimic authoring version`. A compatible runtime shows
+`build_protocol` `5.0`; then setup is complete and no install is needed. Otherwise
+install the package from the install reference you read in step 2, using the
+environment's interpreter directly:
+
+```bash
+python -m pip install "<install reference>"
+```
+
+Here `python` means the absolute selected interpreter, and `<install reference>`
+is the string after `--from` in `../../.mcp.json`. An existing incompatible
+explicit pin is a reported dependency conflict: do not remove it. If the
+installation fails, report the stage and the exact error and leave the project
+unchanged. Check `datamimic authoring version` again, then continue the data task
+with [CE authoring](../generate-test-data/references/ce.md).
