@@ -52,8 +52,15 @@ The Enterprise Platform adds the governed workflows, scanners, dashboards, and e
 ## AI agents: author, verify, and run data models
 
 The [agent plugin](docs/agent_plugin.md) prepares CE in your project environment
-when needed. For manual installation, use `python -m pip install datamimic-ce`
-from PyPI. These instructions describe CE 5.0.
+when needed. These instructions describe CE 5.0.
+
+> **Pre-release.** CE 5.0 is not on PyPI yet. Until 5.0.0, install from GitHub `development`. Use Python 3.11 to 3.13. PyPI has 4.3.0, which does not have the commands on this page.
+
+For manual installation, run:
+
+```bash
+python -m pip install "datamimic-ce @ git+https://github.com/rapiddweller/datamimic@development"
+```
 
 XML is the persisted executable project: a `datamimic.xml` entry and the steps it
 includes. Expectations and role declarations live beside it in
@@ -95,7 +102,7 @@ with the XML and verification evidence.
 
 ### Optional MCP adapter
 
-`python -m pip install "datamimic-ce[mcp]"` adds the same application as typed MCP tools:
+`python -m pip install "datamimic-ce[mcp] @ git+https://github.com/rapiddweller/datamimic@development"` adds the same application as typed MCP tools:
 Build, compile/decompile, discovery, lint and bounded execution. Registration and
 request mapping are in the [MCP quickstart](docs/mcp_quickstart.md).
 
@@ -310,8 +317,10 @@ print(f"{patient.full_name}, {patient.age}, {patient.conditions}")
 
 ## Quickstart — Community Edition
 
+> **Pre-release.** CE 5.0 is not on PyPI yet. Until 5.0.0, install from GitHub `development`. Use Python 3.11 to 3.13.
+
 ```bash
-python -m pip install datamimic-ce
+python -m pip install "datamimic-ce @ git+https://github.com/rapiddweller/datamimic@development"
 ```
 
 For database and MongoDB connections, prefer [connection profiles](docs/developer_guide.md#database-and-mongodb-connection-profiles).

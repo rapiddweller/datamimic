@@ -1,10 +1,11 @@
 # Optional MCP adapter
 
-The CLI is the baseline interface. Install CE 5.0 from PyPI in your Python 3.11+
-project environment, adding MCP only when your client uses it:
+The CLI is the baseline interface. CE 5.0 is not on PyPI yet. Until 5.0.0, install it from GitHub `development`
+in your Python 3.11 to 3.13 project environment, adding MCP only when your
+client uses it:
 
 ```bash
-python -m pip install "datamimic-ce[mcp]"
+python -m pip install "datamimic-ce[mcp] @ git+https://github.com/rapiddweller/datamimic@development"
 datamimic-mcp --transport stdio --workspace-root "/absolute/path/to/project"
 ```
 
