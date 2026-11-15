@@ -216,7 +216,9 @@ def test_routed_database_count_native_failures_are_portable(tmp_path, monkeypatc
             '<generate name="rows" count="1" source="db" sourceEntity="entries"/>',
         )
     error = caught.value
-    assert error.__cause__ is failure
+    assert isinstance(error.__cause__, sqlalchemy.exc.SQLAlchemyError)
+    assert error.__cause__ is not failure
+    assert SENTINEL not in str(error.__cause__)
     assert error.issue_code is IssueCode.OPERATION_EXECUTION_FAILED
     assert "table_not_found" in str(error)
     assert SENTINEL not in str(error)

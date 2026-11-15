@@ -4,6 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import copy
 import logging
 import sys
 from contextlib import suppress
@@ -307,7 +308,7 @@ class RdbmsClient(DatabaseClient):
                 code=IssueCode.OPERATION_EXECUTION_FAILED,
                 target="database read",
                 error=_database_error_facts(error),
-            ) from error
+            ) from _statement_free_cause(error)
 
     def execute_sql_script(self, query: str) -> None:
         """
@@ -327,7 +328,7 @@ class RdbmsClient(DatabaseClient):
                 code=IssueCode.OPERATION_EXECUTION_FAILED,
                 target="SQL script",
                 error=_database_error_facts(error),
-            ) from error
+            ) from _statement_free_cause(error)
 
     def count_table_length(self, table_name: str) -> int:
         """
@@ -347,7 +348,7 @@ class RdbmsClient(DatabaseClient):
                 code=IssueCode.OPERATION_EXECUTION_FAILED,
                 target="database source count",
                 error=_database_error_facts(error),
-            ) from error
+            ) from _statement_free_cause(error)
 
     def count_query_length(self, query: str) -> int:
         """
@@ -486,7 +487,7 @@ class RdbmsClient(DatabaseClient):
                         code=IssueCode.OPERATION_EXECUTION_FAILED,
                         target="database write",
                         error=_database_error_facts(err),
-                    ) from err
+                    ) from _statement_free_cause(err)
                 raise
 
     def _table_and_pk(self, engine, table_name: str):
@@ -568,7 +569,7 @@ class RdbmsClient(DatabaseClient):
         except sqlalchemy.exc.SQLAlchemyError as err:
             raise operation_error(
                 code=IssueCode.OPERATION_EXECUTION_FAILED, target="rdbms.clear", error=_database_error_facts(err)
-            ) from err
+            ) from _statement_free_cause(err)
         logger.info(
             "OPERATION | rdbms.clear | table=%s | action=clear | backend_action=%s | deleted_count=%s",
             table.name,
@@ -897,6 +898,18 @@ _SQLITE_CATEGORIES = {
     14: "connection_failed",
     19: "constraint",
 }
+
+
+def _statement_free_cause(error: sqlalchemy.exc.SQLAlchemyError) -> sqlalchemy.exc.SQLAlchemyError:
+    """Chain the SQLAlchemy class without its SQL text, parameters or driver message."""
+    if isinstance(error, sqlalchemy.exc.DBAPIError):
+        cause = copy.copy(error)
+        cause.statement = None
+        cause.params = None
+        cause.orig = Exception(type(error.orig).__name__)
+        cause.args = (type(error).__name__,)
+        return cause
+    return sqlalchemy.exc.SQLAlchemyError(type(error).__name__)
 
 
 def _database_error_facts(error: sqlalchemy.exc.SQLAlchemyError) -> NormalizedDbError:
