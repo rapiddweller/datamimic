@@ -30,6 +30,6 @@ Repository contributors read [AGENTS.md](AGENTS.md) and use `.venv/bin/datamimic
 
 - [README](README.md): CE, Enterprise Platform and determinism boundaries.
 - [Contributing](CONTRIBUTING.md)
-- [MCP quickstart](docs/mcp_quickstart.md): optional adapter over the same application.
+- [MCP quickstart](docs/mcp_quickstart.md): the MCP server over the same application; the agent plugin starts it.
 - [Developer guide](docs/developer_guide.md)
 - [Data domains](docs/data-domains): Python domain documentation.

@@ -1,9 +1,11 @@
 # Local CE authoring
 
-Use Python 3.11+ and the CLI belonging to the user's project environment. Resolve
-its actual executable once (for example `.venv/bin/datamimic`) and use that same
-binary for every call. Run from the user's project, not the plugin directory.
-The commands below use `datamimic` as that resolved executable.
+Connected `datamimic_*` tools: each authoring command below is the tool named after it
+(prefix `datamimic_`, underscores for hyphens), with the absolute `project` directory on every project tool.
+Without the tools, use Python 3.11+ and the CLI belonging to the user's project
+environment. Resolve its actual executable once (for example `.venv/bin/datamimic`)
+and use that same binary for every call. Run from the user's project, not the plugin
+directory. The commands below use `datamimic` as that resolved executable.
 
 ## Preflight
 
@@ -122,17 +124,16 @@ that execution and its write scope is known. Verify the complete requirements
 with independent checks and readback; report actual runtime evidence separately
 from the unavailable bounded certificate. Compilation alone remains syntax proof.
 
-## Existing XML and optional MCP
+## Existing XML and the real run
 
 Decompile existing XML through `authoring decompile` before editing its DM JSON;
 supply its requirements for the new Build. An unsupported decompile leaves the
 original file intact. Raw XML inspection uses `authoring lint` then
 `authoring dry-run`; normal execution uses `datamimic run model.xml`.
 
-A CE MCP server is an optional transport for the same operations. Follow the
-advertised input schemas, including `request` wrappers. Its host must bind the
-user's project with `datamimic-mcp --transport stdio --workspace-root <project>`;
-verify this binding before reading project-relative resources. The shared setup
-workflow installs CE when needed; it does not configure an MCP connection unless
-the user needs that transport. `datamimic-mcp` needs the `datamimic-ce[mcp]` extra;
-a plain CE install lists the command, which then exits with code 1 and names the extra.
+The connected `datamimic_*` tools run the same operations: follow their input schemas,
+including `request` wrappers, and pass the absolute `project` directory on every
+project tool; the server needs no workspace option. `authoring run-project` builds
+the project first and then produces the real data; it refuses external targets
+unless `allow_side_effects` is true, which needs the user's confirmation of the
+named targets.

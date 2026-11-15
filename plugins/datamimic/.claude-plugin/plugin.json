@@ -1,6 +1,6 @@
 {
   "name": "datamimic",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Author and verify synthetic test data with DATAMIMIC CE or a connected Platform project.",
   "author": {
     "name": "rapiddweller"

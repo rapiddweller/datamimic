@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "datamimic": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "--python",
+        ">=3.11,<3.14",
+        "--from",
+        "datamimic-ce[mcp] @ git+https://github.com/rapiddweller/datamimic@development",
+        "datamimic-mcp",
+        "--transport",
+        "stdio"
+      ],
+      "startup_timeout_sec": 300,
+      "tool_timeout_sec": 900
+    }
+  }
+}

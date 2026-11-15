@@ -1,8 +1,23 @@
 # DATAMIMIC plugin for Codex and Claude Code
 
-The plugin provides shared setup and `generate-test-data` skills: local CE
-authoring or a connected Platform project, structured repair and scoped proof.
+The plugin provides shared setup and `generate-test-data` skills and a local CE
+server: local CE authoring or a connected Platform project, structured repair and
+scoped proof.
 It works in projects that do not contain DATAMIMIC's `AGENTS.md`.
+
+## What the install connects
+
+One install gives the agent the skills and a local DATAMIMIC server (`datamimic_*`
+tools, server name `datamimic`). The server starts through `uvx` from the plugin's
+[`.mcp.json`](../plugins/datamimic/.mcp.json). Until CE 5.0 is released, that file
+installs the package from the GitHub branch `development`; after the release it
+names the published `datamimic-ce[mcp]>=5.0.0,<6`. It is the only file that holds
+the install reference.
+
+Requirements: [uv](https://docs.astral.sh/uv/) on the PATH. `uvx` picks a Python
+from `>=3.11,<3.14` by itself; it does not use your project's virtual environment.
+The tools take the absolute path of the data project (the directory that holds
+`datamimic.xml`) on every call, so the server works from any start directory.
 
 ## Codex
 
@@ -16,10 +31,9 @@ codex plugin list --marketplace datamimic --json
 
 Open a new Codex session in your data project. Invoke `$generate-test-data`, or
 ask for a synthetic dataset; the skill description allows automatic selection.
-The repository marketplace also uses the Claude-compatible catalog supported by
-Codex. The portable root manifest and Claude manifest share the same skill files.
-Run the offered setup workflow, or start your data task; local authoring invokes
-the same setup when needed.
+Codex reads the Claude-compatible catalog in `.claude-plugin/marketplace.json` and the
+plugin's `.codex-plugin/plugin.json`, which points to the same skills and `.mcp.json`.
+`codex mcp list` does not show servers that a plugin provides.
 
 ## Claude Code
 
@@ -29,29 +43,33 @@ claude plugin install datamimic@datamimic
 claude plugin details datamimic
 ```
 
-Start a new session in your data project and invoke
-`/datamimic:generate-test-data`. Setup also has an explicit entry:
-`/datamimic:setup-datamimic`.
+`claude plugin details` lists the MCP server `datamimic`. Start a new session in your
+data project and invoke `/datamimic:generate-test-data`. Setup also has an explicit
+entry: `/datamimic:setup-datamimic`.
 
-## Automatic project setup
+## First start
 
-The shared [setup skill](../plugins/datamimic/skills/setup-datamimic/SKILL.md)
-uses the project's Python 3.11 to 3.13 environment and dependency manager. If CE is
-missing or incompatible, it installs CE from GitHub `development` (CE 5.0 is not on PyPI
-yet), checks the live authoring contract and continues your original task.
-An already compatible environment is reused. Existing dependency conflicts are
-reported rather than silently replacing pins. A connected Platform project uses
-its remote service and needs no local CE install.
+The first start of the server builds an isolated environment and clones the
+repository. Measured on one machine (uv 0.12.3, Python 3.11, other packages already
+cached): the first start took 7 s, a later start 1 s. With an empty uv cache expect
+minutes. Claude Code can show the server as failed or pending in `/mcp` until that
+build ends; Codex waits up to 300 s. The skills load in both cases.
 
-For manual CLI installation, use your project environment. CE 5.0 is not on
-PyPI yet, so install from GitHub `development` until 5.0.0:
+The [setup skill](../plugins/datamimic/skills/setup-datamimic/SKILL.md) warms the
+server once with `uvx ... datamimic-mcp --help`, asks you to reconnect, and checks
+that `datamimic_version` shows `build_protocol` `5.0`. New commits on `development`
+arrive only after `uvx --refresh` with the same arguments, then a reconnect.
+
+Without uv the server does not start; the skills still load. The setup skill then
+installs the same package reference into the project's environment and the agent uses
+the CLI. Install uv to connect the tools: https://docs.astral.sh/uv/.
+
+For manual CLI installation, use your project environment and the reference from
+`.mcp.json`:
 
 ```bash
-python -m pip install "datamimic-ce @ git+https://github.com/rapiddweller/datamimic@development"
+python -m pip install "datamimic-ce[mcp] @ git+https://github.com/rapiddweller/datamimic@development"
 ```
-
-The optional MCP transport has its own [registration guide](mcp_quickstart.md).
-Setup does not automatically configure it.
 
 ## First task
 
@@ -72,7 +90,7 @@ Compile readiness proves syntax; Build
 readiness additionally proves bounded acceptance. External delivery requires its
 own execution and readback.
 
-An optional [local CE MCP connection](mcp_quickstart.md) exposes the same service.
+The [MCP quickstart](mcp_quickstart.md) describes the server for other hosts.
 For a remote Platform project, use its existing project MCP connection and server
 instructions. Its Pending/Ready/commit lifecycle and file references remain
 server-owned; local XML writes do not update that project.
