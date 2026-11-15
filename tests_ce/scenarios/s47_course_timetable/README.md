@@ -1,6 +1,6 @@
 # S47 course timetable (X3)
 
-This project makes the timetable of five courses for one week. Each session gets a slot and a room. Students may
+This project makes the timetable of six courses for one week. Each session gets a slot and a room. Students may
 join a course only when they completed its prerequisite. All names and data are synthetic.
 
 ## Run the tests
@@ -37,11 +37,11 @@ directory for each run.
 | File | Owner of |
 |---|---|
 | `conf/policy.properties` | The rule parameter `search_budget`. A value that is not a whole number stops step 10. |
-| `data/entity/slots.ent.csv` | The week: day and period of each slot. |
+| `data/entity/slots.ent.csv` | The week: day and period of each slot. Step 30 reads it directly. |
 | `data/entity/rooms.ent.csv` | The rooms and their capacity. The smaller room comes first, so the search tries it first. |
-| `data/entity/teachers.ent.csv`, `courses.ent.csv` | The teachers; the teacher, session count and prerequisite of each course. |
-| `data/entity/students.ent.csv`, `completed.ent.csv`, `enrolments.ent.csv` | The students, the courses they completed, and their enrolment requests. |
-| `data/entity/unavailable.ent.csv` | The slots in which a teacher cannot teach. |
+| `data/entity/courses.ent.csv` | The teacher, session count and prerequisite of each course. |
+| `data/entity/completed.ent.csv`, `enrolments.ent.csv` | The courses that students completed, and their enrolment requests. |
+| `data/entity/unavailable.ent.csv` | The slots in which a teacher cannot teach. Steps 30 and 91 read it directly. |
 | `lib/timetable_search.scr.py` | The global search `plan_timetable`. |
 | `acceptance/build.json` | The roles, the input and rule expectations, and the caller's edge controls. |
 
@@ -77,7 +77,8 @@ steps and 10 backtracks; the caller requirement `backtracks >= 1` pins this.
 | `budget_exhausted` | false | The search stopped at `search_budget` steps. This does not prove that no timetable exists. |
 
 `session_decisions` holds, for each session, the places before the chosen one with the rule and the reason. `undone`
-means that no rule refuses the place: the search tried it and undid the choice.
+means that no rule refuses the place: the search tried it and undid the choice. `decision_checks` counts the skipped
+places of each session and the places without a known rule word or without a reason (`unexplained == 0`).
 
 ## Negatives
 
@@ -90,6 +91,7 @@ Each negative is one text patch in `scenario.json`. Build rejects the variant wi
 | `t6_session_dropped` | The search places one session less for each course. |
 | `infeasible_five_sessions_four_days` | C101 needs 5 sessions on 4 days. |
 | `budget_exhausted` | `search_budget` is 5. |
+| `evidence_rule_unnamed` | The evidence leaves the rule word empty. |
 | `policy_not_whole` | `search_budget` is `ten`; step 10 stops (`child_execution`). |
 | `room_without_seats`, `course_without_sessions` | An input value is not positive. |
 
@@ -97,6 +99,6 @@ Each negative is one text patch in `scenario.json`. Build rejects the variant wi
 
 - Build reports one DM214 warning: the `nestedKey` `skipped` has no `defaultValue`. A fallback would hide a failure in
   the decision evidence.
-- Every product that goes to the store needs a readback and an identifier, so step 93 exports each of them.
+- A product that goes to the store needs a readback and an identifier. The lookup files that only the search and the checks read (slots, completed, unavailable) are read directly with `storage="data"`, so they have no product and no foreign-key check.
 - The search has no learning. It is exact for this size, but it grows fast: more courses or fewer slots need a higher
   `search_budget`.

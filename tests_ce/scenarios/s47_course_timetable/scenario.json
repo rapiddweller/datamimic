@@ -1,177 +1,21 @@
 {
- "title": "Course timetable for one week",
- "proves": [
-  "an enrolment is admitted only when the student completed the prerequisite course (T1), checked again from the data",
-  "every session sits in a room that holds all admitted students (T2)",
-  "a teacher teaches one session in a slot and never in an unavailable slot (T3)",
-  "a room hosts one session in a slot (T4)",
-  "no student has two sessions in one slot (T5)",
-  "each course gets all its sessions, one on each day at most (T6)",
-  "the search needs backtracks: the greedy first choices leave a later course without a place",
-  "a demand that no timetable can meet is reported as infeasible, and an exhausted budget is reported as not proven",
-  "the decision evidence names the rule and the reason for each place that a session did not get, or undone when the search tried the place and undid it",
-  "the same model, data and seed give the same timetable on every run"
- ],
- "products": {
-  "completed": 6,
-  "course_checks": 6,
-  "course_checks_input": 6,
-  "course_load": 6,
-  "courses": 6,
-  "enrolment_checks": 24,
-  "enrolment_decisions": 24,
-  "enrolments": 24,
-  "export_completed": 6,
-  "export_course_load": 6,
-  "export_plan": 1,
-  "export_policy": 1,
-  "export_session_decisions": 10,
-  "export_slots": 8,
-  "export_students": 9,
-  "export_teachers": 3,
-  "export_timetable": 10,
-  "export_unavailable": 4,
-  "plan": 1,
-  "policy": 1,
-  "room_checks": 2,
-  "rooms": 2,
-  "session_checks": 10,
-  "session_decisions": 10,
-  "slots": 8,
-  "students": 9,
-  "teachers": 3,
-  "timetable": 10,
-  "unavailable": 4
- },
- "negatives": [
-  {
-   "name": "t1_prerequisite_ignored",
-   "diagnostic": "row_condition",
-   "patch": {
-    "file": "model/20_admission.xml",
-    "old": "<key name=\"admitted\" script=\"prerequisite == '' or any(row.student_id == student_id and row.course_id == prerequisite for row in completed)\"/>",
-    "new": "<key name=\"admitted\" script=\"True\"/>"
-   },
-   "expected": "admitted == prerequisite_met"
-  },
-  {
-   "name": "t2_capacity_ignored",
-   "diagnostic": "row_condition",
-   "patch": {
-    "file": "lib/timetable_search.scr.py",
-    "old": "if room[\"capacity\"] < headcount:",
-    "new": "if False:"
-   },
-   "expected": "room_capacity >= headcount"
-  },
-  {
-   "name": "t3_teacher_unavailable_ignored",
-   "diagnostic": "row_condition",
-   "patch": {
-    "file": "lib/timetable_search.scr.py",
-    "old": "if (course[\"teacher_id\"], slot[\"slot_id\"]) in off:",
-    "new": "if False:"
-   },
-   "expected": "teacher_sessions_in_slot == 1 and not teacher_off"
-  },
-  {
-   "name": "t3_teacher_clash_ignored",
-   "diagnostic": "row_condition",
-   "patch": {
-    "file": "lib/timetable_search.scr.py",
-    "old": "if other[\"teacher_id\"] == course[\"teacher_id\"]:",
-    "new": "if False:"
-   },
-   "expected": "teacher_sessions_in_slot == 1 and not teacher_off"
-  },
-  {
-   "name": "t4_room_clash_ignored",
-   "diagnostic": "row_condition",
-   "patch": {
-    "file": "lib/timetable_search.scr.py",
-    "old": "if other[\"room_id\"] == room[\"room_id\"]:",
-    "new": "if False:"
-   },
-   "expected": "room_sessions_in_slot == 1"
-  },
-  {
-   "name": "t5_student_clash_ignored",
-   "diagnostic": "row_condition",
-   "patch": {
-    "file": "lib/timetable_search.scr.py",
-    "old": "if shared:",
-    "new": "if False:"
-   },
-   "expected": "student_clashes == 0"
-  },
-  {
-   "name": "t6_one_per_day_ignored",
-   "diagnostic": "row_condition",
-   "patch": {
-    "file": "lib/timetable_search.scr.py",
-    "old": "if other[\"course_id\"] == course[\"course_id\"] and other[\"day\"] == slot[\"day\"]:",
-    "new": "if False:"
-   },
-   "expected": "days == sessions_planned"
-  },
-  {
-   "name": "t6_session_dropped",
-   "diagnostic": "row_condition",
-   "patch": {
-    "file": "lib/timetable_search.scr.py",
-    "old": "for number in range(1, course[\"sessions\"] + 1)",
-    "new": "for number in range(1, course[\"sessions\"])"
-   },
-   "expected": "sessions_planned == sessions_required"
-  },
-  {
-   "name": "infeasible_five_sessions_four_days",
-   "diagnostic": "row_condition",
-   "patch": {
-    "file": "data/entity/courses.ent.csv",
-    "old": "C101|T1|2|",
-    "new": "C101|T1|5|"
-   },
-   "expected": "outcome != 'infeasible'"
-  },
-  {
-   "name": "budget_exhausted",
-   "diagnostic": "row_condition",
-   "patch": {
-    "file": "conf/policy.properties",
-    "old": "search_budget=1000",
-    "new": "search_budget=5"
-   },
-   "expected": "search_complete == True"
-  },
-  {
-   "name": "policy_not_whole",
-   "diagnostic": "child_execution",
-   "patch": {
-    "file": "conf/policy.properties",
-    "old": "search_budget=1000",
-    "new": "search_budget=ten"
-   }
-  },
-  {
-   "name": "room_without_seats",
-   "diagnostic": "row_condition",
-   "patch": {
-    "file": "data/entity/rooms.ent.csv",
-    "old": "R2|6",
-    "new": "R2|0"
-   },
-   "expected": "capacity >= 1"
-  },
-  {
-   "name": "course_without_sessions",
-   "diagnostic": "row_condition",
-   "patch": {
-    "file": "data/entity/courses.ent.csv",
-    "old": "C301|T2|2|C201",
-    "new": "C301|T2|0|C201"
-   },
-   "expected": "sessions >= 1"
-  }
- ]
+  "title": "Course timetable for one week",
+  "proves": ["an enrolment is admitted only when the student completed the prerequisite course (T1), checked again from the data", "every session sits in a room that holds all admitted students (T2)", "a teacher teaches one session in a slot and never in an unavailable slot (T3)", "a room hosts one session in a slot (T4)", "no student has two sessions in one slot (T5)", "each course gets all its sessions, one on each day at most (T6)", "the search needs backtracks: the greedy first choices leave a later course without a place", "a demand that no timetable can meet is reported as infeasible, and an exhausted budget is reported as not proven", "the decision evidence names for each place that a session did not get one rule word (T2 to T6, or undone) and a reason; the checks count the skipped places and the places without a rule or reason", "the same model, data and seed give the same timetable on every run"],
+  "products": {"course_checks": 6, "course_checks_input": 6, "course_load": 6, "courses": 6, "decision_checks": 10, "enrolment_checks": 24, "enrolment_decisions": 24, "enrolments": 24, "export_course_load": 6, "export_plan": 1, "export_policy": 1, "export_session_decisions": 10, "export_timetable": 10, "plan": 1, "policy": 1, "room_checks": 2, "rooms": 2, "session_checks": 10, "session_decisions": 10, "timetable": 10},
+  "negatives": [
+    {"name": "t1_prerequisite_ignored", "diagnostic": "row_condition", "patch": {"file": "model/20_admission.xml", "old": "<key name=\"admitted\" script=\"prerequisite == '' or any(row.student_id == student_id and row.course_id == prerequisite for row in completed)\"/>", "new": "<key name=\"admitted\" script=\"True\"/>"}, "expected": "admitted == prerequisite_met"},
+    {"name": "t2_capacity_ignored", "diagnostic": "row_condition", "patch": {"file": "lib/timetable_search.scr.py", "old": "if room[\"capacity\"] < headcount:", "new": "if False:"}, "expected": "room_capacity >= headcount"},
+    {"name": "t3_teacher_unavailable_ignored", "diagnostic": "row_condition", "patch": {"file": "lib/timetable_search.scr.py", "old": "if (course[\"teacher_id\"], slot[\"slot_id\"]) in off:", "new": "if False:"}, "expected": "teacher_sessions_in_slot == 1 and not teacher_off"},
+    {"name": "t3_teacher_clash_ignored", "diagnostic": "row_condition", "patch": {"file": "lib/timetable_search.scr.py", "old": "if other[\"teacher_id\"] == course[\"teacher_id\"]:", "new": "if False:"}, "expected": "teacher_sessions_in_slot == 1 and not teacher_off"},
+    {"name": "t4_room_clash_ignored", "diagnostic": "row_condition", "patch": {"file": "lib/timetable_search.scr.py", "old": "if other[\"room_id\"] == room[\"room_id\"]:", "new": "if False:"}, "expected": "room_sessions_in_slot == 1"},
+    {"name": "t5_student_clash_ignored", "diagnostic": "row_condition", "patch": {"file": "lib/timetable_search.scr.py", "old": "if shared:", "new": "if False:"}, "expected": "student_clashes == 0"},
+    {"name": "t6_one_per_day_ignored", "diagnostic": "row_condition", "patch": {"file": "lib/timetable_search.scr.py", "old": "if other[\"course_id\"] == course[\"course_id\"] and other[\"day\"] == slot[\"day\"]:", "new": "if False:"}, "expected": "days == sessions_planned"},
+    {"name": "t6_session_dropped", "diagnostic": "row_condition", "patch": {"file": "lib/timetable_search.scr.py", "old": "for number in range(1, course[\"sessions\"] + 1)", "new": "for number in range(1, course[\"sessions\"])"}, "expected": "sessions_planned == sessions_required"},
+    {"name": "infeasible_five_sessions_four_days", "diagnostic": "row_condition", "patch": {"file": "data/entity/courses.ent.csv", "old": "C101|T1|2|", "new": "C101|T1|5|"}, "expected": "outcome != 'infeasible'"},
+    {"name": "budget_exhausted", "diagnostic": "row_condition", "patch": {"file": "conf/policy.properties", "old": "search_budget=1000", "new": "search_budget=5"}, "expected": "search_complete == True"},
+    {"name": "policy_not_whole", "diagnostic": "child_execution", "patch": {"file": "conf/policy.properties", "old": "search_budget=1000", "new": "search_budget=ten"}},
+    {"name": "room_without_seats", "diagnostic": "row_condition", "patch": {"file": "data/entity/rooms.ent.csv", "old": "R2|6", "new": "R2|0"}, "expected": "capacity >= 1"},
+    {"name": "course_without_sessions", "diagnostic": "row_condition", "patch": {"file": "data/entity/courses.ent.csv", "old": "C301|T2|2|C201", "new": "C301|T2|0|C201"}, "expected": "sessions >= 1"},
+    {"name": "evidence_rule_unnamed", "diagnostic": "row_condition", "expected": "unexplained == 0", "patch": {"file": "lib/timetable_search.scr.py", "old": "skipped.append({\"place\": f\"{slot['slot_id']}/{room['room_id']}\", \"rule\": rule.value, \"reason\": reason})", "new": "skipped.append({\"place\": f\"{slot['slot_id']}/{room['room_id']}\", \"rule\": \"\", \"reason\": reason})"}}
+  ]
 }

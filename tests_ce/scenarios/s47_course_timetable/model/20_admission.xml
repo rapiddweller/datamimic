@@ -2,7 +2,7 @@
     <!-- Admission: T1 refuses an enrolment when the student has not completed the prerequisite; count the students of each course. -->
     <generate name="enrolment_decisions" source="mem" sourceEntity="enrolments" distribution="ordered" target="mem">
         <variable name="courses" source="mem" sourceEntity="courses" storage="data" distribution="ordered"/>
-        <variable name="completed" source="mem" sourceEntity="completed" storage="data" distribution="ordered"/>
+        <variable name="completed" source="data/entity/completed.ent.csv" storage="data" distribution="ordered"/>
         <key name="enrolment_id" script="enrolment_id"/>
         <key name="student_id" script="student_id"/>
         <key name="course_id" script="course_id"/>

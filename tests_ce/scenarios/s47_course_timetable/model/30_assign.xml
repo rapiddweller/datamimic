@@ -3,8 +3,8 @@
     <generate name="plan" count="1" target="mem">
         <variable name="loads" source="mem" sourceEntity="course_load" storage="data" distribution="ordered"/>
         <variable name="rooms" source="mem" sourceEntity="rooms" storage="data" distribution="ordered"/>
-        <variable name="slots" source="mem" sourceEntity="slots" storage="data" distribution="ordered"/>
-        <variable name="unavailable" source="mem" sourceEntity="unavailable" storage="data" distribution="ordered"/>
+        <variable name="slots" source="data/entity/slots.ent.csv" storage="data" distribution="ordered"/>
+        <variable name="unavailable" source="data/entity/unavailable.ent.csv" storage="data" distribution="ordered"/>
         <variable name="policy" source="mem" sourceEntity="policy" storage="data" distribution="ordered"/>
         <variable name="result" script="plan_timetable(loads, rooms, slots, unavailable, {row.course_id: row.admitted_students for row in loads}, policy[0].search_budget)"/>
         <key name="plan_id" script="1"/>
