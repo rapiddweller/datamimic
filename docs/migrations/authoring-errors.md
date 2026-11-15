@@ -237,7 +237,8 @@ Before, the reader took that line for a header and dropped the value `A` without
 A `<variable>` over a `*.wgt.ent.csv` file draws one row by its weight column. Such a variable
 with `distribution="ordered"` (or any other value but `random`) now fails with `I830`. Before, the attribute had no
 effect and the draws did not follow the file order. Remove `distribution`, or read the file as an `.ent.csv` to get
-the file order. 
+the file order.
+
 ### `<generate source="*.wgt.ent.csv">` draws by weight (#452)
 
 A `<generate>` over a `*.wgt.ent.csv` file now draws `count` rows by the weights of its `weightColumn`, with

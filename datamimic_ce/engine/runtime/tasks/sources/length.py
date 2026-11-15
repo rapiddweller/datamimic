@@ -179,7 +179,8 @@ def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) 
         source_format = source_file_format_for(source_element, source_str, stmt.type)
         memstore = (
             root_ctx.memstore_manager.get_memstore(source_str)
-            if source_format is None and root_ctx.memstore_manager.contain(source_str)
+            if source_format is None
+            and root_ctx.memstore_manager.contain(source_str)
             else None
         )
         client = None
@@ -205,7 +206,9 @@ def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) 
                 default_scripted=bool(root_ctx.default_source_scripted),
             )
         selector = (
-            stmt.selector if client is not None and isinstance(stmt, GenerateStatement | VariableStatement) else None
+            stmt.selector
+            if client is not None and isinstance(stmt, GenerateStatement | VariableStatement)
+            else None
         )
         iteration_selector = (
             stmt.iteration_selector if client is not None and isinstance(stmt, VariableStatement) else None

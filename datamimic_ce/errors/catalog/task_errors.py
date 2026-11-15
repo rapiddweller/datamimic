@@ -259,7 +259,10 @@ ISSUES: list[IssueDefinition] = [
         name="TASK_WEIGHTED_ENTITY_WEIGHT_COLUMN_MISSING",
         title="Task Weighted Entity Weight Column Missing",
         template="the weighted entity file has no weight column '{weight_column}'",
-        cause="A required weight values is missing in the task configuration.",
+        cause=(
+            "The header row of the weighted entity file has no column with the name of weightColumn, "
+            "or 'weight' when weightColumn is not set."
+        ),
         resolution=(
             "Add the weight column to the weighted entity file, or set weightColumn to the name of its weight column."
         ),
@@ -269,7 +272,7 @@ ISSUES: list[IssueDefinition] = [
         name="TASK_WEIGHTED_ENTITY_EMPTY",
         title="Task Weighted Entity Empty",
         template="the weighted entity file has no rows",
-        cause="A required weight values is empty in the task configuration.",
+        cause="The weighted entity file has a header row and no data row, so no row can be drawn.",
         resolution="Add rows to the weighted entity file, or remove the weighted source.",
     ),
     IssueDefinition(
@@ -277,7 +280,10 @@ ISSUES: list[IssueDefinition] = [
         name="TASK_WEIGHTED_ENTITY_NO_WEIGHT_VALUES",
         title="Task Weighted Entity No Weight Values",
         template="the weight column '{weight_column}' of the weighted entity file has no numeric weights",
-        cause="An error occurred during task configuration.",
+        cause=(
+            "The weight column of the weighted entity file holds no number above 0, or a value that is not a "
+            "number, is negative or is NaN, so no row can be drawn."
+        ),
         resolution="Fill the weight column with numbers above 0, or remove the weighted source.",
     ),
     IssueDefinition(
