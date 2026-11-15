@@ -7,7 +7,7 @@
   </a>
 </p>
 
-<h1 align="center">DATAMIMIC Community Edition</h1>
+<h1 align="center">Community Edition</h1>
 
 <p align="center"><b>Test data must agree with itself.</b></p>
 
