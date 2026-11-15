@@ -1,0 +1,24 @@
+<setup>
+    <!-- Export: write the timetable and the plan to CSV, read back from the store. -->
+    <generate name="export_timetable" source="mem" sourceEntity="timetable" distribution="ordered" target="CSV" targetEntity="timetable">
+        <key name="session_id" script="session_id"/>
+        <key name="course_id" script="course_id"/>
+        <key name="teacher_id" script="teacher_id"/>
+        <key name="slot_id" script="slot_id"/>
+        <key name="room_id" script="room_id"/>
+    </generate>
+    <generate name="export_plan" source="mem" sourceEntity="plan" distribution="ordered" target="CSV" targetEntity="plan">
+        <key name="plan_id" script="plan_id"/>
+        <key name="outcome" script="outcome"/>
+        <key name="message" script="message"/>
+    </generate>
+    <generate name="export_policy" source="mem" sourceEntity="policy" distribution="ordered" target="CSV" targetEntity="policy">
+        <key name="policy_id" script="policy_id"/>
+    </generate>
+    <generate name="export_course_load" source="mem" sourceEntity="course_load" distribution="ordered" target="CSV" targetEntity="course_load">
+        <key name="course_id" script="course_id"/>
+    </generate>
+    <generate name="export_session_decisions" source="mem" sourceEntity="session_decisions" distribution="ordered" target="CSV" targetEntity="session_decisions">
+        <key name="session_id" script="session_id"/>
+    </generate>
+</setup>

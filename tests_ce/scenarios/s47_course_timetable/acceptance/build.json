@@ -1,0 +1,56 @@
+{
+  "version": "5.0",
+  "max_count": 1000,
+  "product_roles": [
+    {"product": "policy", "field": "policy_id", "role": {"kind": "identifier"}},
+    {"product": "rooms", "field": "room_id", "role": {"kind": "identifier"}},
+    {"product": "courses", "field": "course_id", "role": {"kind": "identifier"}},
+    {"product": "enrolments", "field": "enrolment_id", "role": {"kind": "identifier"}},
+    {"product": "enrolments", "field": "course_id", "role": {"kind": "foreign_key", "parent_product": "courses", "parent_field": "course_id"}},
+    {"product": "enrolment_decisions", "field": "enrolment_id", "role": {"kind": "identifier"}},
+    {"product": "course_load", "field": "course_id", "role": {"kind": "identifier"}},
+    {"product": "plan", "field": "plan_id", "role": {"kind": "identifier"}},
+    {"product": "timetable", "field": "session_id", "role": {"kind": "identifier"}},
+    {"product": "timetable", "field": "course_id", "role": {"kind": "foreign_key", "parent_product": "courses", "parent_field": "course_id"}},
+    {"product": "timetable", "field": "room_id", "role": {"kind": "foreign_key", "parent_product": "rooms", "parent_field": "room_id"}},
+    {"product": "session_decisions", "field": "session_id", "role": {"kind": "identifier"}},
+    {"product": "decision_checks", "field": "session_id", "role": {"kind": "foreign_key", "parent_product": "session_decisions", "parent_field": "session_id"}},
+    {"product": "enrolment_decisions", "field": "enrolment_id", "role": {"kind": "foreign_key", "parent_product": "enrolments", "parent_field": "enrolment_id"}},
+    {"product": "course_load", "field": "course_id", "role": {"kind": "foreign_key", "parent_product": "courses", "parent_field": "course_id"}},
+    {"product": "room_checks", "field": "room_id", "role": {"kind": "foreign_key", "parent_product": "rooms", "parent_field": "room_id"}},
+    {"product": "course_checks_input", "field": "course_id", "role": {"kind": "foreign_key", "parent_product": "courses", "parent_field": "course_id"}},
+    {"product": "enrolment_checks", "field": "enrolment_id", "role": {"kind": "foreign_key", "parent_product": "enrolment_decisions", "parent_field": "enrolment_id"}},
+    {"product": "session_checks", "field": "session_id", "role": {"kind": "foreign_key", "parent_product": "timetable", "parent_field": "session_id"}},
+    {"product": "course_checks", "field": "course_id", "role": {"kind": "foreign_key", "parent_product": "courses", "parent_field": "course_id"}},
+    {"product": "export_timetable", "field": "session_id", "role": {"kind": "foreign_key", "parent_product": "timetable", "parent_field": "session_id"}},
+    {"product": "export_plan", "field": "plan_id", "role": {"kind": "foreign_key", "parent_product": "plan", "parent_field": "plan_id"}},
+    {"product": "export_policy", "field": "policy_id", "role": {"kind": "foreign_key", "parent_product": "policy", "parent_field": "policy_id"}},
+    {"product": "export_course_load", "field": "course_id", "role": {"kind": "foreign_key", "parent_product": "course_load", "parent_field": "course_id"}},
+    {"product": "export_session_decisions", "field": "session_id", "role": {"kind": "foreign_key", "parent_product": "session_decisions", "parent_field": "session_id"}}
+  ],
+  "expectations": [
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "policy"}, "condition": "search_budget >= 1"},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "room_checks"}, "condition": "capacity >= 1"},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "course_checks_input"}, "condition": "sessions >= 1"},
+
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "plan"}, "condition": "outcome != 'infeasible'"},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "plan"}, "condition": "search_complete == True"},
+
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "enrolment_checks"}, "condition": "admitted == prerequisite_met"},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "session_checks"}, "condition": "room_capacity >= headcount"},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "session_checks"}, "condition": "teacher_sessions_in_slot == 1 and not teacher_off"},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "session_checks"}, "condition": "room_sessions_in_slot == 1"},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "session_checks"}, "condition": "student_clashes == 0"},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "course_checks"}, "condition": "sessions_planned == sessions_required"},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "course_checks"}, "condition": "days == sessions_planned"},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "decision_checks"}, "condition": "unexplained == 0"}
+  ],
+  "acceptance_requirements": [
+    {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "plan"}, "condition": "backtracks >= 1"}},
+    {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "decision_checks"}, "condition": "session_id != 'C102/2' or skipped_places == 8"}},
+    {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "enrolment_checks"}, "condition": "enrolment_id != 'E17' or not admitted"}},
+    {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "enrolment_checks"}, "condition": "enrolment_id != 'E15' or admitted"}},
+    {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "session_checks"}, "condition": "course_id != 'C101' or room_id == 'R1'"}},
+    {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "course_load"}, "condition": "course_id != 'C301' or headcount == 1"}}
+  ]
+}

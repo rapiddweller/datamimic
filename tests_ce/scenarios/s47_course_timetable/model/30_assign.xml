@@ -1,0 +1,29 @@
+<setup>
+    <!-- Assign: search for one complete timetable over all sessions (T2 to T6) and keep the evidence of each decision. -->
+    <generate name="plan" count="1" target="mem">
+        <variable name="loads" source="mem" sourceEntity="course_load" storage="data" distribution="ordered"/>
+        <variable name="rooms" source="mem" sourceEntity="rooms" storage="data" distribution="ordered"/>
+        <variable name="slots" source="data/entity/slots.ent.csv" storage="data" distribution="ordered"/>
+        <variable name="unavailable" source="data/entity/unavailable.ent.csv" storage="data" distribution="ordered"/>
+        <variable name="policy" source="mem" sourceEntity="policy" storage="data" distribution="ordered"/>
+        <variable name="result" script="plan_timetable(loads, rooms, slots, unavailable, {row.course_id: row.admitted_students for row in loads}, policy[0].search_budget)"/>
+        <key name="plan_id" script="1"/>
+        <key name="outcome" script="result['outcome']"/>
+        <key name="search_complete" script="result['search_complete']"/>
+        <key name="message" script="result['message']"/>
+        <key name="steps" script="result['steps']"/>
+        <key name="backtracks" script="result['backtracks']"/>
+        <generate name="timetable" script="result['entries']" count="{len(result['entries'])}" distribution="ordered" target="mem">
+            <key name="session_id" script="session_id"/>
+            <key name="course_id" script="course_id"/>
+            <key name="teacher_id" script="teacher_id"/>
+            <key name="slot_id" script="slot_id"/>
+            <key name="day" script="day"/>
+            <key name="room_id" script="room_id"/>
+        </generate>
+        <generate name="session_decisions" script="result['decisions']" count="{len(result['decisions'])}" distribution="ordered" target="mem">
+            <key name="session_id" script="session_id"/>
+            <nestedKey name="skipped" script="skipped"/>
+        </generate>
+    </generate>
+</setup>

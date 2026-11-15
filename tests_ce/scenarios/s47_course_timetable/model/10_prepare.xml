@@ -1,0 +1,24 @@
+<setup>
+    <!-- Prepare: read each data file and give each column its type. -->
+    <generate name="policy" count="1" target="mem">
+        <!-- The rule parameter as a whole number; a missing or not whole value stops the run. -->
+        <key name="policy_id" script="1"/>
+        <key name="search_budget" script="int(search_budget)"/>
+    </generate>
+    <generate name="rooms" source="data/entity/rooms.ent.csv" distribution="ordered" target="mem">
+        <key name="room_id" script="room_id"/>
+        <key name="capacity" script="int(capacity)"/>
+    </generate>
+    <generate name="courses" source="data/entity/courses.ent.csv" distribution="ordered" target="mem">
+        <key name="course_id" script="course_id"/>
+        <key name="teacher_id" script="teacher_id"/>
+        <key name="sessions" script="int(sessions)"/>
+        <!-- An empty cell is a course without a prerequisite. -->
+        <key name="prerequisite" script="prerequisite"/>
+    </generate>
+    <generate name="enrolments" source="data/entity/enrolments.ent.csv" distribution="ordered" target="mem">
+        <key name="enrolment_id" script="enrolment_id"/>
+        <key name="student_id" script="student_id"/>
+        <key name="course_id" script="course_id"/>
+    </generate>
+</setup>
