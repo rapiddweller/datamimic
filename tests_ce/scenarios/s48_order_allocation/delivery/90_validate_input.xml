@@ -1,0 +1,12 @@
+<setup>
+    <!-- Validate input: measure the input values; acceptance/build.json compares them. -->
+    <generate name="lot_checks" source="mem" sourceEntity="lots" distribution="ordered" target="CSV">
+        <key name="lot_id" script="lot_id"/>
+        <key name="quantity" script="quantity"/>
+    </generate>
+    <generate name="order_checks_input" source="mem" sourceEntity="orders" distribution="ordered" target="CSV">
+        <key name="order_id" script="order_id"/>
+        <key name="quantity" script="quantity"/>
+        <key name="allow_partial" script="allow_partial"/>
+    </generate>
+</setup>

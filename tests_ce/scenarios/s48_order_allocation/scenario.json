@@ -1,0 +1,139 @@
+{
+ "title": "Order allocation: stock lots, inclusive expiry, partial shipments",
+ "proves": [
+  "a lot may serve an order only for the product of the order (A3)",
+  "a lot may ship on its expiry date, and not on the day after (A1)",
+  "no lot ships more than its quantity (A2)",
+  "an order that does not allow a partial shipment is filled completely, from at most two lots (A4, A5)",
+  "an order that allows a partial shipment ships all stock that is still good on its ship date, and the rest is back-ordered (A4)",
+  "the search needs a backtrack: the first lots by expiry leave a later order without stock",
+  "a demand that no allocation can meet is reported as infeasible, and an exhausted budget is reported as not proven",
+  "the decision evidence names for each order and eligible lot whether it was used, and why not",
+  "the same model, data and seed give the same allocation on every run"
+ ],
+ "products": {
+  "allocation_checks": 9,
+  "allocations": 9,
+  "customers": 3,
+  "export_allocations": 9,
+  "export_customers": 3,
+  "export_lots": 6,
+  "export_order_decisions": 7,
+  "export_order_lots": 7,
+  "export_orders": 7,
+  "export_plan": 1,
+  "export_policy": 1,
+  "export_products": 2,
+  "lot_checks": 6,
+  "lots": 6,
+  "order_checks": 7,
+  "order_checks_input": 7,
+  "order_decisions": 7,
+  "order_lots": 7,
+  "orders": 7,
+  "plan": 1,
+  "policy": 1,
+  "products": 2
+ },
+ "negatives": [
+  {
+   "name": "a1_expiry_exclusive",
+   "diagnostic": "row_condition",
+   "patch": {
+    "file": "model/20_eligibility.xml",
+    "old": "parent.ship_on &gt; lot_expires_on",
+    "new": "parent.ship_on &gt;= lot_expires_on"
+   },
+   "expected": "outcome != 'infeasible'"
+  },
+  {
+   "name": "a1_expiry_ignored",
+   "diagnostic": "row_condition",
+   "patch": {
+    "file": "model/20_eligibility.xml",
+    "old": " else 'A1' if parent.ship_on &gt; lot_expires_on else None",
+    "new": " else None"
+   },
+   "expected": "days_to_expiry >= 0"
+  },
+  {
+   "name": "a3_product_ignored",
+   "diagnostic": "row_condition",
+   "patch": {
+    "file": "model/20_eligibility.xml",
+    "old": "'A3' if lot_product != parent.product_id else 'A1'",
+    "new": "'A1'"
+   },
+   "expected": "same_product"
+  },
+  {
+   "name": "a2_oversell",
+   "diagnostic": "row_condition",
+   "patch": {
+    "file": "lib/allocation_search.scr.py",
+    "old": "            part = min(need, left[lot_id])\n",
+    "new": "            part = need\n"
+   },
+   "expected": "lot_allocated <= lot_quantity"
+  },
+  {
+   "name": "a4_partial_ships_nothing",
+   "diagnostic": "row_condition",
+   "patch": {
+    "file": "lib/allocation_search.scr.py",
+    "old": "if left[lot_id]][:max_lots_per_order]",
+    "new": "if left[lot_id]][:0]"
+   },
+   "expected": "backordered == 0 or valid_left == 0"
+  },
+  {
+   "name": "a5_lot_limit_raised",
+   "diagnostic": "row_condition",
+   "patch": {
+    "file": "conf/policy.properties",
+    "old": "max_lots_per_order=2",
+    "new": "max_lots_per_order=3"
+   },
+   "expected": "max_lots_per_order <= 2"
+  },
+  {
+   "name": "infeasible_order_too_large",
+   "diagnostic": "row_condition",
+   "patch": {
+    "file": "data/entity/orders.ent.csv",
+    "old": "O4|C1|P1|14|",
+    "new": "O4|C1|P1|40|"
+   },
+   "expected": "outcome != 'infeasible'"
+  },
+  {
+   "name": "budget_exhausted",
+   "diagnostic": "row_condition",
+   "patch": {
+    "file": "conf/policy.properties",
+    "old": "search_budget=1000",
+    "new": "search_budget=2"
+   },
+   "expected": "search_complete == True"
+  },
+  {
+   "name": "policy_not_whole",
+   "diagnostic": "child_execution",
+   "patch": {
+    "file": "conf/policy.properties",
+    "old": "max_lots_per_order=2",
+    "new": "max_lots_per_order=two"
+   }
+  },
+  {
+   "name": "lot_without_quantity",
+   "diagnostic": "row_condition",
+   "patch": {
+    "file": "data/entity/lots.ent.csv",
+    "old": "L1|P1|5|",
+    "new": "L1|P1|0|"
+   },
+   "expected": "quantity >= 1"
+  }
+ ]
+}

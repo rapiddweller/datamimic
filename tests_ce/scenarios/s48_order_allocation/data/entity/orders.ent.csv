@@ -1,0 +1,8 @@
+order_id|customer_id|product_id|quantity|ship_on|allow_partial
+O1|C1|P1|6|2026-03-02|no
+O2|C2|P1|7|2026-03-03|no
+O3|C3|P1|6|2026-03-06|no
+O4|C1|P1|14|2026-03-05|no
+O5|C2|P2|6|2026-03-03|yes
+O6|C3|P2|4|2026-03-06|yes
+O7|C1|P2|4|2026-03-05|yes

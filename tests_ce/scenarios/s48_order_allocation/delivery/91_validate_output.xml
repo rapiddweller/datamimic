@@ -1,0 +1,28 @@
+<setup>
+    <!-- Validate output: measure the allocation against every rule again, from the data; Build compares the values. -->
+    <generate name="allocation_checks" source="mem" sourceEntity="allocations" distribution="ordered" target="CSV">
+        <variable name="allocations" source="mem" sourceEntity="allocations" storage="data" distribution="ordered"/>
+        <variable name="orders" source="mem" sourceEntity="orders" storage="data" distribution="ordered"/>
+        <variable name="lots" source="mem" sourceEntity="lots" storage="data" distribution="ordered"/>
+        <key name="allocation_id" script="allocation_id"/>
+        <key name="order_id" script="order_id"/>
+        <key name="lot_id" script="lot_id"/>
+        <key name="same_product" script="{row.order_id: row.product_id for row in orders}[order_id] == {row.lot_id: row.product_id for row in lots}[lot_id]"/>
+        <!-- A1: the ship date and the expiry date, from the orders and the lots, not from the eligibility step. -->
+        <key name="days_to_expiry" script="({row.lot_id: row.expires_on for row in lots}[lot_id] - {row.order_id: row.ship_on for row in orders}[order_id]).days"/>
+        <key name="lot_quantity" script="{row.lot_id: row.quantity for row in lots}[lot_id]"/>
+        <key name="lot_allocated" script="sum(row.quantity for row in allocations if row.lot_id == lot_id)"/>
+        <key name="lots_of_order" script="len({row.lot_id for row in allocations if row.order_id == order_id})"/>
+    </generate>
+    <generate name="order_checks" source="mem" sourceEntity="orders" distribution="ordered" target="CSV">
+        <variable name="allocations" source="mem" sourceEntity="allocations" storage="data" distribution="ordered"/>
+        <variable name="lots" source="mem" sourceEntity="lots" storage="data" distribution="ordered"/>
+        <key name="order_id" script="order_id"/>
+        <key name="quantity" script="quantity"/>
+        <key name="allow_partial" script="allow_partial"/>
+        <key name="shipped" script="sum(row.quantity for row in allocations if row.order_id == order_id)"/>
+        <key name="backordered" script="quantity - shipped"/>
+        <!-- A4: the stock that was still good on the ship date after the whole allocation. -->
+        <key name="valid_left" script="sum(lot.quantity - sum(row.quantity for row in allocations if row.lot_id == lot.lot_id) for lot in lots if lot.product_id == product_id and ship_on &lt;= lot.expires_on)"/>
+    </generate>
+</setup>

@@ -1,0 +1,18 @@
+<setup rngSeed="48">
+    <!-- Order allocation for one week. README.md names the files and where each rule A1 to A5 lives. -->
+    <include uri="conf/policy.properties"/>
+    <memstore id="mem"/>
+    <execute uri="lib/allocation_search.scr.py"/>
+    <!-- 10 prepare: read each data file and give each column its type -->
+    <include uri="model/10_prepare.xml"/>
+    <!-- 20 eligibility: decide for each order which lots may serve it: the product (A3) and the expiry date (A1) -->
+    <include uri="model/20_eligibility.xml"/>
+    <!-- 30 allocate: search for one allocation (A2, A4, A5) and keep the evidence of each decision -->
+    <include uri="model/30_allocate.xml"/>
+    <!-- 90 validate input: measure the input values that Build compares -->
+    <include uri="delivery/90_validate_input.xml"/>
+    <!-- 91 validate output: measure the allocation against every rule again, from the data -->
+    <include uri="delivery/91_validate_output.xml"/>
+    <!-- 93 export: write each product to CSV -->
+    <include uri="delivery/93_export.xml"/>
+</setup>
