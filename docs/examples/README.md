@@ -28,10 +28,12 @@ Each example provides:
 3. Tips for customization
 4. Integration patterns
 
-The examples use the `datamimic-ce` package which you can install via pip:
+> **Pre-release.** CE 5.0 is not on PyPI yet. Until 5.0.0, install from GitHub `development`. Use Python 3.11 to 3.13.
+
+The examples use the `datamimic-ce` package:
 
 ```bash
-pip install datamimic-ce
+pip install "datamimic-ce @ git+https://github.com/rapiddweller/datamimic@development"
 ```
 
 ## Validation
