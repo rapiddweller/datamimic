@@ -7,6 +7,7 @@ from datamimic_ce.domains.domain_core.base_entity import IdentifierRegistry
 from datamimic_ce.domains.healthcare.generators.patient_generator import PatientGenerator
 from datamimic_ce.domains.healthcare.models.patient import Patient
 from datamimic_ce.domains.healthcare.services.patient_service import PATIENT_SCHEMA
+from tests_ce.unit_tests.scripted_randoms import ScriptedIntegerRandom
 
 
 def _rng_fingerprint(rng: Random) -> str:
@@ -33,17 +34,6 @@ class RepeatedChoiceRandom(Random):
     def choice(self, seq: str) -> str:
         self.calls.append(seq)
         return self.value
-
-
-class ScriptedIntegerRandom(Random):
-    def __init__(self, values: list[int]) -> None:
-        self.values = iter(values)
-        self.bounds: list[tuple[int, int]] = []
-        super().__init__(0)
-
-    def randint(self, a: int, b: int) -> int:
-        self.bounds.append((a, b))
-        return next(self.values)
 
 
 class RepeatedIntegerRandom(Random):

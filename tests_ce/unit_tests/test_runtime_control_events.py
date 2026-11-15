@@ -9,7 +9,6 @@ import os
 import re
 import subprocess
 import sys
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -30,18 +29,6 @@ def _parse(message: str) -> dict[str, str]:
 def _end_events(records: list[logging.LogRecord]) -> list[dict[str, str]]:
     parsed = [_parse(record.getMessage()) for record in records if record.getMessage().startswith("CONTROL |")]
     return [event for event in parsed if event["kind"] == "end"]
-
-
-@pytest.fixture
-def dm_caplog(caplog: pytest.LogCaptureFixture) -> Iterator[pytest.LogCaptureFixture]:
-    # The DATAMIMIC logger sets propagate=False, so caplog must be attached to it directly.
-    logger = logging.getLogger("DATAMIMIC")
-    logger.addHandler(caplog.handler)
-    try:
-        with caplog.at_level(logging.INFO, logger="DATAMIMIC"):
-            yield caplog
-    finally:
-        logger.removeHandler(caplog.handler)
 
 
 def test_ok_run_logs_exactly_one_end_event(tmp_path: Path, dm_caplog: pytest.LogCaptureFixture) -> None:

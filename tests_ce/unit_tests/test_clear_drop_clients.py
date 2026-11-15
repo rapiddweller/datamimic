@@ -7,7 +7,6 @@
 """The client side of clear and drop (BC-4.0-016): the SQL and MongoDB operations, the per-client operation sets and
 the count gate. Model-level behavior is pinned by integration_tests/test_clear_drop_operations."""
 
-import logging
 from contextlib import contextmanager
 from unittest.mock import MagicMock
 
@@ -44,18 +43,6 @@ def _sql_client(path, read_only=False) -> RdbmsClient:
     )
     client.engine = create_engine(f"sqlite:///{path}")
     return client
-
-
-@pytest.fixture
-def dm_caplog(caplog):
-    # The DATAMIMIC logger may have propagate=False after an earlier test, so attach caplog to it directly.
-    logger = logging.getLogger("DATAMIMIC")
-    logger.addHandler(caplog.handler)
-    try:
-        with caplog.at_level(logging.INFO, logger="DATAMIMIC"):
-            yield caplog
-    finally:
-        logger.removeHandler(caplog.handler)
 
 
 def test_sql_clear_removes_every_row_and_keeps_the_table(tmp_path, dm_caplog):

@@ -7,6 +7,7 @@ from datamimic_ce.domains.domain_core.base_entity import IdentifierRegistry
 from datamimic_ce.domains.healthcare.generators.medical_procedure_generator import MedicalProcedureGenerator
 from datamimic_ce.domains.healthcare.models.medical_procedure import MedicalProcedure
 from datamimic_ce.domains.healthcare.services.medical_procedure_service import MEDICAL_PROCEDURE_SCHEMA
+from tests_ce.unit_tests.scripted_randoms import ScriptedRandom
 
 
 def _procedure(seed: int) -> tuple[MedicalProcedure, Random]:
@@ -26,17 +27,6 @@ class _PublicRngMedicalProcedureGenerator(MedicalProcedureGenerator):
     @property
     def rng(self) -> Random:
         return self._public_rng
-
-
-class _ScriptedRandom(Random):
-    def __init__(self, values: list[float]):
-        super().__init__(0)
-        self.values = iter(values)
-        self.draw_count = 0
-
-    def random(self) -> float:
-        self.draw_count += 1
-        return next(self.values)
 
 
 class _ScriptedIntegerRandom(Random):
@@ -177,7 +167,7 @@ def test_surgical_flag_before_duration_keeps_seeded_rng_sequence(
 
 @pytest.mark.parametrize(("draw", "expected"), [(0.299999, True), (0.3, False)])
 def test_surgical_flag_uses_strict_threshold_and_caches_one_rng_draw(draw: float, expected: bool) -> None:
-    rng = _ScriptedRandom([draw])
+    rng = ScriptedRandom([draw])
     procedure = MedicalProcedure(MedicalProcedureGenerator(dataset="US", rng=rng))
 
     assert procedure.is_surgical is expected
@@ -187,7 +177,7 @@ def test_surgical_flag_uses_strict_threshold_and_caches_one_rng_draw(draw: float
 
 
 def test_shared_generator_keeps_independent_surgical_flag_caches() -> None:
-    rng = _ScriptedRandom([0.2, 0.8])
+    rng = ScriptedRandom([0.2, 0.8])
     generator = MedicalProcedureGenerator(dataset="US", rng=rng)
     first = MedicalProcedure(generator)
     second = MedicalProcedure(generator)
@@ -201,8 +191,8 @@ def test_shared_generator_keeps_independent_surgical_flag_caches() -> None:
 
 
 def test_surgical_flag_uses_public_rng_accessor() -> None:
-    internal_rng = _ScriptedRandom([0.1])
-    public_rng = _ScriptedRandom([0.9])
+    internal_rng = ScriptedRandom([0.1])
+    public_rng = ScriptedRandom([0.9])
     procedure = MedicalProcedure(_PublicRngMedicalProcedureGenerator(internal_rng, public_rng))
 
     assert procedure.is_surgical is False
@@ -222,7 +212,7 @@ def test_surgical_flag_uses_public_rng_accessor() -> None:
 def test_anesthesia_uses_strict_threshold_after_surgical_draw(
     surgical_draw: float, anesthesia_draw: float, expected: bool
 ) -> None:
-    rng = _ScriptedRandom([surgical_draw, anesthesia_draw])
+    rng = ScriptedRandom([surgical_draw, anesthesia_draw])
     procedure = MedicalProcedure(MedicalProcedureGenerator(dataset="US", rng=rng))
 
     assert procedure.requires_anesthesia is expected
@@ -232,7 +222,7 @@ def test_anesthesia_uses_strict_threshold_after_surgical_draw(
 
 
 def test_cached_surgical_flag_makes_anesthesia_consume_only_one_draw() -> None:
-    rng = _ScriptedRandom([0.1, 0.9, 0.1])
+    rng = ScriptedRandom([0.1, 0.9, 0.1])
     procedure = MedicalProcedure(MedicalProcedureGenerator(dataset="US", rng=rng))
 
     assert procedure.is_surgical is True
@@ -245,7 +235,7 @@ def test_cached_surgical_flag_makes_anesthesia_consume_only_one_draw() -> None:
 
 
 def test_shared_generator_keeps_independent_anesthesia_caches() -> None:
-    rng = _ScriptedRandom([0.1, 0.95, 0.8, 0.1])
+    rng = ScriptedRandom([0.1, 0.95, 0.8, 0.1])
     generator = MedicalProcedureGenerator(dataset="US", rng=rng)
     first = MedicalProcedure(generator)
     second = MedicalProcedure(generator)
@@ -259,8 +249,8 @@ def test_shared_generator_keeps_independent_anesthesia_caches() -> None:
 
 
 def test_anesthesia_uses_public_rng_accessor_and_surgical_override() -> None:
-    internal_rng = _ScriptedRandom([0.1])
-    public_rng = _ScriptedRandom([0.9])
+    internal_rng = ScriptedRandom([0.1])
+    public_rng = ScriptedRandom([0.9])
     generator = _PublicRngMedicalProcedureGenerator(internal_rng, public_rng)
     procedure = _SurgicalOverrideMedicalProcedure(generator)
 
@@ -281,7 +271,7 @@ def test_anesthesia_uses_public_rng_accessor_and_surgical_override() -> None:
 def test_preventive_flag_uses_strict_branch_threshold_and_caches_draws(
     surgical_draw: float, preventive_draw: float, expected: bool
 ) -> None:
-    rng = _ScriptedRandom([surgical_draw, preventive_draw])
+    rng = ScriptedRandom([surgical_draw, preventive_draw])
     procedure = MedicalProcedure(MedicalProcedureGenerator(dataset="US", rng=rng))
 
     assert procedure.is_preventive is expected
@@ -292,7 +282,7 @@ def test_preventive_flag_uses_strict_branch_threshold_and_caches_draws(
 
 
 def test_cached_surgical_flag_makes_preventive_consume_only_one_draw() -> None:
-    rng = _ScriptedRandom([0.1, 0.05])
+    rng = ScriptedRandom([0.1, 0.05])
     procedure = MedicalProcedure(MedicalProcedureGenerator(dataset="US", rng=rng))
 
     assert procedure.is_surgical is True
@@ -304,7 +294,7 @@ def test_cached_surgical_flag_makes_preventive_consume_only_one_draw() -> None:
 
 
 def test_shared_generator_keeps_independent_preventive_caches() -> None:
-    rng = _ScriptedRandom([0.1, 0.01, 0.8, 0.5])
+    rng = ScriptedRandom([0.1, 0.01, 0.8, 0.5])
     generator = MedicalProcedureGenerator(dataset="US", rng=rng)
     first = MedicalProcedure(generator)
     second = MedicalProcedure(generator)
@@ -318,8 +308,8 @@ def test_shared_generator_keeps_independent_preventive_caches() -> None:
 
 
 def test_preventive_uses_public_rng_and_overridden_surgical_property() -> None:
-    internal_rng = _ScriptedRandom([0.1])
-    public_rng = _ScriptedRandom([0.049])
+    internal_rng = ScriptedRandom([0.1])
+    public_rng = ScriptedRandom([0.049])
     generator = _PublicRngMedicalProcedureGenerator(internal_rng, public_rng)
     procedure = _SurgicalOverrideMedicalProcedure(generator)
 
@@ -354,7 +344,7 @@ def test_description_first_preserves_seeded_output_and_rng_state() -> None:
 def test_diagnostic_flag_uses_strict_branch_threshold_and_caches_draws(
     surgical_draw: float, diagnostic_draw: float, expected: bool
 ) -> None:
-    rng = _ScriptedRandom([surgical_draw, diagnostic_draw])
+    rng = ScriptedRandom([surgical_draw, diagnostic_draw])
     procedure = MedicalProcedure(MedicalProcedureGenerator(dataset="US", rng=rng))
 
     assert procedure.is_diagnostic is expected
@@ -365,7 +355,7 @@ def test_diagnostic_flag_uses_strict_branch_threshold_and_caches_draws(
 
 
 def test_cached_surgical_flag_makes_diagnostic_consume_only_one_draw() -> None:
-    rng = _ScriptedRandom([0.1, 0.2])
+    rng = ScriptedRandom([0.1, 0.2])
     procedure = MedicalProcedure(MedicalProcedureGenerator(dataset="US", rng=rng))
 
     assert procedure.is_surgical is True
@@ -377,7 +367,7 @@ def test_cached_surgical_flag_makes_diagnostic_consume_only_one_draw() -> None:
 
 
 def test_shared_generator_keeps_independent_diagnostic_caches() -> None:
-    rng = _ScriptedRandom([0.1, 0.1, 0.8, 0.8])
+    rng = ScriptedRandom([0.1, 0.1, 0.8, 0.8])
     generator = MedicalProcedureGenerator(dataset="US", rng=rng)
     first = MedicalProcedure(generator)
     second = MedicalProcedure(generator)
@@ -391,8 +381,8 @@ def test_shared_generator_keeps_independent_diagnostic_caches() -> None:
 
 
 def test_diagnostic_uses_public_rng_and_overridden_surgical_property() -> None:
-    internal_rng = _ScriptedRandom([0.1])
-    public_rng = _ScriptedRandom([0.199])
+    internal_rng = ScriptedRandom([0.1])
+    public_rng = ScriptedRandom([0.199])
     generator = _PublicRngMedicalProcedureGenerator(internal_rng, public_rng)
     procedure = _SurgicalOverrideMedicalProcedure(generator)
 

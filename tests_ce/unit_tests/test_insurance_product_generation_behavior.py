@@ -9,6 +9,7 @@ from datamimic_ce.domains.domain_core.base_entity import IdentifierRegistry
 from datamimic_ce.domains.insurance.generators.insurance_product_generator import InsuranceProductGenerator
 from datamimic_ce.domains.insurance.models.insurance_product import InsuranceProduct
 from datamimic_ce.domains.insurance.services.insurance_product_service import INSURANCE_PRODUCT_SCHEMA
+from tests_ce.unit_tests.scripted_randoms import FixedBitsRandom
 
 
 def _rng_fingerprint(rng: Random) -> str:
@@ -19,20 +20,6 @@ def _product(seed: int) -> tuple[InsuranceProduct, InsuranceProductGenerator, Ra
     rng = Random(seed)
     generator = InsuranceProductGenerator(dataset="US", rng=rng)
     return InsuranceProduct(generator), generator, rng
-
-
-class _FixedBitsRandom(Random):
-    def __init__(self) -> None:
-        super().__init__(1)
-        self.bit_requests: list[int] = []
-        self.fail_next_uuid = False
-
-    def getrandbits(self, k: int) -> int:
-        self.bit_requests.append(k)
-        if k == 128 and self.fail_next_uuid:
-            self.fail_next_uuid = False
-            raise RuntimeError("scripted UUID draw failure")
-        return 0
 
 
 def test_id_first_product_data_first_and_coverages_first_preserve_seeded_outputs_and_rng_state() -> None:
@@ -101,7 +88,7 @@ def test_product_id_is_lazy_cached_and_reads_public_rng_once() -> None:
 
 
 def test_unbound_products_may_keep_duplicate_id_candidates() -> None:
-    rng = _FixedBitsRandom()
+    rng = FixedBitsRandom()
     generator = InsuranceProductGenerator(dataset="US", rng=rng)
     rng.bit_requests.clear()
     first, second = InsuranceProduct(generator), InsuranceProduct(generator)
@@ -112,7 +99,7 @@ def test_unbound_products_may_keep_duplicate_id_candidates() -> None:
 
 
 def test_bound_product_id_collision_is_claimed_without_redraw() -> None:
-    rng = _FixedBitsRandom()
+    rng = FixedBitsRandom()
     generator = InsuranceProductGenerator(dataset="US", rng=rng)
     rng.bit_requests.clear()
     registry = IdentifierRegistry()
@@ -126,7 +113,7 @@ def test_bound_product_id_collision_is_claimed_without_redraw() -> None:
 
 
 def test_product_id_retries_after_generation_failure_without_caching_partial_result() -> None:
-    rng = _FixedBitsRandom()
+    rng = FixedBitsRandom()
     generator = InsuranceProductGenerator(dataset="US", rng=rng)
     rng.bit_requests.clear()
     rng.fail_next_uuid = True
@@ -150,7 +137,7 @@ def test_product_id_retries_generation_after_claim_failure() -> None:
                 raise RuntimeError("scripted claim failure")
             return super()._claim_identifier(name, candidate)
 
-    rng = _FixedBitsRandom()
+    rng = FixedBitsRandom()
     generator = InsuranceProductGenerator(dataset="US", rng=rng)
     rng.bit_requests.clear()
     product = ClaimFailsOnceProduct(generator)
