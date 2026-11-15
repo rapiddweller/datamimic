@@ -5,7 +5,7 @@ Set Width 1100
 Set Height 620
 Set TypingSpeed 40ms
 Hide
-Type "cd tests_ce/scenarios/s50_readme_shop && clear" Enter
+Type "cd tests_ce/scenarios/s53_readme_shop && clear" Enter
 Show
 Type "cat datamimic.xml" Enter
 Sleep 4s

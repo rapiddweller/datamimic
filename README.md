@@ -32,7 +32,7 @@ Independent random values do not agree with each other: an order points to a cus
 
 **DATAMIMIC Community Edition (CE) is an open-source Python library and command line tool, made by rapiddweller and released under the MIT license, that generates connected test data from one XML model.** Records reference each other, domain values come from data files, and the same seed gives the same rows again. CE can also replace personal data in an existing export.
 
-<!-- Recording placeholder: docs/assets/build-ready.gif, made from docs/assets/build-ready.tape after #514 merges. Caption: what the GIF shows, the CE commit, a link to the tape and to the scenario s50_readme_shop. -->
+<!-- Recording placeholder: docs/assets/build-ready.gif, made from docs/assets/build-ready.tape after #514 merges. Caption: what the GIF shows, the CE commit, a link to the tape and to the scenario s53_readme_shop. -->
 
 - **Connected.** One XML project describes tables, nested records, references between records and conditions. CE writes CSV, JSON, XML, XLSX, DbUnit and fixed-width files, and writes to PostgreSQL, MySQL, Oracle, MS SQL Server, SQLite and MongoDB.
 - **Repeatable.** Set `<setup rngSeed="7">`. The same CE version, project files and seed give the same rows on the tested platforms. CI compares seeded output on Linux with Python 3.11 to 3.13 and on Windows with Python 3.11, on each run.
