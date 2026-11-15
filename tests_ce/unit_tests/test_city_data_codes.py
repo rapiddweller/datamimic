@@ -20,7 +20,7 @@ LEADING_ZERO_STATES = {"US": "NJ", "DE": "SN"}
 
 def _column(path: Path, name: str) -> list[str]:
     header, rows = read_headered_csv(path, delimiter=";")
-    keys = {key.strip('"﻿'): index for key, index in header.items()}
+    keys = {key.strip('"'): index for key, index in header.items()}
     return [row[keys[name]] for row in rows] if name in keys else []
 
 
