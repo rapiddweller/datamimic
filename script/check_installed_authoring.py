@@ -83,10 +83,13 @@ async def check_mcp(schemas):
             assert json.loads(result[0].text) == schema, name
         result = await client.call_tool("datamimic_build", {"project": str(Path.cwd())})
         built = json.loads(result[0].text)
-        assert built["outcome"] == "ready" and built["evidence"][0]["count"] == 2, built
+        # The workspace holds rows.csv files that this project never reads: a gap, not a failure.
+        assert built["outcome"] == "ready_with_gaps" and built["evidence"][0]["count"] == 2, built
+        assert "rows.csv" in built["coverage"]["unread_data_files"], built
         result = await client.call_tool("datamimic_run_project", {"project": str(Path.cwd()), "timeout_seconds": 120})
         ran = json.loads(result[0].text)
         assert ran["outcome"] == "completed" and ran["exit_code"] == 0, ran
+        assert ran["build_outcome"] == "ready_with_gaps" and ran["action_required"], ran
         result = await client.call_tool(
             "datamimic_dry_run",
             {
@@ -141,8 +144,10 @@ def check_installed(with_mcp, checkout):
         DecompileDocumentRequest,
         LintRequest,
         ReadyBuild,
+        ReadyWithGapsBuild,
         ReferenceRequest,
         ReferenceTopic,
+        RejectedBuild,
         RunRequest,
     )
     from datamimic_ce.resources.api import demo_names, demo_root
@@ -179,12 +184,28 @@ def check_installed(with_mcp, checkout):
     # The working directory is the project: its entry and its acceptance.
     (Path.cwd() / PROJECT_ENTRY_PATH).write_text(compiled.artifact.compiled_xml, encoding="utf-8")
     (Path.cwd() / PROJECT_ACCEPTANCE_PATH).parent.mkdir()
-    (Path.cwd() / PROJECT_ACCEPTANCE_PATH).write_text(BuildRequestV5().model_dump_json(), encoding="utf-8")
+    expectation = {"kind": "exact_count", "subject": {"kind": "product", "product": "rows"}, "count": 2}
+    acceptance = BuildRequestV5.model_validate({"expectations": [expectation]})
+    (Path.cwd() / PROJECT_ACCEPTANCE_PATH).write_text(acceptance.model_dump_json(), encoding="utf-8")
     built = create_authoring_application(workspace_root=Path.cwd(), descriptor_path=PROJECT_ENTRY_PATH).build()
     assert isinstance(built, ReadyBuild), built
+    assert not built.coverage.has_gaps, built.coverage
     assert built.artifact.ce_version == version
     assert {item.path for item in built.artifact.files} == {PROJECT_ENTRY_PATH, PROJECT_ACCEPTANCE_PATH}
     assert built.evidence[0].count == 2 and built.evidence[0].rows == ({"id": 1}, {"id": 2})
+
+    # The other two outcomes of Build: an open coverage gap, and an acceptance that checks nothing.
+    entry_path = Path.cwd() / PROJECT_ENTRY_PATH
+    entry_path.write_text(compiled.artifact.compiled_xml.replace(' rngSeed="7"', ""), encoding="utf-8")
+    gapped = create_authoring_application(workspace_root=Path.cwd(), descriptor_path=PROJECT_ENTRY_PATH).build()
+    assert isinstance(gapped, ReadyWithGapsBuild) and gapped.coverage.open_gaps, gapped
+    entry_path.write_text(compiled.artifact.compiled_xml.replace('count="2"', 'count="{1 + 1}"'), encoding="utf-8")
+    (Path.cwd() / PROJECT_ACCEPTANCE_PATH).write_text(BuildRequestV5().model_dump_json(), encoding="utf-8")
+    unchecked = create_authoring_application(workspace_root=Path.cwd(), descriptor_path=PROJECT_ENTRY_PATH).build()
+    assert isinstance(unchecked, RejectedBuild), unchecked
+    assert [str(item.code) for item in unchecked.diagnostics] == ["missing_expectation"], unchecked
+    entry_path.write_text(compiled.artifact.compiled_xml, encoding="utf-8")
+    (Path.cwd() / PROJECT_ACCEPTANCE_PATH).write_text(acceptance.model_dump_json(), encoding="utf-8")
 
     invalid = '<setup><generate count="1"/></setup>'
     lint = application.lint(LintRequest(xml=invalid))
@@ -216,8 +237,19 @@ def check_installed(with_mcp, checkout):
     assert json.loads(cli("authoring", "schema", "--name", "build_request_v5")) == schemas["build_request_v5"]
     assert json.loads(cli("authoring", "capabilities", "--full")) == capabilities
     assert json.loads(cli("authoring", "reference"))["topic"] == "overview"
-    cli_built = json.loads(cli("authoring", "build", str(Path.cwd())))
+    # The CLI exits 0 for ready, 3 for ready_with_gaps and 1 for rejected. rows.csv above is a data file that this
+    # project never reads, so its Build is ready_with_gaps; a copy without it is ready.
+    clean = Path(tempfile.mkdtemp(prefix="datamimic-installed-clean-"))
+    for path in (PROJECT_ENTRY_PATH, PROJECT_ACCEPTANCE_PATH):
+        (clean / path).parent.mkdir(exist_ok=True)
+        (clean / path).write_text((Path.cwd() / path).read_text(encoding="utf-8"), encoding="utf-8")
+    cli_built = json.loads(cli("authoring", "build", str(clean)))
     assert cli_built["outcome"] == "ready" and cli_built["evidence"][0]["count"] == 2, cli_built
+    cli_gaps = json.loads(cli("authoring", "build", str(Path.cwd()), status=3))
+    assert cli_gaps["outcome"] == "ready_with_gaps", cli_gaps
+    assert cli_gaps["coverage"]["unread_data_files"] == ["rows.csv"], cli_gaps
+    (clean / PROJECT_ACCEPTANCE_PATH).write_text('{"version": "bogus"}', encoding="utf-8")
+    assert json.loads(cli("authoring", "build", str(clean), status=1))["outcome"] == "rejected"
     assert not json.loads(cli("authoring", "lint", "-", stdin=invalid, status=1))["ok"]
     assert "fastmcp" not in sys.modules and "uvicorn" not in sys.modules
     if with_mcp:

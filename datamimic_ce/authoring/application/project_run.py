@@ -33,10 +33,15 @@ class ProjectRunWorkflow:
         build = self._build()
         if not isinstance(build, (ReadyBuild, ReadyWithGapsBuild)):
             return ProjectRunResult(outcome="not_run", build=build)
+        outcome_name: Literal["ready", "ready_with_gaps"] = build.outcome
+        action_required = build.action_required if isinstance(build, ReadyWithGapsBuild) else None
         effects = self._effects.effects()
         if effects and not request.allow_side_effects:
             return ProjectRunResult(
                 outcome="not_run",
+                build_outcome=outcome_name,
+                coverage=build.coverage,
+                action_required=action_required,
                 required_side_effects=effects,
                 diagnostics=(
                     catalog_diagnostic(
@@ -66,6 +71,9 @@ class ProjectRunWorkflow:
             outcome=outcome,
             exit_code=execution.exit_code,
             duration_seconds=execution.duration_seconds,
+            build_outcome=outcome_name,
+            coverage=build.coverage,
+            action_required=action_required,
             artifacts=execution.artifacts,
             artifact_count=execution.artifact_count,
             log_tail=execution.log_tail,

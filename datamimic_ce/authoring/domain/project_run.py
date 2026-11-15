@@ -14,6 +14,7 @@ from pydantic import Field, StrictBool, StrictInt, StrictStr
 
 from .build_rules import catalog_diagnostic
 from .common import AuthoringModel, NonEmptyStrictStr, NonNegativeStrictInt
+from .coverage import BuildCoverage
 from .diagnostics import AuthoringRuleId, Diagnostic, DiagnosticPhase
 from .requests import BuildResult
 
@@ -60,6 +61,15 @@ class ProjectRunRequest(AuthoringModel):
 class ProjectRunResult(AuthoringModel):
     outcome: Literal["completed", "failed", "timeout", "not_run"]
     build: BuildResult | None = None
+    build_outcome: Literal["ready", "ready_with_gaps"] | None = Field(
+        default=None, description="The outcome of the Build that preceded the run; absent when Build rejected."
+    )
+    coverage: BuildCoverage | None = Field(
+        default=None, description="What that Build did not check. Fix each open gap before you report success."
+    )
+    action_required: str | None = Field(
+        default=None, description="Set when the Build had open coverage gaps; do not report success until fixed."
+    )
     required_side_effects: tuple[ExternalEffect, ...] = ()
     exit_code: StrictInt | None = None
     duration_seconds: float | None = Field(default=None, ge=0)

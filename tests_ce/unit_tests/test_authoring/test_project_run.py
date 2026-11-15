@@ -89,6 +89,19 @@ def test_a_build_with_open_coverage_gaps_still_runs(tmp_path: Path) -> None:
     assert build.outcome == "ready_with_gaps", build
     assert result.outcome == "completed"
     assert len(runner.calls) == 1
+    assert result.build_outcome == "ready_with_gaps"
+    assert result.coverage is not None and not result.coverage.seeded
+    assert result.action_required == build.action_required
+    assert "seeded" in (result.action_required or "")
+
+
+def test_a_clean_ready_run_carries_the_outcome_and_no_action(tmp_path: Path) -> None:
+    result = workflow(ready_build(tmp_path), (), FakeRunner(execution())).execute(ProjectRunRequest())
+
+    assert result.outcome == "completed"
+    assert result.build_outcome == "ready"
+    assert result.coverage is not None and not result.coverage.has_gaps
+    assert result.action_required is None
 
 
 def test_effects_without_the_flag_are_listed_and_nothing_runs(tmp_path: Path) -> None:

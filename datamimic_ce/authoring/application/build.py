@@ -208,20 +208,20 @@ class BuildDocumentWorkflow:
                 verification=blocked_verification(verification_options, "Expectation projection failed."),
             )
 
-        if acceptance.products and not acceptance.checks:
-            return RejectedBuild(
-                phase=DiagnosticPhase.EXPECTATION,
-                diagnostics=(
-                    catalog_diagnostic(
-                        AuthoringRuleId.MISSING_EXPECTATION,
-                        "The acceptance has no expectation, so Build would check nothing about the generated products.",
-                        phase=DiagnosticPhase.EXPECTATION,
-                        path=(PROJECT_ACCEPTANCE_PATH.as_posix(), "expectations"),
-                        actual=0,
-                    ),
+        # Deferred behind the run: the run's own diagnostics stay first, so one pass shows every defect.
+        deferred = (
+            (
+                catalog_diagnostic(
+                    AuthoringRuleId.MISSING_EXPECTATION,
+                    "The acceptance has no expectation, so Build would check nothing about the generated products.",
+                    phase=DiagnosticPhase.EXPECTATION,
+                    path=(PROJECT_ACCEPTANCE_PATH.as_posix(), "expectations"),
+                    actual=0,
                 ),
-                verification=blocked_verification(verification_options, "The acceptance has no expectation."),
             )
+            if acceptance.products and not acceptance.checks
+            else ()
+        )
 
         limit = request.capture_limit(acceptance.declared_rows)
         if acceptance.declared_rows is not None and acceptance.declared_rows > limit:
@@ -302,6 +302,7 @@ class BuildDocumentWorkflow:
                 catalog_diagnostic(AuthoringRuleId.VALIDATION, cause.failure_message(), phase=DiagnosticPhase.EVIDENCE)
                 for cause in causes
             )
+        diagnostics += deferred
         verification = BuildVerificationEvidence(smoke_export=smoke, deterministic_replay=replay)
         digests: dict[PurePosixPath, str] = {}
         for item in read:

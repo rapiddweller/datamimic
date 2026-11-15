@@ -35,20 +35,39 @@ _CITIES = {"kind": "exact_count", "subject": {"kind": "product", "product": "cit
 _SHOPS = '<generate name="shops" count="{1 + 1}"><key name="id" generator="IncrementGenerator"/></generate>'
 
 
-def test_an_acceptance_without_expectation_is_refused_with_a_real_example(tmp_path: Path) -> None:
-    xml = '<setup rngSeed="7"><generate name="rows" count="{1 + 1}"><key name="id" constant="1"/></generate></setup>'
+_NO_EXPECTATION = (
+    '<setup rngSeed="7"><generate name="rows" count="{1 + 1}"><key name="id" constant="1"/></generate></setup>'
+)
 
-    result = build_project(tmp_path, xml)
+
+def test_an_acceptance_without_expectation_is_refused_after_the_run_with_a_real_example(tmp_path: Path) -> None:
+    result = build_project(tmp_path, _NO_EXPECTATION)
 
     assert isinstance(result, RejectedBuild)
-    assert result.phase is DiagnosticPhase.EXPECTATION
+    assert result.phase is DiagnosticPhase.EVIDENCE
     (diagnostic,) = result.diagnostics
     assert diagnostic.code == AuthoringRuleId.MISSING_EXPECTATION
+    assert diagnostic.phase is DiagnosticPhase.EXPECTATION
     assert diagnostic.path == ("acceptance/build.json", "expectations")
     assert diagnostic.actual == 0
     assert diagnostic.remediation is not None
     assert '"kind": "exact_count"' in diagnostic.remediation
     assert "<" not in diagnostic.remediation
+
+
+def test_a_run_defect_comes_first_and_missing_expectation_follows(tmp_path: Path) -> None:
+    broken = _NO_EXPECTATION.replace('constant="1"', 'script="no_such_name"')
+
+    result = build_project(tmp_path, broken)
+
+    assert isinstance(result, RejectedBuild)
+    codes = [item.code for item in result.diagnostics]
+    assert codes[-1] == AuthoringRuleId.MISSING_EXPECTATION
+    assert len(codes) >= 2
+    assert AuthoringRuleId.MISSING_EXPECTATION not in codes[:-1]
+    assert next(item for item in result.diagnostics if item.severity == "error").code != (
+        AuthoringRuleId.MISSING_EXPECTATION
+    )
 
 
 def test_a_project_without_acceptance_file_is_told_to_write_one_expectation(tmp_path: Path) -> None:
