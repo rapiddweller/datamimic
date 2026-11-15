@@ -1,0 +1,7 @@
+course_id|teacher_id|sessions|prerequisite
+C101|T1|2|
+C102|T2|2|
+C201|T1|2|C101
+C202|T3|1|C102
+C301|T2|2|C201
+C401|T1|1|

@@ -1,0 +1,18 @@
+<setup rngSeed="47">
+    <!-- Course timetable for one week. README.md names the files and where each rule T1 to T6 lives. -->
+    <include uri="conf/policy.properties"/>
+    <memstore id="mem"/>
+    <execute uri="lib/timetable_search.scr.py"/>
+    <!-- 10 prepare: read each data file and give each column its type -->
+    <include uri="model/10_prepare.xml"/>
+    <!-- 20 admission: decide for each enrolment if the prerequisite is met (T1) and count the students of each course -->
+    <include uri="model/20_admission.xml"/>
+    <!-- 30 assign: search for one complete timetable (T2 to T6) and keep the evidence of each decision -->
+    <include uri="model/30_assign.xml"/>
+    <!-- 90 validate input: measure the input values that Build compares -->
+    <include uri="delivery/90_validate_input.xml"/>
+    <!-- 91 validate output: measure the timetable against every rule again, from the data -->
+    <include uri="delivery/91_validate_output.xml"/>
+    <!-- 93 export: write the timetable and the plan to CSV -->
+    <include uri="delivery/93_export.xml"/>
+</setup>

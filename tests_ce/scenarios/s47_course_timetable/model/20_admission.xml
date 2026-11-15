@@ -1,0 +1,21 @@
+<setup>
+    <!-- Admission: T1 refuses an enrolment when the student has not completed the prerequisite; count the students of each course. -->
+    <generate name="enrolment_decisions" source="mem" sourceEntity="enrolments" distribution="ordered" target="mem">
+        <variable name="courses" source="mem" sourceEntity="courses" storage="data" distribution="ordered"/>
+        <variable name="completed" source="mem" sourceEntity="completed" storage="data" distribution="ordered"/>
+        <key name="enrolment_id" script="enrolment_id"/>
+        <key name="student_id" script="student_id"/>
+        <key name="course_id" script="course_id"/>
+        <key name="prerequisite" script="{row.course_id: row.prerequisite for row in courses}[course_id]"/>
+        <key name="admitted" script="prerequisite == '' or any(row.student_id == student_id and row.course_id == prerequisite for row in completed)"/>
+        <key name="excluded_by" script="None if admitted else 'T1'"/>
+    </generate>
+    <generate name="course_load" source="mem" sourceEntity="courses" distribution="ordered" target="mem">
+        <variable name="decisions" source="mem" sourceEntity="enrolment_decisions" storage="data" distribution="ordered"/>
+        <key name="course_id" script="course_id"/>
+        <key name="teacher_id" script="teacher_id"/>
+        <key name="sessions" script="sessions"/>
+        <array name="admitted_students" script="sorted(row.student_id for row in decisions if row.course_id == course_id and row.admitted)"/>
+        <key name="headcount" script="len(admitted_students)"/>
+    </generate>
+</setup>

@@ -1,0 +1,39 @@
+<setup>
+    <!-- Validate output: measure the timetable against every rule again, from the data; Build compares the values. -->
+    <generate name="enrolment_checks" source="mem" sourceEntity="enrolment_decisions" distribution="ordered" target="CSV">
+        <variable name="courses" source="mem" sourceEntity="courses" storage="data" distribution="ordered"/>
+        <variable name="completed" source="mem" sourceEntity="completed" storage="data" distribution="ordered"/>
+        <key name="enrolment_id" script="enrolment_id"/>
+        <key name="admitted" script="admitted"/>
+        <!-- The prerequisite is read from the courses and the completed file again, not from the decision. -->
+        <variable name="needs" script="{row.course_id: row.prerequisite for row in courses}[course_id]"/>
+        <key name="prerequisite_met" script="needs == '' or any(row.student_id == student_id and row.course_id == needs for row in completed)"/>
+    </generate>
+    <generate name="session_checks" source="mem" sourceEntity="timetable" distribution="ordered" target="CSV">
+        <variable name="timetable" source="mem" sourceEntity="timetable" storage="data" distribution="ordered"/>
+        <variable name="unavailable" source="mem" sourceEntity="unavailable" storage="data" distribution="ordered"/>
+        <variable name="rooms" source="mem" sourceEntity="rooms" storage="data" distribution="ordered"/>
+        <variable name="courses" source="mem" sourceEntity="courses" storage="data" distribution="ordered"/>
+        <variable name="completed" source="mem" sourceEntity="completed" storage="data" distribution="ordered"/>
+        <variable name="enrolments" source="mem" sourceEntity="enrolments" storage="data" distribution="ordered"/>
+        <key name="session_id" script="session_id"/>
+        <key name="course_id" script="course_id"/>
+        <key name="room_id" script="room_id"/>
+        <variable name="needs_of" script="{row.course_id: row.prerequisite for row in courses}"/>
+        <!-- The students of each course, from the enrolments and the completed courses. -->
+        <variable name="students_of" script="{c.course_id: [e.student_id for e in enrolments if e.course_id == c.course_id and (needs_of[c.course_id] == '' or any(d.student_id == e.student_id and d.course_id == needs_of[c.course_id] for d in completed))] for c in courses}"/>
+        <key name="teacher_sessions_in_slot" script="sum(row.teacher_id == teacher_id and row.slot_id == slot_id for row in timetable)"/>
+        <key name="teacher_off" script="any(row.teacher_id == teacher_id and row.slot_id == slot_id for row in unavailable)"/>
+        <key name="room_sessions_in_slot" script="sum(row.room_id == room_id and row.slot_id == slot_id for row in timetable)"/>
+        <key name="room_capacity" script="{row.room_id: row.capacity for row in rooms}[room_id]"/>
+        <key name="headcount" script="len(students_of[course_id])"/>
+        <key name="student_clashes" script="sum(student in students_of[course_id] for row in timetable if row.slot_id == slot_id and row.session_id != session_id for student in students_of[row.course_id])"/>
+    </generate>
+    <generate name="course_checks" source="mem" sourceEntity="courses" distribution="ordered" target="CSV">
+        <variable name="timetable" source="mem" sourceEntity="timetable" storage="data" distribution="ordered"/>
+        <key name="course_id" script="course_id"/>
+        <key name="sessions_required" script="sessions"/>
+        <key name="sessions_planned" script="sum(row.course_id == course_id for row in timetable)"/>
+        <key name="days" script="len({row.day for row in timetable if row.course_id == course_id})"/>
+    </generate>
+</setup>

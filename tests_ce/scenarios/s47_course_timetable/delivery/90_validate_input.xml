@@ -1,0 +1,11 @@
+<setup>
+    <!-- Validate input: measure the input values; acceptance/build.json compares them. -->
+    <generate name="room_checks" source="mem" sourceEntity="rooms" distribution="ordered" target="CSV">
+        <key name="room_id" script="room_id"/>
+        <key name="capacity" script="capacity"/>
+    </generate>
+    <generate name="course_checks_input" source="mem" sourceEntity="courses" distribution="ordered" target="CSV">
+        <key name="course_id" script="course_id"/>
+        <key name="sessions" script="sessions"/>
+    </generate>
+</setup>
