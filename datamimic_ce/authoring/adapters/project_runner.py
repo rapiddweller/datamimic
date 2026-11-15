@@ -69,7 +69,8 @@ class CeProjectRunner:
         self._environment = {**os.environ, **(environment or {})}
 
     def run(self, params: tuple[ProjectParam, ...], timeout_seconds: int) -> ProjectRunExecution:
-        command = [sys.executable, "-m", "datamimic_ce.interfaces.cli", "run", PROJECT_ENTRY_PATH.as_posix()]
+        # -P keeps the project directory off sys.path: a project file named like a module must not replace it.
+        command = [sys.executable, "-P", "-m", "datamimic_ce.interfaces.cli", "run", PROJECT_ENTRY_PATH.as_posix()]
         for param in params:
             command += ["--param", f"{param.name}={param.value}"]
         before = _snapshot(self._root)

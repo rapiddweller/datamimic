@@ -257,3 +257,14 @@ def test_runner_stops_a_run_that_exceeds_the_timeout(tmp_path: Path, monkeypatch
     assert run.timed_out and run.exit_code is None
     assert run.log_tail == ("start",)
     assert run.duration_seconds < 30
+
+
+def test_project_file_named_like_a_module_does_not_shadow_the_package(tmp_path: Path) -> None:
+    root = project(tmp_path, "customers")
+    shadow = root / "datamimic_ce"
+    shadow.mkdir()
+    (shadow / "__init__.py").write_text('raise RuntimeError("wrong launcher package")\n', encoding="utf-8")
+    result = create_authoring_application(root, descriptor_path=PROJECT_ENTRY_PATH).run_project(
+        ProjectRunRequest(timeout_seconds=300)
+    )
+    assert result.outcome == "completed", result.log_tail

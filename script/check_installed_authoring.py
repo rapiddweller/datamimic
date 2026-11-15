@@ -64,6 +64,7 @@ async def check_mcp(schemas):
                 "lint",
                 "dry_run",
                 "run",
+                "run_project",
             )
         }
         version = json.loads((await client.call_tool("datamimic_version", {}))[0].text)
@@ -83,6 +84,9 @@ async def check_mcp(schemas):
         result = await client.call_tool("datamimic_build", {"project": str(Path.cwd())})
         built = json.loads(result[0].text)
         assert built["outcome"] == "ready" and built["evidence"][0]["count"] == 2, built
+        result = await client.call_tool("datamimic_run_project", {"project": str(Path.cwd()), "timeout_seconds": 120})
+        ran = json.loads(result[0].text)
+        assert ran["outcome"] == "completed" and ran["exit_code"] == 0, ran
         result = await client.call_tool(
             "datamimic_dry_run",
             {
@@ -227,7 +231,7 @@ def check_installed(with_mcp, checkout):
                 "schemas": len(schemas),
                 "rows": 2,
                 "real_child": True,
-                "mcp_tools": 11 if with_mcp else 0,
+                "mcp_tools": 12 if with_mcp else 0,
             }
         )
     )
