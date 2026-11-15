@@ -316,13 +316,15 @@ class RdbmsClient(DatabaseClient):
         self._require_write("execute_sql_script")
         if query is None:
             return
+        failure: OperationError | None = None
         try:
             with self._create_engine().connect() as connection, connection.begin():
                 for command in sql_dialect.split_script(query, self._credential.dbms):
                     connection.exec_driver_sql(command, execution_options=_RAW_SCRIPT)
         except sqlalchemy.exc.SQLAlchemyError as error:
             failure = _operation_failure("SQL script", error)
-        raise failure
+        if failure is not None:
+            raise failure
 
     def count_table_length(self, table_name: str) -> int:
         """
