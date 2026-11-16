@@ -617,9 +617,61 @@ jobs:
       - name: Run unit and architecture tests
         run: uv run pytest tests_ce/unit_tests tests_ce/architecture -q -n auto --dist=load --durations=20
 
-  unit_test:
+  unit_coverage_shard:
+    name: Unit coverage shard ${{ matrix.shard }}
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-22.04
     needs: install_dependencies
+    container: python:3.11-slim-bookworm
+    strategy:
+      fail-fast: false
+      matrix:
+        # Serial coverage of the whole suite took about 46 minutes on two cores; these shards take 20, 16 and 11.
+        include:
+          - shard: benchmarks
+            args: tests_ce/unit_tests/test_benchmarks
+          - shard: authoring
+            args: tests_ce/unit_tests/test_authoring
+          - shard: rest
+            args: tests_ce/unit_tests --ignore=tests_ce/unit_tests/test_benchmarks --ignore=tests_ce/unit_tests/test_authoring
+    steps:
+      - name: Setup git
+        run: |
+          apt-get update
+          apt-get install -y git make
+          git config --global --add safe.directory $(realpath .)
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.1.0
+      - name: Load venv cache
+        uses: actions/cache/restore@v5
+        with:
+          path: .venv
+          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml', './uv.lock') }}
+      - name: Run unit tests with coverage
+        env:
+          COVERAGE_FILE: .coverage.${{ matrix.shard }}
+        run: |
+          . .venv/bin/activate
+          uv run make coverage-unit-run UNIT_TEST_ARGS="${{ matrix.args }}"
+        shell: bash
+      - name: Upload coverage data
+        uses: actions/upload-artifact@v6
+        with:
+          name: coverage-unit-data-${{ matrix.shard }}
+          path: .coverage.${{ matrix.shard }}
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+
+  unit_test:
+    runs-on: ubuntu-22.04
+    needs: [install_dependencies, unit_coverage_shard]
+    # Pull requests skip the shards and run the parallel lane below.
+    if: ${{ !cancelled() && needs.install_dependencies.result == 'success' && (github.event_name == 'pull_request' || needs.unit_coverage_shard.result == 'success') }}
     container: python:3.11-slim-bookworm
     steps:
       - name: Setup git
@@ -648,11 +700,20 @@ jobs:
           echo "== seconds per test file"
           grep -E '^[0-9.]+s (call|setup|teardown) ' unit.log | awk '{split($3,a,"::"); t[a[1]]+=$1} END {for (f in t) printf "%8.0f %s\n", t[f], f}' | sort -rn | head -25
         shell: bash
-      - name: Run unit tests with coverage
+      - name: Download coverage data of the shards
+        if: github.event_name != 'pull_request'
+        uses: actions/download-artifact@v7
+        with:
+          pattern: coverage-unit-data-*
+          path: coverage-unit-data
+          merge-multiple: true
+      - name: Combine unit coverage
         if: github.event_name != 'pull_request'
         run: |
           . .venv/bin/activate
-          uv run make coverage-unit
+          test "$(ls -A coverage-unit-data | wc -l)" -eq 3
+          uv run coverage combine coverage-unit-data
+          uv run make coverage-unit-report
           uv run make test-architecture
         shell: bash
       - name: Package agent plugin
