@@ -59,9 +59,14 @@ def initialize_project(project_name: str, target_directory: Path | None, force: 
         cli_presenter.fail(f"Directory '{project_dir}' already exists. Use --force to overwrite", code=1)
     if project_dir.is_file():
         cli_presenter.fail(f"'{project_dir}' exists and is a file", code=1)
+    overwritten = tuple(
+        str(path)
+        for path in (Path("datamimic.xml"), Path("README.md"), Path("acceptance/build.json"))
+        if (project_dir / path).is_file()
+    )
     project_dir.mkdir(parents=True, exist_ok=force)
     create_project_structure(project_dir)
-    cli_presenter.emit_project_created(project_name, project_dir)
+    cli_presenter.emit_project_created(project_name, project_dir, overwritten)
 
 
 def show_demo_information(demo_name: str) -> None:

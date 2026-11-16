@@ -1,6 +1,7 @@
 import json
 import os
 import shutil
+import shlex
 from unittest.mock import patch
 
 from typer.testing import CliRunner
@@ -21,6 +22,42 @@ class TestCLI:
         assert all((project_dir / name).is_dir() for name in ("data", "output", "script", "config"))
         assert (project_dir / "datamimic.xml").is_file()
         assert (project_dir / "README.md").is_file()
+        assert (project_dir / "acceptance/build.json").is_file()
+        assert f"cd {shlex.quote(str(project_dir))}" in result.output.replace("\n", "")
+        build = runner.invoke(app, ["authoring", "build", str(project_dir)])
+        assert build.exit_code == 0, build.output
+        assert json.loads(build.output)["outcome"] == "ready"
+        acceptance_path = project_dir / "acceptance/build.json"
+        acceptance = json.loads(acceptance_path.read_text())
+        acceptance["expectations"][0]["count"] += 1
+        acceptance_path.write_text(json.dumps(acceptance))
+        rejected = runner.invoke(app, ["authoring", "build", str(project_dir)])
+        assert rejected.exit_code == 1, rejected.output
+        assert json.loads(rejected.output)["outcome"] == "rejected"
+
+    def test_init_target_and_force_reports_only_overwrites(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        target = tmp_path / "target with spaces"
+        project = target / "sample"
+        project.mkdir(parents=True)
+        (project / "datamimic.xml").write_text("old")
+        (project / "keep.txt").write_text("keep")
+        result = runner.invoke(app, ["init", "sample", "--target", str(target), "--force"])
+        assert result.exit_code == 0, result.output
+        output = result.output.replace("\n", "")
+        assert f"cd {shlex.quote(str(project))}" in output
+        assert "Overwritten:" in output and "datamimic.xml" in output
+        assert "README.md" not in output and "acceptance/build.json" not in output
+        assert (project / "keep.txt").read_text() == "keep"
+        assert "acceptance/build.json" in (project / "README.md").read_text()
+        help_result = runner.invoke(app, ["init", "--help"])
+        assert all(
+            name in help_result.output.replace("\n", "")
+            for name in ("datamimic.xml", "README.md", "acceptance/build.json")
+        )
+        again = runner.invoke(app, ["init", "sample", "--target", str(target), "--force"])
+        assert again.exit_code == 0, again.output
+        assert all(name in again.output for name in ("datamimic.xml", "README.md", "acceptance/build.json"))
 
     def test_version_info(self):
         result = runner.invoke(app, ["version"])

@@ -35,7 +35,12 @@ def info() -> None:
 def init(
     project_name: Annotated[str, typer.Argument(help="Project directory name")],
     target_directory: Annotated[Path | None, typer.Option("--target", "-t")] = None,
-    force: Annotated[bool, typer.Option("--force", "-f")] = False,
+    force: Annotated[
+        bool,
+        typer.Option(
+            "--force", "-f", help="Overwrite datamimic.xml, README.md and acceptance/build.json; keep unrelated files."
+        ),
+    ] = False,
 ) -> None:
     cli_runtime.initialize_project(project_name, target_directory, force)
 
