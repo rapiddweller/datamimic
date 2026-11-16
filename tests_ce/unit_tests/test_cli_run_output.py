@@ -5,6 +5,7 @@
 
 import json
 import logging
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -19,7 +20,8 @@ from datamimic_ce.errors.factory import parser_validation_error
 from datamimic_ce.interfaces.cli import presenter
 
 
-def test_failed_run_logs_error_once_on_stderr(tmp_path: Path) -> None:
+def test_failed_run_ends_with_the_cli_error_line(tmp_path: Path) -> None:
+    # Scripts and the integration tests read the `Error: [Exxx/Iyyy]` line; the run log keeps its own record.
     descriptor = tmp_path / "datamimic.xml"
     descriptor.write_text("<setup", encoding="utf-8")
     result = subprocess.run(
@@ -27,7 +29,7 @@ def test_failed_run_logs_error_once_on_stderr(tmp_path: Path) -> None:
     )
     assert result.returncode == 1
     assert result.stdout == ""
-    assert result.stderr.count("Descriptor XML is not well-formed") == 1
+    assert re.search(r"^Error: \[E\d+/I\d+\] .*Descriptor XML is not well-formed", result.stderr, re.MULTILINE)
     assert " | ERROR | DATAMIMIC" in result.stderr
 
 
