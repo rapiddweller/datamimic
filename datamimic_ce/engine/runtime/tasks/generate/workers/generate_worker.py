@@ -262,7 +262,7 @@ class GenerateWorker:
         # Generate and consume product by page
         for page_index, page_tuple in enumerate(index_chunk):
             page_info = f"{page_index + 1}/{len(index_chunk)}"
-            logger.info(f"Worker {worker_id} processing page {page_info}")
+            logger.debug(f"Worker {worker_id} processing page {page_info}")
             page_start, page_end = page_tuple
             with gen_timer("generate", root_context.report_logging, stmt.full_name) as timer_result:
                 timer_result["records_count"] = page_end - page_start

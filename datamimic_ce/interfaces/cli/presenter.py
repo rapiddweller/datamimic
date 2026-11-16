@@ -61,7 +61,7 @@ def fail(message: str, output_format: CliOutputFormat = CliOutputFormat.TEXT, co
     if output_format is CliOutputFormat.JSON:
         typer.echo(json.dumps({"ok": False, "error": message}, indent=2))
     else:
-        typer.echo(f"Error: {message}")
+        typer.echo(f"Error: {message}", err=True)
     raise typer.Exit(code)
 
 

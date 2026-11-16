@@ -32,16 +32,10 @@ class TXTExporter(UnifiedBufferedExporter):
     def __init__(self, config: ExporterConfig, params: dict):
         """Initialize the TXTExporter. separator defaults to ':', line_terminator to the system default."""
         self.separator = params.get("separator") or config.default_separator or ":"
-        self.line_terminator = (
-            params.get("line_terminator") or config.default_line_separator or os.linesep or "\n"
-        )
+        self.line_terminator = params.get("line_terminator") or config.default_line_separator or os.linesep or "\n"
         self._track_serialized_rows = config.track_serialized_rows
         self._serialized_records_by_buffer: dict[Path, list[str]] = {}
         super().__init__("txt", config)
-        logger.info(
-            f"TXTExporter initialized with chunk size {config.chunk_size}, separator '{self.separator}', "
-            f"encoding '{self.encoding}', line terminator '{self.line_terminator}'"
-        )
 
     def get_file_extension(self) -> str:
         """Defines the file suffix based on the format."""

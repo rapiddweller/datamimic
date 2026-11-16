@@ -183,7 +183,7 @@ class GenerateTask(CommonSubTask):
 
         # Log calculated default page size
         default_page_size = max(1, default_page_size)
-        logger.info(f"Using default page size {default_page_size} for processing by page")
+        logger.debug(f"Using default page size {default_page_size} for processing by page")
 
         return default_page_size
 

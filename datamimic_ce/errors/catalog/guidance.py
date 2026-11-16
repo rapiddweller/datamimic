@@ -7,7 +7,7 @@ GUIDANCE_IN_DATE_FORMAT = "Ensure input values match inDateFormat (use %y for 2-
 GUIDANCE_OUT_DATE_FORMAT = "Set inDateFormat or generate datetime values before applying outDateFormat."
 GUIDANCE_EMPTY_VALUE = "Provide a non-empty value or remove date format attributes."
 GUIDANCE_VALID_LOCALE = "Use a valid locale like 'en_US'."
-GUIDANCE_PROJECT_ENV = "Check your project environment configuration or uploaded assets."
+GUIDANCE_PROJECT_ENV = "Check that the referenced file exists relative to the descriptor."
 
 # count is evaluated in the enclosing record, so the generic hint (parent.name) points one level too high.
 GUIDANCE_COUNT_SCOPE = (
@@ -15,7 +15,7 @@ GUIDANCE_COUNT_SCOPE = (
     "(e.g. int(headcount)); parent.name already points one level above that record."
 )
 
-GUIDANCE_DESCRIPTOR_ENV = "Check the descriptor file in your project environment configuration or uploaded assets."
+GUIDANCE_DESCRIPTOR_ENV = "Check the descriptor file."
 
 # The one-product lookup form, the best default for a join; tests_ce/scenarios/s31_file_lookup builds this text.
 FILE_LOOKUP_PATTERN = (

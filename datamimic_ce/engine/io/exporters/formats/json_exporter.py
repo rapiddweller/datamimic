@@ -36,7 +36,6 @@ class JsonExporter(UnifiedBufferedExporter):
     def __init__(self, config: ExporterConfig, params: dict):
         self.use_ndjson = params.get("use_ndjson")
         super().__init__("json", config)
-        logger.info(f"JsonExporter initialized with chunk size {config.chunk_size} and NDJSON: {self.use_ndjson}")
 
     def _write_data_to_buffer(self, data: list[dict], worker_id: int, chunk_idx: int) -> None:
         """Writes data to the current buffer file in NDJSON format."""

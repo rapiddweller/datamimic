@@ -80,7 +80,6 @@ def _invalid_xml(error: etree.XMLSyntaxError | DTDForbiddenError, name: str) -> 
     line, column = error.position if isinstance(error, etree.XMLSyntaxError) else (None, None)
     return parser_validation_error(
         code=IssueCode.PARSER_DESCRIPTOR_INVALID_XML,
-        name=name,
-        xml_location=f"line {line}, column {column}" if line is not None else "a forbidden DTD declaration",
+        reason="syntax error" if line is not None else "forbidden DTD declaration",
         location=DescriptorLocation("setup", descriptor_path=name, line=line, column=column),
     )

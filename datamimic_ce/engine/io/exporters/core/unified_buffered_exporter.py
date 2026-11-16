@@ -220,7 +220,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
         Copy all temporary files to the final destination.
         If destination already exists, creates a versioned directory.
         """
-        logger.info(f"Saving exported result for product {self.product_name}")
+        logger.info(f"Saving exported result for product {self.product_name} with {self._exporter_type} exporter")
 
         # exportUri names the output subdirectory (EE parity: prefix replaces the task_id dir); default
         # keeps the task_id dir so concurrent runs stay isolated.
