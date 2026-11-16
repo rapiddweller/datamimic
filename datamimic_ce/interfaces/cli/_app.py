@@ -35,7 +35,14 @@ def info() -> None:
 def init(
     project_name: Annotated[str, typer.Argument(help="Project directory name")],
     target_directory: Annotated[Path | None, typer.Option("--target", "-t")] = None,
-    force: Annotated[bool, typer.Option("--force", "-f")] = False,
+    force: Annotated[
+        bool,
+        typer.Option(
+            "--force",
+            "-f",
+            help="Overwrite the starter files (the success output lists them); unrelated files are kept.",
+        ),
+    ] = False,
 ) -> None:
     cli_runtime.initialize_project(project_name, target_directory, force)
 

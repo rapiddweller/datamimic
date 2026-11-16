@@ -7,6 +7,8 @@
 from __future__ import annotations
 
 import json
+import re
+import shlex
 from pathlib import Path, PurePosixPath
 
 import pytest
@@ -79,7 +81,11 @@ def test_a_project_without_acceptance_file_is_told_to_write_one_expectation(tmp_
     remediation = result.diagnostics[0].remediation
     assert remediation is not None
     assert '"expectations": [{"kind": "exact_count"' in remediation
-    assert "datamimic authoring init" in remediation
+    commands = re.findall(r"datamimic [a-z][a-z -]*", remediation)
+    assert commands
+    for command in commands:
+        args = shlex.split(command.rstrip(" -"))
+        assert CliRunner().invoke(app, [*args[1:], "--help"]).exit_code == 0, command
     assert '"expectations": []' not in remediation
 
 

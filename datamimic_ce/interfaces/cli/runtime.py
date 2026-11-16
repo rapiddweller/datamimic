@@ -19,7 +19,7 @@ from datamimic_ce.errors import DomainError, UserErrorBase
 from datamimic_ce.interfaces.cli import presenter as cli_presenter
 from datamimic_ce.interfaces.cli.presenter import DemoInformation, DemoSummary, SystemInformation
 from datamimic_ce.interfaces.demo import handle_demo
-from datamimic_ce.interfaces.project import create_project_structure, validate_project_name
+from datamimic_ce.interfaces.project import STARTER_FILES, create_project_structure, validate_project_name
 from datamimic_ce.resources.api import demo_root
 
 logger = logging.getLogger("DATAMIMIC")
@@ -59,9 +59,10 @@ def initialize_project(project_name: str, target_directory: Path | None, force: 
         cli_presenter.fail(f"Directory '{project_dir}' already exists. Use --force to overwrite", code=1)
     if project_dir.is_file():
         cli_presenter.fail(f"'{project_dir}' exists and is a file", code=1)
+    overwritten = tuple(path for path in STARTER_FILES if (project_dir / path).is_file())
     project_dir.mkdir(parents=True, exist_ok=force)
     create_project_structure(project_dir)
-    cli_presenter.emit_project_created(project_name, project_dir)
+    cli_presenter.emit_project_created(project_name, project_dir, overwritten)
 
 
 def show_demo_information(demo_name: str) -> None:
