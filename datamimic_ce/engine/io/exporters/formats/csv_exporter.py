@@ -34,14 +34,8 @@ class CSVExporter(UnifiedBufferedExporter):
         self.delimiter = params.get("delimiter") or config.default_separator or ","
         self.quotechar = params.get("quotechar") or '"'
         self.quoting = params.get("quoting") or csv.QUOTE_MINIMAL
-        self.line_terminator = (
-            params.get("line_terminator") or config.default_line_separator or os.linesep or "\n"
-        )
+        self.line_terminator = params.get("line_terminator") or config.default_line_separator or os.linesep or "\n"
         super().__init__("csv", config)
-        logger.info(
-            f"CSVExporter initialized with chunk size {config.chunk_size}, fieldnames '{self.fieldnames}', "
-            f"encoding '{self._encoding}', delimiter '{self.delimiter}'"
-        )
 
     def _write_data_to_buffer(self, data: list[dict], worker_id: int, chunk_idx: int) -> None:
         """Writes data to the current buffer file in CSV format."""

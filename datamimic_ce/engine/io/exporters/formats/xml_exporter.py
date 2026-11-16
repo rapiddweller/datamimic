@@ -37,10 +37,6 @@ class XMLExporter(UnifiedBufferedExporter):
         self.item_element = params.get("item_element") or "item"
         self._flattened_buffer_files: set[Path] = set()
         super().__init__("xml", config)
-        logger.info(
-            f"XMLExporter initialized with chunk size {config.chunk_size}, root element '{self.root_element}', "
-            f"item element '{self.item_element}', encoding '{self.encoding}'"
-        )
 
     def get_file_extension(self) -> str:
         """Defines the file suffix based on the format."""

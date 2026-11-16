@@ -28,7 +28,6 @@ class XLSXExporter(UnifiedBufferedExporter):
     def __init__(self, config: ExporterConfig, params: dict):
         self.sheet_name = params.get("sheet_name") or "data"
         super().__init__("xlsx", config)
-        logger.info(f"XLSXExporter initialized with chunk size {config.chunk_size}, sheet '{self.sheet_name}'")
 
     def get_file_extension(self) -> str:
         return "xlsx"

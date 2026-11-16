@@ -325,7 +325,7 @@ def parser_validation_error(
     **kwargs: object,
 ) -> ParserValidationError:
     msg = parser_validation_message(code=code, guidance=guidance, location=location, **kwargs)
-    msg = f"{msg}{descriptor_hint(ctx, descriptor_name)}"
+    msg = f"{msg}{descriptor_hint_if_missing(msg, ctx, descriptor_name)}"
     error_type = MissingDescriptorError if code is IssueCode.PARSER_DESCRIPTOR_NOT_FOUND else ParserValidationError
     error = error_type(msg, issue_code=code, location=location)
     error.validation_errors = validation_errors
