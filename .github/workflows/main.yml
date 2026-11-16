@@ -906,13 +906,68 @@ jobs:
           name: coverage-integration
           path: coverage.xml
 
-  external_service_test:
+  external_service_shard:
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-22.04
     needs: install_dependencies
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: mongo
+            postgres: false
+            mongo: true
+            sql: false
+            args: >-
+              tests_ce/external_service_tests/test_demo/demo-mongodb
+              tests_ce/external_service_tests/test_entity_stringify_mongo
+              tests_ce/external_service_tests/test_integration_mongodb
+              tests_ce/external_service_tests/test_mongodb
+              tests_ce/external_service_tests/test_mongodb_error
+              tests_ce/external_service_tests/test_mongodb_reference
+              tests_ce/external_service_tests/test_mongodb_routing_matrix
+          - shard: sql
+            postgres: true
+            mongo: true
+            sql: true
+            args: >-
+              tests_ce/external_service_tests/test_authoring_read_only.py
+              tests_ce/external_service_tests/test_rdbms
+              tests_ce/external_service_tests/test_rdbms_functional
+              tests_ce/external_service_tests/test_rdbms_reference
+              tests_ce/external_service_tests/test_rdbms_sql_matrix
+              tests_ce/external_service_tests/test_sequence_table_generator
+          - shard: demos
+            postgres: true
+            mongo: true
+            sql: false
+            args: >-
+              tests_ce/external_service_tests/datamimic_demo
+              tests_ce/external_service_tests/test_scenario_services
+          - shard: rest
+            postgres: true
+            mongo: true
+            sql: false
+            args: >-
+              tests_ce/external_service_tests
+              --ignore=tests_ce/external_service_tests/test_demo/demo-mongodb
+              --ignore=tests_ce/external_service_tests/test_entity_stringify_mongo
+              --ignore=tests_ce/external_service_tests/test_integration_mongodb
+              --ignore=tests_ce/external_service_tests/test_mongodb
+              --ignore=tests_ce/external_service_tests/test_mongodb_error
+              --ignore=tests_ce/external_service_tests/test_mongodb_reference
+              --ignore=tests_ce/external_service_tests/test_mongodb_routing_matrix
+              --ignore=tests_ce/external_service_tests/test_authoring_read_only.py
+              --ignore=tests_ce/external_service_tests/test_rdbms
+              --ignore=tests_ce/external_service_tests/test_rdbms_functional
+              --ignore=tests_ce/external_service_tests/test_rdbms_reference
+              --ignore=tests_ce/external_service_tests/test_rdbms_sql_matrix
+              --ignore=tests_ce/external_service_tests/test_sequence_table_generator
+              --ignore=tests_ce/external_service_tests/datamimic_demo
+              --ignore=tests_ce/external_service_tests/test_scenario_services
     services:
       postgres:
-        image: postgres:13
+        image: ${{ matrix.postgres && 'postgres:13' || '' }}
         env:
           POSTGRES_USER: datamimic
           POSTGRES_PASSWORD: datamimic
@@ -921,7 +976,7 @@ jobs:
           - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
       mongo:
-        image: mongo:7.0
+        image: ${{ matrix.mongo && 'mongo:7.0' || '' }}
         env:
           MONGO_INITDB_ROOT_USERNAME: datamimic
           MONGO_INITDB_ROOT_PASSWORD: datamimic
@@ -936,7 +991,7 @@ jobs:
           --eval 'db.adminCommand({ping:1}).ok'"
           --health-interval 10s --health-timeout 5s --health-retries 5
       mysql:
-        image: mysql:8
+        image: ${{ matrix.sql && 'mysql:8' || '' }}
         env:
           MYSQL_ROOT_PASSWORD: root
           MYSQL_USER: rduser
@@ -948,7 +1003,7 @@ jobs:
       mssql:
         # Pinned (was unpinned `mcr.microsoft.com/mssql/server`, i.e. `:latest` - a floating tag
         # that silently changes CI's exact SQL Server version over time with no code change here).
-        image: mcr.microsoft.com/mssql/server:2022-latest
+        image: ${{ matrix.sql && 'mcr.microsoft.com/mssql/server:2022-latest' || '' }}
         env:
           DB_HOST: 'mssql'
           DB_PORT: '1433'
@@ -968,7 +1023,7 @@ jobs:
         # actively-maintained, CI-oriented image (built-in healthcheck.sh, fast startup) the
         # python-oracledb driver's own docs point to; no registry auth needed (unlike Oracle's
         # official container-registry.oracle.com images).
-        image: gvenzl/oracle-free:latest
+        image: ${{ matrix.sql && 'gvenzl/oracle-free:latest' || '' }}
         env:
           ORACLE_RANDOM_PASSWORD: 'true'
           ORACLE_DATABASE: rddb
@@ -1001,6 +1056,8 @@ jobs:
           key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml', './uv.lock') }}
       - name: Run external service tests with coverage
         id: service_tests
+        env:
+          COVERAGE_FILE: .coverage.${{ matrix.shard }}
         run: |
           . .venv/bin/activate
           export DATAMIMIC_MONGODB_DIAGNOSTICS_DIR="$PWD/test-artifacts"
@@ -1017,10 +1074,10 @@ jobs:
           PYTHON
           cp uv.lock test-artifacts/mongodb-uv.lock
           sha256sum uv.lock > test-artifacts/mongodb-lock.sha256
-          uv run --frozen pytest tests_ce/external_service_tests/ --cov=. --cov-report=xml
+          uv run --frozen coverage run --source=. -m pytest ${{ matrix.args }} -n 0 --durations=0
         shell: bash
       - name: Observe MongoDB after a service failure
-        if: failure() && steps.service_tests.outcome == 'failure'
+        if: failure() && steps.service_tests.outcome == 'failure' && matrix.mongo
         timeout-minutes: 1
         run: |
           . .venv/bin/activate
@@ -1042,13 +1099,53 @@ jobs:
           PYTHON
         shell: bash
       - name: Upload MongoDB diagnostics
-        if: always()
+        if: always() && matrix.mongo
         uses: actions/upload-artifact@v6
         with:
-          name: mongodb-driver-diagnostics
+          name: mongodb-driver-diagnostics-${{ matrix.shard }}
           path: test-artifacts/mongodb-*
           if-no-files-found: error
           retention-days: 7
+      - name: Upload coverage data
+        uses: actions/upload-artifact@v6
+        with:
+          name: coverage-external-service-data-${{ matrix.shard }}
+          path: .coverage.${{ matrix.shard }}
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+
+  external_service_test:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-22.04
+    needs: external_service_shard
+    container: python:3.11-slim-bookworm
+    steps:
+      - name: Setup git
+        run: |
+          apt-get update
+          apt-get install -y git
+          git config --global --add safe.directory $(realpath .)
+      - name: Checkout repository
+        uses: actions/checkout@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.1.0
+      - name: Load venv cache
+        uses: actions/cache/restore@v5
+        with:
+          path: .venv
+          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml', './uv.lock') }}
+      - name: Download coverage data
+        uses: actions/download-artifact@v7
+        with:
+          pattern: coverage-external-service-data-*
+          path: coverage-external-service-data
+          merge-multiple: true
+      - name: Combine external service coverage
+        run: |
+          test "$(ls -A coverage-external-service-data | wc -l)" -eq 4
+          uv run coverage combine coverage-external-service-data
+          uv run coverage xml
       - name: Upload coverage report
         uses: actions/upload-artifact@v6
         with:
