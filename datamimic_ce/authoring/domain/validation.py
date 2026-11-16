@@ -33,10 +33,18 @@ def validation_diagnostics(
                 actual=_actual(item),
                 allowed_values=_allowed_values(item),
                 # A malformed expectation gets the shape of its kind; the path holds field names only.
-                remediation=expectation_repair(path) or remediation,
+                remediation=expectation_repair(path) or _syntax_remediation(item, prefix) or remediation,
             )
         )
     return tuple(diagnostics)
+
+
+def _syntax_remediation(item: ErrorDetails, prefix: tuple[str | int, ...]) -> str | None:
+    """A JSON syntax error has no field path; it names the file and keeps the line and column in the message."""
+    if item.get("type") != "json_invalid":
+        return None
+    source = f" of {prefix[0]}" if prefix else ""
+    return f"Fix the JSON syntax{source} at the line and column in the message."
 
 
 def _validation_message(item: ErrorDetails) -> str:

@@ -116,7 +116,7 @@ def test_a_foreign_key_side_without_subject_names_the_side_shape(tmp_path: Path)
 
     errors = _raw_errors(tmp_path, _TICKETS, [foreign_key])
 
-    child = [str(item.remediation) for item in errors if item.path[:3] == ("expectations", 0, "foreign_key")]
+    child = [str(item.remediation) for item in errors if item.path[1:4] == ("expectations", 0, "foreign_key")]
     assert child and all(
         text.startswith("Put the product of child inside subject")
         or text.startswith("Put the product of parent inside subject")
@@ -281,5 +281,5 @@ def test_a_per_parent_count_with_grouping_fields_says_that_the_nesting_groups(tm
 
     errors = _raw_errors(tmp_path, _TICKETS, [count])
 
-    fields = [str(item.remediation) for item in errors if item.path[3:] in (("child_field",), ("parent_field",))]
+    fields = [str(item.remediation) for item in errors if item.path[4:] in (("child_field",), ("parent_field",))]
     assert len(fields) == 2 and all("grouped by that nesting" in text for text in fields), fields

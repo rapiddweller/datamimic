@@ -359,7 +359,7 @@ class RejectedBuild(AuthoringModel):
         return cls(phase=phase, diagnostics=(diagnostic,))
 
     @classmethod
-    def from_model_validation(cls, error: ValidationError) -> RejectedBuild:
+    def from_model_validation(cls, error: ValidationError, *, prefix: tuple[str, ...] = ()) -> RejectedBuild:
         from datamimic_ce.authoring.domain.validation import validation_diagnostics
 
         locations = tuple(item.get("loc", ()) for item in error.errors())
@@ -374,7 +374,7 @@ class RejectedBuild(AuthoringModel):
         )
         return cls(
             phase=phase,
-            diagnostics=validation_diagnostics(error, phase=phase, remediation=remediation),
+            diagnostics=validation_diagnostics(error, prefix=prefix, phase=phase, remediation=remediation),
         )
 
 
