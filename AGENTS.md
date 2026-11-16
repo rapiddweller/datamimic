@@ -34,8 +34,13 @@ same application. See `docs/agent_plugin.md`.
 
 Authoring commands default to JSON. File input and `-` for stdin are supported.
 Exit codes: `0` succeeds, `1` rejects an input/operation, `2` is CLI usage error.
+Build exit code 3 means `ready_with_gaps`, not a clean proof; fix the gaps before
+reporting success. `run-project` can exit code 0 after a Build with gaps: inspect
+`build_outcome` and `action_required` rather than treating execution as proof.
 `compile`/`decompile` readiness proves syntax only; Build readiness additionally
 requires complete bounded evidence and the declared acceptance checks.
+Build and dry-run JSON can contain sample row values; do not share transcripts of
+real data.
 
 ## Authoring a model
 
@@ -96,6 +101,9 @@ producer identifier and consumer foreign-key role pair. For time series, literal
 
 For an existing XML descriptor: `authoring lint` → `authoring dry-run`, inspect the
 bounded evidence, then use normal `datamimic run` when execution is requested.
+Dry-run does not read `acceptance/build.json`; its `--max-count` defaults to 10.
+`run-project` permits local `output/` writes without `--allow-side-effects`; that
+option permits effects outside the project.
 For upgrades, see [the migration guide](docs/migrations/authoring-errors.md).
 
 ## Benchmarking local Ollama models

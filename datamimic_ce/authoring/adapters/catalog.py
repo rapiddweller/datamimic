@@ -247,7 +247,9 @@ class CeDslCatalog:
                 return ReferenceResult(
                     topic=request.topic,
                     content=(
-                        "Author DM JSON, compile to XML, and declare expectations in each Build. "
+                        "Persist the project model as datamimic.xml and its expectations in acceptance/build.json. "
+                        "DM JSON is a transient agent representation for drafting or editing one XML file; "
+                        "compile it to XML before Build. "
                         "Codec support, parser validity, bounded evidence and external delivery are separate claims. "
                         "Project data files (*.ent.csv, *.wgt.csv): "
                         "datamimic authoring reference --topic learning --name data_files. "

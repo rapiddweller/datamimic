@@ -84,6 +84,9 @@ original requirements and relative resource paths. `outcome: "ready"` is the
 stopping condition. `artifact.files` lists every project file the proof read
 with its digest; retain the response as the proof. Do not lint/dry-run a
 successful Build again.
+Build exit code 3 means `ready_with_gaps`: repair the gaps before reporting
+success. Build and dry-run JSON can contain sample row values; do not share
+transcripts of real data.
 
 ## Projects with steps
 
@@ -130,10 +133,13 @@ Decompile existing XML through `authoring decompile` before editing its DM JSON;
 supply its requirements for the new Build. An unsupported decompile leaves the
 original file intact. Raw XML inspection uses `authoring lint` then
 `authoring dry-run`; normal execution uses `datamimic run model.xml`.
+Dry-run does not read `acceptance/build.json`; its `--max-count` defaults to 10.
 
 The connected `datamimic_*` tools run the same operations: follow their input schemas,
 including `request` wrappers, and pass the absolute `project` directory on every
 project tool; the server needs no workspace option. `authoring run-project` builds
 the project first and then produces the real data; it refuses external targets
 unless `allow_side_effects` is true, which needs the user's confirmation of the
-named targets.
+named targets. Local `output/` files can be written without that opt-in.
+`run-project` can exit code 0 when `build_outcome` is `ready_with_gaps`; inspect
+`action_required` and fix the gaps before reporting a clean proof.

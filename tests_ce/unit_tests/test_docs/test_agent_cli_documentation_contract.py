@@ -95,3 +95,25 @@ def test_agent_cli_discovery_uses_the_same_public_contract() -> None:
     element = runner.invoke(app, ["authoring", "capability", "--domain", "element", "--name", "generate"])
     assert element.exit_code == 0, element.stdout
     assert json.loads(element.stdout)["capability"]["name"] == "generate"
+
+
+def test_authoring_guidance_explains_proof_and_execution_boundaries() -> None:
+    runner = CliRunner()
+    build = " ".join(runner.invoke(app, ["authoring", "build", "--help"]).stdout.split())
+    run = " ".join(runner.invoke(app, ["authoring", "run-project", "--help"]).stdout.replace("│", " ").split())
+    dry = " ".join(runner.invoke(app, ["authoring", "dry-run", "--help"]).stdout.split())
+    overview = json.loads(runner.invoke(app, ["authoring", "reference", "--topic", "overview"]).stdout)["content"]
+    assert "Exit code 3: ready_with_gaps" in build
+    assert "ready_with_gaps" in run and "exit code 0" in run
+    assert "outside the project" in run and "output/" in run
+    assert "acceptance/build.json" in dry and "--max-count" in dry
+    assert "datamimic.xml" in overview and "acceptance/build.json" in overview
+    assert "transient" in overview and "Author DM JSON, compile to XML" not in overview
+    for path in (
+        ROOT / "AGENTS.md",
+        ROOT / "plugins/datamimic/skills/generate-test-data/references/ce.md",
+    ):
+        text = " ".join(path.read_text().split())
+        assert "ready_with_gaps" in text and "exit code 3" in text
+        assert "run-project" in text and "exit code 0" in text
+        assert "sample" in text and "real data" in text
