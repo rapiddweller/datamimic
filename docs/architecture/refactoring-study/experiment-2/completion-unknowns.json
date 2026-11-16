@@ -402,7 +402,7 @@
   ],
   "validation_unknowns": {
     "classification": "unproven_publication_usage",
-    "reason": "All 20 exact interface.usage_unknown diagnostics remain UNKNOWN: CompiledDocumentArtifact publication through result unions and 19 Domain publication routes across 15 Domain symbols, including four additional publication pointers for repeated symbols. No used/unused conclusion, deletion permission, native PASS, or suppressed raw contract_invalid diagnostic is inferred. All 20 diagnostics are identical to the prior independently reviewed receipt and unchanged by PR #353, PR #358, PR #360, PR #362 and PR #364; no publication-usage uncertainty is cleared. Slice (c) of ADR #356 only shifts the CompiledDocumentArtifact pointer from /components/1/public/21 to /components/1/public/22 because new public entries precede it; subject, kind and claim are identical.",
+    "reason": "All 22 exact interface.usage_unknown diagnostics remain UNKNOWN: CompiledDocumentArtifact publication through result unions and 19 Domain publication routes across 15 Domain symbols, including four additional publication pointers for repeated symbols. No used/unused conclusion, deletion permission, native PASS, or suppressed raw contract_invalid diagnostic is inferred. All 20 diagnostics are identical to the prior independently reviewed receipt and unchanged by PR #353, PR #358, PR #360, PR #362 and PR #364; no publication-usage uncertainty is cleared. Slice (c) of ADR #356 only shifts the CompiledDocumentArtifact pointer from /components/1/public/21 to /components/1/public/22 because new public entries precede it; subject, kind and claim are identical. PR #513 (D1 PR2): ReadyBuild and ReadyWithGapsBuild take their fields from the private ProvenBuild base, and ArchKeel does not follow inherited signatures, so two public entries are reached only through publication it cannot prove: BuildAssurance (declared again on ReadyBuild) and SourceAccessEvidence (a field of BuildAssurance). Both stay UNKNOWN, with no used/unused conclusion; they were used before the change, and the two added diagnostics are exact interface.usage_unknown records.",
     "diagnostics": [
       {
         "code": "interface.usage_unknown",
@@ -410,6 +410,22 @@
         "pointer": "/components/1/public/22",
         "remedy": "Resolve the publication route or inherited bases before classifying this entry as used or unused.",
         "subject": "datamimic_ce.authoring.domain.requests:CompiledDocumentArtifact",
+        "unknown_claim": "An unproven publication or inherited signature may expose this public entry."
+      },
+      {
+        "code": "interface.usage_unknown",
+        "kind": "contract_invalid",
+        "pointer": "/components/1/public/32",
+        "remedy": "Resolve the publication route or inherited bases before classifying this entry as used or unused.",
+        "subject": "datamimic_ce.authoring.domain.requests:SourceAccessEvidence",
+        "unknown_claim": "An unproven publication or inherited signature may expose this public entry."
+      },
+      {
+        "code": "interface.usage_unknown",
+        "kind": "contract_invalid",
+        "pointer": "/components/1/public/33",
+        "remedy": "Resolve the publication route or inherited bases before classifying this entry as used or unused.",
+        "subject": "datamimic_ce.authoring.domain.requests:BuildAssurance",
         "unknown_claim": "An unproven publication or inherited signature may expose this public entry."
       },
       {
