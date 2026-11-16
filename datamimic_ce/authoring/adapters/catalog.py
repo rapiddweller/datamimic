@@ -323,7 +323,7 @@ class CeDslCatalog:
                     topic=request.topic,
                     content=(
                         "Write the entry as datamimic.xml and every required expectation in acceptance/build.json, "
-                        "then Build the project directory."
+                        "then Build the project directory. datamimic authoring init PROJECT writes this starter."
                     ),
                     entries=(
                         AuthoringAssemblyReference(

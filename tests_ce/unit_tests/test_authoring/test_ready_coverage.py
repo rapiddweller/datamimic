@@ -23,6 +23,8 @@ from datamimic_ce.authoring.domain.requests import (
     PROJECT_ENTRY_PATH,
     ReadyBuild,
     ReadyWithGapsBuild,
+    ReferenceRequest,
+    ReferenceTopic,
     RejectedBuild,
 )
 from datamimic_ce.interfaces.cli import app
@@ -73,21 +75,36 @@ def test_a_run_defect_comes_first_and_missing_expectation_follows(tmp_path: Path
     )
 
 
-def test_a_project_without_acceptance_file_is_told_to_write_one_expectation(tmp_path: Path) -> None:
+def _remediation_without_acceptance(tmp_path: Path) -> str:
     (tmp_path / PROJECT_ENTRY_PATH).write_text(_SEEDED, encoding="utf-8")
-
     result = create_authoring_application(tmp_path, descriptor_path=PROJECT_ENTRY_PATH).build()
-
     assert isinstance(result, RejectedBuild)
     remediation = result.diagnostics[0].remediation
     assert remediation is not None
-    assert '"expectations": [{"kind": "exact_count"' in remediation
-    commands = re.findall(r"datamimic [a-z][a-z -]*", remediation)
+    return remediation
+
+
+def _assembly_guidance() -> str:
+    reference = create_authoring_application().reference(ReferenceRequest(topic=ReferenceTopic.ASSEMBLY))
+    return str(reference.content)
+
+
+@pytest.mark.parametrize("source", ["build_remediation", "assembly_guidance"])
+def test_every_command_named_in_guidance_exists(tmp_path: Path, source: str) -> None:
+    text = _remediation_without_acceptance(tmp_path) if source == "build_remediation" else _assembly_guidance()
+    commands = re.findall(r"datamimic [a-z][a-z -]*", text)
     assert commands
     for command in commands:
         args = shlex.split(command.rstrip(" -"))
         assert CliRunner().invoke(app, [*args[1:], "--help"]).exit_code == 0, command
+
+
+def test_a_project_without_acceptance_file_is_told_to_write_one_expectation(tmp_path: Path) -> None:
+    remediation = _remediation_without_acceptance(tmp_path)
+
+    assert '"expectations": [{"kind": "exact_count"' in remediation
     assert '"expectations": []' not in remediation
+    assert "datamimic init" in remediation and "datamimic authoring init" in remediation
 
 
 def test_a_check_derived_from_a_literal_count_avoids_missing_expectation(tmp_path: Path) -> None:

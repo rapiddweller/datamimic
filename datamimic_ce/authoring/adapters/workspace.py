@@ -13,6 +13,7 @@ from pathlib import Path, PurePosixPath
 
 from datamimic_ce.authoring.adapters.windows_snapshot import WindowsSnapshotRoot
 from datamimic_ce.authoring.domain.common import validate_workspace_descriptor_path
+from datamimic_ce.authoring.domain.project_scaffold import ProjectScaffold
 
 MAX_RESOURCE_BYTES = 100 * 1024 * 1024
 
@@ -60,6 +61,95 @@ def _read_resource_file(
         ):
             raise ValueError("workspace resource changed while reading")
         return data
+
+
+def _is_link(path: Path) -> bool:
+    return path.is_symlink()
+
+
+def _exists(path: Path) -> bool:
+    return path.exists()
+
+
+def _is_dir(path: Path) -> bool:
+    return path.is_dir()
+
+
+def _is_file(path: Path) -> bool:
+    return path.is_file()
+
+
+def _inside(path: Path, root: Path) -> bool:
+    resolved: Path = path.resolve(strict=False)
+    return resolved == root or root in resolved.parents
+
+
+def _relative(path: Path, root: Path) -> str:
+    relative: Path = path.relative_to(root)
+    return relative.as_posix()
+
+
+def _make_directory(path: Path) -> None:
+    path.mkdir(exist_ok=True)
+
+
+def _write_file(path: Path, content: str) -> None:
+    parent: Path = path.parent
+    parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+
+
+def check_project_scaffold(
+    root: Path, scaffold: ProjectScaffold, *, overwrite: bool = False
+) -> tuple[tuple[str, Path], ...]:
+    """Refuse, before anything is written, every target that cannot be written safely.
+
+    Every refusal is a one-line `ValueError` or `FileExistsError`; the root need not exist yet.
+    """
+    if _is_link(root):
+        raise ValueError("PROJECT is a symlink; give the real directory")
+    if _exists(root) and not _is_dir(root):
+        raise ValueError("PROJECT is a file, not a directory")
+    resolved_root = root.resolve(strict=False)
+    targets = tuple((str(file.path), resolved_root.joinpath(*file.path.parts)) for file in scaffold.files)
+    for name, target in targets:
+        for step in (target, *target.parents):
+            if step == resolved_root:
+                break
+            if _is_link(step):
+                raise ValueError(f"{_relative(step, resolved_root)} is a symlink; nothing written")
+            if step is not target and _exists(step) and not _is_dir(step):
+                raise ValueError(f"{_relative(step, resolved_root)} is not a directory; nothing written")
+        if not _inside(target, resolved_root):
+            raise ValueError(f"{name} resolves outside the project directory")
+        if _exists(target) and not _is_file(target):
+            raise ValueError(f"{name} exists and is not a file; nothing written")
+    existing = [name for name, target in targets if _exists(target)]
+    if existing and not overwrite:
+        raise FileExistsError(", ".join(existing))
+    return targets
+
+
+def write_project_scaffold(
+    root: Path, scaffold: ProjectScaffold, *, overwrite: bool = False, directories: tuple[str, ...] = ()
+) -> tuple[PurePosixPath, ...]:
+    """Write a starter project into a real directory; never follow a symlink, and never overwrite unless asked.
+
+    The empty `directories` are created with the files, and every check runs before the first write.
+    """
+    targets = check_project_scaffold(root, scaffold, overwrite=overwrite)
+    directory_paths = tuple((name, root.joinpath(name)) for name in directories)
+    for name, path in directory_paths:
+        if _is_link(path):
+            raise ValueError(f"{name} is a symlink; nothing written")
+        if _exists(path) and not _is_dir(path):
+            raise ValueError(f"{name} exists and is not a directory; nothing written")
+    root.mkdir(parents=True, exist_ok=True)
+    for _, path in directory_paths:
+        _make_directory(path)
+    for file, (_, target) in zip(scaffold.files, targets, strict=True):
+        _write_file(target, file.content)
+    return tuple(file.path for file in scaffold.files)
 
 
 @dataclass(frozen=True)

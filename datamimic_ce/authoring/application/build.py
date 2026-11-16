@@ -98,7 +98,7 @@ class BuildDocumentWorkflow:
                     "Write acceptance/build.json beside datamimic.xml with one expectation for each product, for "
                     'example {"version": "5.0", "expectations": [{"kind": "exact_count", "subject": '
                     '{"kind": "product", "product": "orders"}, "count": 10}]}; '
-                    "For a starter project, run `datamimic init`."
+                    "For a starter project, run `datamimic init PROJECT` or `datamimic authoring init PROJECT`."
                 ),
             )
         try:

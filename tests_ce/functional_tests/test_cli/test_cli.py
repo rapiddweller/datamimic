@@ -1,13 +1,15 @@
 import json
 import os
 import shutil
-import shlex
+from pathlib import Path
 from unittest.mock import patch
 
+import pytest
 from typer.testing import CliRunner
 
 from datamimic_ce.interfaces.cli import app
-from datamimic_ce.interfaces.project import STARTER_FILES
+from datamimic_ce.interfaces.cli.presenter import emit_project_created
+from datamimic_ce.interfaces.project import project_scaffold
 
 runner = CliRunner()
 
@@ -24,7 +26,7 @@ class TestCLI:
         assert (project_dir / "datamimic.xml").is_file()
         assert (project_dir / "README.md").is_file()
         assert (project_dir / "acceptance/build.json").is_file()
-        assert f"cd {shlex.quote(str(project_dir))}" in result.output.replace("\n", "")
+        assert "datamimic authoring build ." in result.output.replace("\n", " ")
         build = runner.invoke(app, ["authoring", "build", str(project_dir)])
         assert build.exit_code == 0, build.output
         assert json.loads(build.output)["outcome"] == "ready"
@@ -43,11 +45,13 @@ class TestCLI:
         project.mkdir(parents=True)
         (project / "datamimic.xml").write_text("old")
         (project / "keep.txt").write_text("keep")
-        expected_overwritten = {path for path in STARTER_FILES if (project / path).is_file()}
+        expected_overwritten = {
+            str(file.path) for file in project_scaffold("sample").files if (project / file.path).is_file()
+        }
         result = runner.invoke(app, ["init", "sample", "--target", str(target), "--force"])
         assert result.exit_code == 0, result.output
         output = result.output.replace("\n", "")
-        assert f"cd {shlex.quote(str(project))}" in output
+        assert "datamimic run datamimic.xml" in result.output.replace("\n", " ")
         assert "Overwritten:" in output and "datamimic.xml" in output
         reported = next(
             line.removeprefix("Overwritten: ")
@@ -63,6 +67,57 @@ class TestCLI:
         again = runner.invoke(app, ["init", "sample", "--target", str(target), "--force"])
         assert again.exit_code == 0, again.output
         assert all(name in again.output for name in ("datamimic.xml", "README.md", "acceptance/build.json"))
+
+    def test_init_force_fails_clearly_when_a_starter_path_is_a_directory(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / "sample" / "acceptance" / "build.json").mkdir(parents=True)
+        result = runner.invoke(app, ["init", "sample", "--force"])
+        assert result.exit_code == 1
+        assert "is not a file" in result.output and "Traceback" not in result.output
+        assert result.exception is None or isinstance(result.exception, SystemExit)
+
+    def test_init_force_refusal_writes_nothing(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        project = tmp_path / "sample"
+        project.mkdir()
+        (project / "datamimic.xml").write_bytes(b"<setup>original</setup>")
+        (project / "acceptance").write_text("a regular file")
+        result = runner.invoke(app, ["init", "sample", "--force"])
+        assert result.exit_code == 1
+        assert "acceptance" in result.output and "not a directory" in result.output
+        assert (project / "datamimic.xml").read_bytes() == b"<setup>original</setup>"
+        assert not (project / "README.md").exists() and not (project / "data").exists()
+
+    @pytest.mark.skipif(not hasattr(os, "symlink") or os.name == "nt", reason="needs symlink support")
+    def test_init_force_refuses_a_symlinked_starter_directory(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        project = tmp_path / "sample"
+        project.mkdir()
+        elsewhere = tmp_path / "elsewhere"
+        elsewhere.mkdir()
+        (project / "acceptance").symlink_to(elsewhere, target_is_directory=True)
+        result = runner.invoke(app, ["init", "sample", "--force"])
+        assert result.exit_code == 1
+        assert "symlink" in result.output
+        assert not (project / "data").exists() and not (project / "datamimic.xml").exists()
+        assert not any(elsewhere.iterdir())
+
+    @pytest.mark.skipif(not hasattr(os, "symlink") or os.name == "nt", reason="needs symlink support")
+    def test_init_force_refuses_a_dangling_starter_directory_symlink(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        project = tmp_path / "sample"
+        project.mkdir()
+        (project / "config").symlink_to(tmp_path / "missing", target_is_directory=True)
+        result = runner.invoke(app, ["init", "sample", "--force"])
+        assert result.exit_code == 1
+        assert "config is a symlink" in result.output
+        assert sorted(path.name for path in project.iterdir()) == ["config"]
+
+    def test_next_step_hint_names_both_commands_and_no_path(self, capsys):
+        emit_project_created("p", Path("/tmp/my project"), ())
+        hint = capsys.readouterr().out.splitlines()[-1]
+        assert "datamimic authoring build ." in hint and "datamimic run datamimic.xml" in hint
+        assert "/tmp" not in hint and "my project" not in hint
 
     def test_version_info(self):
         result = runner.invoke(app, ["version"])

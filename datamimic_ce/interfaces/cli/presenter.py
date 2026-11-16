@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import shlex
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
@@ -115,6 +114,9 @@ def emit_demo_list(demos: tuple[DemoSummary, ...]) -> None:
     Console().print(table)
 
 
+NEXT_STEP_HINT = "Next: in that directory run datamimic authoring build . and datamimic run datamimic.xml"
+
+
 def emit_project_created(project_name: str, project_dir: Path, overwritten: tuple[str, ...]) -> None:
     Console(width=80).print(
         Panel.fit(
@@ -125,7 +127,7 @@ def emit_project_created(project_name: str, project_dir: Path, overwritten: tupl
     )
     if overwritten:
         typer.echo(f"Overwritten: {', '.join(overwritten)}")
-    typer.echo(f"Next: cd {shlex.quote(str(project_dir))} && datamimic run datamimic.xml")
+    typer.echo(NEXT_STEP_HINT)
 
 
 def build_exit_code(result: BuildResult) -> int:

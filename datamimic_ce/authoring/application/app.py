@@ -18,7 +18,8 @@ from datamimic_ce.authoring.application.use_cases import (
 )
 from datamimic_ce.authoring.domain.capabilities import CapabilityDomain, CapabilityLookupResult, DslCatalogSnapshot
 from datamimic_ce.authoring.domain.project_run import ProjectRunRequest, ProjectRunResult
-from datamimic_ce.authoring.domain.reference import ReferenceResult
+from datamimic_ce.authoring.domain.project_scaffold import ProjectPattern, ProjectScaffold
+from datamimic_ce.authoring.domain.reference import AuthoringAssemblyReference, ReferenceResult
 from datamimic_ce.authoring.domain.requests import (
     BUILD_PROTOCOL,
     AuthoringSchemaId,
@@ -92,6 +93,17 @@ class AuthoringApplication:
         if result.rules is not None:
             return tuple(str(rule.rule_id) for rule in result.rules)
         return tuple(entry.name for entry in result.entries or ())
+
+    def scaffold(self, pattern: ProjectPattern) -> ProjectScaffold:
+        """The starter project of one pattern: the files that Build proves as written."""
+        match pattern:
+            case ProjectPattern.FLAT:
+                name = "starter"
+        result = self._catalog.reference(ReferenceRequest(topic=ReferenceTopic.ASSEMBLY, name=name))
+        for entry in result.entries or ():
+            if isinstance(entry, AuthoringAssemblyReference) and entry.starter is not None:
+                return ProjectScaffold.from_starter(pattern, entry.starter.entry_xml, entry.starter.acceptance)
+        raise LookupError(f"the catalog has no {name} starter project")
 
     def capabilities(self) -> DslCatalogSnapshot:
         """Return the typed, model-derived catalog for the CLI presentation boundary."""
