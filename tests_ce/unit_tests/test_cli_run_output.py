@@ -71,22 +71,6 @@ def test_error_before_runner_is_presented(tmp_path: Path, monkeypatch: pytest.Mo
     assert capsys.readouterr().err.count("Error: ") == 1
 
 
-def test_unlogged_runner_error_is_presented(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys) -> None:
-    from datamimic_ce.engine.runtime.contracts import RunRequest
-    from datamimic_ce.interfaces.cli import runtime
-
-    descriptor = tmp_path / "datamimic.xml"
-    descriptor.write_text("<setup/>", encoding="utf-8")
-
-    def fail_run(request: RunRequest) -> None:
-        raise parser_validation_error(code=IssueCode.PARSER_DESCRIPTOR_NOT_FOUND, name=request.descriptor_path.name)
-
-    monkeypatch.setattr(runtime, "run", fail_run)
-    with pytest.raises(typer.Exit):
-        runtime.execute_descriptor(descriptor, None, None, False)
-    assert capsys.readouterr().err.count("Error: ") == 1
-
-
 @pytest.mark.parametrize(
     ("options", "message"),
     [

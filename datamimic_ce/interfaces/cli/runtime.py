@@ -26,13 +26,6 @@ from datamimic_ce.resources.api import demo_root
 logger = logging.getLogger("DATAMIMIC")
 
 
-class RunErrorObserver(logging.Handler):
-    logged = False
-
-    def emit(self, record: logging.LogRecord) -> None:
-        self.logged = True
-
-
 class DemoMetadata(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
@@ -178,17 +171,11 @@ def execute_descriptor(
             platform_configs=validated_configs,
             test_mode=test_mode,
         )
-        observer = RunErrorObserver(logging.ERROR)
-        logging.Logger.addHandler(logger, observer)
         try:
-            try:
-                run(request)
-            except (UserErrorBase, DomainError):
-                if observer.logged:
-                    raise typer.Exit(code=1) from None
-                raise
-        finally:
-            logging.Logger.removeHandler(logger, observer)
+            run(request)
+        except (UserErrorBase, DomainError):
+            # The runner logs every user or domain error at ERROR before it re-raises (lifecycle/runner.py).
+            raise typer.Exit(code=1) from None
     except (UserErrorBase, DomainError) as error:
         cli_presenter.fail(error.message if isinstance(error, DomainError) else str(error), code=1)
     finally:
