@@ -95,8 +95,15 @@ def log_system_info():
 
 
 class _GenerationTimer(AbstractContextManager[dict[str, int]]):
-    def __init__(self, process: Literal["generate", "export", "process"], report_logging: bool, product_name: str):
+    def __init__(
+        self,
+        process: Literal["generate", "export", "process"],
+        report_logging: bool,
+        product_name: str,
+        nested: bool,
+    ):
         self._process = process
+        self._nested = nested
         self._report_logging = report_logging
         self._product_name = product_name
         self._result: dict[str, int] = {}
@@ -112,7 +119,7 @@ class _GenerationTimer(AbstractContextManager[dict[str, int]]):
         exc_value: BaseException | None,
         traceback: TracebackType | None,
     ) -> None:
-        if not self._report_logging:
+        if not self._report_logging or exc_type is not None:
             return
         records_count = self._result.get("records_count", 0)
         elapsed_time = time.time() - self._start_time
@@ -123,8 +130,11 @@ class _GenerationTimer(AbstractContextManager[dict[str, int]]):
                 process_name = "Export phase for"
             case _:
                 process_name = "Processing"
+        # A nested product runs once per parent row: its line is one parent's share, not a product total
+        scope = " per parent invocation" if self._nested else ""
         logger.info(
-            f"{process_name} {records_count:,} records '{self._product_name}' took {round(elapsed_time, 5)} seconds "
+            f"{process_name} {records_count:,} records '{self._product_name}'{scope} "
+            f"took {round(elapsed_time, 5)} seconds "
             f"({int(records_count / elapsed_time):,} records/second)"
             if elapsed_time > 0
             else "N/A records/second"
@@ -132,10 +142,13 @@ class _GenerationTimer(AbstractContextManager[dict[str, int]]):
 
 
 def gen_timer(
-    process: Literal["generate", "export", "process"], report_logging: bool, product_name: str
+    process: Literal["generate", "export", "process"],
+    report_logging: bool,
+    product_name: str,
+    nested: bool = False,
 ) -> AbstractContextManager[dict[str, int]]:
     """Time operations without contextlib rewriting frozen domain exceptions."""
-    return _GenerationTimer(process, report_logging, product_name)
+    return _GenerationTimer(process, report_logging, product_name, nested)
 
 
 def format_memory_size(size_in_mb: float) -> str:
