@@ -209,25 +209,37 @@ def build(
     \b
     Exit code 0: ready. Exit code 3: ready_with_gaps.
     Exit code 1: rejected, or input that Build cannot read.
+    JSON evidence can include sample row values; do not share transcripts of real data.
     """
     application = create_authoring_application(workspace_root=project, descriptor_path=PROJECT_ENTRY_PATH)
     result = application.build()
     emit_authoring(result, output_format, exit_code=build_exit_code(result))
 
 
-@app.command("run-project", help="Build the project, then run it for its real data.")
+@app.command("run-project")
 def run_project(
     project: Annotated[
         Path,
         typer.Argument(exists=True, file_okay=False, readable=True, help="Project directory holding datamimic.xml."),
     ] = Path("."),
-    allow_side_effects: Annotated[bool, typer.Option("--allow-side-effects")] = False,
+    allow_side_effects: Annotated[
+        bool,
+        typer.Option(
+            "--allow-side-effects",
+            help="Allow effects outside the project; local output/ files are written without this option.",
+        ),
+    ] = False,
     params: Annotated[
         list[str] | None, typer.Option("--param", help="Runtime property NAME=VALUE; repeatable.")
     ] = None,
     timeout: Annotated[int, typer.Option("--timeout")] = 600,
     output_format: OutputFormat = CliOutputFormat.JSON,
 ) -> None:
+    """Build the project, then run it for its real data.
+
+    A completed run can exit code 0 even when build_outcome is ready_with_gaps.
+    Inspect action_required and fix the gaps before reporting a clean proof.
+    """
     try:
         pairs = [re.split("=", item, maxsplit=1) for item in params or []]
         if any(len(pair) != 2 for pair in pairs):
@@ -313,6 +325,11 @@ def dry_run(
     workspace_root: WorkspaceRoot = None,
     output_format: OutputFormat = CliOutputFormat.JSON,
 ) -> None:
+    """Run bounded XML without reading acceptance/build.json.
+
+    The default --max-count is 10, independent of the project's Build limit.
+    JSON output can include sample row values; do not share transcripts of real data.
+    """
     _run(source, workspace_root, output_format, max_count, sample_rows, timeout, False, dry=True)
 
 
