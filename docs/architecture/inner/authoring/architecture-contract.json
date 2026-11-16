@@ -207,6 +207,10 @@
         "responsibility": "Defines the closed expectation and subject vocabulary shared by Build and acceptance."
       },
       {
+        "path": "datamimic_ce/authoring/domain/project_scaffold.py",
+        "responsibility": "Describes a starter project as plain files and its one pattern, without writing anything."
+      },
+      {
         "path": "datamimic_ce/authoring/domain/proof.py",
         "responsibility": "Defines product roles, requirement origins and independent optional verification evidence."
       },
@@ -330,6 +334,7 @@
         "datamimic_ce.authoring.domain.environments",
         "datamimic_ce.authoring.domain.expectations",
         "datamimic_ce.authoring.domain.project_run",
+        "datamimic_ce.authoring.domain.project_scaffold",
         "datamimic_ce.authoring.domain.proof",
         "datamimic_ce.authoring.domain.reference",
         "datamimic_ce.authoring.domain.requests",
@@ -598,6 +603,7 @@
         "datamimic_ce.authoring.domain.environments",
         "datamimic_ce.authoring.domain.expectations",
         "datamimic_ce.authoring.domain.project_run",
+        "datamimic_ce.authoring.domain.project_scaffold",
         "datamimic_ce.authoring.domain.proof",
         "datamimic_ce.authoring.domain.reference",
         "datamimic_ce.authoring.domain.requests",

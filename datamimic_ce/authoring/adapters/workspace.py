@@ -13,6 +13,7 @@ from pathlib import Path, PurePosixPath
 
 from datamimic_ce.authoring.adapters.windows_snapshot import WindowsSnapshotRoot
 from datamimic_ce.authoring.domain.common import validate_workspace_descriptor_path
+from datamimic_ce.authoring.domain.project_scaffold import ProjectScaffold
 
 MAX_RESOURCE_BYTES = 100 * 1024 * 1024
 
@@ -60,6 +61,58 @@ def _read_resource_file(
         ):
             raise ValueError("workspace resource changed while reading")
         return data
+
+
+def _is_link(path: Path) -> bool:
+    return path.is_symlink()
+
+
+def _exists(path: Path) -> bool:
+    return path.exists()
+
+
+def _inside(path: Path, root: Path) -> bool:
+    resolved: Path = path.resolve(strict=False)
+    return resolved == root or root in resolved.parents
+
+
+def _relative(path: Path, root: Path) -> str:
+    relative: Path = path.relative_to(root)
+    return relative.as_posix()
+
+
+def _write_file(path: Path, content: str) -> None:
+    parent: Path = path.parent
+    parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+
+
+def write_project_scaffold(root: Path, scaffold: ProjectScaffold) -> tuple[PurePosixPath, ...]:
+    """Write a starter project into a real directory; never overwrite a file and never follow a symlink.
+
+    Every refusal is a one-line `ValueError` or `FileExistsError` raised before the first write.
+    """
+    if _is_link(root):
+        raise ValueError("PROJECT is a symlink; give the real directory")
+    if root.is_file():
+        raise ValueError("PROJECT is a file, not a directory")
+    root.mkdir(parents=True, exist_ok=True)
+    resolved_root = root.resolve(strict=True)
+    targets = tuple((str(file.path), resolved_root.joinpath(*file.path.parts)) for file in scaffold.files)
+    for name, target in targets:
+        for step in (target, *target.parents):
+            if step == resolved_root:
+                break
+            if _is_link(step):
+                raise ValueError(f"{_relative(step, resolved_root)} is a symlink; nothing written")
+        if not _inside(target, resolved_root):
+            raise ValueError(f"{name} resolves outside the project directory")
+    existing = [name for name, target in targets if _exists(target)]
+    if existing:
+        raise FileExistsError(", ".join(existing))
+    for file, (_, target) in zip(scaffold.files, targets, strict=True):
+        _write_file(target, file.content)
+    return tuple(file.path for file in scaffold.files)
 
 
 @dataclass(frozen=True)
