@@ -35,6 +35,11 @@ same application. See `docs/agent_plugin.md`.
 
 Authoring commands default to JSON. File input and `-` for stdin are supported.
 Exit codes: `0` succeeds, `1` rejects an input/operation or Build cannot read its input, `2` is CLI usage error.
+For `run` and `init`, invalid argument or option values detected before work exit `2`
+(including malformed runtime parameters, platform configuration and project names);
+operation failures such as a missing descriptor, run failure or existing directory exit `1`.
+Text-mode run logs and the CLI `Error: [Exxx/Iyyy]` result are separate channels:
+both are retained, even when both appear on stderr; scripts consume the CLI result line.
 Build exit code 3 means `ready_with_gaps`, not a clean proof; fix the gaps before
 reporting success. `run-project` can exit code 0 after a Build with gaps: inspect
 `build_outcome` and `action_required` rather than treating execution as proof.

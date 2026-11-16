@@ -84,6 +84,10 @@ original requirements and relative resource paths. `outcome: "ready"` is the
 stopping condition. `artifact.files` lists every project file the proof read
 with its digest; retain the response as the proof. Do not lint/dry-run a
 successful Build again.
+For `run` and `init`, invalid argument or option values detected before work
+exit 2; operation failures such as a missing descriptor, run failure or existing
+directory exit 1. Text errors go to stderr.
+
 Build exit code 3 means `ready_with_gaps`: repair the gaps before reporting
 success. Build and dry-run JSON can contain sample row values; do not share
 transcripts of real data.

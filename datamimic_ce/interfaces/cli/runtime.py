@@ -57,7 +57,7 @@ def show_system_information() -> None:
 
 def initialize_project(project_name: str, target_directory: Path | None, force: bool) -> None:
     if not validate_project_name(project_name):
-        cli_presenter.fail("Project name can only contain letters, numbers, underscores, and dashes", code=1)
+        cli_presenter.fail("Project name can only contain letters, numbers, underscores, and dashes")
     project_dir = (target_directory or Path.cwd()) / project_name
     if project_dir.exists() and not force:
         cli_presenter.fail(f"Directory '{project_dir}' already exists. Use --force to overwrite", code=1)
@@ -156,17 +156,17 @@ def execute_descriptor(
 ) -> None:
     """Production execution uses the normal runtime lifecycle."""
     parameters = _runtime_parameters(params, params_env)
-    descriptor = descriptor_path.resolve()
-    if not descriptor.is_file():
-        cli_presenter.fail(f"Invalid descriptor file path: {descriptor}", code=1)
     try:
         platform_config_values = json.loads(platform_configs) if platform_configs is not None else {}
     except json.JSONDecodeError as error:
-        cli_presenter.fail(f"Invalid platform configuration JSON: {error}", code=1)
+        cli_presenter.fail(f"Invalid platform configuration JSON: {error}")
     try:
         validated_configs = PlatformConfiguration.model_validate(platform_config_values)
     except ValidationError:
-        cli_presenter.fail("--platform-configs must be a JSON object", code=1)
+        cli_presenter.fail("--platform-configs must be a JSON object")
+    descriptor = descriptor_path.resolve()
+    if not descriptor.is_file():
+        cli_presenter.fail(f"Invalid descriptor file path: {descriptor}", code=1)
     original_directory = Path.cwd()
     try:
         os.chdir(descriptor.parent)

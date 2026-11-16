@@ -321,7 +321,7 @@ class TestCLI:
     def test_init_with_invalid_project_name(self):
         """Test initialization with invalid project name"""
         result = runner.invoke(app, ["init", "invalid/name"])
-        assert result.exit_code == 1
+        assert result.exit_code == 2
         assert "Error: Project name can only contain" in result.output
 
     def test_demo_info(self):
