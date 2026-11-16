@@ -6,6 +6,7 @@ import shutil
 from pathlib import Path
 
 import pytest
+import typer
 from typer.testing import CliRunner
 
 from datamimic_ce.interfaces.cli import app
@@ -98,11 +99,15 @@ def test_agent_cli_discovery_uses_the_same_public_contract() -> None:
 
 
 def test_authoring_guidance_explains_proof_and_execution_boundaries() -> None:
-    runner = CliRunner()
-    build = " ".join(runner.invoke(app, ["authoring", "build", "--help"]).stdout.split())
-    run = " ".join(runner.invoke(app, ["authoring", "run-project", "--help"]).stdout.replace("│", " ").split())
-    dry = " ".join(runner.invoke(app, ["authoring", "dry-run", "--help"]).stdout.split())
-    overview = json.loads(runner.invoke(app, ["authoring", "reference", "--topic", "overview"]).stdout)["content"]
+    # Read the declared help, not the rendered panel: Rich wraps and colours it by terminal width.
+    authoring = typer.main.get_command(app).commands["authoring"].commands
+
+    def declared_help(name: str) -> str:
+        command = authoring[name]
+        return " ".join(" ".join([command.help or "", *(param.help or "" for param in command.params)]).split())
+
+    build, run, dry = declared_help("build"), declared_help("run-project"), declared_help("dry-run")
+    overview = json.loads(CliRunner().invoke(app, ["authoring", "reference", "--topic", "overview"]).stdout)["content"]
     assert "Exit code 3: ready_with_gaps" in build
     assert "ready_with_gaps" in run and "exit code 0" in run
     assert "outside the project" in run and "output/" in run
