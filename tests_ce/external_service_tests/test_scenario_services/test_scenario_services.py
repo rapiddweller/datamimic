@@ -23,7 +23,14 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 
 from datamimic_ce.authoring import create_authoring_application
-from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, BuildResult, ReadyBuild, RejectedBuild
+from datamimic_ce.authoring.domain.coverage import CoverageGapKind
+from datamimic_ce.authoring.domain.requests import (
+    PROJECT_ENTRY_PATH,
+    BuildResult,
+    ReadyBuild,
+    ReadyWithGapsBuild,
+    RejectedBuild,
+)
 from datamimic_ce.engine.dsl.api import parse_properties
 from datamimic_ce.engine.runtime.lifecycle.config import get_settings
 from datamimic_ce.errors.base import TaskConfigError
@@ -136,16 +143,20 @@ def _assert_state(project: Path, pg: Engine, mongo: Database) -> None:
 
 @pytest.fixture
 def project(request: pytest.FixtureRequest, tmp_path: Path) -> Path:
-    return shutil.copytree(request.param, tmp_path / request.param.name)
+    return shutil.copytree(request.param, tmp_path / request.param.name, ignore=shutil.ignore_patterns("scenario.json"))
 
 
 @pytest.mark.parametrize("project", _PROJECTS, ids=lambda path: path.name, indirect=True)
 def test_scenario_builds_runs_and_replays(project: Path, pg: Engine, mongo: Database) -> None:
-    scenario = _scenario(project)
+    scenario = _scenario(_ROOT / project.name)
     _seed(project, pg, mongo)
 
     built = _build(project)
-    assert isinstance(built, ReadyBuild), [(str(item.code), item.message) for item in built.diagnostics]
+    diagnostics = [(str(item.code), item.message) for item in built.diagnostics]
+    assert isinstance(built, (ReadyBuild, ReadyWithGapsBuild)), diagnostics
+    expected_gaps = tuple(CoverageGapKind(kind) for kind in scenario.get("gaps", []))
+    assert built.coverage.open_gaps == expected_gaps, diagnostics
+    assert built.outcome == ("ready_with_gaps" if expected_gaps else "ready"), diagnostics
 
     first = _run(project)
     counts = {name: len(rows) for name, rows in first.items() if name in scenario["products"]}

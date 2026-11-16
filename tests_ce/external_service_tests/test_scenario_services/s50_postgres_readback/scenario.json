@@ -10,6 +10,7 @@
     "this project needs the PostgreSQL service: it runs in the external-service test job"
   ],
   "products": {"orders": 12, "orders_back": 12, "orders_check": 1},
+  "gaps": ["products_without_expectation", "unchecked_declared_sinks"],
   "negatives": [
     {"name": "readback_count_wrong", "diagnostic": "exact_count", "expected": "11", "patch": {"file": "acceptance/build.json", "old": "\"product\": \"orders_back\"}, \"count\": 12", "new": "\"product\": \"orders_back\"}, \"count\": 11"}},
     {"name": "client_binding_missing", "diagnostic": "unknown_environment", "patch": {"file": "acceptance/build.json", "old": "{\"environment\": \"shop\", \"family\": \"database\"}", "new": "{\"environment\": \"other\", \"family\": \"database\"}"}},
