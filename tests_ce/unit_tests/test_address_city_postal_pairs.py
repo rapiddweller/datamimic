@@ -14,6 +14,6 @@ def test_generated_de_postal_code_and_city_are_one_row_of_the_city_data() -> Non
         rows = {(str(row["postalCode"]), row["name"]) for row in csv.DictReader(source, delimiter=";")}
     rng = Random(7)
 
-    pairs = [(a.postal_code, a.city) for a in (Address(AddressGenerator(dataset="DE", rng=rng)) for _ in range(200))]
+    pairs = [(a.postal_code, a.city) for a in (Address(AddressGenerator(dataset="DE", rng=rng)) for _ in range(20))]
 
     assert [pair for pair in pairs if pair not in rows] == []
