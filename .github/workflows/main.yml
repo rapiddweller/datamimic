@@ -811,7 +811,6 @@ jobs:
           path: coverage.xml
 
   integration_test:
-    if: github.event_name != 'pull_request'
     runs-on: ubuntu-22.04
     needs: install_dependencies
     container: python:3.11-slim-bookworm
@@ -833,9 +832,15 @@ jobs:
       - name: Run integration tests with coverage
         run: |
           . .venv/bin/activate
-          uv run pytest tests_ce/integration_tests/ --cov --cov-report=xml
+          # A pull request runs the tests without coverage (no report is consumed there); the report is made on push.
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            uv run pytest tests_ce/integration_tests/
+          else
+            uv run pytest tests_ce/integration_tests/ --cov --cov-report=xml
+          fi
         shell: bash
       - name: Upload coverage report
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v6
         with:
           name: coverage-integration
