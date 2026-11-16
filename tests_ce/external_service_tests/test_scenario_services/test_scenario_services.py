@@ -23,7 +23,14 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 
 from datamimic_ce.authoring import create_authoring_application
-from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, BuildResult, ReadyBuild, RejectedBuild
+from datamimic_ce.authoring.domain.coverage import BuildCoverage
+from datamimic_ce.authoring.domain.requests import (
+    PROJECT_ENTRY_PATH,
+    BuildResult,
+    ReadyBuild,
+    ReadyWithGapsBuild,
+    RejectedBuild,
+)
 from datamimic_ce.engine.dsl.api import parse_properties
 from datamimic_ce.engine.runtime.lifecycle.config import get_settings
 from datamimic_ce.errors.base import TaskConfigError
@@ -88,6 +95,28 @@ def _build(project: Path) -> BuildResult:
     return create_authoring_application(project, descriptor_path=PROJECT_ENTRY_PATH).build()
 
 
+def _copy_project(source: Path, destination: Path) -> Path:
+    root = source.resolve()
+
+    def ignore(directory: str, names: list[str]) -> set[str]:
+        return {"scenario.json"} if Path(directory).resolve() == root else set()
+
+    return shutil.copytree(source, destination, ignore=ignore)
+
+
+def _assert_coverage(actual: BuildCoverage, declared: dict) -> BuildCoverage:
+    expected = BuildCoverage(
+        expectation_count=actual.expectation_count,
+        products=actual.products,
+        products_without_expectation=declared["products_without_expectation"],
+        unread_data_files=declared["unread_data_files"],
+        unchecked_declared_sinks=declared["unchecked_declared_sinks"],
+        seeded=declared["seeded"],
+    )
+    assert actual == expected, f"Build coverage differs from scenario declaration: {actual!r}"
+    return expected
+
+
 def _run(project: Path) -> dict[str, list[object]]:
     engine = DataMimicTest(test_dir=project, filename=PROJECT_ENTRY_PATH, capture_test_result=True)
     engine.test_with_timer()
@@ -136,16 +165,56 @@ def _assert_state(project: Path, pg: Engine, mongo: Database) -> None:
 
 @pytest.fixture
 def project(request: pytest.FixtureRequest, tmp_path: Path) -> Path:
-    return shutil.copytree(request.param, tmp_path / request.param.name)
+    return _copy_project(request.param, tmp_path / request.param.name)
+
+
+def test_project_copy_excludes_only_root_scenario_metadata(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    (source / "data").mkdir(parents=True)
+    (source / "scenario.json").write_text("{}", encoding="utf-8")
+    nested = source / "data" / "scenario.json"
+    nested.write_text('{"source": "keep"}', encoding="utf-8")
+
+    copied = _copy_project(source, tmp_path / "copy")
+
+    assert not (copied / "scenario.json").exists()
+    assert (copied / "data" / "scenario.json").read_text(encoding="utf-8") == '{"source": "keep"}'
+
+
+def test_coverage_assertion_rejects_an_unexpected_member_of_an_open_gap() -> None:
+    actual = BuildCoverage(
+        expectation_count=0,
+        products=(),
+        products_without_expectation=(),
+        unread_data_files=("db/seed.json", "data/unexpected.json"),
+        unchecked_declared_sinks=(),
+        seeded=True,
+    )
+    declared = {
+        "products_without_expectation": [],
+        "unread_data_files": ["db/seed.json"],
+        "unchecked_declared_sinks": [],
+        "seeded": True,
+    }
+
+    with pytest.raises(AssertionError, match="Build coverage differs"):
+        _assert_coverage(actual, declared)
 
 
 @pytest.mark.parametrize("project", _PROJECTS, ids=lambda path: path.name, indirect=True)
 def test_scenario_builds_runs_and_replays(project: Path, pg: Engine, mongo: Database) -> None:
-    scenario = _scenario(project)
+    scenario = _scenario(_ROOT / project.name)
     _seed(project, pg, mongo)
 
     built = _build(project)
-    assert isinstance(built, ReadyBuild), [(str(item.code), item.message) for item in built.diagnostics]
+    diagnostics = [(str(item.code), item.message) for item in built.diagnostics]
+    assert isinstance(built, (ReadyBuild, ReadyWithGapsBuild)), diagnostics
+    try:
+        expected_coverage = _assert_coverage(built.coverage, scenario["coverage"])
+    except AssertionError as error:
+        raise AssertionError(f"{error}; diagnostics: {diagnostics}") from error
+    assert built.coverage.open_gaps == expected_coverage.open_gaps, diagnostics
+    assert built.outcome == ("ready_with_gaps" if expected_coverage.has_gaps else "ready"), diagnostics
 
     first = _run(project)
     counts = {name: len(rows) for name, rows in first.items() if name in scenario["products"]}

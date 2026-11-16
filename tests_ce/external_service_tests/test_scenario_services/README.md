@@ -9,9 +9,16 @@ file, SQLite and targetless projects, so these live here, with the other externa
 | `s51_mongo_readback` | S7 on MongoDB: clear a collection, write 12 documents, read them back, check the values in the run. |
 | `s52_mongo_to_postgres` | X6: clean both targets, write 12 raw documents to Mongo, transform them into a Postgres table, read the table back and check each row against its source. |
 
-`test_scenario_services.py` has the contract of `tests_ce/scenarios/test_scenarios.py`: Build is `ready`, a run gives the
-rows in `scenario.json`, a second run gives the same rows, and each negative is rejected with its diagnostic. It adds a
-state check that reads the services directly, and a `run_error` for the negatives where a failed `<assert>` must also stop a normal run (`run_assert_*`).
+`test_scenario_services.py` has the contract of `tests_ce/scenarios/test_scenarios.py`: each Build outcome and its exact
+coverage facts (uncovered products, unread files, unchecked sinks, and seed state) are declared in `scenario.json`;
+a run gives the listed rows, a second run gives the same rows, and each negative is rejected with its diagnostic. The
+runner excludes only the root `scenario.json` from the Build workspace because it is test metadata, not model input.
+It adds state checks that read the services directly, and a `run_error` for negatives where a failed `<assert>` must
+also stop a normal run (`run_assert_*`).
+
+The current coverage gaps are intentional: fixture seed files are loaded into the services by the test rather than
+read by the model; generated totals/check products and declared database sinks do not have separate Build
+expectations. Those gaps do not weaken the run assertions or the service-state checks.
 
 ## Run
 
