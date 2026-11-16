@@ -1,0 +1,12 @@
+{
+  "title": "The init starter writes a CSV file on run",
+  "proves": [
+    "the starter that init writes is ready, writes output/<task>/rows.csv on a normal run and is ready again afterwards"
+  ],
+  "products": {"rows": 2},
+  "exports": ["output/*/*.csv"],
+  "negatives": [
+    {"name": "wrong_count", "diagnostic": "exact_count", "expected": "3",
+     "patch": {"file": "acceptance/build.json", "old": "\"count\": 2}", "new": "\"count\": 3}"}}
+  ]
+}

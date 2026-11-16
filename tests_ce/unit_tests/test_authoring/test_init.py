@@ -17,6 +17,7 @@ from datamimic_ce.authoring.adapters.workspace import write_project_scaffold
 from datamimic_ce.authoring.domain.project_scaffold import ProjectPattern, ProjectScaffold
 from datamimic_ce.authoring.domain.requests import PROJECT_ACCEPTANCE_PATH, PROJECT_ENTRY_PATH, ReadyBuild
 from datamimic_ce.interfaces.cli import app
+from datamimic_ce.interfaces.cli.presenter import NEXT_STEP_HINT
 
 
 def _init(project: Path, *extra: str):
@@ -34,7 +35,7 @@ def test_init_writes_the_entry_and_the_acceptance_and_builds_ready(tmp_path: Pat
         "datamimic.xml",
     ]
     assert "Wrote the flat project" in result.stdout
-    assert f"Next: datamimic authoring build {project}" in result.stdout
+    assert result.stdout.splitlines()[-1] == NEXT_STEP_HINT
     built = create_authoring_application(project, descriptor_path=PROJECT_ENTRY_PATH).build()
     assert isinstance(built, ReadyBuild), built
     assert not built.coverage.has_gaps

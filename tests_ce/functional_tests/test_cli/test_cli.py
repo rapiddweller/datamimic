@@ -8,7 +8,7 @@ import pytest
 from typer.testing import CliRunner
 
 from datamimic_ce.interfaces.cli import app
-from datamimic_ce.interfaces.cli.presenter import emit_project_created
+from datamimic_ce.interfaces.cli.presenter import NEXT_STEP_HINT, emit_project_created
 from datamimic_ce.interfaces.project import project_scaffold
 
 runner = CliRunner()
@@ -117,7 +117,27 @@ class TestCLI:
         emit_project_created("p", Path("/tmp/my project"), ())
         hint = capsys.readouterr().out.splitlines()[-1]
         assert "datamimic authoring build ." in hint and "datamimic run datamimic.xml" in hint
-        assert "/tmp" not in hint and "my project" not in hint
+        assert "/tmp" not in hint and "my_project" not in hint
+
+    @pytest.mark.parametrize("init_args", [("init",), ("authoring", "init")])
+    def test_init_hint_is_identical_and_run_writes_a_file_with_build_ready_around_it(
+        self, init_args, tmp_path, monkeypatch
+    ):
+        project = tmp_path / "my_project"
+        monkeypatch.chdir(tmp_path)
+        created = runner.invoke(app, [*init_args, "my_project"])
+        assert created.exit_code == 0, created.output
+        assert created.output.splitlines()[-1] == NEXT_STEP_HINT
+        assert "my_project" not in NEXT_STEP_HINT
+
+        def build_outcome() -> str:
+            return json.loads(runner.invoke(app, ["authoring", "build", str(project)]).output)["outcome"]
+
+        assert build_outcome() == "ready"
+        monkeypatch.chdir(project)
+        assert runner.invoke(app, ["run", "datamimic.xml"]).exit_code == 0
+        assert [path for path in (project / "output").rglob("*.csv")]
+        assert build_outcome() == "ready"
 
     def test_version_info(self):
         result = runner.invoke(app, ["version"])

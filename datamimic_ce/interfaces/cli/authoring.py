@@ -34,7 +34,7 @@ from datamimic_ce.authoring.domain.requests import (
     RunResult,
 )
 from datamimic_ce.domains.api import get_datamimic_lib_version
-from datamimic_ce.interfaces.cli.presenter import CliOutputFormat, build_exit_code, emit_authoring
+from datamimic_ce.interfaces.cli.presenter import NEXT_STEP_HINT, CliOutputFormat, build_exit_code, emit_authoring
 
 app = typer.Typer(no_args_is_help=True, help="Compile, inspect and verify DATAMIMIC descriptors.")
 OutputFormat = Annotated[CliOutputFormat, typer.Option("--format", "-f")]
@@ -282,7 +282,7 @@ def init(
         typer.echo(f"Not written: {reason}{error}", err=True)
         raise typer.Exit(code=1) from error
     typer.echo(f"Wrote the {pattern.value} project to {project}: {', '.join(str(path) for path in written)}")
-    typer.echo(f"Next: datamimic authoring build {project}")
+    typer.echo(NEXT_STEP_HINT)
 
 
 @app.command("lint", help="Validate an XML descriptor without executing it.")
