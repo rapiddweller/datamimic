@@ -708,10 +708,21 @@ def test_python_api_uses_runtime_request_and_preserves_factory_config(monkeypatc
         )
     ]
     assert captured[0].platform_configs is not None
-    assert captured[0].platform_configs.root is configuration
+    assert captured[0].platform_configs.root == configuration
     assert engine.parse_and_execute() is None
     assert session.executed
     assert engine.capture_test_result() is result
+
+
+@pytest.mark.parametrize("configuration", [[], "bad", {1: "bad"}])
+def test_python_api_rejects_invalid_platform_configs_before_session(monkeypatch, configuration) -> None:
+    from pydantic import ValidationError
+
+    requests = []
+    monkeypatch.setattr("datamimic_ce.interfaces.python.datamimic.create_run_session", requests.append)
+    with pytest.raises(ValidationError):
+        DataMimic(Path("descriptor.xml"), platform_configs=configuration)
+    assert not requests
 
 
 @pytest.mark.parametrize(

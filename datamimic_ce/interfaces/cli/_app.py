@@ -70,7 +70,9 @@ def demo_create(
 @app.command("run", help="Execute a DATAMIMIC XML descriptor.")
 def run(
     descriptor_path: Path = DEFAULT_DESCRIPTOR_PATH,
-    platform_configs: Annotated[str | None, typer.Option("--platform-configs")] = None,
+    platform_configs: Annotated[
+        str | None, typer.Option("--platform-configs", help="JSON object of platform settings")
+    ] = None,
     task_id: Annotated[str | None, typer.Option("--task-id")] = None,
     test_mode: Annotated[bool, typer.Option("--test-mode")] = False,
     params: Annotated[
