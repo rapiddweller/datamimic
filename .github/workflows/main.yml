@@ -615,7 +615,7 @@ jobs:
       - name: Install dependencies
         run: uv sync --python 3.14
       - name: Run unit and architecture tests
-        run: uv run pytest tests_ce/unit_tests tests_ce/architecture -q -n auto
+        run: uv run pytest tests_ce/unit_tests tests_ce/architecture -q -n auto --dist=load --durations=20
 
   unit_test:
     runs-on: ubuntu-22.04

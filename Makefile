@@ -74,7 +74,7 @@ coverage:
 	coverage html --include="$(PACKAGE)/*"
 
 coverage-unit:
-	coverage run --source=$(PACKAGE) -m pytest $(TESTS)/unit_tests -n 0
+	pytest $(TESTS)/unit_tests -n auto --dist=load --cov=$(PACKAGE) --cov-report= --durations=20
 	@coverage report --format=total --omit='$(PACKAGE)/resources/examples/*.py,$(PACKAGE)/resources/demos/**/*.py,$(PACKAGE)/interfaces/demo.py' --fail-under=65.74 $(CE_COVERAGE_FILES)
 	@coverage xml --omit='$(PACKAGE)/resources/examples/*.py,$(PACKAGE)/resources/demos/**/*.py,$(PACKAGE)/interfaces/demo.py' $(CE_COVERAGE_FILES)
 
