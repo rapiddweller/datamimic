@@ -10,6 +10,7 @@ import platform
 from pathlib import Path
 
 import toml
+import typer
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from datamimic_ce.domains.api import get_datamimic_lib_version
@@ -163,15 +164,18 @@ def execute_descriptor(
     try:
         os.chdir(descriptor.parent)
         logger.info(f"Changed working directory to: {descriptor.parent}")
-        run(
-            RunRequest(
-                descriptor_path=descriptor,
-                task_id=task_id,
-                platform_props={**load_descriptor_properties(descriptor), **parameters},
-                platform_configs=validated_configs,
-                test_mode=test_mode,
-            )
+        request = RunRequest(
+            descriptor_path=descriptor,
+            task_id=task_id,
+            platform_props={**load_descriptor_properties(descriptor), **parameters},
+            platform_configs=validated_configs,
+            test_mode=test_mode,
         )
+        try:
+            run(request)
+        except (UserErrorBase, DomainError):
+            # The runner logs every user or domain error at ERROR before it re-raises (lifecycle/runner.py).
+            raise typer.Exit(code=1) from None
     except (UserErrorBase, DomainError) as error:
         cli_presenter.fail(error.message if isinstance(error, DomainError) else str(error), code=1)
     finally:
