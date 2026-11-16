@@ -1,0 +1,5 @@
+<setup rngSeed="7">
+    <generate name="cities" count="3" target="CSV">
+        <key name="region" constant="north"/>
+    </generate>
+</setup>

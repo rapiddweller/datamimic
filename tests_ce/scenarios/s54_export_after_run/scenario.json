@@ -1,0 +1,12 @@
+{
+  "title": "A run's exported files are not unread inputs",
+  "proves": [
+    "a CSV-target project is ready before the run and ready again after the run wrote output/",
+    "a data file outside output/ that the model never reads is still reported after a run"
+  ],
+  "products": {"cities": 3},
+  "negatives": [
+    {"name": "wrong_count", "diagnostic": "exact_count", "expected": "4",
+     "patch": {"file": "acceptance/build.json", "old": "\"count\": 3}", "new": "\"count\": 4}"}}
+  ]
+}

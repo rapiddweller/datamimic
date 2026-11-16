@@ -129,6 +129,23 @@ def test_scenario_builds_runs_and_replays(directory: Path, tmp_path: Path, monke
     counts = {name: len(rows) for name, rows in first.items() if name in scenario.products}
     assert counts == scenario.products
     assert _run(project) == first, "a second run with the same seed must give identical rows"
+    _assert_outcome(_build(project), scenario)  # what the runs exported must not change the Build outcome
+
+
+def test_unread_data_file_outside_output_is_still_reported_after_a_run(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    project = _copy(_ROOT / "s54_export_after_run", tmp_path / "project")
+    monkeypatch.chdir(project)
+    (project / "data").mkdir()
+    (project / "data" / "spare.csv").write_text("id\n1\n", encoding="utf-8")
+
+    _run(project)
+    built = _build(project)
+
+    assert isinstance(built, ReadyWithGapsBuild)
+    assert list(built.coverage.open_gaps) == [CoverageGapKind.UNREAD_DATA_FILES]
+    assert [str(path) for path in built.coverage.unread_data_files] == ["data/spare.csv"]
 
 
 @pytest.mark.parametrize(
