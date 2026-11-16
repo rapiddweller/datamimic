@@ -21,6 +21,7 @@ The id starts with `s`, a two-digit number and a short name, for example `s02_pa
 | `title` | One short line. |
 | `proves` | A list of short sentences. Each sentence is a fact the scenario shows. |
 | `products` | Product name to expected row count of a normal run. |
+| `exports` | Optional. A list of glob patterns, relative to the project. A normal run must have written a file that matches each one, before Build runs again. |
 | `negatives` | A list of `{"name": "<name>", "patch": {"file": "<path>", "old": "<text>", "new": "<text>"}, "diagnostic": "<code>", "expected": "<text>"}`. The patch replaces one text in one file of a copy of the project. The old text must occur exactly once. The file must stay inside the copy. `expected` is optional. Use it when one code covers several rules (for example `row_condition`): it is the `expected` text of the diagnostic, which names the rule. |
 | `equivalents` | Optional. A list of `{"name": "<name>", "patch": {...}}` with the same patch rules. Each patch writes one part of the project in a second spelling that must mean the same. |
 

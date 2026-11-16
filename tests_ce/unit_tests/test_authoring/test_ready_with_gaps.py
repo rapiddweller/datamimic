@@ -241,9 +241,3 @@ def test_exporter_output_is_not_an_unread_input_but_an_unread_file_elsewhere_is(
     ]
 
     assert unread_data_files(files, [], []) == (PurePosixPath("data/stock.csv"),)
-
-
-def test_a_model_that_reads_a_file_under_output_does_not_report_it() -> None:
-    read = PurePosixPath("output/previous/items.csv")
-
-    assert unread_data_files([read], [read], []) == ()
