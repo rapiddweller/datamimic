@@ -10,10 +10,11 @@ file, SQLite and targetless projects, so these live here, with the other externa
 | `s52_mongo_to_postgres` | X6: clean both targets, write 12 raw documents to Mongo, transform them into a Postgres table, read the table back and check each row against its source. |
 
 `test_scenario_services.py` has the contract of `tests_ce/scenarios/test_scenarios.py`: each Build outcome and its exact
-coverage gaps are declared in `scenario.json`; a run gives the listed rows, a second run gives the same rows, and each
-negative is rejected with its diagnostic. The runner excludes `scenario.json` from the Build workspace because it is
-test metadata, not model input. It adds state checks that read the services directly, and a `run_error` for negatives
-where a failed `<assert>` must also stop a normal run (`run_assert_*`).
+coverage facts (uncovered products, unread files, unchecked sinks, and seed state) are declared in `scenario.json`;
+a run gives the listed rows, a second run gives the same rows, and each negative is rejected with its diagnostic. The
+runner excludes only the root `scenario.json` from the Build workspace because it is test metadata, not model input.
+It adds state checks that read the services directly, and a `run_error` for negatives where a failed `<assert>` must
+also stop a normal run (`run_assert_*`).
 
 The current coverage gaps are intentional: fixture seed files are loaded into the services by the test rather than
 read by the model; generated totals/check products and declared database sinks do not have separate Build

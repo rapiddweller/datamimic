@@ -11,7 +11,15 @@
     "this project needs the MongoDB and PostgreSQL services: it runs in the external-service test job"
   ],
   "products": {"dm_x6_raw_orders": 12, "orders": 12, "orders_back": 12, "orders_check": 1},
-  "gaps": ["products_without_expectation", "unread_data_files", "unchecked_declared_sinks"],
+  "coverage": {
+    "products_without_expectation": ["orders_check"],
+    "unread_data_files": ["db/seed.json"],
+    "unchecked_declared_sinks": [
+      {"kind": "mongodb", "environment": "mongodb", "entity": "dm_x6_raw_orders"},
+      {"kind": "database", "environment": "warehouse", "entity": "dm_x6_orders"}
+    ],
+    "seeded": true
+  },
   "negatives": [
     {"name": "raw_count_wrong", "diagnostic": "exact_count", "expected": "11", "patch": {"file": "acceptance/build.json", "old": "\"product\": \"dm_x6_raw_orders\"}, \"count\": 12", "new": "\"product\": \"dm_x6_raw_orders\"}, \"count\": 11"}},
     {"name": "delivered_count_wrong", "diagnostic": "exact_count", "expected": "11", "patch": {"file": "acceptance/build.json", "old": "\"product\": \"orders\"}, \"count\": 12", "new": "\"product\": \"orders\"}, \"count\": 11"}},
