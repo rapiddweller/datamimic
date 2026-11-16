@@ -5,6 +5,8 @@
 
 import json
 import logging
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -15,6 +17,93 @@ from datamimic_ce.engine.dsl.parsers.document.descriptor_parser import _invalid_
 from datamimic_ce.errors.codes import IssueCode
 from datamimic_ce.errors.factory import parser_validation_error
 from datamimic_ce.interfaces.cli import presenter
+
+
+def test_failed_run_logs_error_once_on_stderr(tmp_path: Path) -> None:
+    descriptor = tmp_path / "datamimic.xml"
+    descriptor.write_text("<setup", encoding="utf-8")
+    result = subprocess.run(
+        [str(Path(sys.executable).with_name("datamimic")), "run", str(descriptor)], capture_output=True, text=True
+    )
+    assert result.returncode == 1
+    assert result.stdout == ""
+    assert result.stderr.count("Descriptor XML is not well-formed") == 1
+    assert " | ERROR | DATAMIMIC" in result.stderr
+
+
+def test_failed_run_retains_error_record(tmp_path: Path) -> None:
+    from datamimic_ce.interfaces.cli.runtime import execute_descriptor
+
+    descriptor = tmp_path / "datamimic.xml"
+    descriptor.write_text("<setup", encoding="utf-8")
+    records: list[logging.LogRecord] = []
+
+    class Collector(logging.Handler):
+        def emit(self, record: logging.LogRecord) -> None:
+            records.append(record)
+
+    logger = logging.getLogger("DATAMIMIC")
+    collector = Collector()
+    logger.addHandler(collector)
+    try:
+        with pytest.raises(typer.Exit) as caught:
+            execute_descriptor(descriptor, None, None, False)
+    finally:
+        logger.removeHandler(collector)
+    assert caught.value.exit_code == 1
+    assert (
+        sum(r.levelno == logging.ERROR and "Descriptor XML is not well-formed" in r.getMessage() for r in records) == 1
+    )
+
+
+def test_error_before_runner_is_presented(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys) -> None:
+    from datamimic_ce.interfaces.cli import runtime
+
+    descriptor = tmp_path / "datamimic.xml"
+    descriptor.write_text("<setup/>", encoding="utf-8")
+
+    def fail_loading(path: Path) -> dict[str, str]:
+        raise parser_validation_error(code=IssueCode.PARSER_DESCRIPTOR_NOT_FOUND, name=path.name)
+
+    monkeypatch.setattr(runtime, "load_descriptor_properties", fail_loading)
+    with pytest.raises(typer.Exit):
+        runtime.execute_descriptor(descriptor, None, None, False)
+    assert capsys.readouterr().err.count("Error: ") == 1
+
+
+def test_unlogged_runner_error_is_presented(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys) -> None:
+    from datamimic_ce.engine.runtime.contracts import RunRequest
+    from datamimic_ce.interfaces.cli import runtime
+
+    descriptor = tmp_path / "datamimic.xml"
+    descriptor.write_text("<setup/>", encoding="utf-8")
+
+    def fail_run(request: RunRequest) -> None:
+        raise parser_validation_error(code=IssueCode.PARSER_DESCRIPTOR_NOT_FOUND, name=request.descriptor_path.name)
+
+    monkeypatch.setattr(runtime, "run", fail_run)
+    with pytest.raises(typer.Exit):
+        runtime.execute_descriptor(descriptor, None, None, False)
+    assert capsys.readouterr().err.count("Error: ") == 1
+
+
+@pytest.mark.parametrize(
+    ("options", "message"),
+    [
+        (["--param", "oops"], "--param requires NAME=VALUE"),
+        (["--platform-configs", "[1]"], "--platform-configs must be a JSON object"),
+    ],
+)
+def test_run_option_error_is_still_presented_once(tmp_path: Path, options: list[str], message: str) -> None:
+    descriptor = tmp_path / "datamimic.xml"
+    descriptor.write_text("<setup/>", encoding="utf-8")
+    result = subprocess.run(
+        [str(Path(sys.executable).with_name("datamimic")), "run", str(descriptor), *options],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode != 0
+    assert result.stderr.count(f"Error: {message}") == 1
 
 
 def test_text_error_goes_to_stderr_only(capsys: pytest.CaptureFixture[str]) -> None:
