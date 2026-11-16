@@ -28,6 +28,7 @@ _XML = (
     '<generate name="orders" count="2"><key name="customer_id" script="parent.customer_id"/></generate>'
     "</generate></setup>"
 )
+_FILE = PROJECT_ACCEPTANCE_PATH.as_posix()
 _PRODUCT = {"kind": "product", "product": "customers"}
 
 
@@ -53,8 +54,8 @@ def test_range_with_both_spellings_of_a_bound_names_the_two_names(tmp_path: Path
 
     remediations = _remediations(_build(tmp_path, {"expectations": [range_]}))
 
-    assert remediations[("expectations", 0, "range", "min")].startswith("Write only one of min and minimum.")
-    assert remediations[("expectations", 0, "range", "max")].startswith("Write only one of max and maximum.")
+    assert remediations[(_FILE, "expectations", 0, "range", "min")].startswith("Write only one of min and minimum.")
+    assert remediations[(_FILE, "expectations", 0, "range", "max")].startswith("Write only one of max and maximum.")
     assert all(_shape(ExpectationIntentKind.RANGE) in text for text in remediations.values())
 
 
@@ -82,7 +83,7 @@ def test_acceptance_requirement_expectation_gets_the_same_shape(tmp_path: Path) 
 
     remediations = _remediations(_build(tmp_path, {"acceptance_requirements": [requirement]}))
 
-    path = ("acceptance_requirements", 0, "expectation", "range", "min")
+    path = (_FILE, "acceptance_requirements", 0, "expectation", "range", "min")
     assert remediations[path].startswith("Write only one of min and minimum.")
 
 

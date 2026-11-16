@@ -90,7 +90,7 @@ class BuildDocumentWorkflow:
             acceptance_bytes = self._files.read_project_file(PROJECT_ACCEPTANCE_PATH)
             request = BuildRequestV5.model_validate_json(acceptance_bytes)
         except ValidationError as error:
-            return RejectedBuild.from_model_validation(error)
+            return RejectedBuild.from_model_validation(error, prefix=(PROJECT_ACCEPTANCE_PATH.as_posix(),))
         except (OSError, ValueError):
             return RejectedBuild.from_input_error(
                 "The project has no readable acceptance/build.json.",

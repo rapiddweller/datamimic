@@ -156,7 +156,7 @@ def test_validation_diagnostics_omit_input_secrets_and_none_prefix(tmp_path: Pat
 
     rejection = _build_with_acceptance(tmp_path, json.dumps({"version": "a-private-token"}))
     assert isinstance(rejection, RejectedBuild), "wrong protocol version was accepted"
-    assert rejection.diagnostics[0].path == ("version",)
+    assert rejection.diagnostics[0].path == (PROJECT_ACCEPTANCE_PATH.as_posix(), "version")
     assert "a-private-token" not in rejection.model_dump_json()
     assert not rejection.diagnostics[0].message.startswith("None:")
 
@@ -181,7 +181,7 @@ def test_discriminator_diagnostics_do_not_echo_secrets(tmp_path: Path) -> None:
     result = _build_with_acceptance(tmp_path, json.dumps({"expectations": [{"kind": "private-token"}]}))
     assert isinstance(result, RejectedBuild), result
     assert "private-token" not in result.model_dump_json()
-    assert result.diagnostics[0].path == ("expectations", 0)
+    assert result.diagnostics[0].path == (PROJECT_ACCEPTANCE_PATH.as_posix(), "expectations", 0)
 
 
 @pytest.mark.parametrize(
@@ -206,4 +206,4 @@ def test_canonical_build_rejects_invalid_bounds_and_unknown_fields(tmp_path: Pat
     result = _build_with_acceptance(tmp_path, json.dumps(patch))
     assert isinstance(result, RejectedBuild), result
     assert result.phase is DiagnosticPhase.MODEL
-    assert result.diagnostics[0].path == tuple(patch)
+    assert result.diagnostics[0].path == (PROJECT_ACCEPTANCE_PATH.as_posix(), *patch)
