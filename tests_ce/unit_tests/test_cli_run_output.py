@@ -70,7 +70,8 @@ def test_error_before_runner_is_presented(tmp_path: Path, monkeypatch: pytest.Mo
     monkeypatch.setattr(runtime, "load_descriptor_properties", fail_loading)
     with pytest.raises(typer.Exit):
         runtime.execute_descriptor(descriptor, None, None, False)
-    assert capsys.readouterr().err.count("Error: ") == 1
+    # Count CLI result lines only; a stale log handler from an earlier CliRunner test can add "ValueError: " noise.
+    assert len(re.findall(r"^Error: ", capsys.readouterr().err, re.MULTILINE)) == 1
 
 
 @pytest.mark.parametrize(
