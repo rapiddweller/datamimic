@@ -79,6 +79,32 @@ class TestCLI:
         assert "is not a file" in result.output and "Traceback" not in result.output
         assert result.exception is None or isinstance(result.exception, SystemExit)
 
+    def test_init_force_refusal_writes_nothing(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        project = tmp_path / "sample"
+        project.mkdir()
+        (project / "datamimic.xml").write_bytes(b"<setup>original</setup>")
+        (project / "acceptance").write_text("a regular file")
+        result = runner.invoke(app, ["init", "sample", "--force"])
+        assert result.exit_code == 1
+        assert "acceptance" in result.output and "not a directory" in result.output
+        assert (project / "datamimic.xml").read_bytes() == b"<setup>original</setup>"
+        assert not (project / "README.md").exists() and not (project / "data").exists()
+
+    @pytest.mark.skipif(not hasattr(os, "symlink") or os.name == "nt", reason="needs symlink support")
+    def test_init_force_refuses_a_symlinked_starter_directory(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        project = tmp_path / "sample"
+        project.mkdir()
+        elsewhere = tmp_path / "elsewhere"
+        elsewhere.mkdir()
+        (project / "acceptance").symlink_to(elsewhere, target_is_directory=True)
+        result = runner.invoke(app, ["init", "sample", "--force"])
+        assert result.exit_code == 1
+        assert "symlink" in result.output
+        assert not (project / "data").exists() and not (project / "datamimic.xml").exists()
+        assert not any(elsewhere.iterdir())
+
     @pytest.mark.parametrize(
         ("os_name", "expected"),
         [("posix", "cd '/tmp/my project' &&"), ("nt", 'cd "/tmp/my project" &&')],

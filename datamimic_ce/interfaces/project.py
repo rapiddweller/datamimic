@@ -35,7 +35,8 @@ which `datamimic authoring build .` proves as `ready`.
 
 def project_scaffold(project_name: str) -> ProjectScaffold:
     """The authoring starter plus the README that only `datamimic init` adds."""
-    starter = create_authoring_application().scaffold(ProjectPattern.FLAT)
+    application = create_authoring_application()
+    starter = application.scaffold(ProjectPattern.FLAT)
     readme = ProjectScaffoldFile(PurePosixPath("README.md"), README_TEMPLATE.replace("{project_name}", project_name))
     return replace(starter, files=(*starter.files, readme))
 
@@ -46,7 +47,10 @@ def validate_project_name(name: str) -> bool:
 
 
 def create_project_structure(project_dir: Path) -> None:
-    """Create the initial project structure; the starter files overwrite same-named files."""
-    for directory in PROJECT_DIRECTORIES:
-        (project_dir / directory).mkdir(exist_ok=True)
-    write_project_scaffold(project_dir, project_scaffold(project_dir.name), overwrite=True)
+    """Create the initial project structure; the starter files overwrite same-named files.
+
+    Raises `ValueError` before anything is created when a starter path cannot be written safely.
+    """
+    write_project_scaffold(
+        project_dir, project_scaffold(project_dir.name), overwrite=True, directories=PROJECT_DIRECTORIES
+    )

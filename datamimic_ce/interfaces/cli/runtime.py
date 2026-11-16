@@ -20,7 +20,11 @@ from datamimic_ce.errors import DomainError, UserErrorBase
 from datamimic_ce.interfaces.cli import presenter as cli_presenter
 from datamimic_ce.interfaces.cli.presenter import DemoInformation, DemoSummary, SystemInformation
 from datamimic_ce.interfaces.demo import handle_demo
-from datamimic_ce.interfaces.project import create_project_structure, project_scaffold, validate_project_name
+from datamimic_ce.interfaces.project import (
+    create_project_structure,
+    project_scaffold,
+    validate_project_name,
+)
 from datamimic_ce.resources.api import demo_root
 
 logger = logging.getLogger("DATAMIMIC")
@@ -61,12 +65,12 @@ def initialize_project(project_name: str, target_directory: Path | None, force: 
     if project_dir.is_file():
         cli_presenter.fail(f"'{project_dir}' exists and is a file", code=1)
     starter_paths = tuple(file.path for file in project_scaffold(project_name).files)
-    for path in starter_paths:
-        if (project_dir / path).exists() and not (project_dir / path).is_file():
-            cli_presenter.fail(f"'{project_dir / path}' exists and is not a file", code=1)
     overwritten = tuple(str(path) for path in starter_paths if (project_dir / path).is_file())
     project_dir.mkdir(parents=True, exist_ok=force)
-    create_project_structure(project_dir)
+    try:
+        create_project_structure(project_dir)
+    except ValueError as error:
+        cli_presenter.fail(f"Not written: {error}", code=1)
     cli_presenter.emit_project_created(project_name, project_dir, overwritten)
 
 
