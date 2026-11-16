@@ -489,7 +489,7 @@ def _attribute(field: FieldSpec) -> AttributeCapability:
 def _example(name: str) -> tuple[DmJsonDocumentV1, BuildRequestV5]:
     producer = DmJsonNodeV1(
         kind="generate",
-        properties={"name": "rows", "count": "2"},
+        properties={"name": "rows", "count": "2", **({"target": "CSV"} if name == "starter" else {})},
         children=(DmJsonNodeV1(kind="key", properties={"name": "id", "generator": "IncrementGenerator"}),),
     )
     children: tuple[DmJsonNodeV1, ...] = (producer,)
