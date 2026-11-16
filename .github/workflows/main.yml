@@ -17,10 +17,10 @@ on:
       - '*'
   workflow_dispatch:
 
-# A new push to a pull request cancels its running lane. Every other run keeps its own group.
+# Supersede PRs, development pushes and branch dispatches; keep tag runs independent.
 concurrency:
-  group: ci-${{ github.event.pull_request.number || github.sha }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: ci-${{ github.event.pull_request.number || (((github.event_name == 'push' && github.ref == 'refs/heads/development') || (github.event_name == 'workflow_dispatch' && startsWith(github.ref, 'refs/heads/'))) && github.ref) || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/development') || (github.event_name == 'workflow_dispatch' && startsWith(github.ref, 'refs/heads/')) }}
 
 permissions:
   contents: read
@@ -600,6 +600,16 @@ jobs:
     if: github.event_name != 'pull_request' && needs.changes.outputs.code == 'true'
     runs-on: ubuntu-22.04
     container: python:3.14-slim-bookworm
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: benchmarks
+            args: tests_ce/unit_tests/test_benchmarks
+          - shard: authoring
+            args: tests_ce/unit_tests/test_authoring
+          - shard: rest
+            args: tests_ce/unit_tests --ignore=tests_ce/unit_tests/test_benchmarks --ignore=tests_ce/unit_tests/test_authoring tests_ce/architecture
     steps:
       - name: Setup git
         run: |
@@ -615,7 +625,7 @@ jobs:
       - name: Install dependencies
         run: uv sync --python 3.14
       - name: Run unit and architecture tests
-        run: uv run pytest tests_ce/unit_tests tests_ce/architecture -q -n auto --dist=load --durations=20
+        run: uv run pytest ${{ matrix.args }} -q -n auto --dist=load --durations=20
 
   unit_coverage_shard:
     name: Unit coverage shard ${{ matrix.shard }}
@@ -1166,16 +1176,7 @@ jobs:
     name: E2E Test on ${{ matrix.os }} ${{ matrix.arch }}
     if: github.ref == 'refs/heads/development' || startsWith(github.ref, 'refs/tags/')
     runs-on: ${{ matrix.os }}
-    needs:
-      [
-        build,
-        unit_test,
-        functional_test,
-        integration_test,
-        external_service_test,
-        factory_test,
-        api_test,
-      ]
+    needs: build
     strategy:
       matrix:
         os: [ubuntu-22.04, macos-latest, windows-latest]
@@ -1217,7 +1218,7 @@ jobs:
           Move-Item dist\artifact\*.whl dist
           Move-Item dist\artifact\*.tar.gz dist
           Remove-Item -Path dist\artifact -Recurse -Force
-          Remove-Item -Path dist\setup -Recurse -Force
+          Remove-Item -Path dist\setup -Recurse -Force -ErrorAction SilentlyContinue
         shell: pwsh
 
       - name: List Contents of dist Directory
@@ -1299,6 +1300,12 @@ jobs:
     needs:
       [
         e2e_test,
+        unit_test,
+        functional_test,
+        integration_test,
+        external_service_test,
+        factory_test,
+        api_test,
         runtime_determinism_fan_in,
         mypy,
         ruff,
