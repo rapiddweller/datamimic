@@ -37,6 +37,12 @@ class _SingleLineFormatter(logging.Formatter):
         return re.sub(_LINE_BREAKS, r"\\n", re.sub(r"\r", r"\\r", line))
 
 
+class _StderrHandler(logging.StreamHandler):
+    def emit(self, record: logging.LogRecord) -> None:
+        self.stream = sys.stderr
+        logging.StreamHandler.emit(self, record)
+
+
 def control_value(text: str) -> str:
     """Make descriptor text safe for a ' | '-delimited CONTROL record: no line breaks, no spaced pipes."""
     return re.sub(r"\s*\|\s*", "|", " ".join(text.split()))
@@ -67,7 +73,7 @@ def setup_logger(logger_name: str, worker_name: str, level=logging.INFO):
     if not any(isinstance(handler, logging.StreamHandler) for handler in current_logger.handlers):
         # stderr, not stdout: logs must never interleave with data on stdout —
         # a stdio MCP transport owns stdout for JSON-RPC frames
-        stream_handler = logging.StreamHandler(sys.stderr)
+        stream_handler = _StderrHandler()
         stream_handler.setFormatter(formatter)
         current_logger.setLevel(level)
         current_logger.addHandler(stream_handler)

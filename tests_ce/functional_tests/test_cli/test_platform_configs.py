@@ -5,6 +5,7 @@
 from pathlib import Path
 
 import pytest
+import typer
 from typer.testing import CliRunner
 
 from datamimic_ce.engine.runtime.contracts import RunRequest
@@ -14,14 +15,17 @@ DESCRIPTOR = Path(__file__).resolve().parents[2] / "scenarios/s19_script_scope/d
 
 
 def test_platform_configs_help_explains_the_value() -> None:
-    result = CliRunner().invoke(app, ["run", "--help"], color=False)
-    assert "JSON object of platform settings" in result.output
+    run = typer.main.get_command(app).commands["run"]
+    option = next(param for param in run.params if param.name == "platform_configs")
+    assert option.help == "JSON object of platform settings"
 
 
 def test_bounded_run_help_explains_limit_and_acceptance() -> None:
-    result = CliRunner().invoke(app, ["authoring", "run", "--help"], color=False)
-    assert "without reading acceptance/build.json" in result.output
-    assert "default --max-count is 10" in result.output
+    # Read the declared help: Rich wraps the rendered panel by terminal width.
+    command = typer.main.get_command(app).commands["authoring"].commands["run"]
+    declared = " ".join((command.help or "").split())
+    assert "without reading acceptance/build.json" in declared
+    assert "default --max-count is 10" in declared
 
 
 @pytest.mark.parametrize(
