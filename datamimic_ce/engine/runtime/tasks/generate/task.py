@@ -300,7 +300,9 @@ class GenerateTask(CommonSubTask):
         if self.statement.is_statement_operation:
             return self._execute_statement_operation(context)
         self._assert_delete_selects_rows(context)
-        with gen_timer("process", context.root.report_logging, self.statement.full_name) as timer_result:
+        with gen_timer(
+            "process", context.root.report_logging, self.statement.full_name, isinstance(context, GenIterContext)
+        ) as timer_result:
             try:
                 # Mark Ray initialization status for shutdown at the end of execution
                 # Ray is optional; only import/initialize if explicitly requested.
