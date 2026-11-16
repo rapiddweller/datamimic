@@ -140,6 +140,8 @@ def write_project_scaffold(
     targets = check_project_scaffold(root, scaffold, overwrite=overwrite)
     directory_paths = tuple((name, root.joinpath(name)) for name in directories)
     for name, path in directory_paths:
+        if _is_link(path):
+            raise ValueError(f"{name} is a symlink; nothing written")
         if _exists(path) and not _is_dir(path):
             raise ValueError(f"{name} exists and is not a directory; nothing written")
     root.mkdir(parents=True, exist_ok=True)
