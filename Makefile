@@ -1,4 +1,4 @@
-.PHONY: help install install-pre-commit test test-unit test-architecture test-integration test-functional coverage coverage-unit typecheck lint format check architecture-check architecture-definition-check architecture-version architecture-report architecture-validation-receipt architecture-cycle-check installed-authoring-check agent-plugin-check agent-plugin-package clean
+.PHONY: help install install-pre-commit test test-unit test-architecture test-integration test-functional coverage coverage-unit coverage-unit-run coverage-unit-report typecheck lint format check architecture-check architecture-definition-check architecture-version architecture-report architecture-validation-receipt architecture-cycle-check installed-authoring-check agent-plugin-check agent-plugin-package clean
 
 PYTHON ?= python
 INSTALLED_AUTHORING_ARGS ?=
@@ -7,6 +7,8 @@ AGENT_PLUGIN_ARCHIVE ?= test-artifacts/agent-plugin/datamimic.zip
 PACKAGE := datamimic_ce
 TESTS := tests_ce
 CE_COVERAGE_FILES := $(shell find $(PACKAGE) -type f -name '*.py')
+COVERAGE_OMIT := $(PACKAGE)/resources/examples/*.py,$(PACKAGE)/resources/demos/**/*.py,$(PACKAGE)/interfaces/demo.py
+UNIT_TEST_ARGS ?= $(TESTS)/unit_tests
 ARCHKEEL_SOURCE := archkeel==4.0.1
 # The independent receipt includes the exact Python runtime.
 ARCHKEEL_PYTHON := 3.11.12
@@ -73,10 +75,15 @@ coverage:
 	coverage report --include="$(PACKAGE)/*"
 	coverage html --include="$(PACKAGE)/*"
 
-coverage-unit:
-	pytest $(TESTS)/unit_tests -n auto --dist=load --cov=$(PACKAGE) --cov-report= --durations=20
-	@coverage report --format=total --omit='$(PACKAGE)/resources/examples/*.py,$(PACKAGE)/resources/demos/**/*.py,$(PACKAGE)/interfaces/demo.py' --fail-under=65.74 $(CE_COVERAGE_FILES)
-	@coverage xml --omit='$(PACKAGE)/resources/examples/*.py,$(PACKAGE)/resources/demos/**/*.py,$(PACKAGE)/interfaces/demo.py' $(CE_COVERAGE_FILES)
+coverage-unit: coverage-unit-run coverage-unit-report
+
+# CI runs this once per shard (UNIT_TEST_ARGS, COVERAGE_FILE) and combines the data files before the report.
+coverage-unit-run:
+	coverage run --source=$(PACKAGE) -m pytest $(UNIT_TEST_ARGS) -n 0 --durations=20
+
+coverage-unit-report:
+	@coverage report --format=total --omit='$(COVERAGE_OMIT)' --fail-under=65.74 $(CE_COVERAGE_FILES)
+	@coverage xml --omit='$(COVERAGE_OMIT)' $(CE_COVERAGE_FILES)
 
 typecheck:
 	mypy $(PACKAGE)
