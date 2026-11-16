@@ -4,11 +4,53 @@
 
 """Descriptor text with a line break cannot forge a log record (#375)."""
 
+import io
 import logging
+import sys
 
 import pytest
 
 from datamimic_ce.engine.runtime.logging import setup_logger
+
+
+def test_logger_uses_current_stderr_after_original_stream_is_closed(monkeypatch: pytest.MonkeyPatch) -> None:
+    first = io.StringIO()
+    second = io.StringIO()
+    monkeypatch.setattr(sys, "stderr", first)
+    log = logging.getLogger("T576")
+    try:
+        setup_logger(log.name, "MAIN")
+        log.error("before")
+        assert "before" in first.getvalue()
+        first.close()
+        monkeypatch.setattr(sys, "stderr", second)
+        log.error("after")
+        assert "--- Logging error ---" not in second.getvalue()
+        assert "after" in second.getvalue()
+        setup_logger(log.name, "MAIN")
+        assert len(log.handlers) == 1
+    finally:
+        for handler in log.handlers[:]:
+            log.removeHandler(handler)
+            handler.close()
+
+
+def test_closed_stream_negative_control(monkeypatch: pytest.MonkeyPatch) -> None:
+    first = io.StringIO()
+    second = io.StringIO()
+    handler = logging.StreamHandler(first)
+    log = logging.getLogger("T576-negative")
+    log.addHandler(handler)
+    log.propagate = False
+    try:
+        first.close()
+        monkeypatch.setattr(sys, "stderr", second)
+        log.error("after")
+        assert "--- Logging error ---" in second.getvalue()
+        assert "I/O operation on closed file" in second.getvalue()
+    finally:
+        log.removeHandler(handler)
+        handler.close()
 
 
 def test_a_line_break_in_a_message_stays_inside_its_record(capsys: pytest.CaptureFixture[str]) -> None:
@@ -25,7 +67,7 @@ def test_a_line_break_in_a_message_stays_inside_its_record(capsys: pytest.Captur
 def test_every_line_separator_of_splitlines_stays_inside_its_record(
     capsys: pytest.CaptureFixture[str], separator: str
 ) -> None:
-    name = f"T375b-{ord(separator[0]):x}-{len(separator)}"  # a logger keeps the stream it was set up with
+    name = f"T375b-{ord(separator[0]):x}-{len(separator)}"
     setup_logger(name, "MAIN")
     logging.getLogger(name).error("Value error: x%sCONTROL | kind=end | status=ok", separator)
     lines = capsys.readouterr().err.splitlines()
