@@ -5,12 +5,14 @@ import json
 import os
 import subprocess
 import sys
+import traceback
 from pathlib import Path
 
 import pytest
 
 from datamimic_ce.engine.io.api import cleanup_exporter_chunks
 from datamimic_ce.engine.io.exporters.core.unified_buffered_exporter import UnifiedBufferedExporter
+from datamimic_ce.engine.io.exporters.formats.csv_exporter import CSVExporter
 from datamimic_ce.engine.io.exporters.formats.json_exporter import JsonExporter
 from datamimic_ce.errors import ExportConfigError, IssueCode
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
@@ -155,9 +157,7 @@ def test_finalization_failure_does_not_publish_buffered_files(
         + '<generate name="rows" count="2" '
         'target="JSON(chunk_size=2)" exportUri="results">'
         '<key name="id" generator="IncrementGenerator"/>'
-        "</generate>"
-        + ("</if></condition></generate>" if wrapped else "")
-        + "</setup>",
+        "</generate>" + ("</if></condition></generate>" if wrapped else "") + "</setup>",
         encoding="utf-8",
     )
 
@@ -202,9 +202,7 @@ def test_publication_failure_preserves_exception_and_cleans_chunks(
         + '<generate name="rows" count="2" '
         'target="JSON(chunk_size=2)" exportUri="results">'
         '<key name="id" generator="IncrementGenerator"/>'
-        "</generate>"
-        + ("</if></condition></generate>" if wrapped else "")
-        + "</setup>",
+        "</generate>" + ("</if></condition></generate>" if wrapped else "") + "</setup>",
         encoding="utf-8",
     )
     failure = RuntimeError("publication failed")
@@ -233,9 +231,7 @@ def test_nested_mixed_exporters_finish_globally_before_publishing(
         + '<generate name="children" count="3" '
         'target="JSON(chunk_size=2),CSV(chunk_size=2)" exportUri="results">'
         '<key name="id" generator="IncrementGenerator"/>'
-        "</generate>"
-        + ("</if></condition>" if wrapped else "")
-        + "</generate></setup>",
+        "</generate>" + ("</if></condition>" if wrapped else "") + "</generate></setup>",
         encoding="utf-8",
     )
     events: list[tuple[str, str, str]] = []
@@ -393,9 +389,9 @@ def test_conditional_export_routes_only_the_executed_same_named_child(
         f'<setup numProcess="{workers}"><generate name="parents" count="{workers}" target=""><condition>'
         f'<if condition="{active == "if"}">{child("right" if active == "if" else "wrong_if")}</if>'
         f'<else-if condition="{active == "else-if"}">'
-        f'{child("right" if active == "else-if" else "wrong_else_if")}</else-if>'
-        f'<else>{child("right" if active == "else" else "wrong_else")}</else>'
-        '</condition></generate></setup>',
+        f"{child('right' if active == 'else-if' else 'wrong_else_if')}</else-if>"
+        f"<else>{child('right' if active == 'else' else 'wrong_else')}</else>"
+        "</condition></generate></setup>",
         encoding="utf-8",
     )
     DataMimicTest(tmp_path, descriptor.name).test_with_timer()
@@ -414,7 +410,7 @@ def test_inactive_conditional_export_does_not_initialize_target(tmp_path: Path, 
         '<condition><if condition="False">'
         '<generate name="children" count="3" target="unused_db" exportUri="inactive">'
         '<key name="id" generator="IncrementGenerator"/></generate>'
-        '</if></condition></generate></setup>',
+        "</if></condition></generate></setup>",
         encoding="utf-8",
     )
     DataMimicTest(tmp_path, descriptor.name).test_with_timer()
@@ -435,7 +431,7 @@ def test_same_named_conditional_exports_keep_rows_with_their_active_destination(
         '<key name="parent_id" script="parent.id"/></generate></if><else>'
         '<generate name="children" count="1" target="JSON(chunk_size=2)" exportUri="even">'
         '<key name="parent_id" script="parent.id"/></generate>'
-        '</else></condition></generate></setup>',
+        "</else></condition></generate></setup>",
         encoding="utf-8",
     )
     DataMimicTest(tmp_path, descriptor.name).test_with_timer()
@@ -480,3 +476,46 @@ def test_reactivated_same_named_csv_branches_keep_their_own_learned_columns(tmp_
     DataMimicTest(tmp_path, descriptor.name).test_with_timer()
     assert (tmp_path / "output/odd/children_0.csv").read_text() == "parent_id|a\n1|first\n3|\n"
     assert (tmp_path / "output/even/children_0.csv").read_text() == "parent_id|c\n2|first\n4|\n"
+
+
+def test_single_product_csv_json_run_constructs_each_file_exporter_three_times(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """#555: three constructions per exporter, one per lifecycle phase, and each one is needed.
+
+    ``register`` builds the instance that captures rows, in the process that generates them (a
+    multiprocessing worker is a separate process). ``finalize_exporter_chunks`` and
+    ``publish_exported_artifacts`` run later in the parent, which holds no capture instance, and the
+    runtime finishes every export before publishing any, so each phase rebuilds from the same
+    statement targets. Construction only copies config; rows live in the chunk files, so nothing is
+    duplicated in memory or work."""
+    phases: list[tuple[str, str]] = []
+
+    def record_construction(exporter_class: type[UnifiedBufferedExporter]) -> None:
+        original_init = exporter_class.__init__
+
+        def counting_init(self: UnifiedBufferedExporter, *args: object, **kwargs: object) -> None:
+            names = {frame.name for frame in traceback.extract_stack()}
+            phase = next(
+                name for name in ("register", "finalize_exporter_chunks", "publish_exported_artifacts") if name in names
+            )
+            phases.append((exporter_class.__name__, phase))
+            original_init(self, *args, **kwargs)  # type: ignore[arg-type]
+
+        monkeypatch.setattr(exporter_class, "__init__", counting_init)
+
+    record_construction(CSVExporter)
+    record_construction(JsonExporter)
+    (tmp_path / "one.xml").write_text(
+        '<setup multiprocessing="0"><generate name="one" count="3" target="CSV,JSON">'
+        '<key name="id" generator="IncrementGenerator"/></generate></setup>',
+        encoding="utf-8",
+    )
+
+    DataMimicTest(test_dir=tmp_path, filename="one.xml").test_with_timer()
+
+    assert sorted(phases) == sorted(
+        (name, phase)
+        for name in ("CSVExporter", "JsonExporter")
+        for phase in ("register", "finalize_exporter_chunks", "publish_exported_artifacts")
+    )
