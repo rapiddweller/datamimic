@@ -15,6 +15,8 @@
     {"kind": "exact_count", "subject": {"kind": "product", "product": "orders_back"}, "count": 12},
     {"kind": "unique", "subject": {"kind": "product", "product": "orders_back"}, "field": "id"},
     {"kind": "allowed_values", "subject": {"kind": "product", "product": "orders_back"}, "field": "status", "values": ["new", "paid", "shipped"]},
-    {"kind": "range", "subject": {"kind": "product", "product": "orders_back"}, "field": "amount_cents", "minimum": 100, "maximum": 9900}
+    {"kind": "range", "subject": {"kind": "product", "product": "orders_back"}, "field": "amount_cents", "minimum": 100, "maximum": 9900},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "orders_check"}, "count": 1},
+    {"kind": "exact_count", "subject": {"kind": "declared_sink", "sink": {"kind": "database", "environment": "shop", "entity": "orders"}}, "count": 12}
   ]
 }

@@ -212,6 +212,18 @@ The turn limit is 40 tool calls for every case. A rule that the audit cannot che
 A run is first-try `ready` when the first `datamimic authoring build` call of the agent returns `ready` and the oracle passes on the final project.
 A run is a pass within the turn budget when the oracle passes on the final project and the agent used at most the turn limit.
 
+### Scoring change: `ready_with_gaps` is not a pass (D1)
+
+From CE 5.0, `datamimic authoring build` can return `ready_with_gaps`: the proof passed, but the Build names coverage it did
+not check (a product without expectation, an unread data file, an unchecked declared sink, or no `rngSeed`).
+The `build_ready` check and the first-try `ready` count both treat `ready_with_gaps` as **not passed**, and the check reports
+`Build ready_with_gaps: <action_required>`. An acceptance with no check for a generated product is now rejected
+(`missing_expectation`).
+
+Runs before this change counted such a Build as `ready` and cannot be compared with later runs without it.
+The one result file in `results/` (2026-10-26) is from before the change. Do not mix its first-try and `build_ready`
+numbers with new runs; re-run a case to get a comparable number.
+
 ### Void runs
 
 A run is void when the runner reports a problem or the audit finds a forbidden action. The forbidden actions are:

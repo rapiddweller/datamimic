@@ -15,6 +15,7 @@
     {"kind": "unique", "subject": {"kind": "product", "product": "accounts_back"}, "field": "id"},
     {"kind": "allowed_values", "subject": {"kind": "product", "product": "accounts_back"}, "field": "status", "values": ["loaded"]},
     {"kind": "range", "subject": {"kind": "product", "product": "accounts_total"}, "field": "total", "minimum": 8, "maximum": 8},
-    {"kind": "range", "subject": {"kind": "product", "product": "audit_total"}, "field": "total", "minimum": 3, "maximum": 3}
+    {"kind": "range", "subject": {"kind": "product", "product": "audit_total"}, "field": "total", "minimum": 3, "maximum": 3},
+    {"kind": "exact_count", "subject": {"kind": "declared_sink", "sink": {"kind": "database", "environment": "bank", "entity": "accounts"}}, "count": 8}
   ]
 }

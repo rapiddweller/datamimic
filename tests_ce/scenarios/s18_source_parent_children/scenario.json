@@ -8,6 +8,7 @@
     "a derived total above the Build ceiling of 2000 rows is rejected before execution"
   ],
   "products": {"branches": 6, "tellers": 12},
+  "gaps": ["unread_data_files"],
   "negatives": [
     {"name": "source_parent_without_count", "diagnostic": "child_execution", "expected": "10",
      "patch": {"file": "datamimic.xml", "old": " distribution=\"ordered\" count=\"6\">", "new": " distribution=\"ordered\">"}},
