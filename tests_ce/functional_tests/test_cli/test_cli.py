@@ -2,12 +2,17 @@ import json
 import os
 import shutil
 import shlex
+from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
+
+import pytest
 
 from typer.testing import CliRunner
 
 from datamimic_ce.interfaces.cli import app
-from datamimic_ce.interfaces.project import STARTER_FILES
+from datamimic_ce.interfaces.cli.presenter import emit_project_created
+from datamimic_ce.interfaces.project import project_scaffold
 
 runner = CliRunner()
 
@@ -43,7 +48,9 @@ class TestCLI:
         project.mkdir(parents=True)
         (project / "datamimic.xml").write_text("old")
         (project / "keep.txt").write_text("keep")
-        expected_overwritten = {path for path in STARTER_FILES if (project / path).is_file()}
+        expected_overwritten = {
+            str(file.path) for file in project_scaffold("sample").files if (project / file.path).is_file()
+        }
         result = runner.invoke(app, ["init", "sample", "--target", str(target), "--force"])
         assert result.exit_code == 0, result.output
         output = result.output.replace("\n", "")
@@ -63,6 +70,23 @@ class TestCLI:
         again = runner.invoke(app, ["init", "sample", "--target", str(target), "--force"])
         assert again.exit_code == 0, again.output
         assert all(name in again.output for name in ("datamimic.xml", "README.md", "acceptance/build.json"))
+
+    def test_init_force_fails_clearly_when_a_starter_path_is_a_directory(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / "sample" / "acceptance" / "build.json").mkdir(parents=True)
+        result = runner.invoke(app, ["init", "sample", "--force"])
+        assert result.exit_code == 1
+        assert "is not a file" in result.output and "Traceback" not in result.output
+        assert result.exception is None or isinstance(result.exception, SystemExit)
+
+    @pytest.mark.parametrize(
+        ("os_name", "expected"),
+        [("posix", "cd '/tmp/my project' &&"), ("nt", 'cd "/tmp/my project" &&')],
+    )
+    def test_next_step_hint_quotes_for_the_shell(self, monkeypatch, capsys, os_name, expected):
+        monkeypatch.setattr("datamimic_ce.interfaces.cli.presenter.os", SimpleNamespace(name=os_name))
+        emit_project_created("p", Path("/tmp/my project"), ())
+        assert expected in capsys.readouterr().out
 
     def test_version_info(self):
         result = runner.invoke(app, ["version"])

@@ -26,6 +26,7 @@ same application. See `docs/agent_plugin.md`.
 | Discover the document/acceptance schema | `datamimic authoring schema` / `datamimic authoring schema --name build_request_v5` |
 | Read a focused reference | `datamimic authoring reference --topic assembly --name starter` |
 | Compile/decompile syntax | `datamimic authoring compile -` / `datamimic authoring decompile model.xml` |
+| Start a project (flat starter, never overwrites) | `datamimic authoring init <project>` |
 | Prove a project | `datamimic authoring build <project>` |
 | Validate/inspect existing XML | `datamimic authoring lint model.xml` / `datamimic authoring dry-run model.xml` |
 | Run bounded XML with explicit write opt-in | `datamimic authoring run model.xml --allow-side-effects` |

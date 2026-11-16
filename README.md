@@ -99,6 +99,8 @@ datamimic run shop/datamimic.xml   # writes shop/output/<task id>/customers.csv 
 
 A run generates the data. Build is the step that checks it. Thus use Build as the gate, and use a run for the full output.
 
+Build answers `ready` (exit code 0), `ready_with_gaps` (exit code 3: it passed, but `coverage` names what it did not check, such as a product without expectation or a project without `rngSeed`; fix each gap before you report success) or `rejected` (exit code 1). To start from a project that Build proves as `ready`, run `datamimic authoring init shop`; it writes `datamimic.xml` and `acceptance/build.json` and never overwrites a file.
+
 ### What you get
 
 `customers.csv`:
@@ -269,6 +271,7 @@ Authoring commands print JSON and accept a file or `-` for standard input.
 
 | Command | MCP tool | Use |
 |---|---|---|
+| `datamimic authoring init <project>` | none | Write a starter project that Build proves as `ready` |
 | `datamimic authoring build <project>` | `datamimic_build` | Check a project against `acceptance/build.json` |
 | `datamimic authoring run-project <project>` | `datamimic_run_project` | Build, then run for real data |
 | `datamimic run <datamimic.xml>` | none | Run a model |

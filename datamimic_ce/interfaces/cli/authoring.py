@@ -11,9 +11,11 @@ import typer
 from pydantic import ValidationError
 
 from datamimic_ce.authoring import create_authoring_application
+from datamimic_ce.authoring.adapters.workspace import write_project_scaffold
 from datamimic_ce.authoring.domain.capabilities import CapabilityDomain
 from datamimic_ce.authoring.domain.dm_json import DmJsonDocumentV1
 from datamimic_ce.authoring.domain.project_run import ProjectParam, ProjectRunRequest, ProjectRunResult
+from datamimic_ce.authoring.domain.project_scaffold import ProjectPattern
 from datamimic_ce.authoring.domain.requests import (
     PROJECT_ENTRY_PATH,
     AuthoringSchemaId,
@@ -258,6 +260,29 @@ def run_project(
     application = create_authoring_application(workspace_root=project, descriptor_path=PROJECT_ENTRY_PATH)
     result = application.run_project(request)
     emit_authoring(result, output_format, exit_code=0 if result.outcome == "completed" else 1)
+
+
+@app.command("init")
+def init(
+    project: Annotated[
+        Path,
+        typer.Argument(metavar="PROJECT", help="Directory for the new project; it is created when it is missing."),
+    ] = Path("."),
+    pattern: Annotated[
+        ProjectPattern,
+        typer.Option("--pattern", help="Starter project; each one is ready as written."),
+    ] = ProjectPattern.FLAT,
+) -> None:
+    """Write a starter project (datamimic.xml and acceptance/build.json) that Build accepts. Never overwrites."""
+    application = create_authoring_application()
+    try:
+        written = write_project_scaffold(project, application.scaffold(pattern))
+    except (FileExistsError, ValueError) as error:
+        reason = "these files exist already: " if isinstance(error, FileExistsError) else ""
+        typer.echo(f"Not written: {reason}{error}", err=True)
+        raise typer.Exit(code=1) from error
+    typer.echo(f"Wrote the {pattern.value} project to {project}: {', '.join(str(path) for path in written)}")
+    typer.echo(f"Next: datamimic authoring build {project}")
 
 
 @app.command("lint")
