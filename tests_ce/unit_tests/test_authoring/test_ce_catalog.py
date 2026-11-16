@@ -120,6 +120,15 @@ def test_memstore_example_compiles_only_requested_branch():
     assert 'sourceEntity="rows"' in example.project.entry_xml
 
 
+def test_named_assembly_reference_echoes_the_requested_name():
+    catalog = CeDslCatalog(CeDmJsonCodec())
+    named = catalog.reference(ReferenceRequest(topic=ReferenceTopic.ASSEMBLY, name="starter"))
+    unnamed = catalog.reference(ReferenceRequest(topic=ReferenceTopic.ASSEMBLY))
+    assert named.name == "starter"
+    assert [entry.name for entry in named.entries or ()] == ["starter"]
+    assert unnamed.name is None
+
+
 def test_unknown_named_reference_does_not_return_another_entry():
     catalog = CeDslCatalog(CeDmJsonCodec())
     for topic in (

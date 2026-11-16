@@ -321,6 +321,7 @@ class CeDslCatalog:
                     )
                 return ReferenceResult(
                     topic=request.topic,
+                    name=request.name,
                     content=(
                         "Write the entry as datamimic.xml and every required expectation in acceptance/build.json, "
                         "then Build the project directory. datamimic authoring init PROJECT writes this starter."
