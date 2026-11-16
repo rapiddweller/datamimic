@@ -231,3 +231,13 @@ def test_both_new_rules_are_in_the_catalog_with_their_severity() -> None:
     assert by_id[AuthoringRuleId.MISSING_EXPECTATION].severity == "error"
     assert AuthoringRuleId.COVERAGE_GAP.value == "coverage_gap"
     assert AuthoringRuleId.MISSING_EXPECTATION.value == "missing_expectation"
+
+
+def test_exporter_output_is_not_an_unread_input_but_an_unread_file_elsewhere_is() -> None:
+    files = [
+        PurePosixPath("output/catalogue/products.csv"),
+        PurePosixPath("output/reports/reorder_candidates.json"),
+        PurePosixPath("data/stock.csv"),
+    ]
+
+    assert unread_data_files(files, [], []) == (PurePosixPath("data/stock.csv"),)

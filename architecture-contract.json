@@ -200,6 +200,7 @@
         "datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants:EXPORTER_FIXED_WIDTH",
         "datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants:EXPORTER_JSON",
         "datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants:EXPORTER_LOG_EXPORTER",
+        "datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants:EXPORTER_OUTPUT_DIR",
         "datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants:EXPORTER_TEST_RESULT_EXPORTER",
         "datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants:EXPORTER_TXT",
         "datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants:EXPORTER_XLSX",

@@ -12,6 +12,8 @@ from pathlib import PurePosixPath
 
 from pydantic import Field, JsonValue, StrictBool
 
+from datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants import EXPORTER_OUTPUT_DIR
+
 from .build_rules import catalog_diagnostic
 from .common import AuthoringModel, NonEmptyStrictStr, NonNegativeStrictInt, WorkspaceDescriptorPath
 from .diagnostics import AuthoringRuleId, Diagnostic, DiagnosticPhase
@@ -19,8 +21,9 @@ from .expectations import DeclaredSinkIdentity
 
 # A file with one of these suffixes holds project data. Other files (scripts, notes, XML steps) are not data.
 DATA_FILE_SUFFIXES = frozenset((".csv", ".json", ".jsonl", ".txt", ".xlsx", ".parquet"))
-# The acceptance and the environment profile are read by Build itself, not by the model.
-NON_DATA_ROOTS = frozenset(("acceptance", "conf"))
+# The acceptance and the environment profile are read by Build itself, not by the model. The exporter output is
+# what a run wrote, not an input.
+NON_DATA_ROOTS = frozenset(("acceptance", "conf", EXPORTER_OUTPUT_DIR))
 # Documentation and libraries are not model inputs, at any depth.
 NON_DATA_FOLDERS = frozenset(("docs", "lib"))
 NON_DATA_NAME_PREFIXES = ("readme", "license", "notes", "changelog")

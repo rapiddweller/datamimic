@@ -6,6 +6,7 @@ import time
 from abc import ABC, abstractmethod
 from pathlib import Path
 
+from datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants import EXPORTER_OUTPUT_DIR
 from datamimic_ce.engine.io.contracts import Exporter
 from datamimic_ce.engine.io.exporters.core.exporter_config import ExporterConfig
 from datamimic_ce.engine.io.exporters.core.exporter_state_manager import ExporterStateManager
@@ -224,7 +225,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
 
         # exportUri names the output subdirectory (EE parity: prefix replaces the task_id dir); default
         # keeps the task_id dir so concurrent runs stay isolated.
-        exporter_dir_path = self._descriptor_dir / "output" / (self._export_uri or self._task_id)
+        exporter_dir_path = self._descriptor_dir / EXPORTER_OUTPUT_DIR / (self._export_uri or self._task_id)
 
         # Handle existing directory by adding version number
 

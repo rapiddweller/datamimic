@@ -14,3 +14,6 @@ EXPORTER_TXT = "TXT"
 EXPORTER_XLSX = "XLSX"
 EXPORTER_DBUNIT = "DbUnit"
 EXPORTER_FIXED_WIDTH = "FixedWidth"
+
+# File exporters write below `<descriptor_dir>/EXPORTER_OUTPUT_DIR/`; Authoring coverage ignores the same folder.
+EXPORTER_OUTPUT_DIR = "output"

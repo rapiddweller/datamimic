@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import shlex
@@ -162,6 +163,48 @@ def test_a_data_file_that_the_run_read_is_not_a_gap(tmp_path: Path) -> None:
 
     assert isinstance(result, ReadyBuild), result
     assert result.coverage.unread_data_files == ()
+
+
+_PREVIOUS_EXPORT = PurePosixPath("output/previous/regions.csv")
+
+
+def _with_previous_export(tmp_path: Path, *, read: bool) -> bytes:
+    content = b"id|name\n1|north\n2|south\n"
+    (tmp_path / _PREVIOUS_EXPORT).parent.mkdir(parents=True)
+    (tmp_path / _PREVIOUS_EXPORT).write_bytes(content)
+    entry = (
+        f'<setup rngSeed="7"><generate name="regions" source="{_PREVIOUS_EXPORT}" distribution="ordered"/></setup>'
+        if read
+        else _SEEDED
+    )
+    expectation = (
+        {"kind": "exact_count", "subject": {"kind": "product", "product": "regions"}, "count": 2} if read else _CITIES
+    )
+    write_project(tmp_path, entry, expectations=[expectation])
+    return content
+
+
+def test_a_model_that_reads_a_previous_export_under_output_is_proven_on_its_bytes(tmp_path: Path) -> None:
+    content = _with_previous_export(tmp_path, read=True)
+
+    result = create_authoring_application(tmp_path, descriptor_path=PROJECT_ENTRY_PATH).build()
+
+    assert isinstance(result, ReadyBuild), result
+    assert result.coverage.unread_data_files == ()
+    digests = {item.path: item.sha256 for item in result.artifact.files}
+    assert digests[_PREVIOUS_EXPORT] == hashlib.sha256(content).hexdigest()
+    regions = next(item for item in result.evidence if item.name == "regions")
+    assert [row["name"] for row in regions.rows] == ["north", "south"]
+
+
+def test_a_previous_export_that_the_model_does_not_read_is_neither_a_gap_nor_proof_input(tmp_path: Path) -> None:
+    _with_previous_export(tmp_path, read=False)
+
+    result = create_authoring_application(tmp_path, descriptor_path=PROJECT_ENTRY_PATH).build()
+
+    assert isinstance(result, ReadyBuild), result
+    assert result.coverage.unread_data_files == ()
+    assert _PREVIOUS_EXPORT not in {item.path for item in result.artifact.files}
 
 
 def test_documentation_and_library_files_are_not_unread_data(tmp_path: Path) -> None:
