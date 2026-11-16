@@ -46,7 +46,7 @@ class DataMimic:
                 descriptor_path=descriptor_path,
                 task_id=self._task_id,
                 platform_props=platform_props,
-                platform_configs=PlatformConfiguration.model_construct(root=platform_configs)
+                platform_configs=PlatformConfiguration.model_validate(platform_configs)
                 if platform_configs is not None
                 else None,
                 test_mode=test_mode,

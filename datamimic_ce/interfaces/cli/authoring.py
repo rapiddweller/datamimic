@@ -343,6 +343,11 @@ def bounded_run(
     workspace_root: WorkspaceRoot = None,
     output_format: OutputFormat = CliOutputFormat.JSON,
 ) -> None:
+    """Run bounded XML without reading acceptance/build.json.
+
+    The default --max-count is 10, independent of the project's Build limit.
+    JSON output can include sample row values; do not share transcripts of real data.
+    """
     _run(source, workspace_root, output_format, max_count, sample_rows, timeout, allow_side_effects, dry=False)
 
 

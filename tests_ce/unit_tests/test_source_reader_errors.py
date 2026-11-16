@@ -16,6 +16,7 @@ import pytest
 from datamimic_ce.engine.dsl.api import SourceFileFormat
 from datamimic_ce.engine.io.files.readers import FileUtil, load_source_rows
 from datamimic_ce.errors import InvalidSourceError, IssueCode, MissingSourceError
+from datamimic_ce.errors.catalog import get_issue_definition
 
 _MISSING = [
     ("missing.csv", SourceFileFormat.CSV),
@@ -46,6 +47,12 @@ def test_a_missing_dbunit_file_is_a_portable_i101(tmp_path: Path) -> None:
     assert str(tmp_path) not in str(caught.value)
 
 
+def test_source_guidance_distinguishes_invalid_from_missing() -> None:
+    for code in (IssueCode.SOURCE_INVALID_CSV, IssueCode.SOURCE_UNSUPPORTED_FILE_TYPE):
+        assert get_issue_definition(code).guidance is None
+    assert "exists" in get_issue_definition(IssueCode.INCLUDE_FILE_NOT_FOUND).guidance
+
+
 @pytest.mark.parametrize(
     ("name", "content", "source_format", "code"),
     [
@@ -64,6 +71,7 @@ def test_an_invalid_xml_or_json_source_carries_its_code_and_no_host_path(
     assert caught.value.issue_code is code
     assert name in str(caught.value)
     assert str(tmp_path) not in str(caught.value)
+    assert get_issue_definition(code).guidance is None
 
 
 @pytest.mark.parametrize(

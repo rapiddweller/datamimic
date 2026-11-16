@@ -4,7 +4,6 @@
 # See LICENSE file for the full text of the license.
 
 from datamimic_ce.errors.catalog.definition import IssueDefinition
-from datamimic_ce.errors.catalog.guidance import GUIDANCE_PROJECT_ENV
 from datamimic_ce.errors.codes import IssueCode
 
 ISSUES: list[IssueDefinition] = [
@@ -23,7 +22,6 @@ ISSUES: list[IssueDefinition] = [
         template="Invalid XML in '{name}'",
         cause="The XML file content is malformed or cannot be parsed.",
         resolution="Fix XML syntax and ensure the file is well-formed.",
-        guidance=GUIDANCE_PROJECT_ENV,
     ),
     IssueDefinition(
         code=IssueCode.SOURCE_INVALID_CSV,
@@ -32,7 +30,6 @@ ISSUES: list[IssueDefinition] = [
         template="Invalid CSV in '{name}'",
         cause="The CSV file content is malformed or cannot be parsed.",
         resolution="Fix CSV syntax, delimiter, and quoting, then retry.",
-        guidance=GUIDANCE_PROJECT_ENV,
     ),
     IssueDefinition(
         code=IssueCode.SOURCE_INVALID_JSON,
@@ -41,7 +38,6 @@ ISSUES: list[IssueDefinition] = [
         template="Invalid JSON in '{name}'",
         cause="The JSON file content is malformed or cannot be parsed.",
         resolution="Fix JSON syntax and ensure the file is valid JSON.",
-        guidance=GUIDANCE_PROJECT_ENV,
     ),
     IssueDefinition(
         code=IssueCode.SOURCE_INVALID_XLSX,
@@ -130,7 +126,6 @@ ISSUES: list[IssueDefinition] = [
         template="Data source '{name}' is not supported by DataSourceRegistry",
         cause="The source configuration specifies an unsupported configuration.",
         resolution="Use a supported file or adjust the configuration.",
-        guidance=GUIDANCE_PROJECT_ENV,
     ),
     IssueDefinition(
         code=IssueCode.SOURCE_EXPR_NESTED_NOT_STRING,

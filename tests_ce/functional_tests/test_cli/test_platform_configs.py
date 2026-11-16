@@ -13,6 +13,17 @@ from datamimic_ce.interfaces.cli import app, runtime
 DESCRIPTOR = Path(__file__).resolve().parents[2] / "scenarios/s19_script_scope/datamimic.xml"
 
 
+def test_platform_configs_help_explains_the_value() -> None:
+    result = CliRunner().invoke(app, ["run", "--help"], color=False)
+    assert "JSON object of platform settings" in result.output
+
+
+def test_bounded_run_help_explains_limit_and_acceptance() -> None:
+    result = CliRunner().invoke(app, ["authoring", "run", "--help"], color=False)
+    assert "without reading acceptance/build.json" in result.output
+    assert "default --max-count is 10" in result.output
+
+
 @pytest.mark.parametrize(
     "value,expected",
     [(None, {}), ("{}", {}), ('{"memory_limit_mb": 512}', {"memory_limit_mb": 512})],
