@@ -151,9 +151,13 @@ def execute_descriptor(
     if not descriptor.is_file():
         cli_presenter.fail(f"Invalid descriptor file path: {descriptor}", code=1)
     try:
-        platform_config_values = json.loads(platform_configs) if platform_configs else {}
+        platform_config_values = json.loads(platform_configs) if platform_configs is not None else {}
     except json.JSONDecodeError as error:
         cli_presenter.fail(f"Invalid platform configuration JSON: {error}", code=1)
+    try:
+        validated_configs = PlatformConfiguration.model_validate(platform_config_values)
+    except ValidationError:
+        cli_presenter.fail("--platform-configs must be a JSON object", code=1)
     original_directory = Path.cwd()
     try:
         os.chdir(descriptor.parent)
@@ -163,7 +167,7 @@ def execute_descriptor(
                 descriptor_path=descriptor,
                 task_id=task_id,
                 platform_props={**load_descriptor_properties(descriptor), **parameters},
-                platform_configs=PlatformConfiguration.model_construct(root=platform_config_values),
+                platform_configs=validated_configs,
                 test_mode=test_mode,
             )
         )
