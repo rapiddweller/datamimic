@@ -52,7 +52,7 @@ def test_non_object_platform_configs_fail_before_run(monkeypatch: pytest.MonkeyP
 
     result = CliRunner().invoke(app, ["run", str(DESCRIPTOR), "--platform-configs", value])
 
-    assert result.exit_code == 1
+    assert result.exit_code == 2
     assert "Error: --platform-configs must be a JSON object" in result.output
     assert "Traceback" not in result.output
     assert not requests
@@ -65,7 +65,21 @@ def test_invalid_json_fails_before_run(monkeypatch: pytest.MonkeyPatch, value: s
 
     result = CliRunner().invoke(app, ["run", str(DESCRIPTOR), "--platform-configs", value])
 
-    assert result.exit_code == 1
+    assert result.exit_code == 2
     assert "Error: Invalid platform configuration JSON:" in result.output
     assert "Traceback" not in result.output
     assert not requests
+
+
+def test_invalid_option_precedes_missing_descriptor(tmp_path: Path) -> None:
+    result = CliRunner().invoke(app, ["run", str(tmp_path / "missing.xml"), "--platform-configs", "{"])
+
+    assert result.exit_code == 2
+    assert "Invalid platform configuration JSON" in result.stderr
+
+
+def test_missing_descriptor_is_an_operation_failure(tmp_path: Path) -> None:
+    result = CliRunner().invoke(app, ["run", str(tmp_path / "missing.xml")])
+
+    assert result.exit_code == 1
+    assert "Invalid descriptor file path" in result.stderr
