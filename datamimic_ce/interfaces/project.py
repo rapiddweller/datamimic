@@ -4,15 +4,8 @@ import json
 import re
 from pathlib import Path
 
-
-def validate_project_name(name: str) -> bool:
-    """Return whether a project name contains only letters, digits, dashes, and underscores."""
-    return bool(re.match(r"^[a-zA-Z0-9_-]+$", name))
-
-
-def create_project_structure(project_dir: Path) -> None:
-    """Create the initial project structure with necessary files and directories."""
-    initial_descriptor_content = """
+STARTER_FILES = {
+    "datamimic.xml": """
 <setup rngSeed="7">
     <generate name="datamimic_user_list" count="10" target="CSV,JSON">
         <variable name="person" entity="Person(min_age=18, max_age=90, female_quota=0.5)"/>
@@ -27,35 +20,23 @@ def create_project_structure(project_dir: Path) -> None:
         <key name="datamimic_lover" constant="DEFINITELY"/>
     </generate>
 </setup>
-        """
-
-    (project_dir / "data").mkdir(exist_ok=True)
-    (project_dir / "output").mkdir(exist_ok=True)
-    (project_dir / "script").mkdir(exist_ok=True)
-    (project_dir / "config").mkdir(exist_ok=True)
-
-    (project_dir / "datamimic.xml").write_text(initial_descriptor_content, encoding="utf-8")
-    (project_dir / "acceptance").mkdir(exist_ok=True)
-    (project_dir / "acceptance/build.json").write_text(
-        json.dumps(
-            {
-                "version": "5.0",
-                "expectations": [
-                    {
-                        "kind": "exact_count",
-                        "subject": {"kind": "product", "product": "datamimic_user_list"},
-                        "count": 10,
-                    }
-                ],
-            },
-            indent=2,
-        )
-        + "\n",
-        encoding="utf-8",
+        """,
+    "acceptance/build.json": json.dumps(
+        {
+            "version": "5.0",
+            "expectations": [
+                {
+                    "kind": "exact_count",
+                    "subject": {"kind": "product", "product": "datamimic_user_list"},
+                    "count": 10,
+                }
+            ],
+        },
+        indent=2,
     )
-
-    readme_content = f"""
-# DATAMIMIC Project: {project_dir.name}
+    + "\n",
+    "README.md": """
+# DATAMIMIC Project: {project_name}
 This project was created using DATAMIMIC.
 
 ## Project Structure
@@ -83,5 +64,20 @@ The project is initialized with a sample descriptor that generates user data wit
 2. Place any required input files in the `data/` directory
 3. Verify the project using: `datamimic authoring build .`
 4. Run the project using: `datamimic run datamimic.xml`
-        """
-    (project_dir / "README.md").write_text(readme_content, encoding="utf-8")
+        """,
+}
+
+
+def validate_project_name(name: str) -> bool:
+    """Return whether a project name contains only letters, digits, dashes, and underscores."""
+    return bool(re.match(r"^[a-zA-Z0-9_-]+$", name))
+
+
+def create_project_structure(project_dir: Path) -> None:
+    """Create the initial project structure with necessary files and directories."""
+    for directory in ("data", "output", "script", "config"):
+        (project_dir / directory).mkdir(exist_ok=True)
+    for relative_path, content in STARTER_FILES.items():
+        target = project_dir / relative_path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(content.replace("{project_name}", project_dir.name), encoding="utf-8")

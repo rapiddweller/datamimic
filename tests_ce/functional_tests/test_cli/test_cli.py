@@ -7,6 +7,7 @@ from unittest.mock import patch
 from typer.testing import CliRunner
 
 from datamimic_ce.interfaces.cli import app
+from datamimic_ce.interfaces.project import STARTER_FILES
 
 runner = CliRunner()
 
@@ -42,19 +43,23 @@ class TestCLI:
         project.mkdir(parents=True)
         (project / "datamimic.xml").write_text("old")
         (project / "keep.txt").write_text("keep")
+        expected_overwritten = {path for path in STARTER_FILES if (project / path).is_file()}
         result = runner.invoke(app, ["init", "sample", "--target", str(target), "--force"])
         assert result.exit_code == 0, result.output
         output = result.output.replace("\n", "")
         assert f"cd {shlex.quote(str(project))}" in output
         assert "Overwritten:" in output and "datamimic.xml" in output
+        reported = next(
+            line.removeprefix("Overwritten: ")
+            for line in result.output.splitlines()
+            if line.startswith("Overwritten: ")
+        )
+        assert set(reported.split(", ")) == expected_overwritten
         assert "README.md" not in output and "acceptance/build.json" not in output
         assert (project / "keep.txt").read_text() == "keep"
         assert "acceptance/build.json" in (project / "README.md").read_text()
         help_result = runner.invoke(app, ["init", "--help"])
-        assert all(
-            name in help_result.output.replace("\n", "")
-            for name in ("datamimic.xml", "README.md", "acceptance/build.json")
-        )
+        assert "starter files" in help_result.output
         again = runner.invoke(app, ["init", "sample", "--target", str(target), "--force"])
         assert again.exit_code == 0, again.output
         assert all(name in again.output for name in ("datamimic.xml", "README.md", "acceptance/build.json"))

@@ -38,7 +38,9 @@ def init(
     force: Annotated[
         bool,
         typer.Option(
-            "--force", "-f", help="Overwrite datamimic.xml, README.md and acceptance/build.json; keep unrelated files."
+            "--force",
+            "-f",
+            help="Overwrite the starter files (the success output lists them); unrelated files are kept.",
         ),
     ] = False,
 ) -> None:
