@@ -760,11 +760,21 @@ jobs:
           uv run pytest tests_ce/architecture -n auto -q --durations=15
         shell: bash
 
-  functional_test:
+  functional_coverage_shard:
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-22.04
     needs: install_dependencies
     container: python:3.11-slim-bookworm
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: builds
+            args: tests_ce/scenarios/test_scenarios.py::test_scenario_builds_runs_and_replays
+          - shard: negatives
+            args: tests_ce/scenarios/test_scenarios.py::test_negative_is_rejected_with_named_diagnostic
+          - shard: rest
+            args: tests_ce/functional_tests/ tests_ce/conformance/ tests_ce/scenarios/ --deselect=tests_ce/scenarios/test_scenarios.py::test_scenario_builds_runs_and_replays --deselect=tests_ce/scenarios/test_scenarios.py::test_negative_is_rejected_with_named_diagnostic
     steps:
       - name: Setup git
         run: |
@@ -800,9 +810,53 @@ jobs:
           uv pip list | grep -iE 'click|typer'
         shell: bash
       - name: Run functional tests with coverage
+        env:
+          COVERAGE_FILE: .coverage.${{ matrix.shard }}
         run: |
           . .venv/bin/activate
-          uv run pytest tests_ce/functional_tests/ tests_ce/conformance/ tests_ce/scenarios/ --cov --cov-report=xml
+          uv run coverage run -m pytest ${{ matrix.args }} --durations=20
+        shell: bash
+      - name: Upload coverage data
+        uses: actions/upload-artifact@v6
+        with:
+          name: coverage-functional-data-${{ matrix.shard }}
+          path: .coverage.${{ matrix.shard }}
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+
+  functional_test:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-22.04
+    needs: functional_coverage_shard
+    container: python:3.11-slim-bookworm
+    steps:
+      - name: Setup git
+        run: |
+          apt-get update
+          apt-get install -y git
+          git config --global --add safe.directory $(realpath .)
+      - name: Checkout repository
+        uses: actions/checkout@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.1.0
+      - name: Load venv cache
+        uses: actions/cache/restore@v5
+        with:
+          path: .venv
+          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml', './uv.lock') }}
+      - name: Download coverage data
+        uses: actions/download-artifact@v7
+        with:
+          pattern: coverage-functional-data-*
+          path: coverage-functional-data
+          merge-multiple: true
+      - name: Combine functional coverage
+        run: |
+          . .venv/bin/activate
+          test "$(ls -A coverage-functional-data | wc -l)" -eq 3
+          uv run coverage combine coverage-functional-data
+          uv run coverage xml
         shell: bash
       - name: Upload coverage report
         uses: actions/upload-artifact@v6
