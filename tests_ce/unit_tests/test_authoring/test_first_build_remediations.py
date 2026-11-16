@@ -283,3 +283,12 @@ def test_a_per_parent_count_with_grouping_fields_says_that_the_nesting_groups(tm
 
     fields = [str(item.remediation) for item in errors if item.path[4:] in (("child_field",), ("parent_field",))]
     assert len(fields) == 2 and all("grouped by that nesting" in text for text in fields), fields
+
+
+def test_missing_acceptance_remediation_reads_as_one_sentence_per_clause(tmp_path: Path) -> None:
+    (tmp_path / PROJECT_ENTRY_PATH).write_text('<setup><generate name="a" count="1"/></setup>', encoding="utf-8")
+    result = create_authoring_application(tmp_path, descriptor_path=PROJECT_ENTRY_PATH).build()
+    assert isinstance(result, RejectedBuild)
+    [error] = [item for item in result.diagnostics if item.severity == "error"]
+    assert "}]}; For a starter" not in str(error.remediation)
+    assert "}]}. For a starter project, run" in str(error.remediation)

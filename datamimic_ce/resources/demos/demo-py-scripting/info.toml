@@ -1,5 +1,5 @@
 title = "Basic Py Scripting"
-description = "Showcases the capabilities of Python in combination with DATAMIMIC. Aalso includes the usage of scripted sources and scriptevaluation in templates."
+description = "Showcases the capabilities of Python in combination with DATAMIMIC. Also includes the usage of scripted sources and script evaluation in templates."
 icon = "py"
 tags = ["#datamimic", "#python", "#sourcescript"]
 projectName = "demo-py-scripting"

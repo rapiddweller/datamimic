@@ -29,7 +29,10 @@ def test_failed_run_ends_with_the_cli_error_line(tmp_path: Path) -> None:
     )
     assert result.returncode == 1
     assert result.stdout == ""
-    assert re.search(r"^Error: \[E\d+/I\d+\] .*Descriptor XML is not well-formed", result.stderr, re.MULTILINE)
+    assert re.search(
+        r"^Error: \[E\d+/I\d+\] .*Descriptor validation error: XML is not well-formed", result.stderr, re.MULTILINE
+    )
+    assert "Descriptor XML" not in result.stderr
     assert " | ERROR | DATAMIMIC" in result.stderr
 
 
@@ -54,7 +57,11 @@ def test_failed_run_retains_error_record(tmp_path: Path) -> None:
         logger.removeHandler(collector)
     assert caught.value.exit_code == 1
     assert (
-        sum(r.levelno == logging.ERROR and "Descriptor XML is not well-formed" in r.getMessage() for r in records) == 1
+        sum(
+            r.levelno == logging.ERROR and "Descriptor validation error: XML is not well-formed" in r.getMessage()
+            for r in records
+        )
+        == 1
     )
 
 
