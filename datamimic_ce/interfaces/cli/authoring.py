@@ -86,7 +86,7 @@ def _descriptor_path(source: str, workspace_root: Path | None) -> PurePosixPath:
     return PurePosixPath(Path(source).resolve().relative_to(_workspace(source, workspace_root).resolve()).as_posix())
 
 
-@app.command("version")
+@app.command("version", help="Show the CE version and Build protocol.")
 def version(output_format: OutputFormat = CliOutputFormat.JSON) -> None:
     emit_authoring(
         {
@@ -97,7 +97,7 @@ def version(output_format: OutputFormat = CliOutputFormat.JSON) -> None:
     )
 
 
-@app.command("schema")
+@app.command("schema", help="Show an authoring schema; defaults to the DM JSON document schema.")
 def schema(
     name: Annotated[AuthoringSchemaId, typer.Option("--name")] = AuthoringSchemaId.DM_JSON_DOCUMENT_V1,
     output_format: OutputFormat = CliOutputFormat.JSON,
@@ -105,7 +105,7 @@ def schema(
     emit_authoring(create_authoring_application().schema(name), output_format)
 
 
-@app.command("capabilities")
+@app.command("capabilities", help="List DSL capabilities; use --full for their contracts.")
 def capabilities(
     full: Annotated[bool, typer.Option("--full")] = False,
     output_format: OutputFormat = CliOutputFormat.JSON,
@@ -114,7 +114,7 @@ def capabilities(
     emit_authoring(snapshot.to_dict() if full else snapshot.to_index_dict(), output_format)
 
 
-@app.command("capability")
+@app.command("capability", help="Inspect one DSL capability by domain and name.")
 def capability(
     domain: Annotated[CapabilityDomain, typer.Option("--domain")],
     name: Annotated[str, typer.Option("--name")],
@@ -140,7 +140,7 @@ def reference(
     emit_authoring(create_authoring_application().reference(request), output_format)
 
 
-@app.command("compile")
+@app.command("compile", help="Compile a DM JSON document to XML; this does not prove the project.")
 def compile_document(
     source: Input,
     descriptor_path: Annotated[str, typer.Option("--descriptor-path")] = "model.xml",
@@ -165,7 +165,7 @@ def compile_document(
     emit_authoring(result, output_format, exit_code=0 if isinstance(result, ReadyCompileDocument) else 1)
 
 
-@app.command("decompile")
+@app.command("decompile", help="Decompile XML to DM JSON; this does not prove the project.")
 def decompile_document(
     source: Input,
     descriptor_path: Annotated[str | None, typer.Option("--descriptor-path")] = None,
@@ -285,7 +285,7 @@ def init(
     typer.echo(f"Next: datamimic authoring build {project}")
 
 
-@app.command("lint")
+@app.command("lint", help="Validate an XML descriptor without executing it.")
 def lint(
     source: Input,
     workspace_root: WorkspaceRoot = None,
@@ -350,7 +350,7 @@ def dry_run(
     workspace_root: WorkspaceRoot = None,
     output_format: OutputFormat = CliOutputFormat.JSON,
 ) -> None:
-    """Run bounded XML without reading acceptance/build.json.
+    """Dry-run bounded XML with side effects disabled, without reading acceptance/build.json.
 
     The default --max-count is 10, independent of the project's Build limit.
     JSON output can include sample row values; do not share transcripts of real data.
@@ -368,7 +368,7 @@ def bounded_run(
     workspace_root: WorkspaceRoot = None,
     output_format: OutputFormat = CliOutputFormat.JSON,
 ) -> None:
-    """Run bounded XML without reading acceptance/build.json.
+    """Run bounded XML with optional side effects, without reading acceptance/build.json.
 
     The default --max-count is 10, independent of the project's Build limit.
     JSON output can include sample row values; do not share transcripts of real data.
@@ -376,7 +376,7 @@ def bounded_run(
     _run(source, workspace_root, output_format, max_count, sample_rows, timeout, allow_side_effects, dry=False)
 
 
-@app.command("export-contract")
+@app.command("export-contract", help="Write the authoring contract bundle to the specified path.")
 def export_contract(
     output: Annotated[Path, typer.Argument()],
     package_version: Annotated[str | None, typer.Option("--package-version")] = None,

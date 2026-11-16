@@ -34,7 +34,10 @@ def info() -> None:
 @app.command("init", help="Initialize a DATAMIMIC project.")
 def init(
     project_name: Annotated[str, typer.Argument(help="Project directory name")],
-    target_directory: Annotated[Path | None, typer.Option("--target", "-t")] = None,
+    target_directory: Annotated[
+        Path | None,
+        typer.Option("--target", "-t", help="Parent directory for the project; defaults to the current directory."),
+    ] = None,
     force: Annotated[
         bool,
         typer.Option(
@@ -73,8 +76,8 @@ def run(
     platform_configs: Annotated[
         str | None, typer.Option("--platform-configs", help="JSON object of platform settings")
     ] = None,
-    task_id: Annotated[str | None, typer.Option("--task-id")] = None,
-    test_mode: Annotated[bool, typer.Option("--test-mode")] = False,
+    task_id: Annotated[str | None, typer.Option("--task-id", help="Task identifier; generated when omitted.")] = None,
+    test_mode: Annotated[bool, typer.Option("--test-mode", help="Enable runtime test-result capture.")] = False,
     params: Annotated[
         list[str] | None, typer.Option("--param", help="Runtime property NAME=VALUE; repeat for multiple properties.")
     ] = None,
