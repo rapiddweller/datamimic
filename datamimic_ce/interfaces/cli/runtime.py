@@ -10,7 +10,6 @@ import platform
 from pathlib import Path
 
 import toml
-import typer
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from datamimic_ce.domains.api import get_datamimic_lib_version
@@ -171,11 +170,7 @@ def execute_descriptor(
             platform_configs=validated_configs,
             test_mode=test_mode,
         )
-        try:
-            run(request)
-        except (UserErrorBase, DomainError):
-            # The runner logs every user or domain error at ERROR before it re-raises (lifecycle/runner.py).
-            raise typer.Exit(code=1) from None
+        run(request)
     except (UserErrorBase, DomainError) as error:
         cli_presenter.fail(error.message if isinstance(error, DomainError) else str(error), code=1)
     finally:
