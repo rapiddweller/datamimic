@@ -1190,7 +1190,7 @@ jobs:
 
   factory_api_test:
     name: Factory and API tests
-    if: github.event_name != 'pull_request'
+    # Pull requests run it too: it is short and catches seeded-output pins of domain changes.
     runs-on: ubuntu-22.04
     needs: install_dependencies
     container: python:3.11-slim-bookworm
@@ -1215,6 +1215,7 @@ jobs:
           uv run pytest tests_ce/factory_tests/ --cov=. --cov-report=xml
         shell: bash
       - name: Upload factory coverage report
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v6
         with:
           name: coverage-factory
@@ -1225,6 +1226,7 @@ jobs:
           uv run pytest tests_ce/api_tests/ --cov=. --cov-report=xml
         shell: bash
       - name: Upload api coverage report
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v6
         with:
           name: coverage-api
