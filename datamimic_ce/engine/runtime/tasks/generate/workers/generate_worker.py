@@ -213,7 +213,7 @@ class GenerateWorker:
         chunk_start: int,
         chunk_end: int,
         page_size: int,
-    ) -> dict:
+    ) -> GenerationResult:
         """
         Generate and export data by page in a single process.
 
@@ -272,6 +272,7 @@ class GenerateWorker:
                     context, stmt, page_start, page_end, worker_id, source_reader, unique_cursors
                 )
                 timer_result["records_count"] = len(result_dict[stmt.full_name])
+                result.produced_rows += len(result_dict[stmt.full_name])
 
             with gen_timer(
                 "export", root_context.report_logging, stmt.full_name, isinstance(context, GenIterContext)

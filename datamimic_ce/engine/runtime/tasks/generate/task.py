@@ -410,15 +410,14 @@ class GenerateTask(CommonSubTask):
                     )
 
                 # Update the actual record count in the timer result
-                for product_name, product_data in merged_result.items():
-                    if product_name == self.statement.full_name:
-                        actual_count = len(product_data)
-                        if actual_count != count:
-                            logger.info(
-                                f"Requested to generate {count:,} records but actually "
-                                f"generated {actual_count:,} records due to filtering"
-                            )
-                            timer_result["records_count"] = actual_count
+                if isinstance(merged_result, GenerationResult):
+                    actual_count = merged_result.produced_rows
+                    if actual_count != count:
+                        logger.info(
+                            f"Requested to generate {count:,} records but actually "
+                            f"generated {actual_count:,} records due to filtering"
+                        )
+                    timer_result["records_count"] = actual_count
 
                 # At the end of OUTERMOST gen_stmt:
                 # - export gathered product with LAZY exporters, such as TestResultExporter, MemstoreExporter,...

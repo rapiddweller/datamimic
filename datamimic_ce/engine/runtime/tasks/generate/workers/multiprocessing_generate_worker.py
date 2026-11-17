@@ -48,6 +48,7 @@ class MultiprocessingGenerateWorker(GenerateWorker):
         merged_result = GenerationResult()
         for result in mp_result:
             merged_result.merge_exports(result)
+            merged_result.produced_rows += result.produced_rows
             for product_name, product_data_list in result.items():
                 merged_result[product_name] = merged_result.get(product_name, []) + product_data_list
 

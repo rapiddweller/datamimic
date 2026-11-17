@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 
+from datamimic_ce.engine.runtime.contexts.products import GenerationResult
 from datamimic_ce.engine.runtime.tasks.generate.workers import multiprocessing_generate_worker as worker_module
 from datamimic_ce.engine.runtime.tasks.generate.workers.generate_worker import GenerateWorker
 from datamimic_ce.engine.runtime.tasks.generate.workers.multiprocessing_generate_worker import (
@@ -57,7 +58,13 @@ def test_mp_process_uses_spawn_context(monkeypatch) -> None:
 
         def map(self, _function, args):
             events.append(len(args))
-            return [{"rows": [index]} for index in range(len(args))]
+            results = []
+            for index in range(len(args)):
+                result = GenerationResult()
+                result["rows"] = [index]
+                result.produced_rows = 1
+                results.append(result)
+            return results
 
     class Context:
         def Pool(self, processes: int):
@@ -70,3 +77,4 @@ def test_mp_process_uses_spawn_context(monkeypatch) -> None:
 
     assert events == ["spawn", 2, 2]
     assert result == {"rows": [0, 1]}
+    assert result.produced_rows == 2
