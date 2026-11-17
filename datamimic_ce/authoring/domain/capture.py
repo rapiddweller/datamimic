@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import base64
 import math
 from collections.abc import Iterable
 from dataclasses import dataclass
@@ -15,7 +16,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, TypeAlias
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, ConfigDict, JsonValue, model_validator
 from typing_extensions import TypeAliasType
 
 from datamimic_ce.errors import task_config_error
@@ -137,6 +138,11 @@ class SmokeExportCapture:
             attempted_exporters=0,
             failed_exporters=0,
         )
+
+
+def binary_evidence(value: bytes) -> JsonValue:
+    """The JSON form of a captured binary value in evidence and diagnostics."""
+    return {"type": "binary", "base64": str(base64.b64encode(value), "ascii")}
 
 
 def validate_capture_values(value: object) -> None:
