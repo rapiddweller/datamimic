@@ -83,11 +83,6 @@ class KeyVariableTask(Task):
         self._mode: str | None = None
         # Lazily-built distinct-value iterator for unique="true" (sampling without replacement).
         self._unique_iter: Iterator[object] | None = None
-        # Dedup set for generator-backed unique="true": every generated value is
-        # tracked; duplicates trigger a bounded retry loop. Generator-owned uniqueness
-        # is a separate concern — this is cross-row dedup at the task level.
-        self._generator_seen: set[object] | None = None
-
         self._simple_type_set = {
             DATA_TYPE_BINARY,
             DATA_TYPE_STRING,
@@ -327,7 +322,7 @@ class KeyVariableTask(Task):
             if self._generator is None:
                 value = None
             elif self._statement.unique:
-                value = self._next_unique_generator_value()
+                value = self._next_unique_generator_value(ctx)
             else:
                 value = self._generator.generate()
             # Convert numpy.bool_ to bool for being compatible with consumer (db,...)
@@ -427,24 +422,29 @@ class KeyVariableTask(Task):
                 cursors[key] = self._unique_iter
         return next(self._unique_iter)
 
-    def _next_unique_generator_value(self) -> object:
-        """Call the generator repeatedly until a value not yet seen this task is produced.
-        Raises after a bounded number of retries."""
+    def _next_unique_generator_value(self, ctx: Context) -> object:
+        """Call the generator repeatedly until a value not yet seen by this generation invocation
+        is produced. The invocation owns the seen-set across tasks/pages; statement identity
+        separates same-named keys in different conditional branches. Raises after a bounded
+        number of retries."""
         if self._generator is None:
             raise RuntimeError("Generator is not initialised for unique dedup")
-        if self._generator_seen is None:
-            self._generator_seen = set()
+        key = ("unique-generator", self._statement)
+        cursors = ctx.unique_cursors if isinstance(ctx, GenIterContext) else {}
+        stored = cursors.get(key)
+        seen: set[object] = stored if isinstance(stored, set) else set()
+        cursors[key] = seen
         max_retries = 100
         for _ in range(max_retries):
             value = self._generator.generate()
-            if value not in self._generator_seen:
-                self._generator_seen.add(value)
+            if value not in seen:
+                seen.add(value)
                 return value
         raise task_config_error(
             code=IssueCode.TASK_KEY_UNIQUE_EXHAUSTED,
             element_tag=self._element_tag,
             name=self._statement.name,
-            distinct_count=len(self._generator_seen),
+            distinct_count=len(seen),
         )
 
     def _parse_weights(self, values):
