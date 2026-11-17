@@ -547,7 +547,13 @@ class SelectorWithoutCountNeedsDbSource(Rule):
     _DB_CLIENT_TAGS = (EL_DATABASE, EL_MONGODB)
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
-        db_ids = {el.get("id") for el in ctx.iter(*self._DB_CLIENT_TAGS) if el.get("id")}
+        # A step reads the clients of the entry: they are declared there, never in the step.
+        db_ids = {
+            el.get("id")
+            for root in (ctx.root, *ctx.project[:1])
+            for el in root.iter(*self._DB_CLIENT_TAGS)
+            if el.get("id")
+        }
         for element in ctx.iter(*_GENERATES, EL_VARIABLE):
             if element.get("selector") is None:
                 continue

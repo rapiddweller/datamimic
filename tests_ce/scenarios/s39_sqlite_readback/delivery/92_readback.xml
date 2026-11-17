@@ -1,5 +1,5 @@
 <setup>
-    <!-- Purpose: read the rows back and check their values in the run. The literal count="12" works around #493 (DM211 in an included step): remove it when #493 is fixed. -->
+    <!-- Purpose: read the rows back and check their values in the run. -->
     <generate name="orders_back" source="shop" selector="SELECT id, status, amount_cents FROM orders ORDER BY id" distribution="ordered" count="12" target="">
         <key name="id" script="this.id"/>
         <key name="status" script="this.status"/>
