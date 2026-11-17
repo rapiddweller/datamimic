@@ -34,7 +34,6 @@ class DiagnosticPhase(StrEnum):
 class AuthoringRuleId(StrEnum):
     """Rule identities not already owned by a typed intent discriminator."""
 
-    UNASSURED_MULTI_CONTRIBUTOR_SINK = "unassured_multi_contributor_sink"
     UNEVALUABLE_SINK_EXPECTATION = "unevaluable_sink_expectation"
     MISSING_EXPECTATION = "missing_expectation"
     COVERAGE_GAP = "coverage_gap"

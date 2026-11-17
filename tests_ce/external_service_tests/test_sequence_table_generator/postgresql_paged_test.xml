@@ -1,7 +1,6 @@
 <!-- Uneven count/numProcess ratio: count=13 does not divide evenly across numProcess=4
      (13 = 4+4+4+1 chunks). A non-atomic advance-by-N or an off-by-one in the per-process
-     range arithmetic (SequenceTableGenerator.__init__: process_offset = process_id *
-     per_process_count) is exactly the kind of bug an evenly-divisible count would hide. -->
+     range arithmetic is exactly the kind of bug an evenly-divisible count would hide. -->
 <setup>
 
     <database id="sourceDB" system="postgresql" />

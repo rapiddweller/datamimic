@@ -48,7 +48,7 @@ class CreditCard(BaseEntity):
     @property
     @property_cache
     def card_type(self) -> str:
-        return self._credit_card_generator.generate_card_type(self.card_spec)
+        return self.card_spec["type"]
 
     @property
     @property_cache

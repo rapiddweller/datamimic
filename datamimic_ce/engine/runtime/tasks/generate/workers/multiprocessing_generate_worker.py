@@ -77,7 +77,7 @@ class MultiprocessingGenerateWorker(GenerateWorker):
                 chunk=(chunk_start, chunk_end),
             )
 
-            GenerateWorker.mp_preprocess(context, worker_id)
+            GenerateWorker.mp_preprocess(worker_id)
 
             result = GenerateWorker.generate_and_export_data_by_chunk(
                 context, stmt, worker_id, chunk_start, chunk_end, page_size

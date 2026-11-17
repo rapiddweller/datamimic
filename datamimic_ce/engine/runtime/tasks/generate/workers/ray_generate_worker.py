@@ -69,7 +69,7 @@ class RayGenerateWorker(GenerateWorker):
         """
         context = GenerateWorker.deserialize_worker_context(payload)
         try:
-            GenerateWorker.mp_preprocess(context, worker_id)
+            GenerateWorker.mp_preprocess(worker_id)
 
             result = GenerateWorker.generate_and_export_data_by_chunk(
                 context, stmt, worker_id, chunk_start, chunk_end, page_size

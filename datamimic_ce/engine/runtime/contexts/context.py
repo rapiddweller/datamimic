@@ -280,7 +280,6 @@ class SetupContext(Context):
         self._generators = generators or {}
         self._global_variables: dict[str, object] = {} if global_variables is None else global_variables
         self._num_process = num_process
-        self._process_id: int | None = None
         self.global_increment_registry: GlobalIncrementRegistry | None = None
         self._domain_identifier_registry = (
             IdentifierRegistry() if domain_identifier_registry is None else domain_identifier_registry
@@ -700,15 +699,6 @@ class SetupContext(Context):
     @num_process.setter
     def num_process(self, value: int | None) -> None:
         self._num_process = value
-
-    @property
-    def process_id(self) -> int | None:
-        """Worker id when the run is split across multiple processes; ``None`` otherwise."""
-        return self._process_id
-
-    @process_id.setter
-    def process_id(self, value: int | None) -> None:
-        self._process_id = value
 
     @property
     def default_variable_prefix(self) -> str:

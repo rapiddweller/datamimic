@@ -114,15 +114,6 @@ AUTHORING_RULE_CATALOG: tuple[RuleCatalogEntry, ...] = (
         remediation="Change the row condition or generation intent so every row satisfies it.",
     ),
     RuleCatalogEntry(
-        rule_id=AuthoringRuleId.UNASSURED_MULTI_CONTRIBUTOR_SINK,
-        category="expectation",
-        severity="warning",
-        description="Multiple products share a declared sink without any sink-scoped assurance.",
-        applicability="Supported declared insert sinks with more than one contributing product.",
-        owner=RuleOwner.EXPECTATION,
-        remediation="Add an expectation whose subject names the declared sink and the required cross-product rule.",
-    ),
-    RuleCatalogEntry(
         rule_id=AuthoringRuleId.MISSING_EXPECTATION,
         category="expectation",
         severity="error",

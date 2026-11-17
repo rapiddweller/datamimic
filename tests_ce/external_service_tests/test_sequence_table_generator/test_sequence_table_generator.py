@@ -74,16 +74,8 @@ class TestSequenceTableGenerator:
 
     def test_sequence_table_generator_postgres_uneven_multiprocess(self):
         """Edge case: count=13 does not divide evenly across numProcess=4 (13 = 4+4+4+1).
-        Regression for a real bug found this session: SetupContext.process_id was never wired
-        to the actual multiprocessing worker index (generate_worker.py's mp_preprocess only used
-        worker_id for log naming) - every worker read process_id as None/0, so
-        SequenceTableGenerator's per-process offset (process_id * per_process_count) was always
-        a no-op. The only thing separating workers' ranges was the shared DB sequence's own
-        atomic advance, which isn't sufficient once ranges are supposed to be kept apart by an
-        offset that never applied - reproduced as a real duplicate-key collision, 5/5 runs,
-        before wiring context.root.process_id = worker_id - 1 in mp_preprocess. Also fixes a
-        second, smaller bug this exposed: pre_execute() reserved the raw statement count instead
-        of the same rounded-up per_process_count * total_processes block __init__ assumed."""
+        Workers' id ranges must stay apart: no duplicate ids, and pre_execute() reserves the same
+        rounded-up per_process_count * total_processes block __init__ assumed."""
         engine = DataMimicTest(
             test_dir=self._test_dir, filename="postgresql_uneven_mp_test.xml", capture_test_result=True
         )
@@ -97,7 +89,7 @@ class TestSequenceTableGenerator:
     @pytest.mark.parametrize("filename", ["postgresql_paged_test.xml", "postgresql_paged_mp_test.xml"])
     def test_sequence_table_generator_postgres_count_above_page_size(self, filename):
         """count=13 with pageSize=3: every page continues the sequence (a cached generator used
-        to be served exhausted to later pages, losing rows) and the process offset applies once."""
+        to be served exhausted to later pages, losing rows) and the skip applies once."""
         engine = DataMimicTest(test_dir=self._test_dir, filename=filename, capture_test_result=True)
         engine.test_with_timer()
         ids = [row["id"] for row in engine.capture_result()["check"]]
