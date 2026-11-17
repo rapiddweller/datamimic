@@ -170,6 +170,8 @@ class _WorkerFailure:
     policy_refusal: StrictBool = False
     # Empty unless the refusal names the included step and element that breaks the policy.
     policy_path: tuple[NonEmptyStrictStr, ...] = ()
+    script_file: NonEmptyStrictStr | None = None
+    script_line: PositiveStrictInt | None = None
     # A failed <assert> stops the run like a normal run; these are the products that completed before it.
     stopped_capture: _WorkerSuccess | None = None
     # What the run read before it failed, as in _WorkerSuccess: the stopped evidence binds those files.
@@ -181,9 +183,18 @@ class _WorkerFailure:
 class _BoundedPolicyRefusal(ValueError):
     """A parsed operation cannot inherit bounded execution guarantees."""
 
-    def __init__(self, message: str, path: tuple[str, ...] = ()) -> None:
+    def __init__(
+        self,
+        message: str,
+        path: tuple[str, ...] = (),
+        *,
+        script_file: str | None = None,
+        script_line: int | None = None,
+    ) -> None:
         ValueError.__init__(self, message)
         self.path = path
+        self.script_file = script_file
+        self.script_line = script_line
 
 
 class _IncludeBudgetExceeded(_BoundedPolicyRefusal):
@@ -192,7 +203,7 @@ class _IncludeBudgetExceeded(_BoundedPolicyRefusal):
 
 class _InvalidIncludedXml(ValueError):
     def __init__(self, chain: tuple[str, ...], error: etree.XMLSyntaxError) -> None:
-        super().__init__("Included step is not well-formed XML")
+        ValueError.__init__(self, "Included step is not well-formed XML")
         self.chain = chain
         self.position = error.position
 
@@ -400,7 +411,19 @@ def _refuse_unbounded_execute(
     # Check exactly what ExecuteTask will run: it normalizes file and inline code alike.
     refusal = python_library_refusal(ExecuteStatement.normalize_python_source(raw), seeded=seeded)
     if refusal is not None:
-        raise _BoundedPolicyRefusal(f"{origin}: {refusal.message()}. {refusal.remediation()}")
+        script_path = PurePosixPath(uri) if uri is not None else None
+        script_file = (
+            script_path.name
+            if script_path is not None and (PurePosixPath.is_absolute(script_path) or ".." in script_path.parts)
+            else str(script_path)
+            if script_path is not None
+            else None
+        )
+        raise _BoundedPolicyRefusal(
+            f"{origin}: {refusal.message()}. {refusal.remediation()}",
+            script_file=script_file,
+            script_line=refusal.line if script_file is not None else None,
+        )
 
 
 # Aggregate bytes one include graph may read; Build walks it in the authoring process, not in the bounded child.
@@ -526,7 +549,9 @@ def _validate_bounded_includes(
                         seeded=seeded,
                     )
                 except _BoundedPolicyRefusal as refusal:
-                    raise _BoundedPolicyRefusal(str(refusal), where) from refusal
+                    raise _BoundedPolicyRefusal(
+                        str(refusal), where, script_file=refusal.script_file, script_line=refusal.script_line
+                    ) from refusal
         elif (
             definition is None or definition.bounded_execution_profile.strategy is BoundedExecutionStrategy.UNSUPPORTED
         ):
@@ -1512,6 +1537,8 @@ def _run_engine_capture(
                 error=err if is_user_error(err) else None,
                 policy_refusal=isinstance(err, _BoundedPolicyRefusal),
                 policy_path=err.path if isinstance(err, _BoundedPolicyRefusal) else (),
+                script_file=err.script_file if isinstance(err, _BoundedPolicyRefusal) else None,
+                script_line=err.script_line if isinstance(err, _BoundedPolicyRefusal) else None,
                 source_accesses=source_accesses.snapshot(),
             )
         return message

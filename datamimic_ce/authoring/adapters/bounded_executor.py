@@ -37,6 +37,7 @@ from datamimic_ce.authoring.domain.diagnostics import (
     AuthoringSystemDiagnosticCode,
     CeErrorIdentity,
     Diagnostic,
+    DiagnosticLocation,
     DiagnosticPhase,
     diagnostic_location,
 )
@@ -381,7 +382,11 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
                     else message.fix_hint
                 ),
                 ce_error=identity,
-                location=diagnostic_location(location),
+                location=(
+                    DiagnosticLocation(script_file=message.script_file, script_line=message.script_line)
+                    if message.script_file is not None
+                    else diagnostic_location(location)
+                ),
                 path=path,
                 expected=request.max_count if over_limit else None,
                 actual=(

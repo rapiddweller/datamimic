@@ -137,7 +137,7 @@ class CeDescriptorValidator:
             return _not_well_formed(
                 ("descriptor", logical_path.as_posix(), "line", error.position[0]),
                 None,
-                DiagnosticLocation(file=logical_path.as_posix(), line=error.position[0], column=error.position[1]),
+                DiagnosticLocation(file=str(logical_path), line=error.position[0], column=error.position[1]),
             )
         except _IncludeBudgetExceeded as refusal:
             return LintResult(ok=False, diagnostics=_graph_refused(logical_path, str(refusal)).diagnostics)
@@ -197,7 +197,7 @@ class CeDescriptorValidator:
                     line=error.position[0],
                     column=error.position[1],
                     element="setup",
-                    include_chain=(logical_path.as_posix(), *error.chain),
+                    include_chain=(str(logical_path), *error.chain),
                 ),
             )
         except etree.XMLSyntaxError:
@@ -238,15 +238,12 @@ class CeDescriptorValidator:
                                 element.tag,
                                 *(("line", element.sourceline) if element.sourceline is not None else ()),
                             ),
-                        ).model_copy(
-                            update={
-                                "location": DiagnosticLocation(
-                                    file=step.uri,
-                                    line=element.sourceline,
-                                    element=element.tag,
-                                    include_chain=(logical_path.as_posix(), *chain),
-                                )
-                            }
+                            location=DiagnosticLocation(
+                                file=step.uri,
+                                line=element.sourceline,
+                                element=element.tag,
+                                include_chain=(str(logical_path), *chain),
+                            ),
                         )
                     )
         if refusals:
@@ -261,7 +258,7 @@ class CeDescriptorValidator:
                     logical_path,
                     project=project,
                     prefix=("include", step.uri),
-                    include_chain=(logical_path.as_posix(), *chain),
+                    include_chain=(str(logical_path), *chain),
                 )
             )
         return IncludeGraphResult(
@@ -300,7 +297,7 @@ def _rule_diagnostics(
                     *(("line", finding.line) if finding.line is not None else ()),
                 ),
                 location=DiagnosticLocation(
-                    file=prefix[1] if prefix else logical_path.as_posix(),
+                    file=prefix[1] if prefix else str(logical_path),
                     line=finding.line,
                     element=finding.element,
                     name=finding.name,
@@ -414,7 +411,8 @@ def _graph_refused(
                 phase=DiagnosticPhase.POLICY,
                 path=("descriptor", str(path), "include"),
                 remediation=remediation,
-            ).model_copy(update={"location": location}),
+                location=location,
+            ),
         ),
     )
 

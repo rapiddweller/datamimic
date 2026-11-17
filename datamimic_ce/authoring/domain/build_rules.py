@@ -11,6 +11,7 @@ from pydantic import JsonValue
 from datamimic_ce.authoring.domain.diagnostics import (
     AuthoringRuleId,
     Diagnostic,
+    DiagnosticLocation,
     DiagnosticPhase,
     RuleCatalogEntry,
     RuleOwner,
@@ -229,6 +230,7 @@ def catalog_diagnostic(
     *,
     phase: DiagnosticPhase,
     path: tuple[str | int, ...] = (),
+    location: DiagnosticLocation | None = None,
     expected: JsonValue | None = None,
     actual: JsonValue | None = None,
     allowed_values: tuple[JsonValue, ...] | None = None,
@@ -241,6 +243,7 @@ def catalog_diagnostic(
         message=message,
         phase=phase,
         path=path,
+        location=location,
         expected=expected,
         actual=actual,
         allowed_values=allowed_values,

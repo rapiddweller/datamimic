@@ -67,9 +67,15 @@ def test_seeded_library_loads_once_and_build_replays_it_unrequested(tmp_path: Pa
 def test_library_check_refuses_before_the_library_runs(tmp_path: Path, filename: str, message: str) -> None:
     result = _build(tmp_path, filename)
     assert result.outcome == "rejected"
-    assert any(
-        item.code is AuthoringRuleId.SIDE_EFFECT and item.message.startswith(message) for item in result.diagnostics
-    ), result.diagnostics
+    [diagnostic] = [
+        item
+        for item in result.diagnostics
+        if item.code is AuthoringRuleId.SIDE_EFFECT and item.message.startswith(message)
+    ]
+    assert diagnostic.path == ("descriptor", "datamimic.xml")
+    assert diagnostic.location is not None
+    assert diagnostic.location.script_file == f"lib/{message.split(':', 1)[0]}"
+    assert diagnostic.location.script_line == (1 if filename == "library_indented.xml" else 2)
 
 
 @pytest.mark.parametrize("filename", ["execute_sql.xml", "execute_per_row.xml"])
@@ -155,6 +161,10 @@ def test_included_library_is_checked_against_the_entry_seed() -> None:
         and item.message.startswith("import_in_function.scr.py: Python library line 2 imports inside")
         for item in result.diagnostics
     ), result.diagnostics
+    [diagnostic] = [item for item in result.diagnostics if item.code is AuthoringRuleId.SIDE_EFFECT]
+    assert diagnostic.location is not None
+    assert diagnostic.location.script_file == "lib/import_in_function.scr.py"
+    assert diagnostic.location.script_line == 2
 
 
 def test_forced_replay_names_why_a_seeded_library_model_failed(tmp_path: Path) -> None:
