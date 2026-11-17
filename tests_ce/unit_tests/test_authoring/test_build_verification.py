@@ -118,6 +118,24 @@ def test_requested_smoke_without_exporter_is_not_applicable(tmp_path: Path) -> N
     assert result.verification.smoke_export.applicable_exporters == 0
 
 
+def test_smoke_export_with_empty_nested_product(tmp_path: Path) -> None:
+    result = build_project(
+        tmp_path,
+        """<setup rngSeed="7">
+        <generate name="parents" count="2" target="JSON">
+            <key name="id" generator="IncrementGenerator"/>
+            <generate name="children" count="0" target="JSON">
+                <key name="id" generator="IncrementGenerator"/>
+                <key name="parent_id" script="parent.id"/>
+            </generate>
+        </generate>
+        </setup>""",
+        verification={"smoke_export": True},
+    )
+    assert isinstance(result, ReadyBuild), result
+    assert result.verification.smoke_export.status is VerificationGateStatus.PASSED
+
+
 def test_smoke_failure_cannot_be_masked_by_passing_acceptance(tmp_path: Path, monkeypatch) -> None:
     failed = _captured(ok=False, smoke=SmokeExportCapture(True, 1, 1, 1))
     monkeypatch.setattr(CeBoundedExecutor, "execute", lambda executor, request: failed)

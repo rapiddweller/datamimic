@@ -1284,7 +1284,7 @@ def _smoke_export(
     context manager guarantees zero artifacts. Failures become DM002 diagnostics."""
     captured = _validated_capture_rows(captured)
     diagnostics: list[Diagnostic] = []
-    applicable_exporters = sum(len(file_targets) for _basename, file_targets, _, _ in stripped.values())
+    applicable_exporters = 0
     attempted_exporters = 0
     failed_exporters = 0
     with _PathRemovedDirectory(prefix="datamimic_smoke_") as tmp:
@@ -1301,6 +1301,7 @@ def _smoke_export(
                 ]
                 if not rows:
                     continue
+                applicable_exporters += len(file_targets)
                 for exporter_name, params in file_targets:
                     attempted_exporters += 1
                     diagnostic = _smoke_exporter(
