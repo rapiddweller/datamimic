@@ -372,3 +372,15 @@ def test_runner_does_not_kill_group_after_normal_exit(tmp_path: Path, monkeypatc
     result = project_runner.CeProjectRunner(AuthoringWorkspaceContext(root, PROJECT_ENTRY_PATH)).run((), 5)
     assert result.exit_code == 0
     assert calls == []
+
+
+def test_cli_text_prints_build_diagnostics_when_project_is_rejected(tmp_path: Path) -> None:
+    from typer.testing import CliRunner
+
+    from datamimic_ce.interfaces.cli import app
+
+    root = project(tmp_path, "customers")
+    (root / PROJECT_ENTRY_PATH).write_text("<setup><invalid/></setup>", encoding="utf-8")
+    result = CliRunner().invoke(app, ["authoring", "run-project", str(root), "--format", "text"])
+    assert result.exit_code == 1
+    assert "parser validation" in result.output.lower()

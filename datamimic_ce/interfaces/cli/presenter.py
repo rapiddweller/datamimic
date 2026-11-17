@@ -157,6 +157,9 @@ def emit_authoring(
             typer.echo(f"Not run: {result.not_run_reason}")
         for diagnostic in result.diagnostics:
             typer.echo(f"{diagnostic.severity}: {diagnostic.message}", err=True)
+        if result.not_run_reason == "build_rejected" and result.build is not None:
+            for diagnostic in result.build.diagnostics:
+                typer.echo(f"{diagnostic.severity}: {diagnostic.message}", err=True)
         typer.echo(f"Outcome: {result.outcome}")
     elif output_format is CliOutputFormat.TEXT and isinstance(result, ReadyDecompileDocument):
         for diagnostic in result.diagnostics:
