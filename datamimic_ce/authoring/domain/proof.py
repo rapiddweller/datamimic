@@ -79,11 +79,6 @@ class VerificationGateStatus(StrEnum):
     PASSED = "passed"
 
 
-class VerificationGateEvidence(AuthoringModel):
-    status: VerificationGateStatus = VerificationGateStatus.NOT_REQUESTED
-    reason: NonEmptyStrictStr | None = None
-
-
 class ReplayScope(StrEnum):
     """Typed scope compared by deterministic replay verification."""
 
