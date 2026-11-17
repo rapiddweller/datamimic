@@ -147,8 +147,14 @@ def write_project_scaffold(
     root.mkdir(parents=True, exist_ok=True)
     for _, path in directory_paths:
         _make_directory(path)
+    written: list[str] = []
     for file, (_, target) in zip(scaffold.files, targets, strict=True):
-        _write_file(target, file.content)
+        try:
+            _write_file(target, file.content)
+        except OSError as error:
+            previous = ", ".join(written) or "none"
+            raise OSError(f"could not write {file.path}; files already written: {previous}: {error}") from error
+        written.append(str(file.path))
     return tuple(file.path for file in scaffold.files)
 
 
@@ -159,6 +165,8 @@ def init_project(root: Path, scaffold: ProjectScaffold) -> ProjectInitResult:
     except FileExistsError as error:
         return ProjectInitResult.from_input_error(f"these files exist already: {error}")
     except ValueError as error:
+        return ProjectInitResult.from_input_error(str(error))
+    except OSError as error:
         return ProjectInitResult.from_input_error(str(error))
     return ProjectInitResult.written(scaffold.pattern, written)
 

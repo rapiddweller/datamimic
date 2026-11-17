@@ -65,10 +65,9 @@ def initialize_project(project_name: str, target_directory: Path | None, force: 
         cli_presenter.fail(f"'{project_dir}' exists and is a file", code=1)
     starter_paths = tuple(file.path for file in project_scaffold(project_name).files)
     overwritten = tuple(str(path) for path in starter_paths if (project_dir / path).is_file())
-    project_dir.mkdir(parents=True, exist_ok=force)
     try:
         create_project_structure(project_dir)
-    except ValueError as error:
+    except (OSError, ValueError) as error:
         cli_presenter.fail(f"Not written: {error}", code=1)
     cli_presenter.emit_project_created(project_name, project_dir, overwritten)
 
