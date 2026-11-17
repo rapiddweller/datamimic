@@ -672,7 +672,7 @@ jobs:
           # test_benchmarks runs in benchmarks.yml
           uv run pytest tests_ce/unit_tests -n auto -q --durations=0 --ignore=tests_ce/unit_tests/test_benchmarks | tee unit.log
           echo "== seconds per test file"
-          grep -E '^[0-9.]+s (call|setup|teardown) ' unit.log | awk '{split($3,a,"::"); t[a[1]]+=$1} END {for (f in t) printf "%8.0f %s\n", t[f], f}' | sort -rn | head -25
+          grep -E '^[0-9.]+s (call|setup|teardown) ' unit.log | awk '{split($3,a,"::"); t[a[1]]+=$1} END {for (f in t) printf "%8.0f %s\n", t[f], f}' | sort -rn | awk 'NR <= 25'
         shell: bash
       - name: Download coverage data of the shards
         if: github.event_name != 'pull_request'
