@@ -255,12 +255,12 @@ def test_jurisdiction_first_name_first_and_website_first_preserve_seeded_outputs
     assert _fingerprint(address._row.city_generator.rng) == (
         "e6e1b39b8c4546afa42207d310cd481afc2ee3a1a4f133ad172ba4a55615fca9"
     )
-    assert jurisdiction_first.jurisdiction == "City of New vineyard"
+    assert jurisdiction_first.jurisdiction == "City of New Vineyard"
     assert _fingerprint(jurisdiction_first_rng) == "54c93ad2529a250c288bd2559a710031000d3eefe32aa5aa7156adc4501a73b4"
     assert _fingerprint(address._row.city_generator.rng) == (
         "4d314811c1ee65937154968b06f3d0e91ea7f12e99034325e2bdcd7484129f69"
     )
-    assert jurisdiction_first.name == "City of New vineyard Government Office"
+    assert jurisdiction_first.name == "City of New Vineyard Government Office"
     assert jurisdiction_first.website == "https://www.newvineyard.gov"
     assert _fingerprint(jurisdiction_first_rng) == "57a776cc51cef6741c572750872d8a00b3b72ef1ebd2566f83ca774337fbe9ac"
 
@@ -268,7 +268,7 @@ def test_jurisdiction_first_name_first_and_website_first_preserve_seeded_outputs
     name_first_generator = AdministrationOfficeGenerator(dataset="US", rng=name_first_rng)
     name_first = AdministrationOffice(name_first_generator)
     name_address = name_first.address
-    assert name_first.name == "City of New vineyard Government Office"
+    assert name_first.name == "City of New Vineyard Government Office"
     assert _fingerprint(name_first_rng) == "57a776cc51cef6741c572750872d8a00b3b72ef1ebd2566f83ca774337fbe9ac"
     assert _fingerprint(name_address._row.city_generator.rng) == (
         "4d314811c1ee65937154968b06f3d0e91ea7f12e99034325e2bdcd7484129f69"
@@ -280,7 +280,7 @@ def test_jurisdiction_first_name_first_and_website_first_preserve_seeded_outputs
     website_address = website_first.address
     assert website_first.website == "https://www.newvineyard.gov"
     assert _fingerprint(website_first_rng) == "54c93ad2529a250c288bd2559a710031000d3eefe32aa5aa7156adc4501a73b4"
-    assert website_first.name == "City of New vineyard Government Office"
+    assert website_first.name == "City of New Vineyard Government Office"
     assert _fingerprint(website_first_rng) == "57a776cc51cef6741c572750872d8a00b3b72ef1ebd2566f83ca774337fbe9ac"
     assert _fingerprint(website_address._row.city_generator.rng) == (
         "4d314811c1ee65937154968b06f3d0e91ea7f12e99034325e2bdcd7484129f69"

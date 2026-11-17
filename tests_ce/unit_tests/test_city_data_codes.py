@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from random import Random
 
@@ -13,6 +14,7 @@ from datamimic_ce.domains.shared.models.address import Address
 CITY_DIR = packaged_domain_data_root() / "common" / "city"
 CITY_FILES = sorted(CITY_DIR.glob("city_*.csv"))
 FIVE_DIGIT_COUNTRIES = ("US", "DE")
+LOWERCASE_PARTICLES = {"and", "at", "de", "in", "la", "of", "on", "the"}
 # The leading 0 belongs to the number in these countries; elsewhere areaCode omits the trunk prefix.
 AREA_CODE_WITH_LEADING_ZERO = {"IT", "SM", "VA"}
 LEADING_ZERO_STATES = {"US": "NJ", "DE": "SN"}
@@ -46,6 +48,41 @@ def test_us_city_names_do_not_end_in_a_lowercase_city() -> None:
     names = _column(CITY_DIR / "city_US.csv", "name")
 
     assert [name for name in names if name.endswith(" city")] == []
+
+
+def test_country_city_postal_codes_match_their_formats() -> None:
+    au_codes = _column(CITY_DIR / "city_AU.csv", "postalCode")
+    fr_codes = _column(CITY_DIR / "city_FR.csv", "postalCode")
+
+    assert au_codes and all(re.fullmatch(r"\d{4}", code) for code in au_codes)
+    assert fr_codes and all(re.fullmatch(r"\d{5}", code) for code in fr_codes)
+    assert not re.fullmatch(r"\d{4}", "99150")
+    assert not re.fullmatch(r"\d{5}", "11103 CEDEX")
+
+
+def test_us_city_names_title_case_later_words_and_repair_known_names() -> None:
+    names = _column(CITY_DIR / "city_US.csv", "name")
+    lowercase_words = {
+        word
+        for name in names
+        for word in name.split()[1:]
+        if word[0].islower() and word.lower() not in LOWERCASE_PARTICLES
+    }
+
+    assert not lowercase_words
+    assert {
+        "McAllen",
+        "DeKalb",
+        "DeKalb Junction",
+        "LaGrange",
+        "O'Fallon",
+        "Lake Havasu City",
+        "Panama City Beach",
+        "Sun City West",
+        "New York",
+        "Aberdeen Proving Ground",
+    } <= set(names)
+    assert not {"Mcallen", "Dekalb", "O fallon", "Lake havasu city"} & set(names)
 
 
 @pytest.mark.parametrize("country", FIVE_DIGIT_COUNTRIES)
