@@ -96,5 +96,5 @@ async def test_cli_and_mcp_return_the_same_diagnostic(anyio_backend: str, tmp_pa
 
     contract = TypeAdapter(BuildResult)
     assert cli.exit_code == 1, cli.stdout
-    assert contract.validate_json(mcp[0].text) == contract.validate_json(cli.stdout)
+    assert contract.validate_json(mcp.content[0].text) == contract.validate_json(cli.stdout)
     assert contract.validate_json(cli.stdout).diagnostics[0].path[0] == _FILE

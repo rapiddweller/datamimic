@@ -251,7 +251,7 @@ def create_server(
 
 
 def build_sse_app(server: FastMCP, api_key: str | None = None) -> Starlette:
-    application = server.sse_app()
+    application = server.http_app(path="/sse", transport="sse")
     if api_key:
         application.add_middleware(APIKeyMiddleware, api_key=api_key)
     return application
