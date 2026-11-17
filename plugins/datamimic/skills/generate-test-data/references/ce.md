@@ -22,7 +22,9 @@ The starter must expose a project: `entry_xml` and an `acceptance` with
 the shared setup before writing the model. Continue only with its verified
 project CLI; do not substitute another authoring interface.
 
-Use the returned starter as the first candidate. Live capabilities, schemas and
+Use the returned starter as the first candidate. In an empty project, `datamimic_init`
+(`datamimic authoring init <project>`) writes it for you and never overwrites a file;
+edit the two files, then Build. Live capabilities, schemas and
 references own element/entity purpose, attributes, generators and field types.
 Narrow discovery to the missing domain/name; do not copy a DSL catalog into the
 skill or substitute an external DSL skill. Query only a specific unknown:

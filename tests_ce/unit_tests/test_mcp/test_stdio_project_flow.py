@@ -73,3 +73,40 @@ async def test_rejected_build_is_returned_by_run_project(anyio_backend: str, tmp
     async with stdio_client(tmp_path) as client:
         run = json.loads((await client.call_tool("datamimic_run_project", {"project": str(project)}))[0].text)
     assert run["outcome"] == "not_run" and run["build"]["outcome"] == "rejected"
+
+
+@pytest.mark.anyio
+async def test_init_build_run_project_in_an_empty_project_and_a_second_init_refuses(
+    anyio_backend: str, tmp_path: Path
+) -> None:
+    project = tmp_path / "shop"
+    project.mkdir()
+    launcher = tmp_path / "launcher"
+    launcher.mkdir()
+    async with stdio_client(launcher) as client:
+
+        async def call(tool: str) -> dict:
+            return json.loads((await client.call_tool(tool, {"project": str(project)}))[0].text)
+
+        init = await call("datamimic_init")
+        assert init["outcome"] == "written"
+        assert sorted(path.relative_to(project).as_posix() for path in project.rglob("*") if path.is_file()) == [
+            "acceptance/build.json",
+            "datamimic.xml",
+        ]
+        built = await call("datamimic_build")
+        assert built["outcome"] == "ready"
+        run = await call("datamimic_run_project")
+        assert run["outcome"] == "completed", run["log_tail"]
+        assert run["build_outcome"] == "ready"
+        entry = (project / "datamimic.xml").read_bytes()
+        second = await call("datamimic_init")
+    assert second["outcome"] == "not_written"
+    assert "these files exist already" in second["diagnostics"][0]["message"]
+    assert (project / "datamimic.xml").read_bytes() == entry
+    csv_files = [item["path"] for item in run["artifacts"] if item["path"].endswith(".csv")]
+    assert csv_files and all(path.startswith("output/") for path in csv_files)
+    for relative in csv_files:
+        with (project / relative).open(encoding="utf-8") as handle:
+            assert len(list(csv.reader(handle))) > 1
+    assert list(launcher.iterdir()) == []

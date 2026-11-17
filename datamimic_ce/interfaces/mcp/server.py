@@ -22,8 +22,10 @@ from starlette.responses import JSONResponse, Response
 from starlette.status import HTTP_401_UNAUTHORIZED
 
 from datamimic_ce.authoring import AuthoringApplication, create_authoring_application
+from datamimic_ce.authoring.adapters.workspace import init_project
 from datamimic_ce.authoring.domain.capabilities import CapabilityDomain, CapabilityLookupResult
 from datamimic_ce.authoring.domain.project_run import ProjectParam, ProjectRunRequest, ProjectRunResult
+from datamimic_ce.authoring.domain.project_scaffold import ProjectInitResult, ProjectPattern
 from datamimic_ce.authoring.domain.reference import ReferenceResult
 from datamimic_ce.authoring.domain.requests import (
     DEFAULT_AUTHORING_DESCRIPTOR_PATH,
@@ -90,17 +92,17 @@ def _guarded(hint: str) -> Callable[[Callable[_P, Awaitable[_R]]], Callable[_P, 
     return decorate
 
 
-def _project_root(project: str, workspace_root: Path | None) -> Path | str:
-    """The resolved project directory, or the reason it cannot be used."""
+def _project_root(project: str, workspace_root: Path | None, *, new: bool = False) -> Path | str:
+    """The project directory, or the reason it cannot be used; a new project need not exist and keeps its own path."""
     path = Path(project)
     if not path.is_absolute():
         return "project must be an absolute path."
-    if not path.is_dir():
+    if not new and not path.is_dir():
         return "project must be an existing directory."
     resolved = path.resolve()
     if workspace_root is not None and not resolved.is_relative_to(workspace_root.resolve()):
         return "project lies outside the workspace root of this server."
-    return resolved
+    return path if new else resolved
 
 
 def create_server(
@@ -172,6 +174,18 @@ def create_server(
         if isinstance(root, str):
             return RejectedDecompileDocument.from_input_error(root)
         return await to_thread.run_sync(application(root, request.descriptor_path).decompile_document, request)
+
+    @tool("datamimic_init", "This result cannot be narrowed.")
+    async def datamimic_init(
+        project: Annotated[str, Field(description=_PROJECT_ARGUMENT)],
+        pattern: ProjectPattern = ProjectPattern.FLAT,
+    ) -> ProjectInitResult:
+        """Write a starter project (datamimic.xml and acceptance/build.json) that Build accepts. Never overwrites."""
+        root = _project_root(project, workspace_root, new=True)
+        if isinstance(root, str):
+            return ProjectInitResult.from_input_error(root)
+        scaffold = await to_thread.run_sync(catalog_application().scaffold, pattern)
+        return await to_thread.run_sync(init_project, root, scaffold)
 
     @tool("datamimic_build", "Fix the first diagnostics and call datamimic_build again; read the artifacts on disk.")
     async def datamimic_build(project: Annotated[str, Field(description=_PROJECT_ARGUMENT)]) -> BuildResult:

@@ -36,6 +36,7 @@ async def test_exact_authoring_tool_surface_and_no_resources(anyio_backend: str)
             "datamimic_dry_run",
             "datamimic_run",
             "datamimic_run_project",
+            "datamimic_init",
         }
         assert await client.list_resources() == []
         assert all(tool.description for tool in tools)

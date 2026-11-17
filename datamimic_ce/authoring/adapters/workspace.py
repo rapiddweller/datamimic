@@ -13,7 +13,7 @@ from pathlib import Path, PurePosixPath
 
 from datamimic_ce.authoring.adapters.windows_snapshot import WindowsSnapshotRoot
 from datamimic_ce.authoring.domain.common import validate_workspace_descriptor_path
-from datamimic_ce.authoring.domain.project_scaffold import ProjectScaffold
+from datamimic_ce.authoring.domain.project_scaffold import ProjectInitResult, ProjectScaffold
 
 MAX_RESOURCE_BYTES = 100 * 1024 * 1024
 
@@ -150,6 +150,17 @@ def write_project_scaffold(
     for file, (_, target) in zip(scaffold.files, targets, strict=True):
         _write_file(target, file.content)
     return tuple(file.path for file in scaffold.files)
+
+
+def init_project(root: Path, scaffold: ProjectScaffold) -> ProjectInitResult:
+    """Write the starter project, or report the refusal of `write_project_scaffold` as the result."""
+    try:
+        written = write_project_scaffold(root, scaffold)
+    except FileExistsError as error:
+        return ProjectInitResult.from_input_error(f"these files exist already: {error}")
+    except ValueError as error:
+        return ProjectInitResult.from_input_error(str(error))
+    return ProjectInitResult.written(scaffold.pattern, written)
 
 
 @dataclass(frozen=True)

@@ -174,7 +174,8 @@ What the agent does (from a recorded session with Claude Code, 2026-11-15; short
 datamimic_reference      topic=assembly name=starter   -> project layout
 datamimic_capabilities                                 -> entities, generators, exporters
 datamimic_capability     domain=entity name=Person     -> fields of Person
-Write                    datamimic.xml, acceptance/build.json
+datamimic_init           project=./shop                -> written: datamimic.xml, acceptance/build.json
+Write                    edit both files for 25 customers
 datamimic_build          project=./shop                -> outcome: ready
 datamimic_run_project    project=./shop                -> completed, exit 0, 1.4 s
                                                           output/<id>/customers_csv.csv, 25 rows
