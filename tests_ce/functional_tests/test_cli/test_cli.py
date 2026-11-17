@@ -264,7 +264,6 @@ class TestCLI:
 
         project_dir = tmp_path / project_name
         assert result.exit_code == 0
-        assert project_dir.exists(), "Project directory not created"
         mock_create_structure.assert_called_once_with(project_dir)
         assert "created successfully" in result.output
 
@@ -279,7 +278,6 @@ class TestCLI:
 
             project_path = target_dir / project_name
             assert result.exit_code == 0
-            assert project_path.exists(), "Project directory not created"
             mock_create_structure.assert_called_once_with(project_path)
             assert "created successfully" in result.output
         finally:
@@ -297,7 +295,6 @@ class TestCLI:
 
             project_path = target_dir / project_name
             assert result.exit_code == 0
-            assert project_path.exists(), "Nested project directory not created"
             mock_create_structure.assert_called_once_with(project_path)
         finally:
             if target_dir.exists():

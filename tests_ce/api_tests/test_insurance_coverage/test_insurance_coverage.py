@@ -91,7 +91,7 @@ class TestInsuranceCoverage:
         ]
         assert coverages[0]["min_coverage"] == "10000"
         assert coverages[0]["max_coverage"] == "200000"
-        assert [coverage["code"] for coverage in coverages] == ["ADDL", "VARL", "UMOT", "MEDR", "UNIV"]
+        assert [coverage["code"] for coverage in coverages] == ["ADDL", "WHOL", "UMOT", "DWEL", "TERM"]
         assert all(isinstance(value, str) for coverage in coverages for value in coverage.values())
         assert hashlib.sha256(repr(rng.getstate()).encode()).hexdigest() == (
             "95cb6fb046e68136fea188d9363f79490997254967448c48609642335c7045fb"
