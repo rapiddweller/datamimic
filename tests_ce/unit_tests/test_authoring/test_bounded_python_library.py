@@ -5,12 +5,14 @@
 """A Python library loaded by <execute> reaches Ready through Build when it passes the library check (#332)."""
 
 import shutil
+import pickle
 from pathlib import Path, PurePosixPath
 
 import pytest
 
 from datamimic_ce.authoring import create_authoring_application
-from datamimic_ce.authoring.adapters.bounded_executor import CeBoundedExecutor
+from datamimic_ce.authoring.adapters.bounded_executor import CeBoundedExecutor, _decode_reply
+from datamimic_ce.authoring.adapters.dryrun import _BoundedPolicyRefusal, _WorkerFailure, _refuse_unbounded_execute
 from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
 from datamimic_ce.authoring.domain.capabilities import CapabilityDomain
 from datamimic_ce.authoring.domain.coverage import CoverageGapKind
@@ -67,9 +69,15 @@ def test_seeded_library_loads_once_and_build_replays_it_unrequested(tmp_path: Pa
 def test_library_check_refuses_before_the_library_runs(tmp_path: Path, filename: str, message: str) -> None:
     result = _build(tmp_path, filename)
     assert result.outcome == "rejected"
-    assert any(
-        item.code is AuthoringRuleId.SIDE_EFFECT and item.message.startswith(message) for item in result.diagnostics
-    ), result.diagnostics
+    [diagnostic] = [
+        item
+        for item in result.diagnostics
+        if item.code is AuthoringRuleId.SIDE_EFFECT and item.message.startswith(message)
+    ]
+    assert diagnostic.path == ("descriptor", "datamimic.xml")
+    assert diagnostic.location is not None
+    assert diagnostic.location.script_file == f"lib/{message.split(':', 1)[0]}"
+    assert diagnostic.location.script_line == (1 if filename == "library_indented.xml" else 2)
 
 
 @pytest.mark.parametrize("filename", ["execute_sql.xml", "execute_per_row.xml"])
@@ -155,6 +163,43 @@ def test_included_library_is_checked_against_the_entry_seed() -> None:
         and item.message.startswith("import_in_function.scr.py: Python library line 2 imports inside")
         for item in result.diagnostics
     ), result.diagnostics
+    [diagnostic] = [item for item in result.diagnostics if item.code is AuthoringRuleId.SIDE_EFFECT]
+    assert diagnostic.location is not None
+    assert diagnostic.location.script_file == "lib/import_in_function.scr.py"
+    assert diagnostic.location.script_line == 2
+
+
+@pytest.mark.parametrize("uri", ["/workspace/lib/unsafe.py", "lib/../unsafe.py"])
+def test_library_refusal_location_uses_only_basename_for_unsafe_uri(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, uri: str
+) -> None:
+    from datamimic_ce.engine.dsl import api
+
+    monkeypatch.setattr(api, "read_resource_bytes", lambda path: b"import socket\n")
+    with pytest.raises(_BoundedPolicyRefusal) as raised:
+        _refuse_unbounded_execute(
+            "python",
+            target=None,
+            script=None,
+            uri=uri,
+            inline=None,
+            setup_level=True,
+            descriptor_dir=tmp_path,
+            seeded=False,
+        )
+    refusal = raised.value
+    message = _WorkerFailure(
+        message=str(refusal),
+        fix_hint="Repair the library.",
+        policy_refusal=True,
+        script_file=refusal.script_file,
+        script_line=refusal.script_line,
+    )
+    request = BoundedExecutionRequest(xml="<setup/>", descriptor_path=PurePosixPath("datamimic.xml"))
+    result = _decode_reply(pickle.dumps(message), request, tmp_path)
+    assert result.diagnostics[0].location is not None
+    assert result.diagnostics[0].location.script_file == "unsafe.py"
+    assert result.diagnostics[0].location.script_line == 1
 
 
 def test_forced_replay_names_why_a_seeded_library_model_failed(tmp_path: Path) -> None:

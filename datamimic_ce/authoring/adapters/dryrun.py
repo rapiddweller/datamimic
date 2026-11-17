@@ -170,6 +170,8 @@ class _WorkerFailure:
     policy_refusal: StrictBool = False
     # Empty unless the refusal names the included step and element that breaks the policy.
     policy_path: tuple[NonEmptyStrictStr, ...] = ()
+    script_file: NonEmptyStrictStr | None = None
+    script_line: PositiveStrictInt | None = None
     # A failed <assert> stops the run like a normal run; these are the products that completed before it.
     stopped_capture: _WorkerSuccess | None = None
     # What the run read before it failed, as in _WorkerSuccess: the stopped evidence binds those files.
@@ -181,13 +183,29 @@ class _WorkerFailure:
 class _BoundedPolicyRefusal(ValueError):
     """A parsed operation cannot inherit bounded execution guarantees."""
 
-    def __init__(self, message: str, path: tuple[str, ...] = ()) -> None:
+    def __init__(
+        self,
+        message: str,
+        path: tuple[str, ...] = (),
+        *,
+        script_file: str | None = None,
+        script_line: int | None = None,
+    ) -> None:
         ValueError.__init__(self, message)
         self.path = path
+        self.script_file = script_file
+        self.script_line = script_line
 
 
 class _IncludeBudgetExceeded(_BoundedPolicyRefusal):
     """The include graph's aggregate bytes exceed the budget."""
+
+
+class _InvalidIncludedXml(ValueError):
+    def __init__(self, chain: tuple[str, ...], error: etree.XMLSyntaxError) -> None:
+        ValueError.__init__(self, "Included step is not well-formed XML")
+        self.chain = chain
+        self.position = error.position
 
 
 _WorkerMessage = _WorkerSuccess | _WorkerFailure
@@ -393,14 +411,24 @@ def _refuse_unbounded_execute(
     # Check exactly what ExecuteTask will run: it normalizes file and inline code alike.
     refusal = python_library_refusal(ExecuteStatement.normalize_python_source(raw), seeded=seeded)
     if refusal is not None:
-        raise _BoundedPolicyRefusal(f"{origin}: {refusal.message()}. {refusal.remediation()}")
+        script_file = None
+        if uri is not None:
+            p: PurePosixPath = PurePosixPath(uri)
+            script_file = p.name if PurePosixPath.is_absolute(p) or ".." in p.parts else uri
+        raise _BoundedPolicyRefusal(
+            f"{origin}: {refusal.message()}. {refusal.remediation()}",
+            script_file=script_file,
+            script_line=refusal.line if script_file is not None else None,
+        )
 
 
 # Aggregate bytes one include graph may read; Build walks it in the authoring process, not in the bounded child.
 _MAX_INCLUDE_GRAPH_BYTES = 64 * 1024 * 1024
 
 
-def literal_include_graph(entry: etree._Element, entry_path: Path) -> tuple[tuple[str, bytes], ...]:
+def literal_include_graph(
+    entry: etree._Element, entry_path: Path, *, chains: list[tuple[str, ...]] | None = None
+) -> tuple[tuple[str, bytes], ...]:
     """The entry's literal include graph in execution order: (workspace-relative uri, file bytes) per ``.xml``
     step; ``.properties`` files are read for containment but not retained. Nested uris resolve against the entry
     directory, as the runtime resolves them. Raises _BoundedPolicyRefusal unless the graph is literal,
@@ -414,7 +442,7 @@ def literal_include_graph(entry: etree._Element, entry_path: Path) -> tuple[tupl
     visited = 0
     total = 0
 
-    def visit(document: etree._Element) -> None:
+    def visit(document: etree._Element, chain: tuple[str, ...]) -> None:
         nonlocal visited, total
         if document.tag != "setup":
             raise _BoundedPolicyRefusal("XML include must contain a setup descriptor")
@@ -439,15 +467,21 @@ def literal_include_graph(entry: etree._Element, entry_path: Path) -> tuple[tupl
                 raise _IncludeBudgetExceeded("XML include dependency graph exceeds the aggregate byte budget")
             if suffix == ".xml":
                 graph.append((uri, data))
+                if chains is not None:
+                    chains.append(chain)
                 visited += 1
                 identity = os.path.abspath(dependency)
                 if identity in active or len(active) >= 64 or visited > 2000:
                     raise _BoundedPolicyRefusal("XML include dependency graph is cyclic or exceeds bounded limits")
                 active.append(identity)
-                visit(parse_xml_source(data))
+                try:
+                    child = parse_xml_source(data)
+                except etree.XMLSyntaxError as error:
+                    raise _InvalidIncludedXml((*chain, uri), error) from error
+                visit(child, (*chain, uri))
                 active.pop()
 
-    visit(entry)
+    visit(entry, ())
     return tuple(graph)
 
 
@@ -511,7 +545,9 @@ def _validate_bounded_includes(
                         seeded=seeded,
                     )
                 except _BoundedPolicyRefusal as refusal:
-                    raise _BoundedPolicyRefusal(str(refusal), where) from refusal
+                    raise _BoundedPolicyRefusal(
+                        str(refusal), where, script_file=refusal.script_file, script_line=refusal.script_line
+                    ) from refusal
         elif (
             definition is None or definition.bounded_execution_profile.strategy is BoundedExecutionStrategy.UNSUPPORTED
         ):
@@ -1497,6 +1533,8 @@ def _run_engine_capture(
                 error=err if is_user_error(err) else None,
                 policy_refusal=isinstance(err, _BoundedPolicyRefusal),
                 policy_path=err.path if isinstance(err, _BoundedPolicyRefusal) else (),
+                script_file=err.script_file if isinstance(err, _BoundedPolicyRefusal) else None,
+                script_line=err.script_line if isinstance(err, _BoundedPolicyRefusal) else None,
                 source_accesses=source_accesses.snapshot(),
             )
         return message

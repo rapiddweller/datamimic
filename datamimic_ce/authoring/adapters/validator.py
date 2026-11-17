@@ -15,6 +15,7 @@ from lxml import etree
 from datamimic_ce.authoring.adapters.dryrun import (
     _BoundedPolicyRefusal,
     _IncludeBudgetExceeded,
+    _InvalidIncludedXml,
     literal_include_graph,
 )
 from datamimic_ce.authoring.adapters.linter import _run_rules
@@ -25,7 +26,9 @@ from datamimic_ce.authoring.domain.diagnostics import (
     AuthoringSystemDiagnosticCode,
     CeErrorIdentity,
     Diagnostic,
+    DiagnosticLocation,
     DiagnosticPhase,
+    diagnostic_location,
 )
 from datamimic_ce.authoring.domain.requests import IncludedDescriptor, IncludeGraphResult, LintResult
 from datamimic_ce.authoring.domain.rule_catalog import RuleSeverity, authoring_rule_definition
@@ -88,7 +91,9 @@ class CeDescriptorValidator:
                 and error.location is not None
                 and error.location.line is not None
             ):
-                return _not_well_formed((*prefix, "line", error.location.line), identity)
+                return _not_well_formed(
+                    (*prefix, "line", error.location.line), identity, diagnostic_location(error.location)
+                )
             if error.location is not None:
                 prefix += (error.location.element_tag,)
                 if error.location.line is not None:
@@ -108,6 +113,7 @@ class CeDescriptorValidator:
                             "Descriptor field failed parser validation.",
                             path=prefix + tuple(location),
                             identity=identity,
+                            location=diagnostic_location(error.location),
                         )
                     )
                 # The parser message may echo resolved (possibly secret) values; the static rule
@@ -123,11 +129,16 @@ class CeDescriptorValidator:
                         "Descriptor failed parser validation.",
                         path=prefix,
                         identity=identity,
+                        location=diagnostic_location(error.location),
                     ),
                 ),
             )
         except etree.XMLSyntaxError as error:
-            return _not_well_formed(("descriptor", logical_path.as_posix(), "line", error.position[0]), None)
+            return _not_well_formed(
+                ("descriptor", logical_path.as_posix(), "line", error.position[0]),
+                None,
+                DiagnosticLocation(file=str(logical_path), line=error.position[0], column=error.position[1]),
+            )
         except _IncludeBudgetExceeded as refusal:
             return LintResult(ok=False, diagnostics=_graph_refused(logical_path, str(refusal)).diagnostics)
         except (ValueError, OSError):
@@ -169,12 +180,26 @@ class CeDescriptorValidator:
         """The ``.xml`` steps of the entry's literal include graph, read through the contained workspace reader
         with the same rules the bounded run applies."""
         logical_path = self._workspace_context.descriptor_path
+        chains: list[tuple[str, ...]] = []
         try:
             physical_path = self._workspace_context.resolve_descriptor_path(logical_path)
             with resource_reader_scope(self._workspace_context.read_resource_bytes):
-                graph = literal_include_graph(parse_xml_source(xml), physical_path)
+                graph = literal_include_graph(parse_xml_source(xml), physical_path, chains=chains)
         except _BoundedPolicyRefusal as refusal:
             return _graph_refused(logical_path, str(refusal))  # static rule texts, no paths or values
+        except _InvalidIncludedXml as error:
+            return _graph_refused(
+                logical_path,
+                "An included step is not well-formed XML.",
+                _ESCAPE_HINT,
+                location=DiagnosticLocation(
+                    file=error.chain[-1],
+                    line=error.position[0],
+                    column=error.position[1],
+                    element="setup",
+                    include_chain=(str(logical_path), *error.chain[:-1]),
+                ),
+            )
         except etree.XMLSyntaxError:
             return _graph_refused(logical_path, "An included step is not well-formed XML.", _ESCAPE_HINT)
         except (ValueError, OSError):
@@ -199,7 +224,7 @@ class CeDescriptorValidator:
         # Bindings and sinks resolve against the entry, and a step's clients end with that step; refusing them
         # here keeps a step-declared client from surfacing first as an undeclared id in another step.
         refusals = []
-        for step, root in zip(descriptors, roots, strict=True):
+        for step, root, chain in zip(descriptors, roots, chains, strict=True):
             for element in root:
                 if isinstance(element.tag, str) and element.tag in (EL_DATABASE, EL_MONGODB):
                     refusals.append(
@@ -213,15 +238,29 @@ class CeDescriptorValidator:
                                 element.tag,
                                 *(("line", element.sourceline) if element.sourceline is not None else ()),
                             ),
+                            location=DiagnosticLocation(
+                                file=step.uri,
+                                line=element.sourceline,
+                                element=element.tag,
+                                include_chain=(str(logical_path), *chain),
+                            ),
                         )
                     )
         if refusals:
             return IncludeGraphResult(ok=False, diagnostics=tuple(refusals))
         project = (entry_root, *roots)
         findings: list[Diagnostic] = []
-        for step, root in zip(descriptors, roots, strict=True):
+        for step, root, chain in zip(descriptors, roots, chains, strict=True):
             findings.extend(
-                _rule_diagnostics(root, physical_path, logical_path, project=project, prefix=("include", step.uri))
+                _rule_diagnostics(
+                    root,
+                    physical_path,
+                    logical_path,
+                    project=project,
+                    prefix=("include", step.uri),
+                    step_uri=step.uri,
+                    include_chain=(str(logical_path), *chain),
+                )
             )
         return IncludeGraphResult(
             ok=not any(item.severity == "error" for item in findings),
@@ -239,6 +278,8 @@ def _rule_diagnostics(
     project: tuple[etree._Element, ...] = (),
     declarations_complete: bool = True,
     prefix: tuple[str, ...] | None = None,
+    step_uri: str | None = None,
+    include_chain: tuple[str, ...] = (),
 ) -> tuple[Diagnostic, ...]:
     """Lint findings of one descriptor; an included step is linted with its project and reported at its uri."""
     location = prefix or ("descriptor", logical_path.as_posix())
@@ -257,6 +298,12 @@ def _rule_diagnostics(
                     finding.path,
                     *(("line", finding.line) if finding.line is not None else ()),
                 ),
+                location=DiagnosticLocation(
+                    file=step_uri if step_uri is not None else str(logical_path),
+                    line=finding.line,
+                    element=finding.element,
+                    include_chain=include_chain,
+                ),
                 severity="error"
                 if finding.severity is RuleSeverity.ERROR
                 else ("warning" if finding.severity is RuleSeverity.WARNING else "info"),
@@ -273,6 +320,7 @@ def _diagnostic(
     *,
     path: tuple[str | int, ...],
     identity: CeErrorIdentity | None = None,
+    location: DiagnosticLocation | None = None,
     remediation: str = "Repair the indicated descriptor field or its workspace-local resource configuration.",
 ) -> Diagnostic:
     return Diagnostic(
@@ -281,14 +329,19 @@ def _diagnostic(
         message=message,
         path=path,
         ce_error=identity,
+        location=location,
         remediation=remediation,
     )
 
 
-def _not_well_formed(path: tuple[str | int, ...], identity: CeErrorIdentity | None) -> LintResult:
+def _not_well_formed(
+    path: tuple[str | int, ...], identity: CeErrorIdentity | None, location: DiagnosticLocation | None
+) -> LintResult:
     return LintResult(
         ok=False,
-        diagnostics=(_diagnostic(_NOT_WELL_FORMED, path=path, identity=identity, remediation=_ESCAPE_HINT),),
+        diagnostics=(
+            _diagnostic(_NOT_WELL_FORMED, path=path, identity=identity, location=location, remediation=_ESCAPE_HINT),
+        ),
     )
 
 
@@ -343,7 +396,13 @@ def _analysis_xml(root: etree._Element, xml: str, changed: set[etree._Element]) 
     return etree.tostring(root, encoding="unicode") if root in changed else xml
 
 
-def _graph_refused(path: PurePosixPath, message: str, remediation: str | None = None) -> IncludeGraphResult:
+def _graph_refused(
+    path: PurePosixPath,
+    message: str,
+    remediation: str | None = None,
+    *,
+    location: DiagnosticLocation | None = None,
+) -> IncludeGraphResult:
     return IncludeGraphResult(
         ok=False,
         diagnostics=(
@@ -353,6 +412,7 @@ def _graph_refused(path: PurePosixPath, message: str, remediation: str | None = 
                 phase=DiagnosticPhase.POLICY,
                 path=("descriptor", str(path), "include"),
                 remediation=remediation,
+                location=location,
             ),
         ),
     )
