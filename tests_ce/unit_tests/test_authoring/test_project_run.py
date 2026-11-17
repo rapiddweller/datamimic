@@ -317,3 +317,56 @@ def test_result_rejects_contradictory_not_run_state() -> None:
 
     with pytest.raises(ValidationError):
         ProjectRunResult(outcome="not_run", not_run_reason="input", exit_code=0)
+
+
+@pytest.mark.parametrize("error", [ProcessLookupError, PermissionError])
+def test_runner_tolerates_process_group_disappearing_during_timeout(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, error: type[OSError]
+) -> None:
+    import os
+    import subprocess
+    import sys
+
+    from datamimic_ce.authoring.adapters import project_runner
+
+    root = project(tmp_path, "customers")
+    real_popen = subprocess.Popen
+    original_killpg = os.killpg
+
+    def slow(command, **kwargs):
+        return real_popen([sys.executable, "-c", "import time; time.sleep(60)"], **kwargs)
+
+    def killpg(pid: int, sig: int) -> None:
+        original_killpg(pid, sig)
+        raise error("leader exited")
+
+    monkeypatch.setattr(project_runner.subprocess, "Popen", slow)
+    monkeypatch.setattr(project_runner.os, "killpg", killpg)
+    result = project_runner.CeProjectRunner(AuthoringWorkspaceContext(root, PROJECT_ENTRY_PATH)).run((), 1)
+    assert result.timed_out
+
+
+def test_runner_stops_process_group_after_normal_exit(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import os
+    import subprocess
+    import sys
+
+    from datamimic_ce.authoring.adapters import project_runner
+
+    root = project(tmp_path, "customers")
+    real_popen = subprocess.Popen
+    original_killpg = os.killpg
+    calls: list[int] = []
+
+    def finished(command, **kwargs):
+        return real_popen([sys.executable, "-c", "pass"], **kwargs)
+
+    def killpg(pid: int, sig: int) -> None:
+        calls.append(pid)
+        original_killpg(pid, sig)
+
+    monkeypatch.setattr(project_runner.subprocess, "Popen", finished)
+    monkeypatch.setattr(project_runner.os, "killpg", killpg)
+    result = project_runner.CeProjectRunner(AuthoringWorkspaceContext(root, PROJECT_ENTRY_PATH)).run((), 5)
+    assert result.exit_code == 0
+    assert calls == [calls[0], calls[0]]
