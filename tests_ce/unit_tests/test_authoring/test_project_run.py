@@ -4,6 +4,7 @@ import csv
 import json
 import os
 import shutil
+import sys
 from pathlib import Path
 
 import pytest
@@ -320,7 +321,7 @@ def test_result_rejects_contradictory_not_run_state() -> None:
         ProjectRunResult(outcome="not_run", not_run_reason="input", exit_code=0)
 
 
-@pytest.mark.skipif(os.name == "nt", reason="process groups are POSIX-only")
+@pytest.mark.skipif(sys.platform == "win32", reason="process groups are POSIX-only")
 @pytest.mark.parametrize("error", [ProcessLookupError, PermissionError])
 def test_runner_tolerates_process_group_disappearing_during_timeout(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, error: type[OSError]
@@ -348,6 +349,7 @@ def test_runner_tolerates_process_group_disappearing_during_timeout(
     assert result.timed_out
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="os.killpg is POSIX-only")
 def test_runner_does_not_kill_group_after_normal_exit(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     import os
     import subprocess
@@ -390,6 +392,11 @@ def test_project_run_result_validates_workflow_shapes_and_exit_fields(tmp_path: 
     from datamimic_ce.authoring.domain.project_run import ProjectRunResult
 
     ready = ready_build(tmp_path)
+    gaps_root = tmp_path / "gaps"
+    shutil.copytree(FIXTURES / "customers", gaps_root)
+    gaps_entry = gaps_root / PROJECT_ENTRY_PATH
+    gaps_entry.write_text(gaps_entry.read_text(encoding="utf-8").replace(' rngSeed="7"', ""), encoding="utf-8")
+    gaps_build = create_authoring_application(gaps_root, descriptor_path=PROJECT_ENTRY_PATH).build()
     valid_results = (
         ProjectRunResult.from_input_error("bad params"),
         workflow(RejectedBuild.from_input_error("bad project"), (), FakeRunner(execution())).execute(
@@ -399,12 +406,15 @@ def test_project_run_result_validates_workflow_shapes_and_exit_fields(tmp_path: 
         workflow(ready, (), FakeRunner(execution())).execute(ProjectRunRequest()),
         workflow(ready, (), FakeRunner(execution(9))).execute(ProjectRunRequest()),
         workflow(ready, (), FakeRunner(execution(None, timed_out=True))).execute(ProjectRunRequest()),
+        workflow(gaps_build, (), FakeRunner(execution())).execute(ProjectRunRequest()),
     )
     for result in valid_results:
         ProjectRunResult.model_validate(result.model_dump(mode="json"))
 
     completed = valid_results[3].model_dump(mode="json")
     input_error = valid_results[0].model_dump(mode="json")
+    rejected = valid_results[1].model_dump(mode="json")
+    gaps = valid_results[6].model_dump(mode="json")
     contradictory = (
         {**completed, "exit_code": 9},
         {**completed, "outcome": "timeout", "exit_code": 0},
@@ -413,7 +423,24 @@ def test_project_run_result_validates_workflow_shapes_and_exit_fields(tmp_path: 
         {**input_error, "exit_code": 0},
         {**input_error, "duration_seconds": 0.1},
         {**input_error, "artifacts": [{"path": "out.csv", "bytes": 1}], "artifact_count": 1},
+        {**input_error, "action_required": "Fix open coverage gaps."},
+        {**rejected, "action_required": "Fix open coverage gaps."},
+        {**gaps, "action_required": None},
     )
     for payload in contradictory:
         with pytest.raises(ValidationError):
             ProjectRunResult.model_validate(payload)
+
+
+def test_cli_text_shows_gaps_build_outcome_and_action_required(tmp_path: Path) -> None:
+    from typer.testing import CliRunner
+
+    from datamimic_ce.interfaces.cli import app
+
+    root = project(tmp_path, "customers")
+    entry = root / PROJECT_ENTRY_PATH
+    entry.write_text(entry.read_text(encoding="utf-8").replace(' rngSeed="7"', ""), encoding="utf-8")
+    result = CliRunner().invoke(app, ["authoring", "run-project", str(root), "--format", "text", "--timeout", "300"])
+    assert result.exit_code == 0, result.output
+    assert "Build outcome: ready_with_gaps" in result.output
+    assert "Action required:" in result.output

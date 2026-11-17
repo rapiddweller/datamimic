@@ -155,6 +155,10 @@ def emit_authoring(
     elif output_format is CliOutputFormat.TEXT and isinstance(result, ProjectRunResult):
         if result.outcome == "not_run":
             typer.echo(f"Not run: {result.not_run_reason}")
+        if result.build_outcome is not None:
+            typer.echo(f"Build outcome: {result.build_outcome}")
+        if result.action_required is not None:
+            typer.echo(f"Action required: {result.action_required}")
         for diagnostic in result.diagnostics:
             typer.echo(f"{diagnostic.severity}: {diagnostic.message}", err=True)
         if result.not_run_reason == "build_rejected" and result.build is not None:

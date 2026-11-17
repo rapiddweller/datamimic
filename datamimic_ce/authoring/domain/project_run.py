@@ -131,6 +131,8 @@ class ProjectRunResult(AuthoringModel):
                     or (self.outcome == "timeout" and self.exit_code is None)
                 )
             )
+        if (self.action_required is not None) != (self.build_outcome == "ready_with_gaps"):
+            valid = False
         if not valid:
             raise ValueError("Project run outcome contradicts its execution and Build fields")
         return self
