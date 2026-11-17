@@ -555,3 +555,19 @@ def test_included_generate_publishes_its_own_files_per_parent_row(tmp_path: Path
     files = list((tmp_path / "output/inner").glob("*.csv"))
     assert len(files) == 3
     assert all(path.read_text() == "x\nx\n" for path in files)
+
+
+@pytest.mark.parametrize("same_name", [False, True])
+def test_top_level_generates_have_independent_chunk_counters(tmp_path: Path, same_name: bool) -> None:
+    second = "rows" if same_name else "other"
+    (tmp_path / "twice.xml").write_text(
+        '<setup multiprocessing="0"><generate name="rows" count="1" target="CSV(chunk_size=2)" exportUri="results">'
+        '<key name="id" constant="1"/></generate>'
+        f'<generate name="{second}" count="2" target="CSV(chunk_size=2)" exportUri="results">'
+        '<key name="id" constant="2"/></generate></setup>',
+        encoding="utf-8",
+    )
+    DataMimicTest(tmp_path, "twice.xml").test_with_timer()
+    output = tmp_path / "output/results"
+    assert (output / "rows_0.csv").read_text() == "id\n1\n"
+    assert (output / ("rows_0_1.csv" if same_name else "other_0.csv")).read_text() == "id\n2\n2\n"

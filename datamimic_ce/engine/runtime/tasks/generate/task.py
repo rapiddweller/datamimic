@@ -441,6 +441,7 @@ class GenerateTask(CommonSubTask):
             finally:
                 # Clean temp directory on outermost gen_stmt
                 if outermost:
+                    context.root.export_session = None
                     cleanup_exporter_chunks(context.root.descriptor_dir, context.root.task_id)
                 # Shutdown Ray if initialized
                 if is_ray_initialized and _ray_mod is not None:
