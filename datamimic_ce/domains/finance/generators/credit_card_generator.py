@@ -66,9 +66,6 @@ class CreditCardGenerator(DatasetAwareDomainGenerator):
     def bank_account_generator(self) -> BankAccountGenerator:
         return self._bank_account_generator
 
-    def generate_card_type(self, specs: CardSpec) -> str:
-        return specs["type"]
-
     def generate_card_number(self, specs: CardSpec) -> str:
         prefix = specs.get("prefix", "")
         total_len = specs.get("length", 16)
