@@ -13,7 +13,7 @@ from pathlib import Path
 from datamimic_ce.engine.io.exporters.core.exporter_config import ExporterConfig
 from datamimic_ce.engine.io.exporters.core.unified_buffered_exporter import UnifiedBufferedExporter
 
-logger = logging.getLogger("DATAMIMIC")
+logger: logging.Logger = logging.getLogger("DATAMIMIC")
 
 
 class CSVExporter(UnifiedBufferedExporter):
@@ -43,19 +43,24 @@ class CSVExporter(UnifiedBufferedExporter):
             buffer_file = self._get_buffer_file(worker_id, chunk_idx)
             if buffer_file is None:
                 return
-            write_header = not buffer_file.exists()
+            header_file: Path = buffer_file
+            write_header = not buffer_file.exists() or header_file.stat().st_size == 0
+            if not self.fieldnames and data:
+                self.fieldnames = list(data[0].keys())
+            fieldnames = self.fieldnames
+            if not write_header:
+                with buffer_file.open(newline="", encoding=self._encoding) as csvfile:
+                    fieldnames = next(csv.reader(csvfile, delimiter=self.delimiter, quotechar=self.quotechar))
             with buffer_file.open("a", newline="", encoding=self._encoding) as csvfile:
-                if not self.fieldnames and data:
-                    self.fieldnames = list(data[0].keys())
                 writer = csv.DictWriter(
                     csvfile,
-                    fieldnames=self.fieldnames,
+                    fieldnames=fieldnames,
                     delimiter=self.delimiter,
                     quotechar=self.quotechar,
                     quoting=self.quoting,
                     extrasaction="ignore",
                 )
-                if write_header and self.fieldnames:
+                if write_header and fieldnames:
                     writer.writeheader()
                 for record in data:
                     if any(isinstance(v, bytes | bytearray) for v in record.values()):

@@ -49,7 +49,7 @@ def publish_exported_artifacts(
 
 
 def cleanup_exporter_chunks(descriptor_dir: Path, task_id: str) -> None:
-    for temp_dir in descriptor_dir.glob(f"temp_result_{task_id}*"):
+    for temp_dir in descriptor_dir.glob(f"temp_result_{task_id}_pid_*_exporter_*"):
         shutil.rmtree(temp_dir)
 
 

@@ -47,6 +47,10 @@ class GenerateTask(CommonSubTask):
     def statement(self) -> GenerateStatement:
         return self._statement
 
+    @staticmethod
+    def is_outermost(context: SetupContext | GenIterContext) -> bool:
+        return isinstance(context, SetupContext) and not context.within_generate
+
     def _determine_count(self, context: SetupContext | GenIterContext) -> int:
         """
         Determine the count of records to generate.
@@ -138,7 +142,7 @@ class GenerateTask(CommonSubTask):
 
         stmt = self._statement
         if (
-            not isinstance(context, SetupContext)
+            not GenerateTask.is_outermost(context)
             or stmt.source is None
             or not (isinstance(stmt.count, str) and stmt.count.isdigit())
             or stmt.cyclic
@@ -208,13 +212,11 @@ class GenerateTask(CommonSubTask):
         """Number of Ray workers. 1 for inner gen_stmt; otherwise the requested count unless a
         single-process policy (unique/composite/delete — see single_process_policy) overrides it."""
         # Do not apply multiprocessing for inner gen_stmt
-        if isinstance(context, GenIterContext):
+        if not GenerateTask.is_outermost(context):
             return 1
 
         # Get number of workers from statement, setup context, or default to 1
-        current_setup_context = context
-        while not isinstance(current_setup_context, SetupContext):
-            current_setup_context = current_setup_context.parent
+        current_setup_context = context.root
 
         if isinstance(current_setup_context.total_row_budget, TotalRowBudget):
             return 1
@@ -249,7 +251,7 @@ class GenerateTask(CommonSubTask):
         """Fail closed with I928 before any database access when a clear or drop is not source-free, one-time and
         root-level, as in EE (BC-4.0-016)."""
         stmt = self._statement
-        problem = stmt.operation_intent_problem(nested=not isinstance(context, SetupContext) or context.within_generate)
+        problem = stmt.operation_intent_problem(nested=not self.is_outermost(context))
         if problem is None:
             for client, _ in stmt.client_operations:
                 if context.root.get_client_by_id(client) is None:
@@ -300,9 +302,8 @@ class GenerateTask(CommonSubTask):
         if self.statement.is_statement_operation:
             return self._execute_statement_operation(context)
         self._assert_delete_selects_rows(context)
-        with gen_timer(
-            "process", context.root.report_logging, self.statement.full_name, isinstance(context, GenIterContext)
-        ) as timer_result:
+        outermost = self.is_outermost(context)
+        with gen_timer("process", context.root.report_logging, self.statement.full_name, not outermost) as timer_result:
             try:
                 # Mark Ray initialization status for shutdown at the end of execution
                 # Ray is optional; only import/initialize if explicitly requested.
@@ -337,7 +338,7 @@ class GenerateTask(CommonSubTask):
                 page_size = self._calculate_default_page_size(count)
 
                 # Execute generate task by page in multiprocessing
-                if isinstance(context, SetupContext) and num_workers > 1:
+                if outermost and isinstance(context, SetupContext) and num_workers > 1:
                     self._reject_positional_sequences_under_mp()
                     # Serialize context for Ray multiprocessing
                     copied_context = GenerateWorker.serialize_worker_context(context)
@@ -409,15 +410,14 @@ class GenerateTask(CommonSubTask):
                     )
 
                 # Update the actual record count in the timer result
-                for product_name, product_data in merged_result.items():
-                    if product_name == self.statement.full_name:
-                        actual_count = len(product_data)
-                        if actual_count != count:
-                            logger.info(
-                                f"Requested to generate {count:,} records but actually "
-                                f"generated {actual_count:,} records due to filtering"
-                            )
-                            timer_result["records_count"] = actual_count
+                if isinstance(merged_result, GenerationResult):
+                    actual_count = merged_result.produced_rows
+                    if actual_count != count:
+                        logger.info(
+                            f"Requested to generate {count:,} records but actually "
+                            f"generated {actual_count:,} records due to filtering"
+                        )
+                    timer_result["records_count"] = actual_count
 
                 # At the end of OUTERMOST gen_stmt:
                 # - export gathered product with LAZY exporters, such as TestResultExporter, MemstoreExporter,...
@@ -439,8 +439,9 @@ class GenerateTask(CommonSubTask):
 
             finally:
                 # Clean temp directory on outermost gen_stmt
-                if isinstance(context, SetupContext):
-                    cleanup_exporter_chunks(context.descriptor_dir, context.task_id)
+                if outermost:
+                    context.root.export_session = None
+                    cleanup_exporter_chunks(context.root.descriptor_dir, context.root.task_id)
                 # Shutdown Ray if initialized
                 if is_ray_initialized and _ray_mod is not None:
                     _ray_mod.shutdown()

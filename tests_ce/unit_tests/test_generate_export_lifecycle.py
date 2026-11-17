@@ -519,3 +519,55 @@ def test_single_product_csv_json_run_constructs_each_file_exporter_three_times(
         for name in ("CSVExporter", "JsonExporter")
         for phase in ("register", "finalize_exporter_chunks", "publish_exported_artifacts")
     )
+
+
+@pytest.mark.parametrize("include", [False, True])
+def test_included_generate_preserves_outer_pages(tmp_path: Path, include: bool) -> None:
+    (tmp_path / "step.xml").write_text(
+        '<setup><generate name="inner" count="1" target=""><key name="x" constant="x"/></generate></setup>',
+        encoding="utf-8",
+    )
+    (tmp_path / "outer.xml").write_text(
+        '<setup multiprocessing="0"><generate name="outer" count="3" pageSize="1" '
+        'target="CSV" exportUri="results"><key name="id" generator="IncrementGenerator"/>'
+        + ('<include uri="step.xml"/>' if include else "")
+        + "</generate></setup>",
+        encoding="utf-8",
+    )
+    DataMimicTest(tmp_path, "outer.xml").test_with_timer()
+    assert (tmp_path / "output/results/outer.csv").read_text() == "id\n1\n2\n3\n"
+
+
+def test_included_generate_publishes_its_own_files_per_parent_row(tmp_path: Path) -> None:
+    (tmp_path / "step.xml").write_text(
+        '<setup><generate name="inner" count="1" target="CSV" exportUri="inner">'
+        '<key name="x" constant="x"/></generate></setup>',
+        encoding="utf-8",
+    )
+    (tmp_path / "outer.xml").write_text(
+        '<setup multiprocessing="0"><generate name="outer" count="3" pageSize="1" '
+        'target="CSV" exportUri="outer"><key name="id" generator="IncrementGenerator"/>'
+        '<include uri="step.xml"/></generate></setup>',
+        encoding="utf-8",
+    )
+    DataMimicTest(tmp_path, "outer.xml").test_with_timer()
+    assert (tmp_path / "output/outer/outer.csv").read_text() == "id\n1\n2\n3\n"
+    files = list((tmp_path / "output/inner").glob("*.csv"))
+    assert len(files) == 3
+    assert all(path.read_text() == "x\nx\n" for path in files)
+
+
+@pytest.mark.parametrize("same_name", [False, True])
+def test_top_level_generates_have_independent_chunk_counters(tmp_path: Path, same_name: bool) -> None:
+    second = "rows" if same_name else "other"
+    (tmp_path / "twice.xml").write_text(
+        '<setup multiprocessing="0"><generate name="rows" count="1" target="CSV(chunk_size=2)" exportUri="results">'
+        '<key name="id" constant="1"/></generate>'
+        f'<generate name="{second}" count="2" target="CSV(chunk_size=2)" exportUri="results">'
+        '<key name="id" constant="2"/></generate></setup>',
+        encoding="utf-8",
+    )
+    DataMimicTest(tmp_path, "twice.xml").test_with_timer()
+    output = tmp_path / "output/results"
+    assert (output / "rows_0.csv").read_text() == "id\n1\n"
+    assert (output / ("rows_0_1.csv" if same_name else "other_0.csv")).read_text() == "id\n2\n2\n"

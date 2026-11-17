@@ -65,6 +65,7 @@ class TestGenerateTask:
 
         # Set attributes with realistic values
         context.use_mp = True
+        context.within_generate = False
         context.test_mode = False
         context.report_logging = True
         context.num_process = 4

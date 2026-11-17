@@ -48,6 +48,7 @@ class RayGenerateWorker(GenerateWorker):
         merged_result = GenerationResult()
         for result in ray_result:
             merged_result.merge_exports(result)
+            merged_result.produced_rows += result.produced_rows
             for product_name, product_data_list in result.items():
                 merged_result[product_name] = merged_result.get(product_name, []) + product_data_list
 
@@ -62,7 +63,7 @@ class RayGenerateWorker(GenerateWorker):
         chunk_start: int,
         chunk_end: int,
         page_size: int,
-    ) -> dict:
+    ) -> GenerationResult:
         """
         Ray remote function to generate and export data by page in multiprocessing.
         """

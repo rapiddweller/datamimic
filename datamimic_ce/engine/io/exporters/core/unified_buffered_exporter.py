@@ -1,5 +1,6 @@
 import hashlib
 import logging
+import os
 import pathlib
 import shutil
 import time
@@ -95,6 +96,8 @@ class UnifiedBufferedExporter(Exporter, ABC):
 
     def _write_batch_with_retry(self, batch: list[dict], worker_id: int, chunk_idx: int) -> None:
         """Write a batch of data with retry mechanism."""
+        buffer_file: Path = self._get_buffer_file(worker_id, chunk_idx)
+        original_size = buffer_file.stat().st_size if buffer_file.exists() else None
         for attempt in range(self.MAX_RETRIES):
             try:
                 self._write_data_to_buffer(batch, worker_id, chunk_idx)
@@ -102,6 +105,10 @@ class UnifiedBufferedExporter(Exporter, ABC):
             except Exception as e:
                 if is_user_error(e):
                     raise
+                if original_size is None:
+                    buffer_file.unlink(missing_ok=True)
+                else:
+                    os.truncate(buffer_file, original_size)
                 logger.error(f"Attempt {attempt + 1} failed to write batch: {e}")
                 if attempt == self.MAX_RETRIES - 1:
                     raise BufferFileError(f"Failed to write batch after {self.MAX_RETRIES} attempts: {e}") from e

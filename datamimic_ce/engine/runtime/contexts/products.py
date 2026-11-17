@@ -52,6 +52,7 @@ class GenerationResult(dict[str, list]):
         super().__init__()
         self.exports: dict[ExecutedExport, set[int]] = {}
         self.nested_exports: list[NestedExport] = []
+        self.produced_rows = 0
 
     def record_export(self, statement: GenerateStatement, worker_id: int) -> None:
         self.exports.setdefault(ExecutedExport.from_statement(statement), set()).add(worker_id)
