@@ -9,8 +9,35 @@ import json
 from pathlib import Path
 
 from datamimic_ce.authoring import create_authoring_application
-from datamimic_ce.authoring.domain.requests import PROJECT_ACCEPTANCE_PATH, PROJECT_ENTRY_PATH, RejectedBuild
+from datamimic_ce.authoring.domain.diagnostics import Diagnostic, DiagnosticLocation
+from datamimic_ce.authoring.domain.requests import (
+    PROJECT_ACCEPTANCE_PATH,
+    PROJECT_ENTRY_PATH,
+    LintRequest,
+    RejectedBuild,
+)
 from tests_ce.authoring_project import build_project
+
+
+def test_diagnostic_location_schema_matches_ee() -> None:
+    assert set(DiagnosticLocation.model_fields) == {
+        "file",
+        "line",
+        "column",
+        "element",
+        "name",
+        "attribute",
+        "include_chain",
+        "value_line",
+        "value_column",
+        "expression_line",
+        "expression_column",
+        "script_file",
+        "script_line",
+        "script_function",
+    }
+    assert "location" in Diagnostic.model_json_schema()["properties"]
+    assert DiagnosticLocation().model_dump()["include_chain"] == ()
 
 
 def _errors(tmp_path: Path, xml: str, **acceptance: object) -> list:
@@ -42,6 +69,14 @@ def test_a_less_than_sign_in_an_attribute_names_the_escape(tmp_path: Path) -> No
     assert error.path == ("descriptor", "datamimic.xml", "line", 2)
     assert "&lt;" in str(error.remediation) and "&amp;" in str(error.remediation)
     assert "7349" not in str(error.remediation)
+    lint = create_authoring_application(tmp_path, descriptor_path=PROJECT_ENTRY_PATH).lint(LintRequest(xml=xml))
+    for diagnostic in (error, lint.diagnostics[0]):
+        assert diagnostic.location is not None
+        assert diagnostic.location.file == "datamimic.xml"
+        assert diagnostic.location.line == 2
+        assert diagnostic.location.column is not None
+        assert diagnostic.location.element == "setup"
+        assert "7349" not in diagnostic.location.model_dump_json()
 
 
 def test_an_unclosed_element_gets_the_same_well_formed_diagnostic(tmp_path: Path) -> None:

@@ -12,6 +12,7 @@ from typing import Annotated, Literal
 from pydantic import Field, JsonValue, StrictStr, model_validator
 
 from datamimic_ce.errors.codes import ErrorCode, IssueCode
+from datamimic_ce.errors.context import DescriptorLocation
 
 from .common import AuthoringModel, NonEmptyStrictStr
 from .expectations import ExpectationIntentKind
@@ -109,11 +110,41 @@ class CeErrorIdentity(AuthoringModel):
     issue_code: IssueCode | None = None
 
 
+class DiagnosticLocation(AuthoringModel):
+    file: str | None = None
+    line: int | None = None
+    column: int | None = None
+    element: str | None = None
+    name: str | None = None
+    attribute: str | None = None
+    include_chain: tuple[str, ...] = ()
+    value_line: int | None = None
+    value_column: int | None = None
+    expression_line: int | None = None
+    expression_column: int | None = None
+    script_file: str | None = None
+    script_line: int | None = None
+    script_function: str | None = None
+
+
+def diagnostic_location(location: DescriptorLocation | None) -> DiagnosticLocation | None:
+    if location is None:
+        return None
+    return DiagnosticLocation(
+        file=location.descriptor_path,
+        line=location.line,
+        column=location.column,
+        element=location.element_tag,
+        attribute=location.attribute,
+    )
+
+
 class Diagnostic(AuthoringModel):
     code: DiagnosticCode
     message: NonEmptyStrictStr
     phase: DiagnosticPhase
     path: tuple[str | int, ...] = ()
+    location: DiagnosticLocation | None = None
     expected: JsonValue | None = None
     actual: JsonValue | None = None
     allowed_values: tuple[JsonValue, ...] | None = None

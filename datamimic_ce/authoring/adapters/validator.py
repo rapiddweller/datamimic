@@ -25,7 +25,9 @@ from datamimic_ce.authoring.domain.diagnostics import (
     AuthoringSystemDiagnosticCode,
     CeErrorIdentity,
     Diagnostic,
+    DiagnosticLocation,
     DiagnosticPhase,
+    diagnostic_location,
 )
 from datamimic_ce.authoring.domain.requests import IncludedDescriptor, IncludeGraphResult, LintResult
 from datamimic_ce.authoring.domain.rule_catalog import RuleSeverity, authoring_rule_definition
@@ -88,7 +90,9 @@ class CeDescriptorValidator:
                 and error.location is not None
                 and error.location.line is not None
             ):
-                return _not_well_formed((*prefix, "line", error.location.line), identity)
+                return _not_well_formed(
+                    (*prefix, "line", error.location.line), identity, diagnostic_location(error.location)
+                )
             if error.location is not None:
                 prefix += (error.location.element_tag,)
                 if error.location.line is not None:
@@ -108,6 +112,7 @@ class CeDescriptorValidator:
                             "Descriptor field failed parser validation.",
                             path=prefix + tuple(location),
                             identity=identity,
+                            location=diagnostic_location(error.location),
                         )
                     )
                 # The parser message may echo resolved (possibly secret) values; the static rule
@@ -123,11 +128,16 @@ class CeDescriptorValidator:
                         "Descriptor failed parser validation.",
                         path=prefix,
                         identity=identity,
+                        location=diagnostic_location(error.location),
                     ),
                 ),
             )
         except etree.XMLSyntaxError as error:
-            return _not_well_formed(("descriptor", logical_path.as_posix(), "line", error.position[0]), None)
+            return _not_well_formed(
+                ("descriptor", logical_path.as_posix(), "line", error.position[0]),
+                None,
+                DiagnosticLocation(file=logical_path.as_posix(), line=error.position[0], column=error.position[1]),
+            )
         except _IncludeBudgetExceeded as refusal:
             return LintResult(ok=False, diagnostics=_graph_refused(logical_path, str(refusal)).diagnostics)
         except (ValueError, OSError):
@@ -273,6 +283,7 @@ def _diagnostic(
     *,
     path: tuple[str | int, ...],
     identity: CeErrorIdentity | None = None,
+    location: DiagnosticLocation | None = None,
     remediation: str = "Repair the indicated descriptor field or its workspace-local resource configuration.",
 ) -> Diagnostic:
     return Diagnostic(
@@ -281,14 +292,19 @@ def _diagnostic(
         message=message,
         path=path,
         ce_error=identity,
+        location=location,
         remediation=remediation,
     )
 
 
-def _not_well_formed(path: tuple[str | int, ...], identity: CeErrorIdentity | None) -> LintResult:
+def _not_well_formed(
+    path: tuple[str | int, ...], identity: CeErrorIdentity | None, location: DiagnosticLocation | None
+) -> LintResult:
     return LintResult(
         ok=False,
-        diagnostics=(_diagnostic(_NOT_WELL_FORMED, path=path, identity=identity, remediation=_ESCAPE_HINT),),
+        diagnostics=(
+            _diagnostic(_NOT_WELL_FORMED, path=path, identity=identity, location=location, remediation=_ESCAPE_HINT),
+        ),
     )
 
 

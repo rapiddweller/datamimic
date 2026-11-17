@@ -38,6 +38,7 @@ from datamimic_ce.authoring.domain.diagnostics import (
     CeErrorIdentity,
     Diagnostic,
     DiagnosticPhase,
+    diagnostic_location,
 )
 from datamimic_ce.authoring.domain.requests import (
     BoundedExecutionEvidence,
@@ -301,6 +302,7 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
                             remediation="Change the data or the model so that every row meets the condition, or "
                             "correct the condition. The run stops at the first failed <assert>, as datamimic run does.",
                             ce_error=identity,
+                            location=diagnostic_location(location),
                             path=assert_path,
                             expected=rule,
                         ),
@@ -379,6 +381,7 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
                     else message.fix_hint
                 ),
                 ce_error=identity,
+                location=diagnostic_location(location),
                 path=path,
                 expected=request.max_count if over_limit else None,
                 actual=(
