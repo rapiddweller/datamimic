@@ -7,7 +7,7 @@
     "the order of two independent steps does not change their rows; the step key is the step path, not its position (an entry <execute> library keeps one run-wide stream and follows the call order)",
     "./model/10_first.xml and model/10_first.xml are the same step",
     "the rows do not depend on the project directory: each equivalent runs the project and the variant in two directories",
-    "rngSeed on an included step has no effect: the entry seed governs the run",
+    "rngSeed on an included step has no effect: the entry seed governs the run; lint warns with DM320 (#472), Build stays ready, and the unit test test_included_step_lint_context.py holds the class matrix",
     "numProcess on a seeded step generate keeps the rows: a seeded generate runs single-process",
     "the check fails when a step repeats the draws of another stream"
   ],
