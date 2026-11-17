@@ -138,7 +138,9 @@ a file source:
 }
 ```
 
-CSV columns arrive as strings: cast them in `where` and in scripts. `where` reads
+CSV columns arrive as strings: cast them in `where` and in scripts. A Build
+`range` expectation requires numeric captured values; cast source text in the
+model rather than applying a range to the original text column. `where` reads
 one row: its columns, `this`, and the expression functions. It must not read the
 clock or draw random values, and it cannot read `parent.`, variables or setup names.
 A column name with a space or a Python keyword is `this['order id']` or

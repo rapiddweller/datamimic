@@ -4,6 +4,7 @@
 
 """One Build of a project: its files, their bounded CE evidence and optional gates."""
 
+from decimal import Decimal
 from hashlib import sha256
 from importlib import metadata
 from pathlib import PurePosixPath
@@ -28,6 +29,7 @@ from datamimic_ce.authoring.domain.diagnostics import (
     DiagnosticPhase,
 )
 from datamimic_ce.authoring.domain.dm_json import DmJsonCodecError, DmJsonDocumentV1, iter_dm_json_nodes
+from datamimic_ce.authoring.domain.expectations import ProductRowsSubject, RangeExpectation
 from datamimic_ce.authoring.domain.proof import (
     BuildVerificationEvidence,
     BuildVerificationOptions,
@@ -245,11 +247,42 @@ class BuildDocumentWorkflow:
             and not first.captured.products
             and any(item.severity == "error" for item in first.diagnostics)
         )
+        acceptance_diagnostics = (
+            *(() if failed else evaluate_acceptance(acceptance, first.captured, stopped=first.stopped_by_assert)),
+        )
+        for check in acceptance.checks:
+            expectation = check.expectation
+            if not isinstance(expectation, RangeExpectation) or not isinstance(expectation.subject, ProductRowsSubject):
+                continue
+            product = acceptance.product(expectation.subject.product)
+            captured = first.captured.get(product.capture_name) if product is not None else None
+            if captured is None:
+                continue
+            if any(
+                isinstance(row, dict)
+                and expectation.field in row
+                and (
+                    isinstance(row[expectation.field], bool)
+                    or not isinstance(row[expectation.field], (int, float, Decimal))
+                )
+                for row in captured.rows
+            ):
+                diagnostic = catalog_diagnostic(
+                    expectation.kind,
+                    f"Range expectation for product '{expectation.subject.product}' field '{expectation.field}' "
+                    "requires numeric captured values.",
+                    phase=DiagnosticPhase.EVIDENCE,
+                    path=check.path,
+                )
+                acceptance_diagnostics = tuple(
+                    diagnostic if item.path == check.path and item.code == expectation.kind else item
+                    for item in acceptance_diagnostics
+                )
         diagnostics = (
             *lint.diagnostics,
             *graph.diagnostics,
             *first.diagnostics,
-            *(() if failed else evaluate_acceptance(acceptance, first.captured, stopped=first.stopped_by_assert)),
+            *acceptance_diagnostics,
         )
         project_nodes = tuple(
             node
