@@ -24,7 +24,7 @@ def anyio_backend() -> str:
 async def call_init(project: str, workspace_root: Path | None = None, **arguments: str) -> dict:
     async with Client(create_server(workspace_root=workspace_root)) as client:
         response = await client.call_tool("datamimic_init", {"project": project, **arguments})
-    return json.loads(response[0].text)
+    return json.loads(response.content[0].text)
 
 
 def files_of(project: Path) -> list[str]:

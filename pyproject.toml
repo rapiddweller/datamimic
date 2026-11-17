@@ -58,7 +58,7 @@ ray = [
 
 # Optional dependency group for MCP server surface
 mcp = [
-    "fastmcp==2.2.0",  # the tested release; later ones change SSE auth, drop sse_app and change call_tool results (#658)
+    "fastmcp==4.2.0",  # tested MCP server and client API (#658)
     "uvicorn>=0.30",
 ]
 
@@ -102,7 +102,7 @@ dev-dependencies = [
     "types-xmltodict>=0.13.0",
     "types-lxml>=5.3.0",
     "types-openpyxl>=3.1.0",
-    "fastmcp==2.2.0",  # the tested release; later ones change SSE auth, drop sse_app and change call_tool results (#658)
+    "fastmcp==4.2.0",  # tested MCP server and client API (#658)
     "uvicorn>=0.30",
 ]
 

@@ -68,7 +68,7 @@ async def check_mcp(schemas):
                 "init",
             )
         }
-        version = json.loads((await client.call_tool("datamimic_version", {}))[0].text)
+        version = json.loads((await client.call_tool("datamimic_version", {})).content[0].text)
         assert version["build_protocol"] == "5.0", version
         for name, schema in schemas.items():
             if len(json.dumps(schema)) > MAX_MCP_RESULT_CHARACTERS:
@@ -81,14 +81,14 @@ async def check_mcp(schemas):
                     raise AssertionError(f"{name} exceeds the MCP result limit and must be refused")
                 continue
             result = await client.call_tool("datamimic_schema", {"name": name})
-            assert json.loads(result[0].text) == schema, name
+            assert json.loads(result.content[0].text) == schema, name
         result = await client.call_tool("datamimic_build", {"project": str(Path.cwd())})
-        built = json.loads(result[0].text)
+        built = json.loads(result.content[0].text)
         # The workspace holds rows.csv files that this project never reads: a gap, not a failure.
         assert built["outcome"] == "ready_with_gaps" and built["evidence"][0]["count"] == 2, built
         assert "rows.csv" in built["coverage"]["unread_data_files"], built
         result = await client.call_tool("datamimic_run_project", {"project": str(Path.cwd()), "timeout_seconds": 120})
-        ran = json.loads(result[0].text)
+        ran = json.loads(result.content[0].text)
         assert ran["outcome"] == "completed" and ran["exit_code"] == 0, ran
         assert ran["build_outcome"] == "ready_with_gaps" and ran["action_required"], ran
         result = await client.call_tool(
@@ -100,7 +100,7 @@ async def check_mcp(schemas):
                 },
             },
         )
-        sourced = json.loads(result[0].text)
+        sourced = json.loads(result.content[0].text)
         assert sourced["ok"] and sourced["products"][0]["rows"][0] == {"id": "1", "name": "inside"}, sourced
     assert not protocol_errors, protocol_errors
 

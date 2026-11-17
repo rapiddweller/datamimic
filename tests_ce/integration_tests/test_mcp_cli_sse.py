@@ -7,6 +7,7 @@ import sys
 import time
 
 import pytest
+from httpx2 import HTTPStatusError
 
 fastmcp_client = pytest.importorskip("fastmcp.client")
 transports = pytest.importorskip("fastmcp.client.transports")
@@ -68,7 +69,7 @@ async def test_cli_sse_exact_tools_with_api_key(anyio_backend: str) -> None:
     port = free_tcp_port()
     process = spawn_server(port, "secret")
     try:
-        with pytest.raises(ConnectionError):
+        with pytest.raises(HTTPStatusError, match="401"):
             async with Client(SSETransport(f"http://127.0.0.1:{port}/sse")) as client:
                 await client.list_tools()
         headers = {"Authorization": "Bearer secret"}

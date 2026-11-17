@@ -44,7 +44,7 @@ async def test_exact_authoring_tool_surface_and_no_resources(anyio_backend: str)
         # Build takes only the project: its acceptance/build.json is the only acceptance input.
         assert set(build.inputSchema["properties"]) == {"project"}
         assert build.inputSchema["required"] == ["project"]
-        version = json.loads((await client.call_tool("datamimic_version", {}))[0].text)
+        version = json.loads((await client.call_tool("datamimic_version", {})).content[0].text)
         assert version["build_protocol"] == "5.0"
 
 
@@ -55,17 +55,17 @@ async def test_codec_lint_and_reference_use_canonical_contracts(anyio_backend: s
         compiled = await client.call_tool(
             "datamimic_compile", {"project": project, "request": {"document": {"root": {"kind": "setup"}}}}
         )
-        compiled_payload = json.loads(compiled[0].text)
+        compiled_payload = json.loads(compiled.content[0].text)
         assert compiled_payload["outcome"] == "ready"
         xml = compiled_payload["artifact"]["compiled_xml"]
         decompiled = await client.call_tool("datamimic_decompile", {"project": project, "request": {"xml": xml}})
-        assert json.loads(decompiled[0].text)["document"] == compiled_payload["artifact"]["document"]
+        assert json.loads(decompiled.content[0].text)["document"] == compiled_payload["artifact"]["document"]
         checked = await client.call_tool("datamimic_lint", {"project": project, "request": {"xml": xml}})
-        assert json.loads(checked[0].text)["ok"] is True
+        assert json.loads(checked.content[0].text)["ok"] is True
         reference = await client.call_tool("datamimic_reference", {"request": {"topic": "overview"}})
-        assert json.loads(reference[0].text)["topic"] == "overview"
+        assert json.loads(reference.content[0].text)["topic"] == "overview"
         capabilities = await client.call_tool("datamimic_capabilities", {})
-        assert "setup" in json.loads(capabilities[0].text)["element"]
+        assert "setup" in json.loads(capabilities.content[0].text)["element"]
 
 
 @pytest.mark.anyio
@@ -102,7 +102,7 @@ async def test_build_matches_cli_and_preserves_caller_requirement_rejections(any
         cli = CliRunner().invoke(app, ["authoring", "build", str(tmp_path)])
         assert cli.exit_code == 0, cli.stdout
         contract = TypeAdapter(BuildResult)
-        assert contract.validate_json(ready[0].text) == contract.validate_json(cli.stdout)
+        assert contract.validate_json(ready.content[0].text) == contract.validate_json(cli.stdout)
         write_project(
             tmp_path,
             xml,
@@ -118,7 +118,7 @@ async def test_build_matches_cli_and_preserves_caller_requirement_rejections(any
             ],
         )
         rejected = await client.call_tool("datamimic_build", {"project": str(tmp_path)})
-        payload = json.loads(rejected[0].text)
+        payload = json.loads(rejected.content[0].text)
         assert payload["outcome"] == "rejected"
         assert any(item["path"][:2] == ["acceptance_requirements", 0] for item in payload["diagnostics"])
 
@@ -132,7 +132,7 @@ async def test_bounded_run_tools_preserve_distinct_phases(anyio_backend: str, tm
     async with Client(create_server()) as client:
         dry = await client.call_tool("datamimic_dry_run", {"project": str(tmp_path), "request": {"xml": xml}})
         run = await client.call_tool("datamimic_run", {"project": str(tmp_path), "request": {"xml": xml}})
-        dry_payload, run_payload = json.loads(dry[0].text), json.loads(run[0].text)
+        dry_payload, run_payload = json.loads(dry.content[0].text), json.loads(run.content[0].text)
         assert dry_payload["ok"] is run_payload["ok"] is True
         assert dry_payload["phase"] == "dry_run"
         assert run_payload["phase"] == "run"
@@ -159,7 +159,7 @@ async def test_invalid_dsl_values_return_build_result_over_mcp(anyio_backend, tm
     write_project(tmp_path, xml, verification={"smoke_export": True, "deterministic_replay": True})
     async with Client(create_server()) as client:
         response = await client.call_tool("datamimic_build", {"project": str(tmp_path)})
-        result = TypeAdapter(BuildResult).validate_json(response[0].text)
+        result = TypeAdapter(BuildResult).validate_json(response.content[0].text)
         assert isinstance(result, RejectedBuild), result
         assert result.diagnostics[0].path[:4] == ("document", "root", "children", 0)
         assert result.verification.smoke_export.status == "blocked"

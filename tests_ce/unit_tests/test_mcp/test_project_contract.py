@@ -74,10 +74,10 @@ async def test_unusable_project_is_an_input_diagnostic_not_a_tool_error(
     restriction = allowed if kind != "relative" else None
     async with Client(create_server(workspace_root=restriction)) as client:
         response = await client.call_tool(tool, {"project": project, **PROJECT_TOOLS[tool]})
-    payload = json.loads(response[0].text)
+    payload = json.loads(response.content[0].text)
     diagnostics = payload["diagnostics"]
     assert diagnostics[0]["code"] == "input", payload
-    assert str(tmp_path) not in response[0].text
+    assert str(tmp_path) not in response.content[0].text
 
 
 @pytest.mark.anyio
@@ -87,7 +87,7 @@ async def test_project_inside_the_workspace_root_is_accepted(anyio_backend: str,
     write_project(project, XML)
     async with Client(create_server(workspace_root=tmp_path)) as client:
         response = await client.call_tool("datamimic_build", {"project": str(project)})
-    assert json.loads(response[0].text)["outcome"] == "ready"
+    assert json.loads(response.content[0].text)["outcome"] == "ready"
 
 
 @pytest.mark.anyio
@@ -130,6 +130,25 @@ def test_child_environment_adds_project_values_without_touching_this_process(
 
 
 @pytest.mark.anyio
+async def test_version_text_only_and_exact_size_boundary(anyio_backend: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(mcp_server, "get_datamimic_lib_version", lambda: "é")
+    expected = '{"ce_version":"é","build_protocol":"5.0"}'
+    monkeypatch.setattr(mcp_server, "MAX_RESULT_CHARACTERS", len(expected))
+    async with Client(create_server()) as client:
+        result = await client.call_tool("datamimic_version", {})
+        assert result.content[0].text == expected
+        assert result.structured_content is None
+        monkeypatch.setattr(mcp_server, "MAX_RESULT_CHARACTERS", len(expected) - 1)
+        with pytest.raises(Exception, match="result_too_large") as raised:
+            await client.call_tool("datamimic_version", {})
+    assert json.loads(str(raised.value)) == {
+        "error": "result_too_large",
+        "size": len(expected),
+        "hint": "This result cannot be narrowed.",
+    }
+
+
+@pytest.mark.anyio
 async def test_oversized_result_names_the_narrowing_argument(
     anyio_backend: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -153,7 +172,7 @@ async def test_argument_free_tools_stay_under_the_size_limit(anyio_backend: str,
             ("datamimic_build", {"project": str(tmp_path)}),
         ):
             response = await client.call_tool(name, arguments)
-            assert len(response[0].text) <= mcp_server.MAX_RESULT_CHARACTERS, name
+            assert len(response.content[0].text) <= mcp_server.MAX_RESULT_CHARACTERS, name
 
 
 @pytest.mark.anyio

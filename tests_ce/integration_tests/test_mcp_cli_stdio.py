@@ -47,7 +47,7 @@ async def test_cli_stdio_authoring_roundtrip(anyio_backend: str) -> None:
             "datamimic_reference",
             {"request": {"topic": "overview"}},
         )
-        assert json.loads(result[0].text)["topic"] == "overview"
+        assert json.loads(result.content[0].text)["topic"] == "overview"
 
 
 @pytest.mark.anyio
@@ -75,6 +75,6 @@ async def test_cli_stdio_explicit_workspace_reads_project_instead_of_launcher(tm
                 },
             },
         )
-        payload = json.loads(result[0].text)
+        payload = json.loads(result.content[0].text)
         assert payload["ok"], payload
         assert payload["products"][0]["rows"] == [{"id": "PROJECT"}]

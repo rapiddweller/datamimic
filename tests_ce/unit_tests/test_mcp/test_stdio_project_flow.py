@@ -41,11 +41,11 @@ async def test_build_then_run_project_writes_25_rows(anyio_backend: str, tmp_pat
     launcher = tmp_path / "launcher"
     launcher.mkdir()
     async with stdio_client(launcher) as client:
-        version = json.loads((await client.call_tool("datamimic_version", {}))[0].text)
+        version = json.loads((await client.call_tool("datamimic_version", {})).content[0].text)
         assert version["build_protocol"] == "5.0"
-        built = json.loads((await client.call_tool("datamimic_build", {"project": str(project)}))[0].text)
+        built = json.loads((await client.call_tool("datamimic_build", {"project": str(project)})).content[0].text)
         assert built["outcome"] == "ready"
-        run = json.loads((await client.call_tool("datamimic_run_project", {"project": str(project)}))[0].text)
+        run = json.loads((await client.call_tool("datamimic_run_project", {"project": str(project)})).content[0].text)
     assert run["outcome"] == "completed", run["log_tail"]
     csv_files = [item["path"] for item in run["artifacts"] if item["path"].endswith(".csv")]
     assert len(csv_files) == 1
@@ -60,7 +60,7 @@ async def test_database_project_is_not_run_without_allow_side_effects(anyio_back
     shutil.copytree(FIXTURES / "warehouse", project)
     before = sorted(path.name for path in project.rglob("*"))
     async with stdio_client(tmp_path) as client:
-        run = json.loads((await client.call_tool("datamimic_run_project", {"project": str(project)}))[0].text)
+        run = json.loads((await client.call_tool("datamimic_run_project", {"project": str(project)})).content[0].text)
     assert run["outcome"] == "not_run"
     assert {item["kind"] for item in run["required_side_effects"]} == {"database", "target"}
     assert sorted(path.name for path in project.rglob("*")) == before
@@ -71,7 +71,7 @@ async def test_rejected_build_is_returned_by_run_project(anyio_backend: str, tmp
     project = tmp_path / "empty"
     project.mkdir()
     async with stdio_client(tmp_path) as client:
-        run = json.loads((await client.call_tool("datamimic_run_project", {"project": str(project)}))[0].text)
+        run = json.loads((await client.call_tool("datamimic_run_project", {"project": str(project)})).content[0].text)
     assert run["outcome"] == "not_run" and run["build"]["outcome"] == "rejected"
 
 
@@ -86,7 +86,7 @@ async def test_init_build_run_project_in_an_empty_project_and_a_second_init_refu
     async with stdio_client(launcher) as client:
 
         async def call(tool: str) -> dict:
-            return json.loads((await client.call_tool(tool, {"project": str(project)}))[0].text)
+            return json.loads((await client.call_tool(tool, {"project": str(project)})).content[0].text)
 
         init = await call("datamimic_init")
         assert init["outcome"] == "written"
