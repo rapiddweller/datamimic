@@ -44,6 +44,7 @@ class CapturedObjectId:
 
 CaptureValue: TypeAlias = (
     str
+    | bytes
     | bool
     | int
     | float
@@ -152,7 +153,7 @@ def validate_capture_values(value: object) -> None:
                 raise ValueError("captured ObjectId contains noncanonical state")
             CapturedObjectId(value=current.value)
             continue
-        if current is None or isinstance(current, str | bool | date | datetime | UUID):
+        if current is None or isinstance(current, str | bytes | bool | date | datetime | UUID):
             continue
         if isinstance(current, int):
             if current.bit_length() > 14_000:

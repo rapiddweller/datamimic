@@ -4,6 +4,7 @@
 
 """JSON response samples projected after validation of the complete capture."""
 
+import base64
 from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
@@ -15,6 +16,8 @@ from datamimic_ce.authoring.domain.requests import ProductEvidence
 
 
 def _json_value(value: object) -> JsonValue:
+    if isinstance(value, bytes):
+        return {"type": "binary", "base64": str(base64.b64encode(value), "ascii")}
     if isinstance(value, CapturedObjectId):
         return value.value
     if value is None or isinstance(value, str | int | float | bool):

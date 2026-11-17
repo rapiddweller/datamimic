@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import base64
 import json
 import re
 from collections.abc import Mapping
@@ -241,6 +242,8 @@ def _matches_literal(actual: object, expected: JsonValue) -> bool:
 
 
 def _json_value(value: object) -> JsonValue:
+    if isinstance(value, bytes):
+        return {"type": "binary", "base64": str(base64.b64encode(value), "ascii")}
     if isinstance(value, CapturedObjectId):
         return value.value
     if value is None or isinstance(value, str | int | float | bool):
