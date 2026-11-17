@@ -23,6 +23,7 @@ from datamimic_ce.authoring.domain.proof import ReplayMismatchKind, Verification
 from datamimic_ce.authoring.domain.requests import (
     PROJECT_ENTRY_PATH,
     BoundedExecutionEvidence,
+    BoundedExecutionStatus,
     LintResult,
     ReadyBuild,
     ReadyWithGapsBuild,
@@ -68,8 +69,13 @@ def _captured(*, rows=({"id": 1}, {"id": 2}), ok=True, base_run_ok=True, smoke=N
         reason="Complete controlled executor-port capture",
     )
     return BoundedExecutionEvidence(
-        ok=ok,
-        base_run_ok=base_run_ok,
+        status=(
+            BoundedExecutionStatus.FAILED
+            if not base_run_ok
+            else BoundedExecutionStatus.PASSED
+            if ok
+            else BoundedExecutionStatus.SMOKE_FAILED
+        ),
         captured=CapturedProducts((CapturedProduct("items", tuple(rows), provenance),), 10),
         smoke_export=smoke or SmokeExportCapture.not_requested(),
     )
@@ -116,6 +122,24 @@ def test_requested_smoke_without_exporter_is_not_applicable(tmp_path: Path) -> N
     assert isinstance(result, ReadyBuild), result
     assert result.verification.smoke_export.status is VerificationGateStatus.NOT_APPLICABLE
     assert result.verification.smoke_export.applicable_exporters == 0
+
+
+def test_smoke_export_with_empty_nested_product(tmp_path: Path) -> None:
+    result = build_project(
+        tmp_path,
+        """<setup rngSeed="7">
+        <generate name="parents" count="2" target="JSON">
+            <key name="id" generator="IncrementGenerator"/>
+            <generate name="children" count="0" target="JSON">
+                <key name="id" generator="IncrementGenerator"/>
+                <key name="parent_id" script="parent.id"/>
+            </generate>
+        </generate>
+        </setup>""",
+        verification={"smoke_export": True},
+    )
+    assert isinstance(result, ReadyBuild), result
+    assert result.verification.smoke_export.status is VerificationGateStatus.PASSED
 
 
 def test_smoke_failure_cannot_be_masked_by_passing_acceptance(tmp_path: Path, monkeypatch) -> None:

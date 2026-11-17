@@ -44,6 +44,7 @@ from datamimic_ce.authoring.domain.diagnostics import (
 from datamimic_ce.authoring.domain.requests import (
     BoundedExecutionEvidence,
     BoundedExecutionRequest,
+    BoundedExecutionStatus,
     ProjectFileDigest,
     SourceAccessEvidence,
 )
@@ -74,7 +75,7 @@ def _failure(code: AuthoringSystemDiagnosticCode, message: str, max_count: int) 
         remediation="Repair the bounded descriptor or its workspace resources, then retry.",
     )
     return BoundedExecutionEvidence(
-        ok=False, captured=CapturedProducts((), max_count), diagnostics=(diagnostic,), base_run_ok=False
+        status=BoundedExecutionStatus.FAILED, captured=CapturedProducts((), max_count), diagnostics=(diagnostic,)
     )
 
 
@@ -289,7 +290,7 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
             ):
                 assert_path, text, rule = _failed_assert(location, request, entry, workspace)
                 return BoundedExecutionEvidence(
-                    ok=False,
+                    status=BoundedExecutionStatus.STOPPED_BY_ASSERT,
                     captured=(
                         dryrun._captured_products(message.stopped_capture, request.max_count)
                         if message.stopped_capture is not None
@@ -324,13 +325,11 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
                         ),
                         *_warning_diagnostics(message.warnings),
                     ),
-                    base_run_ok=False,
                     source_accesses=tuple(
                         SourceAccessEvidence(source_type=source_type, requests=count)
                         for source_type, count in message.source_accesses
                     ),
                     files=_read_file_digests(message.read_files, request, workspace),
-                    stopped_by_assert=True,
                 )
             definition = (
                 get_issue_definition(message.error.issue_code)
@@ -396,10 +395,9 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
                 ),
             )
             return BoundedExecutionEvidence(
-                ok=False,
+                status=BoundedExecutionStatus.FAILED,
                 captured=CapturedProducts((), request.max_count),
                 diagnostics=(diagnostic, *_warning_diagnostics(message.warnings)),
-                base_run_ok=False,
                 files=_read_file_digests(message.read_files, request, workspace),
             )
         if not isinstance(message, dryrun._WorkerSuccess):
@@ -445,8 +443,15 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
                     remediation="Use a descriptor that produces the required bounded data.",
                 ),
             )
+        base_run_ok = base_run_ok or ((bool(skipped) or ran_operation) and not captured.products)
         return BoundedExecutionEvidence(
-            ok=(base_run_ok or bool(skipped) or ran_operation) and not diagnostics,
+            status=(
+                BoundedExecutionStatus.FAILED
+                if not base_run_ok
+                else BoundedExecutionStatus.SMOKE_FAILED
+                if diagnostics
+                else BoundedExecutionStatus.PASSED
+            ),
             captured=captured,
             # Warnings follow ok: they inform and never reject.
             diagnostics=diagnostics + skipped + _warning_diagnostics(message.warnings),
@@ -455,9 +460,6 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
                 SourceAccessEvidence(source_type=source_type, requests=count)
                 for source_type, count in message.source_accesses
             ),
-            # A run that only skipped clear/drop has nothing to capture and nothing failed. A product without rows
-            # next to a skipped clear stays a failure, as without the clear; Build still needs products.
-            base_run_ok=base_run_ok or ((bool(skipped) or ran_operation) and not captured.products),
             files=_read_file_digests(message.read_files, request, workspace),
         )
     except (

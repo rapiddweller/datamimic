@@ -199,12 +199,12 @@ class RunResult(AuthoringModel):
     diagnostics: tuple[Diagnostic, ...] = ()
 
     @classmethod
-    def from_input_error(cls, message: str) -> RunResult:
+    def from_input_error(cls, message: str, phase: RunPhase) -> RunResult:
         from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
 
         return cls(
             ok=False,
-            phase=RunPhase.RUN,
+            phase=phase,
             diagnostics=(catalog_diagnostic(AuthoringRuleId.INPUT, message, phase=DiagnosticPhase.MODEL),),
         )
 
@@ -486,17 +486,33 @@ class BoundedExecutionRequest(AuthoringModel):
     hash_seed: StrictInt | None = Field(default=None, ge=0, le=4294967295)
 
 
+class BoundedExecutionStatus(StrEnum):
+    PASSED = "passed"
+    SMOKE_FAILED = "smoke_failed"
+    FAILED = "failed"
+    STOPPED_BY_ASSERT = "stopped_by_assert"
+
+
 @dataclass(frozen=True)
 class BoundedExecutionEvidence:
     """Validated full execution evidence, kept inside the application boundary."""
 
-    ok: bool
+    status: BoundedExecutionStatus
     captured: CapturedProducts
     diagnostics: tuple[Diagnostic, ...] = ()
     smoke_export: SmokeExportCapture = SmokeExportCapture.not_requested()
-    base_run_ok: bool = True
     source_accesses: tuple[SourceAccessEvidence, ...] = ()
     # Workspace files the run opened for reading, hashed from the private copy it read them from.
     files: tuple[ProjectFileDigest, ...] = ()
-    # A failed <assert> stopped the run; ``captured`` holds only the products that completed before it.
-    stopped_by_assert: bool = False
+
+    @property
+    def ok(self) -> bool:
+        return self.status is BoundedExecutionStatus.PASSED
+
+    @property
+    def base_run_ok(self) -> bool:
+        return self.status in (BoundedExecutionStatus.PASSED, BoundedExecutionStatus.SMOKE_FAILED)
+
+    @property
+    def stopped_by_assert(self) -> bool:
+        return self.status is BoundedExecutionStatus.STOPPED_BY_ASSERT
