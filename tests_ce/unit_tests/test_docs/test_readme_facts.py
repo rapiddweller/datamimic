@@ -20,7 +20,9 @@ def test_readme_shop_project_is_the_scenario_project() -> None:
 def test_readme_determinism_matrix_size_equals_the_workflow() -> None:
     workflow = (ROOT / ".github/workflows/main.yml").read_text(encoding="utf-8")
     matrix = workflow.split("runtime_determinism_matrix:", 1)[1]
-    cells = len(re.findall(r"^\s+cell: ", matrix, re.MULTILINE))
+    matrix_cells = len(re.findall(r"^\s+cell: ", matrix, re.MULTILINE))
+    ubuntu_cells = len(re.findall(r'^\s+"ubuntu-[\w-]+ \d+\.\d+ ', matrix, re.MULTILINE))
+    cells = matrix_cells + ubuntu_cells
     stated = int(re.search(r"compares seeded output on (\d+) configurations", README).group(1))
 
     assert stated == cells
