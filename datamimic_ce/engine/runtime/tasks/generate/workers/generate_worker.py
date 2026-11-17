@@ -267,16 +267,16 @@ class GenerateWorker:
             with gen_timer(
                 "generate", root_context.report_logging, stmt.full_name, isinstance(context, GenIterContext)
             ) as timer_result:
-                timer_result["records_count"] = page_end - page_start
                 # Generate product
                 result_dict = GenerateWorker._generate_product_by_page_in_single_process(
                     context, stmt, page_start, page_end, worker_id, source_reader, unique_cursors
                 )
+                timer_result["records_count"] = len(result_dict[stmt.full_name])
 
             with gen_timer(
                 "export", root_context.report_logging, stmt.full_name, isinstance(context, GenIterContext)
             ) as timer_result:
-                timer_result["records_count"] = page_end - page_start
+                timer_result["records_count"] = len(result_dict[stmt.full_name])
                 # Export product by page. A NESTED generate (GenIterContext) defers to the enclosing
                 # statement's page export, which writes the parent's rows first and then recurses into
                 # the children - exporting here would land child rows

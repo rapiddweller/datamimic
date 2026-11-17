@@ -70,3 +70,22 @@ def test_targetless_run_reports_phases_without_claiming_export(
     assert not (tmp_path / "output").exists()
     if capture_test_result:
         assert runner.capture_result() == {"rows": [{"id": 1}, {"id": 2}, {"id": 3}]}
+
+
+@pytest.mark.parametrize("count", [2, 3])
+def test_short_source_reports_produced_rows_in_every_phase(tmp_path, monkeypatch, count: int) -> None:
+    (tmp_path / "source.csv").write_text("id\n1\n2\n", encoding="utf-8")
+    (tmp_path / "rows.xml").write_text(
+        f'<setup multiprocessing="0"><generate name="rows" count="{count}" source="source.csv" '
+        'distribution="ordered" target=""/></setup>',
+        encoding="utf-8",
+    )
+    messages: list[str] = []
+    monkeypatch.setattr(runtime_logging.logger, "info", messages.append)
+    DataMimicTest(tmp_path, "rows.xml", capture_test_result=True).test_with_timer()
+    timings = [message.partition(" took")[0] for message in messages if " records 'rows' took" in message]
+    assert timings == [
+        "Generating 2 records 'rows'",
+        "Export phase for 2 records 'rows'",
+        "Processing 2 records 'rows'",
+    ]
