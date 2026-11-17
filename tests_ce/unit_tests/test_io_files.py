@@ -230,3 +230,16 @@ def test_csv_reader_annotations_are_narrow():
         == tuple[dict[str, int], list[tuple[str, ...]]]
     )
     assert get_type_hints(FileUtil.read_csv_to_list_of_tuples_without_header)["return"] == list[tuple[str, ...]]
+
+
+def test_file_content_cache_rereads_changed_file(tmp_path):
+    path = tmp_path / "changing.json"
+    path.write_text('[{"a": 1}]', encoding="utf-8")
+    try:
+        assert FileUtil.read_json_to_list(path) == [{"a": 1}]
+        assert FileUtil.read_json_to_list(path) == [{"a": 1}]
+        path.write_text('[{"a": 2}, {"a": 3}]', encoding="utf-8")
+        assert FileUtil.read_json_to_list(path) == [{"a": 2}, {"a": 3}]
+    finally:
+        FileContentStorage._file_data_cache.pop(str(path), None)
+        FileContentStorage._file_signatures.pop(str(path), None)

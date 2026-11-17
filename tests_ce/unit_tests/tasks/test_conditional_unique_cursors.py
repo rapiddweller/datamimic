@@ -227,3 +227,22 @@ def test_nested_unique_pool_still_fails_when_one_invocation_overdraws(
     body += '</generate>'
     with pytest.raises(ValueError, match="unique"):
         _run(tmp_path, body)
+
+
+@pytest.mark.parametrize("wrapped", [False, True], ids=["direct", "conditional"])
+def test_unique_generator_values_stay_distinct_across_pages_and_replays(tmp_path: Path, wrapped: bool) -> None:
+    key = '<key name="code" type="int" generator="IntegerGenerator" min="1" max="12" unique="true"/>'
+    body = '<generate name="rows" count="12" pageSize="3" target="">' + _conditional(key, wrapped) + "</generate>"
+    first = _run(tmp_path, body, workers=1)
+    assert sorted(row["code"] for row in first["rows"]) == list(range(1, 13))
+    assert _run(tmp_path, body, workers=1) == first
+
+
+def test_unique_generator_same_named_branches_have_separate_cursors(tmp_path: Path) -> None:
+    body = '<generate name="rows" count="8" pageSize="3" target="">'
+    body += '<key name="id" generator="IncrementGenerator"/><condition>'
+    key = '<key name="code" type="int" generator="IntegerGenerator" min="1" max="4" unique="true"/>'
+    body += f'<if condition="id % 2 == 1">{key}</if><else>{key}</else></condition></generate>'
+    rows = _run(tmp_path, body, workers=1)["rows"]
+    assert sorted(row["code"] for row in rows[::2]) == [1, 2, 3, 4]
+    assert sorted(row["code"] for row in rows[1::2]) == [1, 2, 3, 4]
