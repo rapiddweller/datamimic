@@ -634,10 +634,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Serial coverage of the whole suite took about 46 minutes on two cores; these two shards take about 16 and 11.
+        # Serial coverage of the whole suite took about 46 minutes on two cores; the authoring suite is split in two by measured test time.
         include:
-          - shard: authoring
-            args: tests_ce/unit_tests/test_authoring
+          - shard: authoring-a
+            args: tests_ce/unit_tests/test_authoring/test_derived_row_limit.py tests_ce/unit_tests/test_authoring/test_build_verification.py tests_ce/unit_tests/test_authoring/test_ready_coverage.py tests_ce/unit_tests/test_authoring/test_dryrun_includes.py tests_ce/unit_tests/test_authoring/test_assert_gate.py tests_ce/unit_tests/test_authoring/test_project_run.py tests_ce/unit_tests/test_authoring/test_dryrun.py
+          - shard: authoring-b
+            args: tests_ce/unit_tests/test_authoring --ignore=tests_ce/unit_tests/test_authoring/test_derived_row_limit.py --ignore=tests_ce/unit_tests/test_authoring/test_build_verification.py --ignore=tests_ce/unit_tests/test_authoring/test_ready_coverage.py --ignore=tests_ce/unit_tests/test_authoring/test_dryrun_includes.py --ignore=tests_ce/unit_tests/test_authoring/test_assert_gate.py --ignore=tests_ce/unit_tests/test_authoring/test_project_run.py --ignore=tests_ce/unit_tests/test_authoring/test_dryrun.py
           - shard: rest
             args: tests_ce/unit_tests --ignore=tests_ce/unit_tests/test_benchmarks --ignore=tests_ce/unit_tests/test_authoring
     steps:
@@ -717,7 +719,7 @@ jobs:
         if: github.event_name != 'pull_request'
         run: |
           . .venv/bin/activate
-          test "$(ls -A coverage-unit-data | wc -l)" -eq 2
+          test "$(ls -A coverage-unit-data | wc -l)" -eq 3
           uv run coverage combine coverage-unit-data
           uv run make coverage-unit-report
           uv run make test-architecture
@@ -775,7 +777,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - shard: builds
+          - shard: builds-a
+            scenario_shard: 0/2
+            args: tests_ce/scenarios/test_scenarios.py::test_scenario_builds_runs_and_replays
+          - shard: builds-b
+            scenario_shard: 1/2
             args: tests_ce/scenarios/test_scenarios.py::test_scenario_builds_runs_and_replays
           - shard: negatives
             args: tests_ce/scenarios/test_scenarios.py::test_negative_is_rejected_with_named_diagnostic
@@ -818,6 +824,7 @@ jobs:
       - name: Run functional tests with coverage
         env:
           COVERAGE_FILE: .coverage.${{ matrix.shard }}
+          SCENARIO_SHARD: ${{ matrix.scenario_shard }}
         run: |
           . .venv/bin/activate
           uv run coverage run -m pytest ${{ matrix.args }} --durations=20
@@ -860,7 +867,7 @@ jobs:
       - name: Combine functional coverage
         run: |
           . .venv/bin/activate
-          test "$(ls -A coverage-functional-data | wc -l)" -eq 3
+          test "$(ls -A coverage-functional-data | wc -l)" -eq 4
           uv run coverage combine coverage-functional-data
           uv run coverage xml
         shell: bash
@@ -870,10 +877,22 @@ jobs:
           name: coverage-functional
           path: coverage.xml
 
-  integration_test:
+  integration_coverage_shard:
+    name: Integration coverage shard ${{ matrix.shard }}
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-22.04
     needs: install_dependencies
     container: python:3.11-slim-bookworm
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: files
+            args: tests_ce/integration_tests/test_file_filter tests_ce/integration_tests/test_large_count tests_ce/integration_tests/test_blank_selector
+          - shard: pages
+            args: tests_ce/integration_tests/test_page_process tests_ce/integration_tests/test_source_file_errors tests_ce/integration_tests/test_decimal_json tests_ce/integration_tests/test_dotenv_entrypoints.py
+          - shard: rest
+            args: tests_ce/integration_tests/ --ignore=tests_ce/integration_tests/test_file_filter --ignore=tests_ce/integration_tests/test_large_count --ignore=tests_ce/integration_tests/test_blank_selector --ignore=tests_ce/integration_tests/test_page_process --ignore=tests_ce/integration_tests/test_source_file_errors --ignore=tests_ce/integration_tests/test_decimal_json --ignore=tests_ce/integration_tests/test_dotenv_entrypoints.py
     steps:
       - name: Setup git
         run: |
@@ -890,14 +909,62 @@ jobs:
           path: .venv
           key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml', './uv.lock') }}
       - name: Run integration tests with coverage
+        env:
+          COVERAGE_FILE: .coverage.${{ matrix.shard }}
         run: |
           . .venv/bin/activate
-          # A pull request runs the tests without coverage (no report is consumed there); the report is made on push.
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            uv run pytest tests_ce/integration_tests/
-          else
-            uv run pytest tests_ce/integration_tests/ --cov --cov-report=xml
-          fi
+          uv run coverage run -m pytest ${{ matrix.args }} --durations=20
+        shell: bash
+      - name: Upload coverage data
+        uses: actions/upload-artifact@v6
+        with:
+          name: coverage-integration-data-${{ matrix.shard }}
+          path: .coverage.${{ matrix.shard }}
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+
+  integration_test:
+    runs-on: ubuntu-22.04
+    needs: [install_dependencies, integration_coverage_shard]
+    # Pull requests skip the shards and run the tests here without coverage; a push combines the shard coverage.
+    if: ${{ !cancelled() && needs.install_dependencies.result == 'success' && (github.event_name == 'pull_request' || needs.integration_coverage_shard.result == 'success') }}
+    container: python:3.11-slim-bookworm
+    steps:
+      - name: Setup git
+        run: |
+          apt-get update
+          apt-get install -y git
+          git config --global --add safe.directory $(realpath .)
+      - name: Checkout repository
+        uses: actions/checkout@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.1.0
+      - name: Load venv cache
+        uses: actions/cache/restore@v5
+        with:
+          path: .venv
+          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml', './uv.lock') }}
+      - name: Run integration tests
+        if: github.event_name == 'pull_request'
+        run: |
+          . .venv/bin/activate
+          uv run pytest tests_ce/integration_tests/
+        shell: bash
+      - name: Download coverage data
+        if: github.event_name != 'pull_request'
+        uses: actions/download-artifact@v7
+        with:
+          pattern: coverage-integration-data-*
+          path: coverage-integration-data
+          merge-multiple: true
+      - name: Combine integration coverage
+        if: github.event_name != 'pull_request'
+        run: |
+          . .venv/bin/activate
+          test "$(ls -A coverage-integration-data | wc -l)" -eq 3
+          uv run coverage combine coverage-integration-data
+          uv run coverage xml
         shell: bash
       - name: Upload coverage report
         if: github.event_name != 'pull_request'
