@@ -177,3 +177,61 @@ def test_credit_card_to_dict_keeps_public_key_order():
         "bin",
         "iban",
     )
+
+
+def _weights(dataset: str) -> dict[str, float]:
+    rows = CreditCardGenerator(dataset=dataset, rng=Random(0))._load_card_types()
+    total = sum(float(r[4]) for r in rows)
+    return {r[0]: float(r[4]) / total for r in rows}
+
+
+def _cards(seed: int, count: int, dataset: str = "US") -> list[CreditCard]:
+    generator = CreditCardGenerator(dataset=dataset, rng=Random(seed))
+    return [CreditCard(generator) for _ in range(count)]
+
+
+@pytest.mark.parametrize("dataset", ["US", "DE", "VN"])
+def test_card_type_follows_declared_weights_across_cards(dataset):
+    count = 4000
+    cards = _cards(7, count, dataset)
+    observed = {}
+    for card in cards:
+        observed[card.card_type] = observed.get(card.card_type, 0) + 1
+
+    for card_type, weight in _weights(dataset).items():
+        assert abs(observed.get(card_type, 0) / count - weight) < 0.03, (card_type, observed)
+
+
+@pytest.mark.parametrize("dataset", ["US", "DE", "VN"])
+def test_card_fields_agree_with_the_card_type(dataset):
+    rows = {r[0]: r for r in CreditCardGenerator(dataset=dataset, rng=Random(0))._load_card_types()}
+    for card in _cards(11, 300, dataset):
+        _, prefixes, length, cvv_length, _ = rows[card.card_type]
+        assert card.card_number.startswith(tuple(prefixes.split("|")))
+        assert len(card.card_number) == int(length)
+        assert len(card.cvv) == len(card.cvc_number) == int(cvv_length)
+
+
+def test_same_seed_reproduces_cards_and_other_seed_differs():
+    def snapshot(seed: int) -> list[tuple[str, str, str]]:
+        return [(c.card_type, c.card_number, c.cvv) for c in _cards(seed, 20)]
+
+    assert snapshot(5) == snapshot(5)
+    assert snapshot(5) != snapshot(6)
+
+
+def test_card_spec_is_picked_once_per_card(monkeypatch):
+    generator = CreditCardGenerator(dataset="US", rng=Random(3))
+    picks = []
+    original = generator.get_card_specs
+
+    def counting_pick():
+        picks.append(original())
+        return picks[-1]
+
+    monkeypatch.setattr(generator, "get_card_specs", counting_pick)
+    card = CreditCard(generator)
+    card.card_type, card.card_number, card.cvv, card.cvc_number
+    assert len(picks) == 1
+    CreditCard(generator).card_type
+    assert len(picks) == 2

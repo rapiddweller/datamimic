@@ -53,7 +53,6 @@ class CreditCardGenerator(DatasetAwareDomainGenerator):
             rng=self._derive_rng(),
         )
         self._card_types_cache: list[tuple] | None = None
-        self._card_specs: CardSpec | None = None
 
     @property
     def person_generator(self) -> PersonGenerator:
@@ -67,12 +66,10 @@ class CreditCardGenerator(DatasetAwareDomainGenerator):
     def bank_account_generator(self) -> BankAccountGenerator:
         return self._bank_account_generator
 
-    def generate_card_type(self) -> str:
-        #  keep API returning type, but use dataset-specific specs
-        return self.get_card_specs()["type"]
+    def generate_card_type(self, specs: CardSpec) -> str:
+        return specs["type"]
 
-    def generate_card_number(self) -> str:
-        specs = self.get_card_specs()
+    def generate_card_number(self, specs: CardSpec) -> str:
         prefix = specs.get("prefix", "")
         total_len = specs.get("length", 16)
         remaining = max(0, total_len - len(prefix))
@@ -82,8 +79,7 @@ class CreditCardGenerator(DatasetAwareDomainGenerator):
         payload = f"{prefix}{random_digits}"
         return f"{payload}{luhn_check_digit(payload)}"
 
-    def generate_security_code(self) -> str:
-        specs = self.get_card_specs()
+    def generate_security_code(self, specs: CardSpec) -> str:
         cvv_len = specs.get("cvv_length", 3)
         digits = [str(self.rng.randint(0, 9)) for _ in range(cvv_len)]
         return "".join(digits)
@@ -105,11 +101,9 @@ class CreditCardGenerator(DatasetAwareDomainGenerator):
 
     def get_card_specs(self) -> CardSpec:
         """
-        Pick and cache a weighted card specification from dataset file.
+        Pick a weighted card specification from the dataset file; one pick per card.
         Returns: {type, prefix, length:int, cvv_length:int}
         """
-        if self._card_specs is not None:
-            return self._card_specs
         rows = self._load_card_types()
         # columns: type,prefix,length,cvv_length,weight
         weights = [float(r[4]) for r in rows]
@@ -117,10 +111,9 @@ class CreditCardGenerator(DatasetAwareDomainGenerator):
         # 'prefix' may list alternative BINs pipe-separated (e.g. AMEX "34|37"); pick one
         # so the card number is a clean numeric payload.
         prefix = self._rng.choice(str(chosen[1]).split("|"))
-        self._card_specs = {
+        return {
             "type": chosen[0],
             "prefix": prefix,
             "length": int(chosen[2]),
             "cvv_length": int(chosen[3]),
         }
-        return self._card_specs
