@@ -10,9 +10,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: architecture-pages
-  queue: max
-  cancel-in-progress: false
+  group: architecture-pages-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   publish:

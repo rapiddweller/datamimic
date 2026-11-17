@@ -17,10 +17,9 @@ on:
       - '*'
   workflow_dispatch:
 
-# Supersede PRs, development pushes and branch dispatches; keep tag runs independent.
 concurrency:
-  group: ci-${{ github.event.pull_request.number || (((github.event_name == 'push' && github.ref == 'refs/heads/development') || (github.event_name == 'workflow_dispatch' && startsWith(github.ref, 'refs/heads/'))) && github.ref) || github.run_id }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/development') || (github.event_name == 'workflow_dispatch' && startsWith(github.ref, 'refs/heads/')) }}
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
 permissions:
   contents: read

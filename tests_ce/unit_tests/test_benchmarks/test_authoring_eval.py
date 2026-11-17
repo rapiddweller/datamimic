@@ -2004,7 +2004,7 @@ def _alive(pid: int) -> bool:
     if Path("/proc").is_dir():
         try:
             return Path(f"/proc/{pid}/stat").read_text(encoding="utf-8").rsplit(")", 1)[1].split()[0] != "Z"
-        except FileNotFoundError:
+        except (FileNotFoundError, ProcessLookupError):  # reaped between open and read: ESRCH
             return False
     state = subprocess.run(["ps", "-o", "stat=", "-p", str(pid)], capture_output=True, text=True, check=False).stdout
     return bool(state.strip()) and not state.strip().startswith("Z")
