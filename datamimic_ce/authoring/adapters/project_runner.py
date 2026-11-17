@@ -85,7 +85,6 @@ class CeProjectRunner:
             for limit in (timeout_seconds, None):
                 try:
                     exit_code = process.wait(timeout=limit)
-                    _terminate_process_tree(process)
                     break
                 except subprocess.TimeoutExpired:
                     _terminate_process_tree(process)

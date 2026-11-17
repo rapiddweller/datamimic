@@ -2,6 +2,7 @@
 
 import csv
 import json
+import os
 import shutil
 from pathlib import Path
 
@@ -319,6 +320,7 @@ def test_result_rejects_contradictory_not_run_state() -> None:
         ProjectRunResult(outcome="not_run", not_run_reason="input", exit_code=0)
 
 
+@pytest.mark.skipif(os.name == "nt", reason="process groups are POSIX-only")
 @pytest.mark.parametrize("error", [ProcessLookupError, PermissionError])
 def test_runner_tolerates_process_group_disappearing_during_timeout(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, error: type[OSError]
@@ -346,7 +348,7 @@ def test_runner_tolerates_process_group_disappearing_during_timeout(
     assert result.timed_out
 
 
-def test_runner_stops_process_group_after_normal_exit(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_runner_does_not_kill_group_after_normal_exit(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     import os
     import subprocess
     import sys
@@ -369,4 +371,4 @@ def test_runner_stops_process_group_after_normal_exit(tmp_path: Path, monkeypatc
     monkeypatch.setattr(project_runner.os, "killpg", killpg)
     result = project_runner.CeProjectRunner(AuthoringWorkspaceContext(root, PROJECT_ENTRY_PATH)).run((), 5)
     assert result.exit_code == 0
-    assert calls == [calls[0], calls[0]]
+    assert calls == []
