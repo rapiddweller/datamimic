@@ -13,8 +13,9 @@ from anyio import to_thread
 from dotenv import dotenv_values
 from fastmcp import FastMCP
 from fastmcp.exceptions import ToolError
+from fastmcp.tools import ToolResult
 from pydantic import Field, JsonValue, ValidationError
-from pydantic_core import to_jsonable_python
+from pydantic_core import to_json, to_jsonable_python
 from starlette.applications import Starlette
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
@@ -47,6 +48,7 @@ from datamimic_ce.authoring.domain.requests import (
     RunResult,
 )
 from datamimic_ce.domains.api import get_datamimic_lib_version
+from mcp.types import TextContent
 
 
 class MountableApplication(Protocol):
@@ -74,18 +76,19 @@ MAX_RESULT_CHARACTERS = 60_000
 _PROJECT_ARGUMENT = "Absolute path of the directory that holds datamimic.xml."
 
 
-def _guarded(hint: str) -> Callable[[Callable[_P, Awaitable[_R]]], Callable[_P, Awaitable[_R]]]:
+def _guarded(hint: str) -> Callable[[Callable[_P, Awaitable[_R]]], Callable[_P, Awaitable[ToolResult]]]:
     """Refuse a result over the size limit and name the argument that narrows it."""
 
-    def decorate(function: Callable[_P, Awaitable[_R]]) -> Callable[_P, Awaitable[_R]]:
+    def decorate(function: Callable[_P, Awaitable[_R]]) -> Callable[_P, Awaitable[ToolResult]]:
         @wraps(function)
-        async def guarded(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+        async def guarded(*args: _P.args, **kwargs: _P.kwargs) -> ToolResult:
             result = await function(*args, **kwargs)
-            # The text FastMCP sends: its default JSON form of the result.
-            size = len(json.dumps(to_jsonable_python(result)))
+            # FastMCP 4 serializes JSON compactly, without ASCII escaping.
+            text = to_json(to_jsonable_python(result)).decode()
+            size = len(text)
             if size > MAX_RESULT_CHARACTERS:
                 raise ToolError(json.dumps({"error": "result_too_large", "size": size, "hint": hint}))
-            return result
+            return ToolResult(content=[TextContent(type="text", text=text)])
 
         return guarded
 
@@ -120,7 +123,7 @@ def create_server(
         """Register one tool whose result may not exceed the size limit."""
 
         def register(function: Callable[_P, Awaitable[_R]]) -> Callable[_P, Awaitable[_R]]:
-            server.tool(name)(_guarded(hint)(function))
+            server.tool(name, output_schema=None)(_guarded(hint)(function))
             return function
 
         return register

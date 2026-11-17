@@ -130,6 +130,25 @@ def test_child_environment_adds_project_values_without_touching_this_process(
 
 
 @pytest.mark.anyio
+async def test_version_text_only_and_exact_size_boundary(anyio_backend: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(mcp_server, "get_datamimic_lib_version", lambda: "é")
+    expected = '{"ce_version":"é","build_protocol":"5.0"}'
+    monkeypatch.setattr(mcp_server, "MAX_RESULT_CHARACTERS", len(expected))
+    async with Client(create_server()) as client:
+        result = await client.call_tool("datamimic_version", {})
+        assert result.content[0].text == expected
+        assert result.structured_content is None
+        monkeypatch.setattr(mcp_server, "MAX_RESULT_CHARACTERS", len(expected) - 1)
+        with pytest.raises(Exception, match="result_too_large") as raised:
+            await client.call_tool("datamimic_version", {})
+    assert json.loads(str(raised.value)) == {
+        "error": "result_too_large",
+        "size": len(expected),
+        "hint": "This result cannot be narrowed.",
+    }
+
+
+@pytest.mark.anyio
 async def test_oversized_result_names_the_narrowing_argument(
     anyio_backend: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:
