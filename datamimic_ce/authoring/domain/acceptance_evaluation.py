@@ -466,6 +466,15 @@ def _check_expectation(
                 f"field '{expectation.field}' is missing from {_subject_label(expectation.subject)}",
                 {"expected": expected, "actual": None},
             )
+        non_numeric = tuple(
+            value for value in values if isinstance(value, bool) or not isinstance(value, (int, float, Decimal))
+        )
+        if non_numeric:
+            return _ExpectationFailure(
+                f"values for '{expectation.field}' in {_subject_label(expectation.subject)} are not numbers; "
+                "range requires numeric captured values",
+                {"expected": expected, "actual": _json_value(non_numeric)},
+            )
         invalid = tuple(
             value
             for value in values

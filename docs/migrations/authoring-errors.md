@@ -17,6 +17,10 @@ with the script name and line; nothing is rejected, and Build's deterministic re
 A generator that the script only stores (alone, in a container, in a conditional expression, through a walrus,
 or in a lazy wrapper such as `map` or an imported `itertools.islice`) is not reported. A generator default argument
 stays reported, as a decorator argument does: a call while the script loads consumes it before the seed applies.
+W008 is a static scan, not an execution trace. It can miss a module-level `global islice` in a function later called
+at module load, an `it.islice = list` mutation, a star import that replaces a lazy name, dynamic rebinding through
+`globals()`, `setattr()` or `exec()`, and a shadowed lazy name called before a later re-import. These are known
+limits; seeded Build replay remains the hard check, and authors should avoid rebinding lazy `itertools` names.
 
 File source readers name only the file, never the host path. A file that is not an `.xlsx` workbook fails with
 `I197`; a fixed-width (`.fcw`) file without a valid `# name[width],...` first line fails with `I198`. The error

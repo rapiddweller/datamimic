@@ -27,17 +27,34 @@ def test_executor_keeps_full_capture_beyond_response_sample():
     assert result.smoke_export.requested is False
 
 
-def test_launcher_package_cannot_replace_the_selected_worker(tmp_path, monkeypatch):
+def test_bounded_child_does_not_import_a_package_shadowing_datamimic_ce_from_the_launch_directory(
+    tmp_path, monkeypatch
+):
+    import subprocess
+
+    from datamimic_ce.authoring.adapters import bounded_executor
+
     shadow = tmp_path / "datamimic_ce"
     shadow.mkdir()
-    (shadow / "__init__.py").write_text('raise RuntimeError("wrong launcher package")\n')
+    marker = tmp_path / "shadow-imported"
+    (shadow / "__init__.py").write_text(f'from pathlib import Path\nPath({str(marker)!r}).touch()\n')
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setenv("PYTHONPATH", str(Path(__file__).resolve().parents[3]))
+    monkeypatch.delenv("PYTHONPATH", raising=False)
+    commands = []
+    popen = subprocess.Popen
+
+    def launch(command, **kwargs):
+        commands.append(command)
+        return popen(command, **kwargs)
+
+    monkeypatch.setattr(bounded_executor.subprocess, "Popen", launch)
 
     result = CeBoundedExecutor().execute(BoundedExecutionRequest(xml=_XML))
 
     assert result.ok, result.diagnostics
     assert result.captured.get("rows").rows == ({"id": 1}, {"id": 2}, {"id": 3})
+    assert not marker.exists()
+    assert "-P" in commands[0]
 
 
 def test_private_workspace_preserves_relative_sources_without_host_writes(tmp_path):
