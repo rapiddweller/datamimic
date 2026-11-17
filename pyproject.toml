@@ -22,18 +22,18 @@ requires-python = ">=3.11"
 dependencies = [
     "dill>=0.3.0", # import dill - Used for pickling
     "faker==33.3.1", # from faker import Faker - Used for generating fake data
-    "mysql-connector-python==8.3.0", # import mysql.connector - Used for MySQL database connections
+    "mysql-connector-python==26.10.0", # import mysql.connector - Used for MySQL database connections
     "numpy>=1.26.3", # import numpy as np - Used for numerical operations
     "oracledb==3.3.0", # import oracledb - Used for Oracle database connections
     "psycopg2-binary==2.9.11", # import psycopg2 - Used for PostgreSQL database connections
     "pydantic==2.12.0", # from pydantic import BaseModel - Used for data validation
     "pydantic-settings==2.7.1", # from pydantic_settings import BaseSettings - Used for settings management
     "pydantic[email]", # from pydantic import EmailStr - Used for email validation
-    "pymongo==4.15.2", # import pymongo - Used for MongoDB connections
+    "pymongo==4.20.0", # import pymongo - Used for MongoDB connections
     "pymssql==2.3.13", # import pymssql - pure-Python MSSQL driver, opt-in via <database driver="pymssql">
     "pyodbc==5.3.0", # import pyodbc - Used for ODBC connections
-    "python-dotenv==1.0.1", # from dotenv import load_dotenv
-    "requests==2.32.3", # import requests - Used for making HTTP requests
+    "python-dotenv==1.2.4", # from dotenv import load_dotenv
+    "requests==2.34.2", # import requests - Used for making HTTP requests
     "sqlalchemy==2.0.37", # from sqlalchemy import create_engine
     "sqlglot>=30.18.0,<31.0.0", # import sqlglot - reads selectors and splits scripts (datamimic_ce/clients/sql_dialect.py); AST/token API pinned to the tested major
     "xmltodict==0.14.2", # import xmltodict - Used for parsing XML data to Python dictionaries
