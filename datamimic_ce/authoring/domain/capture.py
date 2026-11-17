@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import base64
 import math
 from collections.abc import Iterable
 from dataclasses import dataclass
@@ -15,7 +16,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, TypeAlias
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, ConfigDict, JsonValue, model_validator
 from typing_extensions import TypeAliasType
 
 from datamimic_ce.errors import task_config_error
@@ -44,6 +45,7 @@ class CapturedObjectId:
 
 CaptureValue: TypeAlias = (
     str
+    | bytes
     | bool
     | int
     | float
@@ -138,6 +140,11 @@ class SmokeExportCapture:
         )
 
 
+def binary_evidence(value: bytes) -> JsonValue:
+    """The JSON form of a captured binary value in evidence and diagnostics."""
+    return {"type": "binary", "base64": str(base64.b64encode(value), "ascii")}
+
+
 def validate_capture_values(value: object) -> None:
     """Reject cyclic, oversized or executable values before any capture consumer."""
     stack: list[tuple[object, int, frozenset[int]]] = [(value, 0, frozenset())]
@@ -152,7 +159,7 @@ def validate_capture_values(value: object) -> None:
                 raise ValueError("captured ObjectId contains noncanonical state")
             CapturedObjectId(value=current.value)
             continue
-        if current is None or isinstance(current, str | bool | date | datetime | UUID):
+        if current is None or isinstance(current, str | bytes | bool | date | datetime | UUID):
             continue
         if isinstance(current, int):
             if current.bit_length() > 14_000:

@@ -1,0 +1,8 @@
+{
+  "version": "5.0",
+  "verification": {"deterministic_replay": true},
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "blobs"}, "count": 3},
+    {"kind": "unique", "subject": {"kind": "product", "product": "blobs"}, "field": "payload"}
+  ]
+}

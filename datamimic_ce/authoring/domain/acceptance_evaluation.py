@@ -19,7 +19,7 @@ from pydantic import JsonValue
 
 from datamimic_ce.authoring.domain.acceptance_contract import MEMSTORE_READBACK_ONCE, AcceptanceSpecV1
 from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
-from datamimic_ce.authoring.domain.capture import CapturedObjectId, CapturedProducts, CaptureStatus
+from datamimic_ce.authoring.domain.capture import CapturedObjectId, CapturedProducts, CaptureStatus, binary_evidence
 from datamimic_ce.authoring.domain.common import MAX_AUTHORING_MAX_COUNT
 from datamimic_ce.authoring.domain.diagnostics import (
     AuthoringRuleId,
@@ -241,6 +241,8 @@ def _matches_literal(actual: object, expected: JsonValue) -> bool:
 
 
 def _json_value(value: object) -> JsonValue:
+    if isinstance(value, bytes):
+        return binary_evidence(value)
     if isinstance(value, CapturedObjectId):
         return value.value
     if value is None or isinstance(value, str | int | float | bool):
