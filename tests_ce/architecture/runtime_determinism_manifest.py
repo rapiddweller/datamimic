@@ -17,7 +17,7 @@ EXPECTED_FACADE_CONTENT_HASHES: dict[str, str] = {
     "patient": "906a07ea1c4d93ea52b2ba64139d2340e2d416c4b00a16e6448b61132bb93f89",
     "person": "e8365620df54a91427b02035004bf5315c637bde7e1df0706e1c641c857bd9d4",
 }
-EXPECTED_ENTITY_REPLAY_HASH = "b42005458b66887a2feb7051740e091b5288eef566a6de6fe1ff723b413ed76e"
+EXPECTED_ENTITY_REPLAY_HASH = "fe31afc3ef4c47541b08a6ca0c6aaaef654d7d5df52a71fd90dccee27863f782"
 # #282 keeps the literal product's unique pool across its automatic page boundary:
 # E,C,D,A,B replaces the erroneous per-page restart E,C,D,B,C.
 # #635 draws weighted values without the no-repeat filter (given names in this replay).
