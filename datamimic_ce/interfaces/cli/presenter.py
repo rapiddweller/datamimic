@@ -15,6 +15,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+from datamimic_ce.authoring.domain.project_run import ProjectRunResult
 from datamimic_ce.authoring.domain.requests import (
     BuildResult,
     ReadyBuild,
@@ -151,6 +152,19 @@ def emit_authoring(
         if isinstance(result, ReadyWithGapsBuild):
             typer.echo("Status: Ready with gaps")
             typer.echo(f"Action required: {result.action_required}")
+    elif output_format is CliOutputFormat.TEXT and isinstance(result, ProjectRunResult):
+        if result.outcome == "not_run":
+            typer.echo(f"Not run: {result.not_run_reason}")
+        if result.build_outcome is not None:
+            typer.echo(f"Build outcome: {result.build_outcome}")
+        if result.action_required is not None:
+            typer.echo(f"Action required: {result.action_required}")
+        for diagnostic in result.diagnostics:
+            typer.echo(f"{diagnostic.severity}: {diagnostic.message}", err=True)
+        if result.not_run_reason == "build_rejected" and result.build is not None:
+            for diagnostic in result.build.diagnostics:
+                typer.echo(f"{diagnostic.severity}: {diagnostic.message}", err=True)
+        typer.echo(f"Outcome: {result.outcome}")
     elif output_format is CliOutputFormat.TEXT and isinstance(result, ReadyDecompileDocument):
         for diagnostic in result.diagnostics:
             typer.echo(f"{diagnostic.severity}: {diagnostic.message}", err=True)

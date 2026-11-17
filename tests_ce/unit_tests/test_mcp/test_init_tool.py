@@ -157,3 +157,45 @@ async def test_init_result_is_guarded_by_the_size_limit(
     async with Client(create_server()) as client:
         with pytest.raises(Exception, match="result_too_large"):
             await client.call_tool("datamimic_init", {"project": str(tmp_path)})
+
+
+@pytest.mark.anyio
+async def test_init_reports_write_oserror_and_files_written_so_far(
+    anyio_backend: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from datamimic_ce.authoring.adapters import workspace
+
+    write_file = workspace._write_file
+    calls = 0
+
+    def fail_second(path: Path, content: str) -> None:
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            raise OSError("disk full")
+        write_file(path, content)
+
+    monkeypatch.setattr(workspace, "_write_file", fail_second)
+    result = await call_init(str(tmp_path))
+    assert result["outcome"] == "not_written"
+    message = result["diagnostics"][0]["message"]
+    assert "disk full" in message and "acceptance/build.json" in message and "datamimic.xml" in message
+
+
+@pytest.mark.anyio
+async def test_init_names_a_file_that_may_be_partial_after_write_error(
+    anyio_backend: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    original = Path.write_text
+
+    def fail_after_open(path: Path, data: str, *args, **kwargs) -> int:
+        written = original(path, data, *args, **kwargs)
+        if path.name == "build.json":
+            raise OSError("disk full")
+        return written
+
+    monkeypatch.setattr(Path, "write_text", fail_after_open)
+    result = await call_init(str(tmp_path))
+    assert result["outcome"] == "not_written"
+    message = result["diagnostics"][0]["message"]
+    assert "acceptance/build.json" in message and "may be partial" in message

@@ -163,3 +163,18 @@ def test_starter_run_logs_one_saving_line_per_exporter_without_init_noise(tmp_pa
     assert len(saving) == 2
     assert any("CSV" in m.upper() for m in saving) and any("JSON" in m.upper() for m in saving)
     assert len(set(saving)) == 2
+
+
+def test_refused_init_does_not_leave_a_new_project_directory(tmp_path: Path, monkeypatch) -> None:
+    from typer.testing import CliRunner
+
+    from datamimic_ce.interfaces.cli import app
+    from datamimic_ce.interfaces.cli import runtime
+
+    def refuse(project_dir: Path) -> None:
+        raise ValueError("starter path is unsafe")
+
+    monkeypatch.setattr(runtime, "create_project_structure", refuse)
+    result = CliRunner().invoke(app, ["init", "refused", "--target", str(tmp_path)])
+    assert result.exit_code == 1
+    assert not (tmp_path / "refused").exists()

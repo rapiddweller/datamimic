@@ -2,7 +2,9 @@
 
 import csv
 import json
+import os
 import shutil
+import sys
 from pathlib import Path
 
 import pytest
@@ -75,6 +77,7 @@ def test_rejected_build_stops_before_any_run(tmp_path: Path) -> None:
     result = workflow(rejected, (), runner).execute(ProjectRunRequest())
     assert result.outcome == "not_run" and result.build == rejected
     assert runner.calls == []
+    assert result.not_run_reason == "build_rejected"
 
 
 def test_a_build_with_open_coverage_gaps_still_runs(tmp_path: Path) -> None:
@@ -95,6 +98,19 @@ def test_a_build_with_open_coverage_gaps_still_runs(tmp_path: Path) -> None:
     assert "seeded" in (result.action_required or "")
 
 
+def test_run_preserves_build_warning_diagnostics(tmp_path: Path) -> None:
+    root = project(tmp_path, "customers")
+    entry = root / PROJECT_ENTRY_PATH
+    entry.write_text(entry.read_text(encoding="utf-8").replace(' rngSeed="7"', ""), encoding="utf-8")
+    build = create_authoring_application(root, descriptor_path=PROJECT_ENTRY_PATH).build()
+    assert any(item.severity == "warning" for item in build.diagnostics)
+
+    result = workflow(build, (), FakeRunner(execution())).execute(ProjectRunRequest())
+
+    warnings = tuple(item for item in build.diagnostics if item.severity == "warning")
+    assert all(item in result.diagnostics for item in warnings)
+
+
 def test_a_clean_ready_run_carries_the_outcome_and_no_action(tmp_path: Path) -> None:
     result = workflow(ready_build(tmp_path), (), FakeRunner(execution())).execute(ProjectRunRequest())
 
@@ -108,6 +124,7 @@ def test_effects_without_the_flag_are_listed_and_nothing_runs(tmp_path: Path) ->
     runner = FakeRunner(execution())
     result = workflow(ready_build(tmp_path), (EFFECT,), runner).execute(ProjectRunRequest())
     assert result.outcome == "not_run" and result.required_side_effects == (EFFECT,)
+    assert result.not_run_reason == "side_effects_not_allowed"
     assert result.diagnostics[0].code.value == "side_effect"
     assert runner.calls == []
 
@@ -295,3 +312,135 @@ def test_project_file_named_like_a_module_does_not_shadow_the_package(tmp_path: 
         ProjectRunRequest(timeout_seconds=300)
     )
     assert result.outcome == "completed", result.log_tail
+
+
+def test_result_rejects_contradictory_not_run_state() -> None:
+    from datamimic_ce.authoring.domain.project_run import ProjectRunResult
+
+    with pytest.raises(ValidationError):
+        ProjectRunResult(outcome="not_run", not_run_reason="input", exit_code=0)
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="process groups are POSIX-only")
+@pytest.mark.parametrize("error", [ProcessLookupError, PermissionError])
+def test_runner_tolerates_process_group_disappearing_during_timeout(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, error: type[OSError]
+) -> None:
+    import os
+    import subprocess
+    import sys
+
+    from datamimic_ce.authoring.adapters import project_runner
+
+    root = project(tmp_path, "customers")
+    real_popen = subprocess.Popen
+    original_killpg = os.killpg
+
+    def slow(command, **kwargs):
+        return real_popen([sys.executable, "-c", "import time; time.sleep(60)"], **kwargs)
+
+    def killpg(pid: int, sig: int) -> None:
+        original_killpg(pid, sig)
+        raise error("leader exited")
+
+    monkeypatch.setattr(project_runner.subprocess, "Popen", slow)
+    monkeypatch.setattr(project_runner.os, "killpg", killpg)
+    result = project_runner.CeProjectRunner(AuthoringWorkspaceContext(root, PROJECT_ENTRY_PATH)).run((), 1)
+    assert result.timed_out
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="os.killpg is POSIX-only")
+def test_runner_does_not_kill_group_after_normal_exit(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import os
+    import subprocess
+    import sys
+
+    from datamimic_ce.authoring.adapters import project_runner
+
+    root = project(tmp_path, "customers")
+    real_popen = subprocess.Popen
+    original_killpg = os.killpg
+    calls: list[int] = []
+
+    def finished(command, **kwargs):
+        return real_popen([sys.executable, "-c", "pass"], **kwargs)
+
+    def killpg(pid: int, sig: int) -> None:
+        calls.append(pid)
+        original_killpg(pid, sig)
+
+    monkeypatch.setattr(project_runner.subprocess, "Popen", finished)
+    monkeypatch.setattr(project_runner.os, "killpg", killpg)
+    result = project_runner.CeProjectRunner(AuthoringWorkspaceContext(root, PROJECT_ENTRY_PATH)).run((), 5)
+    assert result.exit_code == 0
+    assert calls == []
+
+
+def test_cli_text_prints_build_diagnostics_when_project_is_rejected(tmp_path: Path) -> None:
+    from typer.testing import CliRunner
+
+    from datamimic_ce.interfaces.cli import app
+
+    root = project(tmp_path, "customers")
+    (root / PROJECT_ENTRY_PATH).write_text("<setup><invalid/></setup>", encoding="utf-8")
+    result = CliRunner().invoke(app, ["authoring", "run-project", str(root), "--format", "text"])
+    assert result.exit_code == 1
+    assert "parser validation" in result.output.lower()
+
+
+def test_project_run_result_validates_workflow_shapes_and_exit_fields(tmp_path: Path) -> None:
+    from datamimic_ce.authoring.domain.project_run import ProjectRunResult
+
+    ready = ready_build(tmp_path)
+    gaps_root = tmp_path / "gaps"
+    shutil.copytree(FIXTURES / "customers", gaps_root)
+    gaps_entry = gaps_root / PROJECT_ENTRY_PATH
+    gaps_entry.write_text(gaps_entry.read_text(encoding="utf-8").replace(' rngSeed="7"', ""), encoding="utf-8")
+    gaps_build = create_authoring_application(gaps_root, descriptor_path=PROJECT_ENTRY_PATH).build()
+    valid_results = (
+        ProjectRunResult.from_input_error("bad params"),
+        workflow(RejectedBuild.from_input_error("bad project"), (), FakeRunner(execution())).execute(
+            ProjectRunRequest()
+        ),
+        workflow(ready, (EFFECT,), FakeRunner(execution())).execute(ProjectRunRequest()),
+        workflow(ready, (), FakeRunner(execution())).execute(ProjectRunRequest()),
+        workflow(ready, (), FakeRunner(execution(9))).execute(ProjectRunRequest()),
+        workflow(ready, (), FakeRunner(execution(None, timed_out=True))).execute(ProjectRunRequest()),
+        workflow(gaps_build, (), FakeRunner(execution())).execute(ProjectRunRequest()),
+    )
+    for result in valid_results:
+        ProjectRunResult.model_validate(result.model_dump(mode="json"))
+
+    completed = valid_results[3].model_dump(mode="json")
+    input_error = valid_results[0].model_dump(mode="json")
+    rejected = valid_results[1].model_dump(mode="json")
+    gaps = valid_results[6].model_dump(mode="json")
+    contradictory = (
+        {**completed, "exit_code": 9},
+        {**completed, "outcome": "timeout", "exit_code": 0},
+        {**completed, "outcome": "failed", "exit_code": None},
+        {**completed, "duration_seconds": None},
+        {**input_error, "exit_code": 0},
+        {**input_error, "duration_seconds": 0.1},
+        {**input_error, "artifacts": [{"path": "out.csv", "bytes": 1}], "artifact_count": 1},
+        {**input_error, "action_required": "Fix open coverage gaps."},
+        {**rejected, "action_required": "Fix open coverage gaps."},
+        {**gaps, "action_required": None},
+    )
+    for payload in contradictory:
+        with pytest.raises(ValidationError):
+            ProjectRunResult.model_validate(payload)
+
+
+def test_cli_text_shows_gaps_build_outcome_and_action_required(tmp_path: Path) -> None:
+    from typer.testing import CliRunner
+
+    from datamimic_ce.interfaces.cli import app
+
+    root = project(tmp_path, "customers")
+    entry = root / PROJECT_ENTRY_PATH
+    entry.write_text(entry.read_text(encoding="utf-8").replace(' rngSeed="7"', ""), encoding="utf-8")
+    result = CliRunner().invoke(app, ["authoring", "run-project", str(root), "--format", "text", "--timeout", "300"])
+    assert result.exit_code == 0, result.output
+    assert "Build outcome: ready_with_gaps" in result.output
+    assert "Action required:" in result.output

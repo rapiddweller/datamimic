@@ -32,13 +32,14 @@ class ProjectRunWorkflow:
     def execute(self, request: ProjectRunRequest) -> ProjectRunResult:
         build = self._build()
         if not isinstance(build, (ReadyBuild, ReadyWithGapsBuild)):
-            return ProjectRunResult(outcome="not_run", build=build)
+            return ProjectRunResult(outcome="not_run", not_run_reason="build_rejected", build=build)
         outcome_name: Literal["ready", "ready_with_gaps"] = build.outcome
         action_required = build.action_required if isinstance(build, ReadyWithGapsBuild) else None
         effects = self._effects.effects()
         if effects and not request.allow_side_effects:
             return ProjectRunResult(
                 outcome="not_run",
+                not_run_reason="side_effects_not_allowed",
                 build_outcome=outcome_name,
                 coverage=build.coverage,
                 action_required=action_required,
@@ -51,15 +52,16 @@ class ProjectRunWorkflow:
                         remediation="Ask the user to confirm the listed targets, then call again with "
                         "allow_side_effects true.",
                     ),
+                    *tuple(item for item in build.diagnostics if item.severity == "warning"),
                 ),
             )
         execution = self._runner.run(request.params, request.timeout_seconds)
         outcome: Literal["completed", "failed", "timeout"] = (
             "timeout" if execution.timed_out else "completed" if execution.exit_code == 0 else "failed"
         )
-        diagnostics: tuple[Diagnostic, ...] = ()
+        diagnostics: tuple[Diagnostic, ...] = tuple(item for item in build.diagnostics if item.severity == "warning")
         if outcome != "completed":
-            diagnostics = (
+            diagnostics += (
                 Diagnostic(
                     code=AuthoringSystemDiagnosticCode.CHILD_EXECUTION,
                     phase=DiagnosticPhase.EVIDENCE,

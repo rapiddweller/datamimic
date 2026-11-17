@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import io
 import os
-import signal
 import subprocess
 import sys
 import tempfile
@@ -17,6 +16,7 @@ from collections import deque
 from collections.abc import Mapping
 from pathlib import Path, PurePath, PurePosixPath
 
+from datamimic_ce.authoring.adapters.bounded_executor import _terminate_process_tree
 from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
 from datamimic_ce.authoring.domain.project_run import (
     LOG_TAIL_LINES,
@@ -56,13 +56,6 @@ def _log_tail(descriptor: int) -> tuple[str, ...]:
     return tuple(line[:-1] if line[-1:] == "\n" else line for line in last)
 
 
-def _stop(process: subprocess.Popen[bytes]) -> None:
-    if os.name == "posix":
-        os.killpg(process.pid, signal.SIGKILL)
-    else:
-        os.kill(process.pid, signal.SIGTERM)
-
-
 class CeProjectRunner:
     def __init__(self, workspace: AuthoringWorkspaceContext, environment: Mapping[str, str] | None = None) -> None:
         self._root = workspace.root
@@ -94,7 +87,7 @@ class CeProjectRunner:
                     exit_code = process.wait(timeout=limit)
                     break
                 except subprocess.TimeoutExpired:
-                    _stop(process)
+                    _terminate_process_tree(process)
                     timed_out = True
             if timed_out:
                 exit_code = None
