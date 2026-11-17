@@ -285,6 +285,22 @@ def test_build_refuses_kept_rows_above_the_limit_with_the_count_rule(
         "expected": None,
         "actual": actual,
         "allowed_values": None,
+        "location": {
+            "file": "datamimic.xml",
+            "line": None,
+            "column": None,
+            "element": "generate",
+            "name": None,
+            "attribute": attribute,
+            "include_chain": [],
+            "value_line": None,
+            "value_column": None,
+            "expression_line": None,
+            "expression_column": None,
+            "script_file": None,
+            "script_line": None,
+            "script_function": None,
+        },
     }
 
 
