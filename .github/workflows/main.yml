@@ -593,8 +593,7 @@ jobs:
         run: uv run pytest ${{ matrix.args }} -q -n auto --dist=load --durations=20
 
   unit_coverage_shard:
-    name: Unit coverage shard ${{ matrix.shard }}
-    if: github.event_name != 'pull_request'
+    name: ${{ github.event_name == 'pull_request' && 'Unit shard' || 'Unit coverage shard' }} ${{ matrix.shard }}
     runs-on: ubuntu-22.04
     needs: install_dependencies
     container: python:3.11-slim-bookworm
@@ -602,6 +601,7 @@ jobs:
       fail-fast: false
       matrix:
         # Serial coverage of the whole suite took about 46 minutes on two cores; the authoring suite is split in two by measured test time.
+        # A pull request runs the same shards in parallel without coverage.
         include:
           - shard: authoring-a
             args: tests_ce/unit_tests/test_authoring/test_derived_row_limit.py tests_ce/unit_tests/test_authoring/test_build_verification.py tests_ce/unit_tests/test_authoring/test_ready_coverage.py tests_ce/unit_tests/test_authoring/test_dryrun_includes.py tests_ce/unit_tests/test_authoring/test_assert_gate.py tests_ce/unit_tests/test_authoring/test_project_run.py tests_ce/unit_tests/test_authoring/test_dryrun.py
@@ -626,7 +626,14 @@ jobs:
         with:
           path: .venv
           key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml', './uv.lock') }}
+      - name: Run unit tests in parallel
+        if: github.event_name == 'pull_request'
+        run: |
+          . .venv/bin/activate
+          uv run pytest ${{ matrix.args }} -n auto -q --durations=20
+        shell: bash
       - name: Run unit tests with coverage
+        if: github.event_name != 'pull_request'
         env:
           COVERAGE_FILE: .coverage.${{ matrix.shard }}
         run: |
@@ -634,6 +641,7 @@ jobs:
           uv run make coverage-unit-run UNIT_TEST_ARGS="${{ matrix.args }}"
         shell: bash
       - name: Upload coverage data
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v6
         with:
           name: coverage-unit-data-${{ matrix.shard }}
@@ -645,8 +653,7 @@ jobs:
   unit_test:
     runs-on: ubuntu-22.04
     needs: [install_dependencies, unit_coverage_shard]
-    # Pull requests skip the shards and run the parallel lane below.
-    if: ${{ !cancelled() && needs.install_dependencies.result == 'success' && (github.event_name == 'pull_request' || needs.unit_coverage_shard.result == 'success') }}
+    if: ${{ !cancelled() && needs.install_dependencies.result == 'success' && needs.unit_coverage_shard.result == 'success' }}
     container: python:3.11-slim-bookworm
     steps:
       - name: Setup git
@@ -665,16 +672,6 @@ jobs:
         with:
           path: .venv
           key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml', './uv.lock') }}
-      - name: Run unit tests in parallel
-        if: github.event_name == 'pull_request'
-        run: |
-          . .venv/bin/activate
-          nproc
-          # test_benchmarks runs in benchmarks.yml
-          uv run pytest tests_ce/unit_tests -n auto -q --durations=0 --ignore=tests_ce/unit_tests/test_benchmarks | tee unit.log
-          echo "== seconds per test file"
-          grep -E '^[0-9.]+s (call|setup|teardown) ' unit.log | awk '{split($3,a,"::"); t[a[1]]+=$1} END {for (f in t) printf "%8.0f %s\n", t[f], f}' | sort -rn | awk 'NR <= 25'
-        shell: bash
       - name: Download coverage data of the shards
         if: github.event_name != 'pull_request'
         uses: actions/download-artifact@v7
@@ -845,8 +842,7 @@ jobs:
           path: coverage.xml
 
   integration_coverage_shard:
-    name: Integration coverage shard ${{ matrix.shard }}
-    if: github.event_name != 'pull_request'
+    name: ${{ github.event_name == 'pull_request' && 'Integration shard' || 'Integration coverage shard' }} ${{ matrix.shard }}
     runs-on: ubuntu-22.04
     needs: install_dependencies
     container: python:3.11-slim-bookworm
@@ -875,7 +871,14 @@ jobs:
         with:
           path: .venv
           key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml', './uv.lock') }}
+      - name: Run integration tests
+        if: github.event_name == 'pull_request'
+        run: |
+          . .venv/bin/activate
+          uv run pytest ${{ matrix.args }} --durations=20
+        shell: bash
       - name: Run integration tests with coverage
+        if: github.event_name != 'pull_request'
         env:
           COVERAGE_FILE: .coverage.${{ matrix.shard }}
         run: |
@@ -883,6 +886,7 @@ jobs:
           uv run coverage run -m pytest ${{ matrix.args }} --durations=20
         shell: bash
       - name: Upload coverage data
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v6
         with:
           name: coverage-integration-data-${{ matrix.shard }}
@@ -894,30 +898,28 @@ jobs:
   integration_test:
     runs-on: ubuntu-22.04
     needs: [install_dependencies, integration_coverage_shard]
-    # Pull requests skip the shards and run the tests here without coverage; a push combines the shard coverage.
-    if: ${{ !cancelled() && needs.install_dependencies.result == 'success' && (github.event_name == 'pull_request' || needs.integration_coverage_shard.result == 'success') }}
+    # The shards run the tests; a push combines their coverage here.
+    if: ${{ !cancelled() && needs.install_dependencies.result == 'success' && needs.integration_coverage_shard.result == 'success' }}
     container: python:3.11-slim-bookworm
     steps:
       - name: Setup git
+        if: github.event_name != 'pull_request'
         run: |
           apt-get update
           apt-get install -y git
           git config --global --add safe.directory $(realpath .)
       - name: Checkout repository
+        if: github.event_name != 'pull_request'
         uses: actions/checkout@v5
       - name: Install uv
+        if: github.event_name != 'pull_request'
         uses: astral-sh/setup-uv@v8.1.0
       - name: Load venv cache
+        if: github.event_name != 'pull_request'
         uses: actions/cache/restore@v5
         with:
           path: .venv
           key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml', './uv.lock') }}
-      - name: Run integration tests
-        if: github.event_name == 'pull_request'
-        run: |
-          . .venv/bin/activate
-          uv run pytest tests_ce/integration_tests/
-        shell: bash
       - name: Download coverage data
         if: github.event_name != 'pull_request'
         uses: actions/download-artifact@v7
