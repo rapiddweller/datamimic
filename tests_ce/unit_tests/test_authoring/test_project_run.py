@@ -384,3 +384,36 @@ def test_cli_text_prints_build_diagnostics_when_project_is_rejected(tmp_path: Pa
     result = CliRunner().invoke(app, ["authoring", "run-project", str(root), "--format", "text"])
     assert result.exit_code == 1
     assert "parser validation" in result.output.lower()
+
+
+def test_project_run_result_validates_workflow_shapes_and_exit_fields(tmp_path: Path) -> None:
+    from datamimic_ce.authoring.domain.project_run import ProjectRunResult
+
+    ready = ready_build(tmp_path)
+    valid_results = (
+        ProjectRunResult.from_input_error("bad params"),
+        workflow(RejectedBuild.from_input_error("bad project"), (), FakeRunner(execution())).execute(
+            ProjectRunRequest()
+        ),
+        workflow(ready, (EFFECT,), FakeRunner(execution())).execute(ProjectRunRequest()),
+        workflow(ready, (), FakeRunner(execution())).execute(ProjectRunRequest()),
+        workflow(ready, (), FakeRunner(execution(9))).execute(ProjectRunRequest()),
+        workflow(ready, (), FakeRunner(execution(None, timed_out=True))).execute(ProjectRunRequest()),
+    )
+    for result in valid_results:
+        ProjectRunResult.model_validate(result.model_dump(mode="json"))
+
+    completed = valid_results[3].model_dump(mode="json")
+    input_error = valid_results[0].model_dump(mode="json")
+    contradictory = (
+        {**completed, "exit_code": 9},
+        {**completed, "outcome": "timeout", "exit_code": 0},
+        {**completed, "outcome": "failed", "exit_code": None},
+        {**completed, "duration_seconds": None},
+        {**input_error, "exit_code": 0},
+        {**input_error, "duration_seconds": 0.1},
+        {**input_error, "artifacts": [{"path": "out.csv", "bytes": 1}], "artifact_count": 1},
+    )
+    for payload in contradictory:
+        with pytest.raises(ValidationError):
+            ProjectRunResult.model_validate(payload)

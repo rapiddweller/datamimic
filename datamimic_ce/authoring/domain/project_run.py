@@ -124,6 +124,12 @@ class ProjectRunResult(AuthoringModel):
                 and self.build_outcome is not None
                 and self.coverage is not None
                 and not self.required_side_effects
+                and self.duration_seconds is not None
+                and (
+                    (self.outcome == "completed" and self.exit_code == 0)
+                    or (self.outcome == "failed" and self.exit_code is not None and self.exit_code != 0)
+                    or (self.outcome == "timeout" and self.exit_code is None)
+                )
             )
         if not valid:
             raise ValueError("Project run outcome contradicts its execution and Build fields")
