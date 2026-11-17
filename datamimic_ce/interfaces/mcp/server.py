@@ -84,7 +84,8 @@ def _guarded(hint: str) -> Callable[[Callable[_P, Awaitable[_R]]], Callable[_P, 
         async def guarded(*args: _P.args, **kwargs: _P.kwargs) -> ToolResult:
             result = await function(*args, **kwargs)
             # FastMCP 4 serializes JSON compactly, without ASCII escaping.
-            text = to_json(to_jsonable_python(result)).decode()
+            encoded: bytes = to_json(to_jsonable_python(result))
+            text = str(encoded, "utf-8")
             size = len(text)
             if size > MAX_RESULT_CHARACTERS:
                 raise ToolError(json.dumps({"error": "result_too_large", "size": size, "hint": hint}))
