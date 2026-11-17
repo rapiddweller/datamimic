@@ -331,7 +331,6 @@
         "datamimic_ce.domains.shared.generators.phone_number_generator",
         "datamimic_ce.domains.shared.datasets.loader:load_weighted_values_try_dataset",
         "datamimic_ce.domains.shared.datasets.loader:pick_one_weighted",
-        "datamimic_ce.domains.shared.datasets.loader:pick_one_weighted_no_repeat",
         "datamimic_ce.domains.shared.datasets.loader:pick_weighted_from_headered_csv",
         "datamimic_ce.domains.shared.datasets.loader:read_cached_headered_csv",
         "datamimic_ce.domains.shared.datasets.loader:read_csv_rows",

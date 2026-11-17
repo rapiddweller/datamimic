@@ -49,27 +49,6 @@ def pick_one_weighted(rng: random.Random, values: Sequence[str], weights: Sequen
     return rng.choices(values, weights=weights, k=1)[0]
 
 
-def pick_one_weighted_no_repeat(
-    rng: random.Random,
-    values: Sequence[str],
-    weights: Sequence[float],
-    *,
-    last: str | None,
-) -> str:
-    """Pick one value by weight, excluding *last* when ≥2 distinct values exist.
-
-    Guarantees non-repetition by filter-and-renormalise (not retry).
-    Falls back to the full pool when *last* is None, not present in *values*,
-    or only one distinct value exists.
-    """
-    if last is not None and len(set(values)) > 1:
-        pool = [(v, w) for v, w in zip(values, weights, strict=True) if v != last]
-        if pool:
-            p_vals, p_wgts = zip(*pool, strict=True)
-            return rng.choices(list(p_vals), weights=list(p_wgts), k=1)[0]
-    return rng.choices(list(values), weights=list(weights), k=1)[0]
-
-
 def pick_weighted_from_headered_csv(
     rng: random.Random, file_path: Path, *, value_col: str, weight_col: str = "weight"
 ) -> str:

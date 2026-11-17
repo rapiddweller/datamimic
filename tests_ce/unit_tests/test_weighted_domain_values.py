@@ -8,7 +8,7 @@ from random import Random
 from datamimic_ce.domains.domain_core.datasets.path import dataset_path
 from datamimic_ce.domains.finance.generators.bank_account_generator import BankAccountGenerator
 from datamimic_ce.domains.insurance.generators.insurance_policy_generator import InsurancePolicyGenerator
-from datamimic_ce.domains.shared.datasets.loader import load_weighted_values_try_dataset, pick_one_weighted_no_repeat
+from datamimic_ce.domains.shared.datasets.loader import load_weighted_values_try_dataset
 
 DRAWS = 6000
 TOLERANCE = 0.03
@@ -69,6 +69,12 @@ def test_same_seed_reproduces_weighted_values():
     assert statuses(4) != statuses(5)
 
 
+def _pick_excluding_last(rng: Random, values: list[str], weights: list[float], last: str | None) -> str:
+    pool = [(v, w) for v, w in zip(values, weights, strict=True) if v != last]
+    vals, wgts = zip(*pool, strict=True)
+    return rng.choices(list(vals), weights=list(wgts), k=1)[0]
+
+
 def test_no_repeat_picking_fails_the_frequency_check():
     """Negative control: the old no-repeat behaviour distorts the declared shares beyond the tolerance."""
     _, declared = _policy_statuses()
@@ -78,7 +84,7 @@ def test_no_repeat_picking_fails_the_frequency_check():
     last = None
     drawn = []
     for _ in range(DRAWS):
-        last = pick_one_weighted_no_repeat(rng, values, weights, last=last)
+        last = _pick_excluding_last(rng, values, weights, last)
         drawn.append(last)
     top = max(declared, key=lambda v: declared[v])
     assert abs(drawn.count(top) / DRAWS - declared[top]) > TOLERANCE
