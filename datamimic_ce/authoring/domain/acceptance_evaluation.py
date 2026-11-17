@@ -157,41 +157,6 @@ def _unevaluable_sink_subject(
     return None
 
 
-def declared_sink_coverage_warnings(spec: AcceptanceSpecV1) -> tuple[Diagnostic, ...]:
-    """Report structurally visible multi-product sinks without explicit sink assurance."""
-    assured = {
-        subject.sink
-        for check in spec.checks
-        for expectation in (check.expectation,)
-        for subject in expectation_subjects(expectation)
-        if isinstance(subject, DeclaredSinkRowsSubject)
-    }
-    diagnostics: list[Diagnostic] = []
-    for sink, contributors in spec.declared_sink_contributors().items():
-        if len(contributors) < 2 or sink in assured:
-            continue
-        diagnostic = catalog_diagnostic(
-            AuthoringRuleId.UNASSURED_MULTI_CONTRIBUTOR_SINK,
-            (
-                f"{len(contributors)} products contribute to declared sink "
-                f"'{sink.kind}:{sink.environment}:{sink.entity}' without sink-scoped assurance"
-            ),
-            phase=DiagnosticPhase.EXPECTATION,
-            path=("products",),
-        ).model_copy(
-            update={
-                "expected": {"declared_sink_expectations": "at_least_one"},
-                "actual": {
-                    "sink": sink.model_dump(mode="json"),
-                    "contributors": list(contributors),
-                    "declared_sink_expectations": 0,
-                },
-            }
-        )
-        diagnostics.append(diagnostic)
-    return tuple(diagnostics)
-
-
 def _values(rows: tuple[Mapping[str, object], ...], field: str) -> tuple[object, ...] | None:
     values: list[object] = []
     for row in rows:
@@ -778,4 +743,4 @@ def evaluate_acceptance(
     return (*diagnostics, *not_evaluated)
 
 
-__all__ = ["declared_sink_coverage_warnings", "evaluate_acceptance"]
+__all__ = ["evaluate_acceptance"]
