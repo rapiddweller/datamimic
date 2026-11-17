@@ -6,7 +6,7 @@
     "the run checks values: an <assert> on every readback row (status set) and an <assert> on a totals row (row count, id sum, amount sum, status count) of the rows that the seed writes; a wrong or stale table fails the run",
     "Build needs an environment binding for the client and reads the table in the project (db/s39_shop.sqlite, the 12 rows that the seed writes): it proves the readback product against the table as it is on disk",
     "Build does not prove that the load wrote the rows: Build isolates the write target and skips the clear, so the readback in Build shows the fixture rows, not the generated rows",
-    "a readback needs a literal count: without count Build cannot prove the cardinality; a count above the rows of the table stops the source early (DM316). The literal count also works around #493 and is marked in the XML",
+    "a readback needs a literal count: without count Build cannot prove the cardinality and reports the capture as unknown, not DM211, because the lint of a step sees the client that the entry declares (#493); a count above the rows of the table stops the source early (DM316)",
     "the table comes from a checked-in SQLite file, because Build refuses an <execute> step (unsupported_bounded_operation): a project cannot create its own table and stay provable"
   ],
   "products": {
@@ -50,6 +50,25 @@
         "file": "acceptance/build.json",
         "old": "\"product\": \"orders_back\"}, \"field\": \"amount_cents\", \"minimum\": 100, \"maximum\": 9900",
         "new": "\"product\": \"orders_back\"}, \"field\": \"amount_cents\", \"minimum\": 100, \"maximum\": 1000"
+      }
+    },
+    {
+      "name": "readback_without_count_is_capture_unknown",
+      "diagnostic": "validation",
+      "message": "capture is unknown",
+      "patch": {
+        "file": "delivery/92_readback.xml",
+        "old": "ORDER BY id\" distribution=\"ordered\" count=\"12\"",
+        "new": "ORDER BY id\" distribution=\"ordered\""
+      }
+    },
+    {
+      "name": "readback_without_declared_client",
+      "diagnostic": "DM401",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "<database id=\"shop\"",
+        "new": "<database id=\"other\""
       }
     },
     {

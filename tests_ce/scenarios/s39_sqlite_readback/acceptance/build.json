@@ -1,5 +1,6 @@
 {
   "version": "5.0",
+  "max_count": 100,
   "environment_bindings": [
     {"environment": "shop", "family": "database"}
   ],

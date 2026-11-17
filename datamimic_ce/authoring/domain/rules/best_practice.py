@@ -393,6 +393,14 @@ class SeededScriptIteratesSet(Rule):
                     yield ctx.diag(type(self), element, evidence=f"{attr} reads a set in an order-dependent way")
 
 
+class IncludedStepSetsOwnSeed(Rule):
+    definition = authoring_rule_definition("DM320")
+
+    def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
+        if ctx.run_root is not ctx.root and ctx.root.get("rngSeed") is not None:
+            yield ctx.diag(type(self), ctx.root, evidence=f'rngSeed="{ctx.root.get("rngSeed")}" on an included step')
+
+
 def _memstore_rows(ctx: LintContext, consumer: etree._Element) -> int | None:
     """Rows that top-level producers with literal counts write to the memstore entity the consumer reads;
     None when a producer is nested, reads a source (it can stop below its count) or is counted by a script,
@@ -461,4 +469,5 @@ RULES: tuple[type[Rule], ...] = (
     NestedFiniteSequenceCardinalityUnknown,
     CountWithSourceCapsSilently,
     SeededScriptIteratesSet,
+    IncludedStepSetsOwnSeed,
 )

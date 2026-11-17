@@ -483,6 +483,17 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         "<key name=\"x\" script=\"list({'a', 'b'})[0]\"/></generate></setup>",
     ),
     _rule_definition(
+        "DM320",
+        RuleSeverity.WARNING,
+        "Included step sets its own rngSeed",
+        "The entry setup owns the seed of the run. An included step that sets rngSeed on its own setup is ignored: "
+        "each step draws from a stream derived from the entry seed and the step path.",
+        "Remove rngSeed from the step and set it on the entry setup, or change the entry seed to change the rows.",
+        "Included step seed stream contract (#463); EE needs the same code (#472).",
+        '<setup rngSeed="1"><include uri="model/10_step.xml"/></setup> with step <setup>',
+        '<setup rngSeed="1"><include uri="model/10_step.xml"/></setup> with step <setup rngSeed="2">',
+    ),
+    _rule_definition(
         "DM401",
         RuleSeverity.ERROR,
         "Unknown target",
