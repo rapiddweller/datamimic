@@ -18,7 +18,7 @@ from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareD
 from datamimic_ce.domains.domain_core.datasets.path import dataset_path
 from datamimic_ce.domains.shared.datasets.loader import (
     load_weighted_values_try_dataset,
-    pick_one_weighted_no_repeat,
+    pick_one_weighted,
     read_weighted_records,
     read_weighted_values,
 )
@@ -68,7 +68,6 @@ class PatientGenerator(DatasetAwareDomainGenerator):
             rng=self._derive_rng(),
         )
         # Track last blood type to reduce immediate repetition in tests
-        self._last_blood_type: str | None = None
 
     @property
     def person_generator(self) -> PersonGenerator:
@@ -131,8 +130,7 @@ class PatientGenerator(DatasetAwareDomainGenerator):
         values, weights = load_weighted_values_try_dataset(
             "healthcare", "medical", "blood_types.csv", dataset=self._dataset, start=start
         )
-        choice = pick_one_weighted_no_repeat(self._rng, values, weights, last=self._last_blood_type)
-        self._last_blood_type = choice
+        choice = pick_one_weighted(self._rng, values, weights)
         return choice
 
     def generate_age_appropriate_conditions(

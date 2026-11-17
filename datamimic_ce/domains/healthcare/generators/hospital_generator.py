@@ -35,7 +35,6 @@ class HospitalGenerator(ClockAnchoredDomainGenerator):
             dataset=self._dataset,
             rng=self._derive_rng(),
         )
-        self._last_type: str | None = None
 
     @property
     def address_generator(self) -> AddressGenerator:
@@ -79,14 +78,13 @@ class HospitalGenerator(ClockAnchoredDomainGenerator):
     def get_hospital_type(self):
         from datamimic_ce.domains.shared.datasets.loader import (
             load_weighted_values_try_dataset,
-            pick_one_weighted_no_repeat,
+            pick_one_weighted,
         )
 
         values, w = load_weighted_values_try_dataset(
             "healthcare", "hospital", "hospital_types.csv", dataset=self._dataset, start=Path(__file__)
         )
-        choice = pick_one_weighted_no_repeat(self._rng, values, w, last=self._last_type)
-        self._last_type = choice
+        choice = pick_one_weighted(self._rng, values, w)
         return choice
 
     def generate_hospital_id_candidate(self) -> str:

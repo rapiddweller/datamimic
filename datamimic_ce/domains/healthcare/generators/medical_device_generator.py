@@ -20,7 +20,6 @@ from datamimic_ce.domains.domain_core.datasets.path import dataset_path
 from datamimic_ce.domains.shared.datasets.loader import (
     load_weighted_values_try_dataset,
     pick_one_weighted,
-    pick_one_weighted_no_repeat,
     read_weighted_dataframe,
     read_weighted_values,
 )
@@ -57,7 +56,6 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
             demographic_config=demographic_config,
             rng=self._derive_rng(),
         )
-        self._last_manufacturer: str | None = None
 
     @property
     def person_generator(self) -> PersonGenerator:
@@ -121,8 +119,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
         loaded_data = read_weighted_dataframe(file_path)
         values: list[str] = [str(v) for v in loaded_data[0].tolist() if v is not None]
         weights: list[float] = [float(w) for w in loaded_data[1].tolist()]
-        choice = pick_one_weighted_no_repeat(self._rng, values, weights, last=self._last_manufacturer)
-        self._last_manufacturer = choice
+        choice = pick_one_weighted(self._rng, values, weights)
         return choice
 
     def generate_model_number(self) -> str:

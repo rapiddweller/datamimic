@@ -19,7 +19,7 @@ from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchored
 from datamimic_ce.domains.domain_core.datasets.path import dataset_path
 from datamimic_ce.domains.shared.datasets.loader import (
     load_weighted_values_try_dataset,
-    pick_one_weighted_no_repeat,
+    pick_one_weighted,
     read_headered_csv,
     read_weighted_values,
 )
@@ -66,9 +66,7 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
             rng=self._derive_rng(),
         )
         # Track last office type to avoid immediate repetition in successive generations
-        self._last_office_type: str | None = None
         # Track last jurisdiction to reduce immediate repetition across entities
-        self._last_jurisdiction: str | None = None
         # Track last hours signature to reduce repetition across entities
         self._last_hours_signature: tuple[tuple[str, str], ...] | None = None
         # Track last staff count to reduce identical consecutive draws
@@ -113,8 +111,7 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
             dataset=self._dataset,
             start=Path(__file__),
         )
-        choice = pick_one_weighted_no_repeat(self._rng, values, weights, last=self._last_office_type)
-        self._last_office_type = choice
+        choice = pick_one_weighted(self._rng, values, weights)
         return choice
 
     # Helper: pick jurisdiction bucket from dataset (city/county/state/federal)
@@ -126,8 +123,7 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
             dataset=self._dataset,
             start=Path(__file__),
         )
-        pick = pick_one_weighted_no_repeat(self._rng, values, weights, last=self._last_jurisdiction)
-        self._last_jurisdiction = pick
+        pick = pick_one_weighted(self._rng, values, weights)
         return pick.lower()
 
     def generate_jurisdiction(self, office_type: str, city: str, state: str) -> str:

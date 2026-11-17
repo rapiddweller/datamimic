@@ -66,11 +66,11 @@ def test_id_first_and_company_data_first_preserve_seeded_values_and_rng_states()
     assert id_first.id == "e9eb3c75-46d0-46ca-b11a-796932f26875"
     assert _rng_fingerprint(id_first_rng) == "0cc04eaa6654064e8caf4dba2e8bdc791f17d190567f59c51305faa8e97ad2e3"
     assert id_first.company_data == {
-        "name": "Allstate",
-        "code": "ALST",
-        "founded_year": "1931",
-        "headquarters": "Northfield Township, IL",
-        "website": "www.allstate.com",
+        "name": "Progressive",
+        "code": "PRGRS",
+        "founded_year": "1937",
+        "headquarters": "Mayfield Village, OH",
+        "website": "www.progressive.com",
     }
     assert _rng_fingerprint(id_first_rng) == "2bd92d72c86f278cc2360930ca52ea56db2f8f09dce3b5b3a03aa000ed53b103"
 

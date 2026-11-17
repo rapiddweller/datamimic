@@ -10,7 +10,7 @@ from pathlib import Path
 
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.domain_core.datasets.path import dataset_path
-from datamimic_ce.domains.shared.datasets.loader import pick_one_weighted_no_repeat, read_weighted_values
+from datamimic_ce.domains.shared.datasets.loader import pick_one_weighted, read_weighted_values
 from datamimic_ce.domains.shared.generators.address_generator import AddressGenerator
 from datamimic_ce.domains.shared.generators.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.domains.shared.literal_generators.business.company_name_generator import CompanyNameGenerator
@@ -37,7 +37,6 @@ class CompanyGenerator(DatasetAwareDomainGenerator):
         self._address_generator = AddressGenerator(dataset=self._dataset, rng=self._derive_rng())
         self._sector_generator = SectorGenerator(dataset=self._dataset, rng=self._derive_rng())
         self._legal_dataset = self._dataset
-        self._last_legal_form: str | None = None
 
     @property
     def company_name_generator(self) -> CompanyNameGenerator:
@@ -95,6 +94,5 @@ class CompanyGenerator(DatasetAwareDomainGenerator):
         """
         file_path = dataset_path("common", "organization", f"legalForm_{self._legal_dataset}.csv", start=Path(__file__))
         legal_values, legal_wgt = read_weighted_values(file_path)
-        choice = pick_one_weighted_no_repeat(self._rng, legal_values, legal_wgt, last=self._last_legal_form)
-        self._last_legal_form = choice
+        choice = pick_one_weighted(self._rng, legal_values, legal_wgt)
         return choice

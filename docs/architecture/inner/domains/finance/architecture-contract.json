@@ -147,6 +147,7 @@
       "public": [
         "datamimic_ce.domains.finance.generators.bank_account_generator:BankAccountGenerator",
         "datamimic_ce.domains.finance.generators.bank_generator:BankGenerator",
+        "datamimic_ce.domains.finance.generators.credit_card_generator:CardSpec",
         "datamimic_ce.domains.finance.generators.credit_card_generator:CreditCardGenerator",
         "datamimic_ce.domains.finance.generators.transaction_generator:TransactionGenerator"
       ],

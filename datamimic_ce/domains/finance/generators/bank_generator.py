@@ -8,7 +8,7 @@ from pathlib import Path
 
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.domain_core.datasets.path import dataset_path
-from datamimic_ce.domains.shared.datasets.loader import pick_one_weighted_no_repeat, read_headered_csv
+from datamimic_ce.domains.shared.datasets.loader import pick_one_weighted, read_headered_csv
 from datamimic_ce.domains.shared.generators.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.domains.shared.literal_generators.primitives.string_generator import StringGenerator
 
@@ -21,7 +21,6 @@ class BankGenerator(DatasetAwareDomainGenerator):
     ):
         super().__init__(dataset=dataset, rng=rng)
         # Track last pick to avoid immediate repetition in single process
-        self._last_bank_name: str | None = None
 
     def generate_bank_data(self) -> dict[str, str]:
         #  centralized dataset path
@@ -32,10 +31,8 @@ class BankGenerator(DatasetAwareDomainGenerator):
         wgt_idx = header_dict["weight"]
         names = [row[name_idx] for row in loaded_data]
         weights = [float(row[wgt_idx]) for row in loaded_data]
-        # pick_one_weighted_no_repeat guarantees non-repetition when ≥2 distinct values
-        chosen_name = pick_one_weighted_no_repeat(self._rng, names, weights, last=self._last_bank_name)
+        chosen_name = pick_one_weighted(self._rng, names, weights)
         bank_data = loaded_data[names.index(chosen_name)]
-        self._last_bank_name = chosen_name
 
         return {
             "name": bank_data[header_dict["name"]],

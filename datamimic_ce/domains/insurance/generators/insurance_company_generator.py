@@ -22,8 +22,6 @@ class InsuranceCompanyGenerator(DatasetAwareDomainGenerator):
             rng: Optional seeded random instance for deterministic output.
         """
         super().__init__(dataset=dataset, rng=rng)
-        self._last_company_code: str | None = None
-        self._last_founded_year: str | None = None
 
     def generate_id_candidate(self) -> str:
         return uuid4_from_random(self.rng)
@@ -32,21 +30,7 @@ class InsuranceCompanyGenerator(DatasetAwareDomainGenerator):
         #  use unified dataset path helper
         file_path = dataset_path("insurance", f"companies_{self._dataset}.csv", start=Path(__file__))
         loaded_wgt, loaded_data = read_weighted_records(file_path, "weight")
-        # Avoid immediate repetition by code and founded_year when feasible
-        pool = loaded_data
-        pool_w = loaded_wgt
-        if len(loaded_data) > 1:
-            filtered = [
-                row
-                for row in loaded_data
-                if row.get("code") != self._last_company_code and row.get("founded_year") != self._last_founded_year
-            ]
-            if filtered:
-                pool = filtered
-                pool_w = [float(row.get("weight", 1.0) or 1.0) for row in filtered]
-        company_data = self._rng.choices(pool, weights=pool_w, k=1)[0]
-        self._last_company_code = company_data.get("code")
-        self._last_founded_year = company_data.get("founded_year")
+        company_data = self._rng.choices(loaded_data, weights=loaded_wgt, k=1)[0]
 
         return {
             "name": company_data["name"],

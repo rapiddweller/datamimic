@@ -14,7 +14,7 @@ from datetime import datetime
 
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
-from datamimic_ce.domains.finance.generators.credit_card_generator import CreditCardGenerator
+from datamimic_ce.domains.finance.generators.credit_card_generator import CardSpec, CreditCardGenerator
 from datamimic_ce.domains.finance.models.bank import Bank
 from datamimic_ce.domains.finance.models.bank_account import BankAccount
 from datamimic_ce.domains.shared.models.person import Person
@@ -42,13 +42,18 @@ class CreditCard(BaseEntity):
 
     @property
     @property_cache
+    def card_spec(self) -> CardSpec:
+        return self._credit_card_generator.get_card_specs()
+
+    @property
+    @property_cache
     def card_type(self) -> str:
-        return self._credit_card_generator.generate_card_type()
+        return self._credit_card_generator.generate_card_type(self.card_spec)
 
     @property
     @property_cache
     def card_number(self) -> str:
-        return self._credit_card_generator.generate_card_number()
+        return self._credit_card_generator.generate_card_number(self.card_spec)
 
     @property
     @property_cache
@@ -68,12 +73,12 @@ class CreditCard(BaseEntity):
     @property
     @property_cache
     def cvv(self) -> str:
-        return self._credit_card_generator.generate_security_code()
+        return self._credit_card_generator.generate_security_code(self.card_spec)
 
     @property
     @property_cache
     def cvc_number(self) -> str:
-        return self._credit_card_generator.generate_security_code()
+        return self._credit_card_generator.generate_security_code(self.card_spec)
 
     @property
     @property_cache
