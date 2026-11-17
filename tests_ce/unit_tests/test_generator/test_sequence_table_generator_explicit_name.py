@@ -123,7 +123,8 @@ def test_explicit_sequence_name_reaches_client_verbatim(setup_context: SetupCont
 def test_pre_execute_uses_convention_name_when_no_override(setup_context: SetupContext):
     gen, client = _make(setup_context, "SequenceTableGenerator", key="k4")
     gen.pre_execute(setup_context)
-    assert client.requested_names == ["orders_id_seq", "orders_id_seq"]
+    # init read, reservation, re-anchor read on the reserved block
+    assert client.requested_names == ["orders_id_seq"] * 3
 
 
 def test_positional_arg_is_rejected(setup_context: SetupContext):
@@ -172,7 +173,6 @@ def test_missing_database_name_has_useful_error(setup_context: SetupContext):
         _make(setup_context, "SequenceTableGenerator", key="k10", database=None)
     assert caught.value.code is ErrorCode.GENERATOR_CONFIG
     assert caught.value.issue_code is None
-
 
 
 def test_unknown_sequence_kwarg_retains_only_allowed_parameter_repair(setup_context: SetupContext):

@@ -169,9 +169,7 @@ def test_sequence_key_task_reconstruction_preserves_paginated_generation(setup_c
     client = RecoveringClient()
     setup_context.clients["db1"] = client
     generate = GenerateStatement(GenerateModel(name="orders", count="5", type="orders"), None)
-    key = KeyStatement(
-        KeyModel(name="id", type="int", generator="SequenceTableGenerator", database="db1"), generate
-    )
+    key = KeyStatement(KeyModel(name="id", type="int", generator="SequenceTableGenerator", database="db1"), generate)
     generate.sub_statements = [key]
     key.sub_statements = []
     task = KeyTask(setup_context, key, DataSourcePagination(skip=0, limit=5))
@@ -187,10 +185,11 @@ def test_sequence_key_task_reconstruction_preserves_paginated_generation(setup_c
     assert client._seq == {}  # Reconstruction does not reserve an extra sequence range.
 
 
-def test_sequence_table_generator_unpaginated_instance_is_not_cached(setup_context: SetupContext):
-    """GenerateTask.pre_execute builds sub-tasks with pagination=None; caching that instance under
-    the generation cache key made every single-process page StopIterate on its first record
-    (0 rows generated). The pre-execute instance must stay out of the cache."""
+def test_sequence_table_generator_unpaginated_instance_is_repositioned_by_the_first_page(
+    setup_context: SetupContext,
+):
+    """GenerateTask.pre_execute builds sub-tasks with pagination=None and reserves the block on
+    that instance; the cached instance must serve the first page from its start, not be exhausted."""
     setup_context.clients["db1"] = DummyRdbmsClient()
     util = GeneratorUtil(context=setup_context)
 
@@ -198,15 +197,18 @@ def test_sequence_table_generator_unpaginated_instance_is_not_cached(setup_conte
     stmt = DummyStmt(name="id", parent_stmt=None, database="db1", root_gen=root_gen)
 
     unpaginated = util.create_generator("SequenceTableGenerator", stmt=stmt, key="seq:t:id")
-    assert "seq:t:id" not in setup_context.generators
+    assert setup_context.generators["seq:t:id"] is unpaginated
 
     paginated = util.create_generator(
         "SequenceTableGenerator", stmt=stmt, key="seq:t:id", pagination=DataSourcePagination(skip=0, limit=5)
     )
-    assert paginated is not unpaginated
-    assert setup_context.generators["seq:t:id"] is paginated
-    # The generation-path instance actually generates (the poisoned one raised StopIteration)
-    assert isinstance(paginated.generate(), int)
+    assert paginated is unpaginated
+    assert [paginated.generate() for _ in range(5)] == [995, 996, 997, 998, 999]
+
+    same_page = util.create_generator(
+        "SequenceTableGenerator", stmt=stmt, key="seq:t:id", pagination=DataSourcePagination(skip=0, limit=5)
+    )
+    assert same_page is paginated  # re-applying the page in use keeps the position
 
 
 def test_datetime_generator_ast_path_uses_cache_key(setup_context: SetupContext):
@@ -331,14 +333,16 @@ def test_sequence_table_generator_multi_process_partitions_non_overlapping():
     stmt0 = DummyStmt(name="id", parent_stmt=None, database="db1", root_gen=root_gen)
     stmt1 = DummyStmt(name="id", parent_stmt=None, database="db1", root_gen=root_gen)
 
-    # Use a small limit to keep expectations clear
-    pagination = DataSourcePagination(skip=0, limit=4)
+    # Each process pages with its chunk's global skip (chunks are (0, 5) and (5, 10))
+    pagination0 = DataSourcePagination(skip=0, limit=4)
+    pagination1 = DataSourcePagination(skip=5, limit=4)
+    pagination = pagination0
 
     util0 = GeneratorUtil(context=ctx0)
     util1 = GeneratorUtil(context=ctx1)
 
     g0 = util0.create_generator("SequenceTableGenerator", stmt=stmt0, key="mp:seq:0", pagination=pagination)
-    g1 = util1.create_generator("SequenceTableGenerator", stmt=stmt1, key="mp:seq:1", pagination=pagination)
+    g1 = util1.create_generator("SequenceTableGenerator", stmt=stmt1, key="mp:seq:1", pagination=pagination1)
 
     vals0, vals1 = [], []
     try:
@@ -353,10 +357,9 @@ def test_sequence_table_generator_multi_process_partitions_non_overlapping():
         pass
 
     # Expected starts per current algorithm
-    per_proc = (root_gen.count + 2 - 1) // 2  # == 5
     base = 1000 - root_gen.count
     expected_start0 = base + pagination.skip
-    expected_start1 = base + 2 * per_proc + pagination.skip
+    expected_start1 = base + pagination1.skip
 
     assert vals0[0] == expected_start0
     assert vals1[0] == expected_start1
@@ -384,3 +387,55 @@ def test_sequence_table_generator_rejects_mysql_multiprocessing(setup_context: S
             stmt=stmt,
             key="mysql:sequence",
         )
+
+
+def _sequence_key_task(setup_context: SetupContext, pagination: DataSourcePagination, count: str = "10") -> KeyTask:
+    generate = GenerateStatement(GenerateModel(name="orders", count=count, type="orders"), None)
+    key = KeyStatement(KeyModel(name="id", type="int", generator="SequenceTableGenerator", database="db1"), generate)
+    generate.sub_statements = [key]
+    key.sub_statements = []
+    return KeyTask(setup_context, key, pagination)
+
+
+def _run_page(task: KeyTask, setup_context: SetupContext, rows: int) -> list[int]:
+    context = GenIterContext(setup_context, "orders")
+    values = []
+    for _ in range(rows):
+        task.execute(context)
+        values.append(context.current_product["id"])
+    return values
+
+
+def test_sequence_key_task_later_pages_continue_the_sequence(setup_context: SetupContext):
+    setup_context.clients["db1"] = DummyRdbmsClient()
+
+    first = _run_page(_sequence_key_task(setup_context, DataSourcePagination(skip=0, limit=5)), setup_context, 5)
+    second = _run_page(_sequence_key_task(setup_context, DataSourcePagination(skip=5, limit=5)), setup_context, 5)
+
+    assert first + second == list(range(990, 1000))
+
+
+def test_sequence_key_task_process_chunk_uses_global_skip_once(setup_context: SetupContext):
+    """numProcess=2, count=10: process 1 owns chunk (5, 10) and its pages carry the global skip."""
+    setup_context.clients["db1"] = DummyRdbmsClient()
+    setup_context.num_process = 2
+    setup_context.process_id = 1
+
+    first = _run_page(_sequence_key_task(setup_context, DataSourcePagination(skip=5, limit=2)), setup_context, 2)
+    second = _run_page(_sequence_key_task(setup_context, DataSourcePagination(skip=7, limit=3)), setup_context, 3)
+
+    assert first + second == [995, 996, 997, 998, 999]
+
+
+def test_sequence_key_task_repeated_invocation_of_the_same_page_reserves_a_new_block(setup_context: SetupContext):
+    """A nested generate runs again with the same page: GenerateTask.pre_execute reserves a new
+    block, and the page must start at that block, not stay on the exhausted cursor."""
+    setup_context.clients["db1"] = DummyRdbmsClient()
+    page = DataSourcePagination(skip=0, limit=5)
+    runs = []
+    for _ in range(2):
+        _sequence_key_task(setup_context, None, count="5").pre_execute(setup_context)
+        runs.append(_run_page(_sequence_key_task(setup_context, page, count="5"), setup_context, 5))
+
+    assert runs[0] == [1000, 1001, 1002, 1003, 1004]
+    assert runs[1] == [1005, 1006, 1007, 1008, 1009]

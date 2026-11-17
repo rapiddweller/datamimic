@@ -45,11 +45,9 @@ class KeyTask(KeyVariableTask, GenSubTask):
             )
 
     def pre_execute(self, ctx: Context):
-        if self.statement.generator is not None and "SequenceTableGenerator" in self.statement.generator:
-            sequence_table_generator = GeneratorUtil(ctx).create_generator(
-                str(self._statement.generator), self._statement, self._pagination
-            )
-            sequence_table_generator.pre_execute(ctx)
+        # The generation-path instance is the one reserved here: it is cached under the key's
+        # cache key and reaches every worker with the block start fixed by this reservation.
+        GeneratorUtil(ctx).pre_execute_generator(self._generator)
 
     @property
     def statement(self) -> KeyStatement:

@@ -94,6 +94,16 @@ class TestSequenceTableGenerator:
         assert len(ids) == 13
         assert len(set(ids)) == 13, f"duplicate ids: {ids}"
 
+    @pytest.mark.parametrize("filename", ["postgresql_paged_test.xml", "postgresql_paged_mp_test.xml"])
+    def test_sequence_table_generator_postgres_count_above_page_size(self, filename):
+        """count=13 with pageSize=3: every page continues the sequence (a cached generator used
+        to be served exhausted to later pages, losing rows) and the process offset applies once."""
+        engine = DataMimicTest(test_dir=self._test_dir, filename=filename, capture_test_result=True)
+        engine.test_with_timer()
+        ids = [row["id"] for row in engine.capture_result()["check"]]
+        assert len(ids) == 13
+        assert max(ids) - min(ids) == 12, f"non-contiguous ids: {sorted(ids)}"
+
     def test_sequence_table_generator_mysql_uneven_multiprocess(self):
         """MySQL SequenceTableGenerator gracefully degrades to single-process
         (PR #217 added _uses_mysql_sequence policy).  The run must complete with

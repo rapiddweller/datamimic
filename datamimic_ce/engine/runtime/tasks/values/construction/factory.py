@@ -33,7 +33,7 @@ from datamimic_ce.engine.dsl.api import (
     NumberDistribution,
     Statement,
 )
-from datamimic_ce.engine.io.api import DataSourcePagination
+from datamimic_ce.engine.io.api import DataSourcePagination, WeightedDataSource
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.tasks.values.construction.global_increment import GlobalIncrementGenerator
 from datamimic_ce.engine.runtime.tasks.values.construction.sequence_table import SequenceTableGenerator
@@ -117,6 +117,11 @@ class GeneratorUtil:
         }
         self._context = context
 
+    def pre_execute_generator(self, generator: WeightedDataSource | None) -> None:
+        """Reserve external state (a sequence block) once in the parent process, before workers start."""
+        if isinstance(generator, SequenceTableGenerator):
+            generator.pre_execute(self._context)
+
     def create_generator(
         self,
         generator_str: str,
@@ -148,6 +153,8 @@ class GeneratorUtil:
             cache_key = key or generator_str
             generator_from_ctx = self._context.root.generators.get(cache_key)
             if generator_from_ctx is not None:
+                if isinstance(generator_from_ctx, SequenceTableGenerator) and pagination:
+                    generator_from_ctx.add_pagination(pagination=pagination)
                 return generator_from_ctx
 
             # Parse generator string into type and parameters
@@ -222,12 +229,9 @@ class GeneratorUtil:
                 result = cls(context=self._context, stmt=stmt, sequence=parsed_sequence)
                 if pagination:
                     result.add_pagination(pagination=pagination)
-                    # Cache only generation-ready (paginated) instances. GenerateTask.pre_execute
-                    # builds its sub-tasks with pagination=None; caching that instance under the
-                    # same full_name|generator cache key the paginated page-tasks use later made
-                    # every single-process run hit _current=None -> StopIteration on the first
-                    # record -> 0 rows (only the numProcess=2 path had coverage, masking this).
-                    self._context.root.generators[cache_key] = result
+                # Cached unpaginated too: GenerateTask.pre_execute reserves the block on this
+                # instance and workers inherit it; each page then re-positions it.
+                self._context.root.generators[cache_key] = result
                 return result
 
             # --- DateTimeGenerator special parsing ---
