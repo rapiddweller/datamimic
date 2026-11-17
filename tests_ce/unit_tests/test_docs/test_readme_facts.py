@@ -33,3 +33,11 @@ def test_readme_scenario_count_is_not_above_the_repository() -> None:
     scenarios = [p for p in (ROOT / "tests_ce/scenarios").iterdir() if re.match(r"s\d+_", p.name)]
 
     assert len(scenarios) >= stated
+
+
+def test_readme_links_are_absolute_because_pypi_renders_it_outside_github() -> None:
+    targets = re.findall(r"\]\(([^)\s]+)", README) + re.findall(r'(?:src|href)="([^"]+)"', README)
+    relative = [target for target in targets if not re.match(r"(https?:|mailto:|#)", target)]
+
+    assert targets
+    assert relative == []
