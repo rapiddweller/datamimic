@@ -15,6 +15,7 @@ from lxml import etree
 from datamimic_ce.authoring.adapters.dryrun import (
     _BoundedPolicyRefusal,
     _IncludeBudgetExceeded,
+    _InvalidIncludedXml,
     literal_include_graph,
 )
 from datamimic_ce.authoring.adapters.linter import _run_rules
@@ -179,12 +180,26 @@ class CeDescriptorValidator:
         """The ``.xml`` steps of the entry's literal include graph, read through the contained workspace reader
         with the same rules the bounded run applies."""
         logical_path = self._workspace_context.descriptor_path
+        chains: list[tuple[str, ...]] = []
         try:
             physical_path = self._workspace_context.resolve_descriptor_path(logical_path)
             with resource_reader_scope(self._workspace_context.read_resource_bytes):
-                graph = literal_include_graph(parse_xml_source(xml), physical_path)
+                graph = literal_include_graph(parse_xml_source(xml), physical_path, chains=chains)
         except _BoundedPolicyRefusal as refusal:
             return _graph_refused(logical_path, str(refusal))  # static rule texts, no paths or values
+        except _InvalidIncludedXml as error:
+            return _graph_refused(
+                logical_path,
+                "An included step is not well-formed XML.",
+                _ESCAPE_HINT,
+                location=DiagnosticLocation(
+                    file=error.chain[-1],
+                    line=error.position[0],
+                    column=error.position[1],
+                    element="setup",
+                    include_chain=(logical_path.as_posix(), *error.chain),
+                ),
+            )
         except etree.XMLSyntaxError:
             return _graph_refused(logical_path, "An included step is not well-formed XML.", _ESCAPE_HINT)
         except (ValueError, OSError):
@@ -209,7 +224,7 @@ class CeDescriptorValidator:
         # Bindings and sinks resolve against the entry, and a step's clients end with that step; refusing them
         # here keeps a step-declared client from surfacing first as an undeclared id in another step.
         refusals = []
-        for step, root in zip(descriptors, roots, strict=True):
+        for step, root, chain in zip(descriptors, roots, chains, strict=True):
             for element in root:
                 if isinstance(element.tag, str) and element.tag in (EL_DATABASE, EL_MONGODB):
                     refusals.append(
@@ -223,15 +238,31 @@ class CeDescriptorValidator:
                                 element.tag,
                                 *(("line", element.sourceline) if element.sourceline is not None else ()),
                             ),
+                        ).model_copy(
+                            update={
+                                "location": DiagnosticLocation(
+                                    file=step.uri,
+                                    line=element.sourceline,
+                                    element=element.tag,
+                                    include_chain=(logical_path.as_posix(), *chain),
+                                )
+                            }
                         )
                     )
         if refusals:
             return IncludeGraphResult(ok=False, diagnostics=tuple(refusals))
         project = (entry_root, *roots)
         findings: list[Diagnostic] = []
-        for step, root in zip(descriptors, roots, strict=True):
+        for step, root, chain in zip(descriptors, roots, chains, strict=True):
             findings.extend(
-                _rule_diagnostics(root, physical_path, logical_path, project=project, prefix=("include", step.uri))
+                _rule_diagnostics(
+                    root,
+                    physical_path,
+                    logical_path,
+                    project=project,
+                    prefix=("include", step.uri),
+                    include_chain=(logical_path.as_posix(), *chain),
+                )
             )
         return IncludeGraphResult(
             ok=not any(item.severity == "error" for item in findings),
@@ -249,6 +280,7 @@ def _rule_diagnostics(
     project: tuple[etree._Element, ...] = (),
     declarations_complete: bool = True,
     prefix: tuple[str, ...] | None = None,
+    include_chain: tuple[str, ...] = (),
 ) -> tuple[Diagnostic, ...]:
     """Lint findings of one descriptor; an included step is linted with its project and reported at its uri."""
     location = prefix or ("descriptor", logical_path.as_posix())
@@ -266,6 +298,13 @@ def _rule_diagnostics(
                     *location,
                     finding.path,
                     *(("line", finding.line) if finding.line is not None else ()),
+                ),
+                location=DiagnosticLocation(
+                    file=prefix[1] if prefix else logical_path.as_posix(),
+                    line=finding.line,
+                    element=finding.element,
+                    name=finding.name,
+                    include_chain=include_chain,
                 ),
                 severity="error"
                 if finding.severity is RuleSeverity.ERROR
@@ -359,7 +398,13 @@ def _analysis_xml(root: etree._Element, xml: str, changed: set[etree._Element]) 
     return etree.tostring(root, encoding="unicode") if root in changed else xml
 
 
-def _graph_refused(path: PurePosixPath, message: str, remediation: str | None = None) -> IncludeGraphResult:
+def _graph_refused(
+    path: PurePosixPath,
+    message: str,
+    remediation: str | None = None,
+    *,
+    location: DiagnosticLocation | None = None,
+) -> IncludeGraphResult:
     return IncludeGraphResult(
         ok=False,
         diagnostics=(
@@ -369,7 +414,7 @@ def _graph_refused(path: PurePosixPath, message: str, remediation: str | None = 
                 phase=DiagnosticPhase.POLICY,
                 path=("descriptor", str(path), "include"),
                 remediation=remediation,
-            ),
+            ).model_copy(update={"location": location}),
         ),
     )
 

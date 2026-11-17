@@ -102,7 +102,7 @@ def test_a_forbidden_dtd_keeps_the_parser_text_without_the_escape_hint(tmp_path:
 
 def test_a_less_than_sign_in_an_included_step_names_the_escape(tmp_path: Path) -> None:
     (tmp_path / "step.xml").write_text(
-        '<setup><generate name="a" count="2"><key name="k" script="7349 if 1 < 2 else 0"/></generate></setup>',
+        '<setup>\n<generate name="a" count="2"><key name="k" script="7349 if 1 < 2 else 0"/></generate></setup>',
         encoding="utf-8",
     )
 
@@ -110,6 +110,23 @@ def test_a_less_than_sign_in_an_included_step_names_the_escape(tmp_path: Path) -
 
     assert "&lt;" in str(error.remediation) and "&amp;" in str(error.remediation)
     assert "7349" not in error.model_dump_json()
+    assert error.location is not None
+    assert error.location.file == "step.xml"
+    assert error.location.line == 2
+    assert error.location.include_chain == ("datamimic.xml", "step.xml")
+
+
+def test_invalid_nested_step_names_the_whole_include_chain(tmp_path: Path) -> None:
+    (tmp_path / "outer.xml").write_text('<setup><include uri="step.xml"/></setup>', encoding="utf-8")
+    (tmp_path / "step.xml").write_text('<setup>\n<generate name="secret" count="1"></setup>', encoding="utf-8")
+
+    [error] = _errors(tmp_path, '<setup rngSeed="1"><include uri="outer.xml"/></setup>')
+
+    assert error.location is not None
+    assert error.location.file == "step.xml"
+    assert error.location.line == 2
+    assert error.location.include_chain == ("datamimic.xml", "outer.xml", "step.xml")
+    assert "secret" not in error.location.model_dump_json()
 
 
 def test_unique_on_a_typed_key_names_a_pool_a_key_accepts(tmp_path: Path) -> None:

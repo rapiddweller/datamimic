@@ -190,6 +190,13 @@ class _IncludeBudgetExceeded(_BoundedPolicyRefusal):
     """The include graph's aggregate bytes exceed the budget."""
 
 
+class _InvalidIncludedXml(ValueError):
+    def __init__(self, chain: tuple[str, ...], error: etree.XMLSyntaxError) -> None:
+        super().__init__("Included step is not well-formed XML")
+        self.chain = chain
+        self.position = error.position
+
+
 _WorkerMessage = _WorkerSuccess | _WorkerFailure
 
 
@@ -400,7 +407,9 @@ def _refuse_unbounded_execute(
 _MAX_INCLUDE_GRAPH_BYTES = 64 * 1024 * 1024
 
 
-def literal_include_graph(entry: etree._Element, entry_path: Path) -> tuple[tuple[str, bytes], ...]:
+def literal_include_graph(
+    entry: etree._Element, entry_path: Path, *, chains: list[tuple[str, ...]] | None = None
+) -> tuple[tuple[str, bytes], ...]:
     """The entry's literal include graph in execution order: (workspace-relative uri, file bytes) per ``.xml``
     step; ``.properties`` files are read for containment but not retained. Nested uris resolve against the entry
     directory, as the runtime resolves them. Raises _BoundedPolicyRefusal unless the graph is literal,
@@ -414,7 +423,7 @@ def literal_include_graph(entry: etree._Element, entry_path: Path) -> tuple[tupl
     visited = 0
     total = 0
 
-    def visit(document: etree._Element) -> None:
+    def visit(document: etree._Element, chain: tuple[str, ...]) -> None:
         nonlocal visited, total
         if document.tag != "setup":
             raise _BoundedPolicyRefusal("XML include must contain a setup descriptor")
@@ -439,15 +448,21 @@ def literal_include_graph(entry: etree._Element, entry_path: Path) -> tuple[tupl
                 raise _IncludeBudgetExceeded("XML include dependency graph exceeds the aggregate byte budget")
             if suffix == ".xml":
                 graph.append((uri, data))
+                if chains is not None:
+                    chains.append((*chain, uri))
                 visited += 1
                 identity = os.path.abspath(dependency)
                 if identity in active or len(active) >= 64 or visited > 2000:
                     raise _BoundedPolicyRefusal("XML include dependency graph is cyclic or exceeds bounded limits")
                 active.append(identity)
-                visit(parse_xml_source(data))
+                try:
+                    child = parse_xml_source(data)
+                except etree.XMLSyntaxError as error:
+                    raise _InvalidIncludedXml((*chain, uri), error) from error
+                visit(child, (*chain, uri))
                 active.pop()
 
-    visit(entry)
+    visit(entry, ())
     return tuple(graph)
 
 
