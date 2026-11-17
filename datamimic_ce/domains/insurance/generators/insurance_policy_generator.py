@@ -57,7 +57,6 @@ class InsurancePolicyGenerator(DatasetAwareDomainGenerator):
         )
         self._datetime_generator = DateTimeGenerator(random=True, rng=self._derive_rng())
         # Track last picks to avoid immediate repetition in tests without rerun plugin
-        self._last_status: str | None = None
 
     def generate_id_candidate(self) -> str:
         return uuid4_from_random(self.rng)
@@ -114,12 +113,11 @@ class InsurancePolicyGenerator(DatasetAwareDomainGenerator):
     def pick_status(self, *, start_path: Path) -> str:
         from datamimic_ce.domains.shared.datasets.loader import (
             load_weighted_values_try_dataset,
-            pick_one_weighted_no_repeat,
+            pick_one_weighted,
         )
 
         values, weights = load_weighted_values_try_dataset(
             "insurance", "policy", "statuses.csv", dataset=self._dataset, start=start_path
         )
-        choice = pick_one_weighted_no_repeat(self._rng, values, weights, last=self._last_status)
-        self._last_status = choice
+        choice = pick_one_weighted(self._rng, values, weights)
         return choice

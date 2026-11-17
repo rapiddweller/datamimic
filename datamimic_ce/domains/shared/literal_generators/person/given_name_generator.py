@@ -25,7 +25,6 @@ class GivenNameGenerator(DatasetAwareDomainGenerator):
     ):
         super().__init__(dataset=dataset, rng=rng)
         self._gender = gender
-        self._last_given: str | None = None
 
         # Prepare file path
         file_name_male = f"givenName_male_{self._dataset}.csv"
@@ -76,13 +75,6 @@ class GivenNameGenerator(DatasetAwareDomainGenerator):
             selected_dataset = self._dataset_male if self._rng.choice([True, False]) else self._dataset_female
         else:
             raise ValueError(f"Invalid gender: {gender}")
-        # Avoid immediate repetition when possible
         values, weights = selected_dataset[0], selected_dataset[1]
-        if self._last_given in values and len(values) > 1:
-            pool = [(v, w) for v, w in zip(values, weights, strict=False) if v != self._last_given]
-            vals, wgts = zip(*pool, strict=False)
-            choice = self._rng.choices(list(vals), weights=list(wgts), k=1)[0]
-        else:
-            choice = self._rng.choices(values, weights, k=1)[0]
-        self._last_given = choice
+        choice = self._rng.choices(values, weights, k=1)[0]
         return choice

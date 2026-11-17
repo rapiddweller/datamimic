@@ -11,7 +11,7 @@ from pathlib import Path
 from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
 from datamimic_ce.domains.domain_core.datasets.path import dataset_path
 from datamimic_ce.domains.finance.generators.bank_generator import BankGenerator
-from datamimic_ce.domains.shared.datasets.loader import pick_one_weighted_no_repeat, read_csv_rows
+from datamimic_ce.domains.shared.datasets.loader import pick_one_weighted, read_csv_rows
 from datamimic_ce.domains.shared.literal_generators.primitives.data_faker_generator import DataFakerGenerator
 
 _DIGITS = "0123456789"
@@ -60,8 +60,6 @@ class BankAccountGenerator(ClockAnchoredDomainGenerator):
             "bban",
             rng=self._derive_rng(),
         )
-        self._last_account_type: str | None = None
-        self._last_currency: str | None = None
 
     @property
     def bank_generator(self) -> BankGenerator:
@@ -107,8 +105,7 @@ class BankAccountGenerator(ClockAnchoredDomainGenerator):
         account_types_data = read_csv_rows(file_path)[1:]
         values = [row[0] for row in account_types_data]
         weights = [float(item[1]) for item in account_types_data]
-        choice = pick_one_weighted_no_repeat(self._rng, values, weights, last=self._last_account_type)
-        self._last_account_type = choice
+        choice = pick_one_weighted(self._rng, values, weights)
         return choice
 
     def generate_balance(self) -> float:
@@ -128,8 +125,7 @@ class BankAccountGenerator(ClockAnchoredDomainGenerator):
         weight_idx = header_map["weight"]
         weights = [float(row[weight_idx]) for row in rows]
         codes = [row[code_idx] for row in rows]
-        choice = pick_one_weighted_no_repeat(self._rng, codes, weights, last=self._last_currency)
-        self._last_currency = choice
+        choice = pick_one_weighted(self._rng, codes, weights)
         return choice
 
     def generate_iban(self) -> str | None:

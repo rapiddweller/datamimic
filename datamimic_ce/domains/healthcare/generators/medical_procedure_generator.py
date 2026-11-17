@@ -29,7 +29,6 @@ class MedicalProcedureGenerator(DatasetAwareDomainGenerator):
         rng: random.Random | None = None,
     ):
         super().__init__(dataset=dataset, rng=rng)
-        self._last_specialty: str | None = None
         self._last_recovery_time: int | None = None
 
     def generate_procedure_id_candidate(self) -> str:
@@ -129,13 +128,12 @@ class MedicalProcedureGenerator(DatasetAwareDomainGenerator):
 
     def generate_specialty(self) -> str:
         """Generate a medical specialty (dataset-driven)."""
-        from datamimic_ce.domains.shared.datasets.loader import pick_one_weighted_no_repeat
+        from datamimic_ce.domains.shared.datasets.loader import pick_one_weighted
 
         file_path = dataset_path("healthcare", "medical", f"specialties_{self._dataset}.csv", start=Path(__file__))
         wgt, loaded_data = read_weighted_records(file_path, "weight")
         values = [row["specialty"] for row in loaded_data]
-        choice = pick_one_weighted_no_repeat(self._rng, values, wgt, last=self._last_specialty)
-        self._last_specialty = choice
+        choice = pick_one_weighted(self._rng, values, wgt)
         return choice
 
     def generate_category(self) -> str:

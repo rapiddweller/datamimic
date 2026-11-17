@@ -15,7 +15,6 @@ from datamimic_ce.domains.domain_core.datasets.path import dataset_path
 from datamimic_ce.domains.shared.datasets.loader import (
     load_weighted_values_try_dataset,
     pick_one_weighted,
-    pick_one_weighted_no_repeat,
     read_weighted_records,
 )
 from datamimic_ce.domains.shared.generators.address_generator import AddressGenerator
@@ -43,8 +42,6 @@ class PoliceOfficerGenerator(ClockAnchoredDomainGenerator):
             reference_now: Optional fixed datetime anchor for deterministic mode.
         """
         super().__init__(dataset=dataset, rng=rng, reference_now=reference_now)
-        self._last_department: str | None = None
-        self._last_unit: str | None = None
         from datamimic_ce.domains.shared.demographics.config import DemographicConfig as _DC
 
         demo = demographic_config if demographic_config is not None else _DC()
@@ -130,8 +127,7 @@ class PoliceOfficerGenerator(ClockAnchoredDomainGenerator):
         loaded_weights, loaded_data = read_weighted_records(file_path, "weight")
         values = [row["department_id"] for row in loaded_data]
 
-        val = pick_one_weighted_no_repeat(self._rng, values, loaded_weights, last=self._last_department)
-        self._last_department = val
+        val = pick_one_weighted(self._rng, values, loaded_weights)
         return val
 
     # Helper: weighted selections for officer attributes
@@ -172,6 +168,5 @@ class PoliceOfficerGenerator(ClockAnchoredDomainGenerator):
         file_path = dataset_path("public_sector", "police", f"departments_{self._dataset}.csv", start=Path(__file__))
         loaded_weights, loaded_data = read_weighted_records(file_path, "weight")
         values = [row["department_id"] for row in loaded_data]
-        val = pick_one_weighted_no_repeat(self._rng, values, loaded_weights, last=self._last_unit)
-        self._last_unit = val
+        val = pick_one_weighted(self._rng, values, loaded_weights)
         return val

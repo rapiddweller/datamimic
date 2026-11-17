@@ -26,7 +26,6 @@ class InsuranceProductGenerator(DatasetAwareDomainGenerator):
             dataset=self._dataset,
             rng=self._derive_rng(),
         )
-        self._last_product_type: str | None = None
 
     def generate_id_candidate(self) -> str:
         return uuid4_from_random(self.rng)
@@ -44,19 +43,8 @@ class InsuranceProductGenerator(DatasetAwareDomainGenerator):
 
         file_path = dataset_path("insurance", f"products_{self._dataset}.csv", start=Path(__file__))
         _, rows_dicts = read_weighted_records(file_path, "weight")
-        # Avoid immediate repetition by type
-        if self._last_product_type is not None and len(rows_dicts) > 1:
-            pool = [row for row in rows_dicts if row.get("type") != self._last_product_type]
-            pool_w = [float(str(row.get("weight", 1.0) or 1.0)) for row in pool]
-            # Weighted choice over dict rows
-            idx = self._rng.choices(range(len(pool)), weights=pool_w, k=1)[0]
-            product_data = pool[idx]
-        else:
-            weights_all = [float(str(r.get("weight", 1.0) or 1.0)) for r in rows_dicts]
-            idx = self._rng.choices(range(len(rows_dicts)), weights=weights_all, k=1)[0]
-            product_data = rows_dicts[idx]
-        _ptype = product_data.get("type")
-        self._last_product_type = str(_ptype) if _ptype is not None else None
+        weights = [float(str(r.get("weight", 1.0) or 1.0)) for r in rows_dicts]
+        product_data = self._rng.choices(rows_dicts, weights=weights, k=1)[0]
 
         return {"type": product_data["type"], "code": product_data["code"], "description": product_data["description"]}
 

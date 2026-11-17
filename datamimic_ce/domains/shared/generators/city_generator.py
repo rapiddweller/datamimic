@@ -46,7 +46,6 @@ class CityGenerator(DatasetAwareDomainGenerator):
         super().__init__(dataset=dataset, rng=rng)
         self._country_name = None
         self._city_data = None
-        self._last_state: str | None = None
 
     def _get_city_data(self):
         """Load city data from CSV file.
@@ -90,25 +89,7 @@ class CityGenerator(DatasetAwareDomainGenerator):
         # Load city data
         city_header_dict, city_data = self._get_city_data()
 
-        # Choose a row, avoiding immediate state repetition when possible
-        if self._last_state is not None and len(city_data) > 1:
-            # try up to 5 times to find different state
-            attempt = 0
-            city_row = None
-            state_idx = city_header_dict.get("state.id")
-            while attempt < 5:
-                random_index = self._rng.randint(0, len(city_data) - 1)
-                candidate = city_data[random_index]
-                cand_state = candidate[state_idx] if state_idx is not None else None
-                if cand_state != self._last_state:
-                    city_row = candidate
-                    break
-                attempt += 1
-            if city_row is None:
-                city_row = city_data[self._rng.randint(0, len(city_data) - 1)]
-        else:
-            random_index = self._rng.randint(0, len(city_data) - 1)
-            city_row = city_data[random_index]
+        city_row = city_data[self._rng.randint(0, len(city_data) - 1)]
 
         # Load country name
         country_name = self._get_country_name()
@@ -133,6 +114,4 @@ class CityGenerator(DatasetAwareDomainGenerator):
             "country": country_name,
             "country_code": self._dataset,
         }
-        # remember last state for anti-repetition
-        self._last_state = result.get("state")
         return result

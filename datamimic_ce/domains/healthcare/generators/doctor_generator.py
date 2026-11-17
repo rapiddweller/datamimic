@@ -26,7 +26,7 @@ from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchored
 from datamimic_ce.domains.domain_core.datasets.path import dataset_path
 from datamimic_ce.domains.healthcare.generators.hospital_generator import HospitalGenerator
 from datamimic_ce.domains.shared.datasets.loader import (
-    pick_one_weighted_no_repeat,
+    pick_one_weighted,
     read_weighted_records,
     read_weighted_values,
 )
@@ -59,8 +59,6 @@ class DoctorGenerator(ClockAnchoredDomainGenerator):
             dataset=self._dataset,
             rng=self._derive_rng(),
         )
-        self._last_specialty: str | None = None
-        self._last_med_school: str | None = None
         self._last_grad_year: int | None = None
 
     @property
@@ -81,8 +79,7 @@ class DoctorGenerator(ClockAnchoredDomainGenerator):
         wgt, loaded_data = read_weighted_records(file_path, "weight")
         values = [item["specialty"] for item in loaded_data]
         weights = [float(w) for w in wgt]
-        choice = pick_one_weighted_no_repeat(self._rng, values, weights, last=self._last_specialty)
-        self._last_specialty = choice
+        choice = pick_one_weighted(self._rng, values, weights)
         return choice
 
     def generate_medical_school(self) -> str:
@@ -106,8 +103,7 @@ class DoctorGenerator(ClockAnchoredDomainGenerator):
                 inst_us = dataset_path("healthcare", "medical", "institutions_US.csv", start=Path(__file__))
                 values, w = read_weighted_values(inst_us)
         weights = [float(wi) for wi in w]
-        choice = pick_one_weighted_no_repeat(self._rng, values, weights, last=self._last_med_school)
-        self._last_med_school = choice
+        choice = pick_one_weighted(self._rng, values, weights)
         return choice
 
     def generate_certifications(self) -> list[str]:

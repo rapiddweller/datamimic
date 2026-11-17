@@ -20,7 +20,8 @@ EXPECTED_FACADE_CONTENT_HASHES: dict[str, str] = {
 EXPECTED_ENTITY_REPLAY_HASH = "b42005458b66887a2feb7051740e091b5288eef566a6de6fe1ff723b413ed76e"
 # #282 keeps the literal product's unique pool across its automatic page boundary:
 # E,C,D,A,B replaces the erroneous per-page restart E,C,D,B,C.
-EXPECTED_LITERAL_REPLAY_HASH = "94da876cb727b8df912b8e2a099989d75df8e174c7c9926510f39f578fd88a0c"
+# #635 draws weighted values without the no-repeat filter (given names in this replay).
+EXPECTED_LITERAL_REPLAY_HASH = "26c9d0be52ec7030877880b2ebad816c2f627854a3a865c720023261536ec434"
 UTF8_PROBE_HASH = "346c09d6dbf788249cbd8cf5bae13bf2d4f34dd83e6aa689c190b996cf82d2a7"
 
 

@@ -38,9 +38,6 @@ class EducationalInstitutionGenerator(ClockAnchoredDomainGenerator):
             dataset=self._dataset,
             rng=self._derive_rng(),
         )
-        # Track last chosen level to reduce immediate repetition across entities
-        self._last_level: str | None = None
-        self._last_institution_type: str | None = None
         self._last_accreditations: tuple[str, ...] | None = None
 
     @property
@@ -149,7 +146,7 @@ class EducationalInstitutionGenerator(ClockAnchoredDomainGenerator):
         import csv
 
         from datamimic_ce.domains.domain_core.datasets.path import dataset_path
-        from datamimic_ce.domains.shared.datasets.loader import pick_one_weighted_no_repeat
+        from datamimic_ce.domains.shared.datasets.loader import pick_one_weighted
 
         path = dataset_path("public_sector", "education", f"levels_{self._dataset}.csv", start=start)
         levels_by_pattern: dict[str, list[tuple[str, float]]] = {}
@@ -166,17 +163,15 @@ class EducationalInstitutionGenerator(ClockAnchoredDomainGenerator):
             if not items:
                 return None
             values, weights = zip(*items, strict=True)
-            return pick_one_weighted_no_repeat(self._rng, list(values), list(weights), last=self._last_level)
+            return pick_one_weighted(self._rng, list(values), list(weights))
 
         for patt in ("University", "College", "Vocational", "Special", "School"):
             if patt in institution_type:
                 chosen = pick_for(patt)
                 if chosen:
-                    self._last_level = chosen
                     return chosen
 
         chosen = pick_for("Default") or "Higher Education"
-        self._last_level = chosen
         return chosen
 
     def pick_accreditations(self, institution_type: str, *, start: Path) -> list[str]:
@@ -212,14 +207,13 @@ class EducationalInstitutionGenerator(ClockAnchoredDomainGenerator):
     def pick_institution_type(self, *, start: Path) -> str:
         from datamimic_ce.domains.shared.datasets.loader import (
             load_weighted_values_try_dataset,
-            pick_one_weighted_no_repeat,
+            pick_one_weighted,
         )
 
         values, weights = load_weighted_values_try_dataset(
             "public_sector", "education", "institution_types.csv", dataset=self._dataset, start=start
         )
-        choice = pick_one_weighted_no_repeat(self._rng, values, weights, last=self._last_institution_type)
-        self._last_institution_type = choice
+        choice = pick_one_weighted(self._rng, values, weights)
         return choice
 
     def generate_programs(self, level: str, *, start: Path) -> list[str]:
