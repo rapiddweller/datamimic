@@ -16,6 +16,8 @@ FIVE_DIGIT_COUNTRIES = ("US", "DE")
 # The leading 0 belongs to the number in these countries; elsewhere areaCode omits the trunk prefix.
 AREA_CODE_WITH_LEADING_ZERO = {"IT", "SM", "VA"}
 LEADING_ZERO_STATES = {"US": "NJ", "DE": "SN"}
+# Seeds 0-59 reach a leading-zero address in the state (US: seeds 22, 29, 52; DE: 42, 57).
+SEEDS_REACHING_A_LEADING_ZERO_ADDRESS = range(60)
 
 
 def _column(path: Path, name: str) -> list[str]:
@@ -48,7 +50,9 @@ def test_us_city_names_do_not_end_in_a_lowercase_city() -> None:
 
 @pytest.mark.parametrize("country", FIVE_DIGIT_COUNTRIES)
 def test_seeded_address_in_a_leading_zero_state_has_a_five_digit_postal_code(country: str) -> None:
-    addresses = [Address(AddressGenerator(dataset=country, rng=Random(seed))) for seed in range(300)]
+    addresses = [
+        Address(AddressGenerator(dataset=country, rng=Random(seed))) for seed in SEEDS_REACHING_A_LEADING_ZERO_ADDRESS
+    ]
     in_state = [address for address in addresses if address.state == LEADING_ZERO_STATES[country]]
 
     assert in_state

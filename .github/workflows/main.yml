@@ -604,8 +604,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - shard: benchmarks
-            args: tests_ce/unit_tests/test_benchmarks
           - shard: authoring
             args: tests_ce/unit_tests/test_authoring
           - shard: rest
@@ -636,10 +634,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Serial coverage of the whole suite took about 46 minutes on two cores; these shards take 20, 16 and 11.
+        # Serial coverage of the whole suite took about 46 minutes on two cores; these two shards take about 16 and 11.
         include:
-          - shard: benchmarks
-            args: tests_ce/unit_tests/test_benchmarks
           - shard: authoring
             args: tests_ce/unit_tests/test_authoring
           - shard: rest
@@ -705,7 +701,7 @@ jobs:
         run: |
           . .venv/bin/activate
           nproc
-          # test_benchmarks (100 broken-variant runs of about 12 s each) runs in the full lane only
+          # test_benchmarks runs in benchmarks.yml
           uv run pytest tests_ce/unit_tests -n auto -q --durations=0 --ignore=tests_ce/unit_tests/test_benchmarks | tee unit.log
           echo "== seconds per test file"
           grep -E '^[0-9.]+s (call|setup|teardown) ' unit.log | awk '{split($3,a,"::"); t[a[1]]+=$1} END {for (f in t) printf "%8.0f %s\n", t[f], f}' | sort -rn | head -25
@@ -721,7 +717,7 @@ jobs:
         if: github.event_name != 'pull_request'
         run: |
           . .venv/bin/activate
-          test "$(ls -A coverage-unit-data | wc -l)" -eq 3
+          test "$(ls -A coverage-unit-data | wc -l)" -eq 2
           uv run coverage combine coverage-unit-data
           uv run make coverage-unit-report
           uv run make test-architecture

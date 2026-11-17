@@ -1,0 +1,50 @@
+name: Authoring eval oracle tests
+run-name: ${{ github.actor || 'unknown' }} is running ${{ github.workflow || 'workflow' }} on ${{ github.repository || 'repo' }}
+# tests_ce/unit_tests/test_benchmarks tests the blind-agent eval oracle (benchmarks/authoring_eval), not product code.
+# It runs when the oracle or its tests change, nightly, and by hand; main.yml leaves it out.
+on:
+  push:
+    branches:
+      - development
+    paths:
+      - 'benchmarks/**'
+      - 'tests_ce/unit_tests/test_benchmarks/**'
+      - '.github/workflows/benchmarks.yml'
+  pull_request:
+    paths:
+      - 'benchmarks/**'
+      - 'tests_ce/unit_tests/test_benchmarks/**'
+      - '.github/workflows/benchmarks.yml'
+  schedule:
+    - cron: '17 2 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: benchmarks-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  RUNTIME_ENVIRONMENT: production
+
+jobs:
+  benchmarks_oracle:
+    name: Authoring eval oracle tests
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.1.0
+      - name: Install dependencies
+        run: uv sync --python 3.11
+      - name: Run oracle tests
+        run: uv run pytest tests_ce/unit_tests/test_benchmarks -n auto -q --durations=10

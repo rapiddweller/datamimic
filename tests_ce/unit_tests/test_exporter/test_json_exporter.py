@@ -69,9 +69,13 @@ class TestJsonExporter(unittest.TestCase):
         self.assertEqual(len(data), total_items)
 
     def test_large_data_non_multiple_chunk_size(self):
-        """Test exporting 1,000,001 records with chunk size 100,000 (11 chunks expected)."""
-        total_records = 1_000_001
-        chunk_size = 100_000
+        """Test exporting 5,001 records with chunk size 2,500 (3 chunks expected).
+
+        A 1,000-record write batch does not divide the chunk size, so a batch straddles a chunk boundary,
+        and one record is left over for the last chunk.
+        """
+        total_records = 5_001
+        chunk_size = 2_500
         data = generate_mock_data(total_records)
         product = ("test_product", data)
         self.setUp(chunk_size=chunk_size)
