@@ -297,7 +297,7 @@ def test_sequence_table_generator_multi_process_partitions_non_overlapping():
     shared_client = DummyRdbmsClient()
 
     # Two separate roots to simulate two processes
-    def mk_ctx(proc_id: int) -> SetupContext:
+    def mk_ctx() -> SetupContext:
         ctx = SetupContext(
             memstore_manager=MemstoreManager(),
             task_id=str(uuid.uuid4()),
@@ -321,13 +321,12 @@ def test_sequence_table_generator_multi_process_partitions_non_overlapping():
             default_source_scripted=False,
             report_logging=False,
         )
-        # Attach shared DB client and simulated process id
+        # Attach shared DB client
         ctx.clients["db1"] = shared_client
-        ctx.process_id = proc_id  # attribute used by SequenceTableGenerator if present
         return ctx
 
-    ctx0 = mk_ctx(0)
-    ctx1 = mk_ctx(1)
+    ctx0 = mk_ctx()
+    ctx1 = mk_ctx()
 
     root_gen = DummyRootGenStmt(type_="gen", count=10)
     stmt0 = DummyStmt(name="id", parent_stmt=None, database="db1", root_gen=root_gen)
@@ -419,7 +418,6 @@ def test_sequence_key_task_process_chunk_uses_global_skip_once(setup_context: Se
     """numProcess=2, count=10: process 1 owns chunk (5, 10) and its pages carry the global skip."""
     setup_context.clients["db1"] = DummyRdbmsClient()
     setup_context.num_process = 2
-    setup_context.process_id = 1
 
     first = _run_page(_sequence_key_task(setup_context, DataSourcePagination(skip=5, limit=2)), setup_context, 2)
     second = _run_page(_sequence_key_task(setup_context, DataSourcePagination(skip=7, limit=3)), setup_context, 3)

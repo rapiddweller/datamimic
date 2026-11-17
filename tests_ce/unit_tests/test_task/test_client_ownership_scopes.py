@@ -212,7 +212,7 @@ def test_worker_error_survives_multiple_cleanup_failures(monkeypatch):
         raise original_error
 
     monkeypatch.setattr(GenerateWorker, "deserialize_worker_context", lambda payload: context)
-    monkeypatch.setattr(GenerateWorker, "mp_preprocess", lambda ctx, worker_id: None)
+    monkeypatch.setattr(GenerateWorker, "mp_preprocess", lambda worker_id: None)
     monkeypatch.setattr(GenerateWorker, "generate_and_export_data_by_chunk", fail)
     with pytest.raises(ValueError) as caught:
         MultiprocessingGenerateWorker.mp_wrapper((None, SimpleNamespace(full_name="rows"), 1, 0, 1, 1))
