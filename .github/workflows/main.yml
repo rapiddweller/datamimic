@@ -251,7 +251,8 @@ jobs:
           uv sync --all-extras --python 3.11
         shell: bash
 
-  mypy:
+  static_checks:
+    name: Static checks (mypy, ruff)
     runs-on: ubuntu-22.04
     needs: install_dependencies
     container: python:3.11-slim-bookworm
@@ -275,26 +276,6 @@ jobs:
           . .venv/bin/activate
           uv run mypy datamimic_ce
         shell: bash
-
-  ruff:
-    runs-on: ubuntu-22.04
-    needs: install_dependencies
-    container: python:3.11-slim-bookworm
-    steps:
-      - name: Setup git
-        run: |
-          apt-get update
-          apt-get install -y git
-          git config --global --add safe.directory $(realpath .)
-      - name: Checkout repository
-        uses: actions/checkout@v5
-      - name: Install uv
-        uses: astral-sh/setup-uv@v8.1.0
-      - name: Load venv cache
-        uses: actions/cache/restore@v5
-        with:
-          path: .venv
-          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml', './uv.lock') }}
       - name: Run ruff
         run: |
           . .venv/bin/activate
@@ -366,16 +347,19 @@ jobs:
           "$RUNNER_TEMP/authoring-wheel/bin/python" -m pip install "${wheel[0]}[mcp]"
           make installed-authoring-check PYTHON="$RUNNER_TEMP/authoring-wheel/bin/python" INSTALLED_AUTHORING_ARGS=--mcp
 
-  python_312_smoke:
-    name: Python 3.12 wheel smoke test
+  python_newer_smoke:
+    name: Python 3.12, 3.13 and 3.14 wheel smoke tests
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-22.04
     needs: build
     steps:
-      - name: Set Up Python 3.12
+      - name: Set Up Python 3.12, 3.13 and 3.14
         uses: actions/setup-python@v6
         with:
-          python-version: '3.12'
+          python-version: |
+            3.12
+            3.13
+            3.14
       - name: Checkout installed-package probe
         uses: actions/checkout@v5
         with:
@@ -385,61 +369,13 @@ jobs:
         with:
           name: artifact
           path: dist
-      - name: Install and check built wheel
+      - name: Install and check built wheel on each Python
         run: |
-          python -m venv "$RUNNER_TEMP/authoring-wheel"
-          "$RUNNER_TEMP/authoring-wheel/bin/python" -m pip install dist/*.whl
-          make installed-authoring-check PYTHON="$RUNNER_TEMP/authoring-wheel/bin/python"
-
-  python_313_smoke:
-    name: Python 3.13 wheel smoke test
-    if: github.event_name != 'pull_request'
-    runs-on: ubuntu-22.04
-    needs: build
-    steps:
-      - name: Set Up Python 3.13
-        uses: actions/setup-python@v6
-        with:
-          python-version: '3.13'
-      - name: Checkout installed-package probe
-        uses: actions/checkout@v5
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-      - name: Download wheel
-        uses: actions/download-artifact@v7
-        with:
-          name: artifact
-          path: dist
-      - name: Install and check built wheel
-        run: |
-          python -m venv "$RUNNER_TEMP/authoring-wheel"
-          "$RUNNER_TEMP/authoring-wheel/bin/python" -m pip install dist/*.whl
-          make installed-authoring-check PYTHON="$RUNNER_TEMP/authoring-wheel/bin/python"
-
-  python_314_smoke:
-    name: Python 3.14 wheel smoke test
-    if: github.event_name != 'pull_request'
-    runs-on: ubuntu-22.04
-    needs: build
-    steps:
-      - name: Set Up Python 3.14
-        uses: actions/setup-python@v6
-        with:
-          python-version: '3.14'
-      - name: Checkout installed-package probe
-        uses: actions/checkout@v5
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-      - name: Download wheel
-        uses: actions/download-artifact@v7
-        with:
-          name: artifact
-          path: dist
-      - name: Install and check built wheel
-        run: |
-          python -m venv "$RUNNER_TEMP/authoring-wheel"
-          "$RUNNER_TEMP/authoring-wheel/bin/python" -m pip install dist/*.whl
-          make installed-authoring-check PYTHON="$RUNNER_TEMP/authoring-wheel/bin/python"
+          for version in 3.12 3.13 3.14; do
+            python"$version" -m venv "$RUNNER_TEMP/authoring-wheel-$version"
+            "$RUNNER_TEMP/authoring-wheel-$version/bin/python" -m pip install dist/*.whl
+            make installed-authoring-check PYTHON="$RUNNER_TEMP/authoring-wheel-$version/bin/python"
+          done
 
   runtime_determinism_matrix:
     name: Seeded runtime determinism on ${{ matrix.os }} Python ${{ matrix.python-version }} (${{ matrix.timezone }}, ${{ matrix.resolution }})
@@ -451,31 +387,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-22.04
-            timezone: Etc/UTC
-            python-version: '3.11'
-            cell: ubuntu-py311-utc
-            resolution: highest
-          - os: ubuntu-22.04
-            timezone: Etc/UTC
-            python-version: '3.12'
-            cell: ubuntu-py312-utc
-            resolution: highest
-          - os: ubuntu-22.04
-            timezone: Etc/UTC
-            python-version: '3.13'
-            cell: ubuntu-py313-utc
-            resolution: highest
-          - os: ubuntu-22.04
-            timezone: Etc/UTC
-            python-version: '3.14'
-            cell: ubuntu-py314-utc
-            resolution: highest
-          - os: ubuntu-22.04
-            timezone: America/Los_Angeles
-            python-version: '3.11'
-            cell: ubuntu-py311-los-angeles
-            resolution: highest
           - os: windows-latest
             timezone: UTC
             python-version: '3.11'
@@ -486,11 +397,6 @@ jobs:
             python-version: '3.11'
             cell: windows-py311-pacific
             resolution: highest
-          - os: ubuntu-22.04
-            timezone: Etc/UTC
-            python-version: '3.11'
-            cell: ubuntu-py311-utc-lowest-direct
-            resolution: lowest-direct
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -506,14 +412,6 @@ jobs:
 
       - name: Install dependencies
         run: uv sync --python ${{ matrix.python-version }} --resolution ${{ matrix.resolution }}
-
-      - name: Set host timezone (Unix)
-        if: runner.os != 'Windows'
-        shell: bash
-        run: |
-          sudo ln -snf "/usr/share/zoneinfo/${{ matrix.timezone }}" /etc/localtime
-          echo "${{ matrix.timezone }}" | sudo tee /etc/timezone >/dev/null
-          date
 
       - name: Set host timezone (Windows)
         if: runner.os == 'Windows'
@@ -569,11 +467,80 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+  runtime_determinism_ubuntu:
+    name: Seeded runtime determinism on ubuntu-22.04 (6 cells)
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set Up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: |
+            3.11
+            3.12
+            3.13
+            3.14
+          architecture: x64
+
+      - name: Install uv Package Manager
+        uses: astral-sh/setup-uv@v8.1.0
+
+      - name: Prove determinism in every Ubuntu cell
+        shell: bash
+        run: |
+          set -euo pipefail
+          # cell python-version timezone resolution
+          cells=(
+            "ubuntu-py311-utc 3.11 Etc/UTC highest"
+            "ubuntu-py312-utc 3.12 Etc/UTC highest"
+            "ubuntu-py313-utc 3.13 Etc/UTC highest"
+            "ubuntu-py314-utc 3.14 Etc/UTC highest"
+            "ubuntu-py311-los-angeles 3.11 America/Los_Angeles highest"
+            "ubuntu-py311-utc-lowest-direct 3.11 Etc/UTC lowest-direct"
+          )
+          determinism_test=tests_ce/integration_tests/test_determinism_seed_scenarios/test_determinism_seed_scenarios.py
+          for cell_spec in "${cells[@]}"; do
+            read -r cell python_version timezone resolution <<< "$cell_spec"
+            echo "::group::$cell"
+            export UV_RESOLUTION="$resolution"
+            sudo ln -snf "/usr/share/zoneinfo/$timezone" /etc/localtime
+            echo "$timezone" | sudo tee /etc/timezone >/dev/null
+            date
+            uv sync --python "$python_version" --resolution "$resolution"
+            uv run pytest tests_ce/architecture/test_facade_determinism.py -q
+            uv run pytest \
+              "$determinism_test::test_committed_model_is_in_sync_with_builder[seed_in_setup.xml]" \
+              "$determinism_test::test_setup_seed_makes_the_full_model_deterministic" -q
+            uv run pytest \
+              "$determinism_test::test_replay_model_covers_every_literal_generator" \
+              "$determinism_test::test_every_seeded_path_replays_across_processes" \
+              "$determinism_test::test_seeded_rejected_entropy_sources_fail_from_committed_models" -q
+            mkdir -p "runtime-determinism/$cell"
+            uv run python -m tests_ce.architecture.runtime_determinism_manifest generate --output "runtime-determinism/$cell/runtime-determinism-manifest.json"
+            {
+              uv run python -VV
+              uv --version
+              uv pip freeze
+            } | tee "runtime-determinism/$cell/runtime-environment.txt"
+            echo "::endgroup::"
+          done
+
+      - name: Upload actual seeded runtime determinism manifests
+        uses: actions/upload-artifact@v6
+        with:
+          name: seeded-runtime-hashes-ubuntu
+          path: runtime-determinism
+          if-no-files-found: error
+          retention-days: 1
+
   runtime_determinism_fan_in:
     name: Compare seeded runtime determinism hashes across matrix cells
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-22.04
-    needs: runtime_determinism_matrix
+    needs: [runtime_determinism_matrix, runtime_determinism_ubuntu]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -1218,7 +1185,8 @@ jobs:
           name: coverage-external-service
           path: coverage.xml
 
-  factory_test:
+  factory_api_test:
+    name: Factory and API tests
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-22.04
     needs: install_dependencies
@@ -1243,38 +1211,17 @@ jobs:
           . .venv/bin/activate
           uv run pytest tests_ce/factory_tests/ --cov=. --cov-report=xml
         shell: bash
-      - name: Upload coverage report
+      - name: Upload factory coverage report
         uses: actions/upload-artifact@v6
         with:
           name: coverage-factory
           path: coverage.xml
-
-  api_test:
-    if: github.event_name != 'pull_request'
-    runs-on: ubuntu-22.04
-    needs: install_dependencies
-    container: python:3.11-slim-bookworm
-    steps:
-      - name: Setup git
-        run: |
-          apt-get update
-          apt-get install -y git
-          git config --global --add safe.directory $(realpath .)
-      - name: Checkout repository
-        uses: actions/checkout@v5
-      - name: Install uv
-        uses: astral-sh/setup-uv@v8.1.0
-      - name: Load venv cache
-        uses: actions/cache/restore@v5
-        with:
-          path: .venv
-          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml', './uv.lock') }}
       - name: Run api tests
         run: |
           . .venv/bin/activate
           uv run pytest tests_ce/api_tests/ --cov=. --cov-report=xml
         shell: bash
-      - name: Upload coverage report
+      - name: Upload api coverage report
         uses: actions/upload-artifact@v6
         with:
           name: coverage-api
@@ -1289,8 +1236,7 @@ jobs:
         functional_test,
         integration_test,
         external_service_test,
-        factory_test,
-        api_test,
+        factory_api_test,
       ]
     steps:
       - name: Checkout repository
@@ -1463,13 +1409,11 @@ jobs:
         functional_test,
         integration_test,
         external_service_test,
-        factory_test,
-        api_test,
+        factory_api_test,
         runtime_determinism_fan_in,
-        mypy,
-        ruff,
+        static_checks,
         python_311_smoke,
-        python_314_smoke,
+        python_newer_smoke,
         unit_test_py314,
         archkeel_check,
       ]
