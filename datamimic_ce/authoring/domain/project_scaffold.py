@@ -10,8 +10,13 @@ import json
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import PurePosixPath
+from typing import Literal
 
-from datamimic_ce.authoring.domain.common import validate_workspace_descriptor_path
+from pydantic import StrictStr
+
+from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
+from datamimic_ce.authoring.domain.common import AuthoringModel, validate_workspace_descriptor_path
+from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId, Diagnostic, DiagnosticPhase
 from datamimic_ce.authoring.domain.requests import PROJECT_ACCEPTANCE_PATH, PROJECT_ENTRY_PATH, BuildRequestV5
 
 
@@ -56,3 +61,21 @@ class ProjectScaffold:
                 *project_files,
             ),
         )
+
+
+class ProjectInitResult(AuthoringModel):
+    """What `init` did: the files it wrote, or the one reason that it wrote none."""
+
+    outcome: Literal["written", "not_written"]
+    pattern: ProjectPattern | None = None
+    files: tuple[StrictStr, ...] = ()
+    diagnostics: tuple[Diagnostic, ...] = ()
+
+    @classmethod
+    def written(cls, pattern: ProjectPattern, files: tuple[PurePosixPath, ...]) -> ProjectInitResult:
+        return ProjectInitResult(outcome="written", pattern=pattern, files=tuple(str(path) for path in files))
+
+    @classmethod
+    def from_input_error(cls, message: str) -> ProjectInitResult:
+        diagnostic = catalog_diagnostic(AuthoringRuleId.INPUT, message, phase=DiagnosticPhase.MODEL)
+        return ProjectInitResult(outcome="not_written", diagnostics=(diagnostic,))

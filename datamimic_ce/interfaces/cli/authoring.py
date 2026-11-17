@@ -11,7 +11,7 @@ import typer
 from pydantic import ValidationError
 
 from datamimic_ce.authoring import create_authoring_application
-from datamimic_ce.authoring.adapters.workspace import write_project_scaffold
+from datamimic_ce.authoring.adapters.workspace import init_project
 from datamimic_ce.authoring.domain.capabilities import CapabilityDomain
 from datamimic_ce.authoring.domain.dm_json import DmJsonDocumentV1
 from datamimic_ce.authoring.domain.project_run import ProjectParam, ProjectRunRequest, ProjectRunResult
@@ -275,13 +275,11 @@ def init(
 ) -> None:
     """Write a starter project (datamimic.xml and acceptance/build.json) that Build accepts. Never overwrites."""
     application = create_authoring_application()
-    try:
-        written = write_project_scaffold(project, application.scaffold(pattern))
-    except (FileExistsError, ValueError) as error:
-        reason = "these files exist already: " if isinstance(error, FileExistsError) else ""
-        typer.echo(f"Not written: {reason}{error}", err=True)
-        raise typer.Exit(code=1) from error
-    typer.echo(f"Wrote the {pattern.value} project to {project}: {', '.join(str(path) for path in written)}")
+    result = init_project(project, application.scaffold(pattern))
+    if result.outcome == "not_written":
+        typer.echo(f"Not written: {result.diagnostics[0].message}", err=True)
+        raise typer.Exit(code=1)
+    typer.echo(f"Wrote the {pattern.value} project to {project}: {', '.join(result.files)}")
     typer.echo(NEXT_STEP_HINT)
 
 

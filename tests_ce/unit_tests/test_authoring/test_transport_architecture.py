@@ -86,3 +86,11 @@ def test_transports_do_not_import_authoring_implementation_modules() -> None:
             node.module for node in ast.walk(tree) if isinstance(node, ast.ImportFrom) and node.module is not None
         }
         assert not imports & forbidden
+
+
+def test_cli_and_mcp_init_share_one_writer_and_do_not_write_files_themselves() -> None:
+    for relative in ("datamimic_ce/interfaces/cli/authoring.py", "datamimic_ce/interfaces/mcp/server.py"):
+        tree = ast.parse((ROOT / relative).read_text(encoding="utf-8"))
+        names = {alias.name for node in ast.walk(tree) if isinstance(node, ast.ImportFrom) for alias in node.names}
+        assert "init_project" in names, relative
+        assert "write_project_scaffold" not in names, relative

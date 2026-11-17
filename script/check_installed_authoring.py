@@ -65,6 +65,7 @@ async def check_mcp(schemas):
                 "dry_run",
                 "run",
                 "run_project",
+                "init",
             )
         }
         version = json.loads((await client.call_tool("datamimic_version", {}))[0].text)

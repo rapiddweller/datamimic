@@ -180,6 +180,8 @@ datamimic_run_project    project=./shop                -> completed, exit 0, 1.4
                                                           output/<id>/customers_csv.csv, 25 rows
 ```
 
+In an empty project the agent can start with `datamimic_init`, which writes the starter `datamimic.xml` and `acceptance/build.json` and never overwrites a file. Like every project tool, it takes an absolute path, for example `datamimic_init project=/home/me/shop`.
+
 <!-- Recording placeholder: docs/assets/agent-quick-start.gif, at most 30 seconds, recorded after P4a. Keep the text block above. -->
 
 The first start of the MCP server downloads CE from GitHub and takes about 7 s. Later starts take about 1 s. We measured both on one machine.

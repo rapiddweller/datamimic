@@ -36,6 +36,7 @@ which projects a call may name; without it any project can be named. A project's
 | `datamimic_reference` | `datamimic authoring reference --topic <topic> [--name <name>]` |
 | `datamimic_compile` | `datamimic authoring compile -` |
 | `datamimic_decompile` | `datamimic authoring decompile -` |
+| `datamimic_init` | `datamimic authoring init <project> [--pattern flat]` |
 | `datamimic_build` | `datamimic authoring build <project>` |
 | `datamimic_lint` | `datamimic authoring lint -` |
 | `datamimic_dry_run` | `datamimic authoring dry-run -` |
@@ -43,7 +44,12 @@ which projects a call may name; without it any project can be named. A project's
 | `datamimic_run_project` | `datamimic authoring run-project <project>` |
 
 `datamimic_version` also returns `build_protocol`; `5.0` is the Build contract this
-documentation describes. Persist XML. `datamimic_build` proves a project: its
+documentation describes. Persist XML. `datamimic_init` writes the flat starter
+(`datamimic.xml` and `acceptance/build.json`) that Build proves as `ready`; it creates a
+missing project directory, never overwrites a file, and refuses a symlink or a path
+outside the project with `outcome: not_written` and an `input` diagnostic. The flow
+for a new project is `datamimic_init`, `datamimic_build`, `datamimic_run_project`.
+`datamimic_build` proves a project: its
 `datamimic.xml` against `acceptance/build.json`, which holds expectations,
 `product_roles`, origin-tagged `acceptance_requirements` and smoke/replay options.
 `datamimic_run_project` builds first and then produces the real data; it refuses a

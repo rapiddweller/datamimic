@@ -193,6 +193,7 @@ async def test_every_tool_is_guarded(anyio_backend: str, tmp_path: Path, monkeyp
         "datamimic_capability": {"domain": "element", "name": "setup"},
         "datamimic_reference": {"request": {"topic": "overview"}},
         "datamimic_run_project": {"project": project},
+        "datamimic_init": {"project": project},
         **{name: {"project": project, **arguments} for name, arguments in PROJECT_TOOLS.items()},
     }
     async with Client(create_server()) as client:

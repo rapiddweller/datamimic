@@ -40,6 +40,7 @@ async def test_cli_stdio_authoring_roundtrip(anyio_backend: str) -> None:
             "datamimic_dry_run",
             "datamimic_run",
             "datamimic_run_project",
+            "datamimic_init",
             "datamimic_reference",
         }
         result = await client.call_tool(
