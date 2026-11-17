@@ -8,7 +8,11 @@ descriptor is the shape an agent wrote; no remediation may echo a descriptor val
 import json
 from pathlib import Path
 
+import pytest
+from lxml import etree
+
 from datamimic_ce.authoring import create_authoring_application
+from datamimic_ce.authoring.adapters.validator import DescriptorParser
 from datamimic_ce.authoring.domain.diagnostics import Diagnostic, DiagnosticLocation
 from datamimic_ce.authoring.domain.requests import (
     PROJECT_ACCEPTANCE_PATH,
@@ -113,7 +117,7 @@ def test_a_less_than_sign_in_an_included_step_names_the_escape(tmp_path: Path) -
     assert error.location is not None
     assert error.location.file == "step.xml"
     assert error.location.line == 2
-    assert error.location.include_chain == ("datamimic.xml", "step.xml")
+    assert error.location.include_chain == ("datamimic.xml",)
 
 
 def test_invalid_nested_step_names_the_whole_include_chain(tmp_path: Path) -> None:
@@ -125,8 +129,72 @@ def test_invalid_nested_step_names_the_whole_include_chain(tmp_path: Path) -> No
     assert error.location is not None
     assert error.location.file == "step.xml"
     assert error.location.line == 2
-    assert error.location.include_chain == ("datamimic.xml", "outer.xml", "step.xml")
+    assert error.location.include_chain == ("datamimic.xml", "outer.xml")
     assert "secret" not in error.location.model_dump_json()
+
+
+@pytest.mark.parametrize("nested", [False, True])
+def test_step_rule_location_names_only_includers(tmp_path: Path, nested: bool) -> None:
+    (tmp_path / "step.xml").write_text(
+        '<setup>\n<generate name="rows" count="1"><key name="${db_password}" type="string" unique="true"/>'
+        "</generate></setup>",
+        encoding="utf-8",
+    )
+    if nested:
+        (tmp_path / "outer.xml").write_text('<setup><include uri="step.xml"/></setup>', encoding="utf-8")
+    entry = "outer.xml" if nested else "step.xml"
+    errors = _errors(tmp_path, f'<setup rngSeed="1"><include uri="{entry}"/></setup>')
+    [finding] = [item for item in errors if item.code == "DM204"]
+    assert finding.location is not None
+    assert finding.location.file == "step.xml"
+    assert finding.location.line == 2
+    assert finding.location.include_chain == (("datamimic.xml", "outer.xml") if nested else ("datamimic.xml",))
+    assert "${db_password}" not in finding.location.model_dump_json()
+
+
+@pytest.mark.parametrize("element", ["database", "mongodb"])
+def test_included_client_location_names_the_includer(tmp_path: Path, element: str) -> None:
+    (tmp_path / "step.xml").write_text(f'<setup>\n<{element} id="db"/>\n</setup>', encoding="utf-8")
+    errors = _errors(tmp_path, '<setup rngSeed="1"><include uri="step.xml"/></setup>')
+    [finding] = [
+        item for item in errors if item.message == "Clients belong to the entry descriptor, not to an included step."
+    ]
+    assert finding.location is not None
+    assert finding.location.file == "step.xml"
+    assert finding.location.line == 2
+    assert finding.location.element == element
+    assert finding.location.include_chain == ("datamimic.xml",)
+
+
+def test_rule_location_never_exposes_element_name(tmp_path: Path) -> None:
+    xml = (
+        '<setup rngSeed="1"><generate name="rows" count="1">'
+        '<key name="${db_password}" type="string" unique="true"/></generate></setup>'
+    )
+    app = create_authoring_application(tmp_path, descriptor_path=PROJECT_ENTRY_PATH)
+    result = app.lint(LintRequest(xml=xml))
+    findings = [item for item in result.diagnostics if item.code == "DM204"]
+    assert findings
+    for item in findings:
+        assert item.location is not None
+        assert item.location.element == "key"
+        assert item.location.name is None
+        assert "${db_password}" not in item.location.model_dump_json()
+
+
+def test_raw_xml_syntax_error_location_has_no_invented_element(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def fail(*args: object, **kwargs: object) -> None:
+        raise etree.XMLSyntaxError("bad", 0, 7, 9)
+
+    monkeypatch.setattr(DescriptorParser, "parse_xml", fail)
+    app = create_authoring_application(tmp_path, descriptor_path=PROJECT_ENTRY_PATH)
+    result = app.lint(LintRequest(xml="<setup/>"))
+    [diagnostic] = result.diagnostics
+    assert diagnostic.location is not None
+    assert diagnostic.location.file == "datamimic.xml"
+    assert diagnostic.location.line == 7
+    assert diagnostic.location.column == 9
+    assert diagnostic.location.element is None
 
 
 def test_unique_on_a_typed_key_names_a_pool_a_key_accepts(tmp_path: Path) -> None:

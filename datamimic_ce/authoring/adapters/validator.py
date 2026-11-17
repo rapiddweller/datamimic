@@ -197,7 +197,7 @@ class CeDescriptorValidator:
                     line=error.position[0],
                     column=error.position[1],
                     element="setup",
-                    include_chain=(str(logical_path), *error.chain),
+                    include_chain=(str(logical_path), *error.chain[:-1]),
                 ),
             )
         except etree.XMLSyntaxError:
@@ -258,6 +258,7 @@ class CeDescriptorValidator:
                     logical_path,
                     project=project,
                     prefix=("include", step.uri),
+                    step_uri=step.uri,
                     include_chain=(str(logical_path), *chain),
                 )
             )
@@ -277,6 +278,7 @@ def _rule_diagnostics(
     project: tuple[etree._Element, ...] = (),
     declarations_complete: bool = True,
     prefix: tuple[str, ...] | None = None,
+    step_uri: str | None = None,
     include_chain: tuple[str, ...] = (),
 ) -> tuple[Diagnostic, ...]:
     """Lint findings of one descriptor; an included step is linted with its project and reported at its uri."""
@@ -297,10 +299,9 @@ def _rule_diagnostics(
                     *(("line", finding.line) if finding.line is not None else ()),
                 ),
                 location=DiagnosticLocation(
-                    file=prefix[1] if prefix else str(logical_path),
+                    file=step_uri if step_uri is not None else str(logical_path),
                     line=finding.line,
                     element=finding.element,
-                    name=finding.name,
                     include_chain=include_chain,
                 ),
                 severity="error"

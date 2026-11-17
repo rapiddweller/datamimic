@@ -411,14 +411,10 @@ def _refuse_unbounded_execute(
     # Check exactly what ExecuteTask will run: it normalizes file and inline code alike.
     refusal = python_library_refusal(ExecuteStatement.normalize_python_source(raw), seeded=seeded)
     if refusal is not None:
-        script_path = PurePosixPath(uri) if uri is not None else None
-        script_file = (
-            script_path.name
-            if script_path is not None and (PurePosixPath.is_absolute(script_path) or ".." in script_path.parts)
-            else str(script_path)
-            if script_path is not None
-            else None
-        )
+        script_file = None
+        if uri is not None:
+            p: PurePosixPath = PurePosixPath(uri)
+            script_file = p.name if PurePosixPath.is_absolute(p) or ".." in p.parts else uri
         raise _BoundedPolicyRefusal(
             f"{origin}: {refusal.message()}. {refusal.remediation()}",
             script_file=script_file,
@@ -472,7 +468,7 @@ def literal_include_graph(
             if suffix == ".xml":
                 graph.append((uri, data))
                 if chains is not None:
-                    chains.append((*chain, uri))
+                    chains.append(chain)
                 visited += 1
                 identity = os.path.abspath(dependency)
                 if identity in active or len(active) >= 64 or visited > 2000:
