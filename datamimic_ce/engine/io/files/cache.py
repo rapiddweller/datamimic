@@ -4,6 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import os
 from collections.abc import Callable
 from typing import ClassVar
 
@@ -16,6 +17,26 @@ class FileContentStorage:
     """
 
     _file_data_cache: ClassVar[dict[str, object]] = {}
+    _file_signatures: ClassVar[dict[str, tuple[int, int] | None]] = {}
+
+    @staticmethod
+    def file_signature(cache_key: str) -> tuple[int, int] | None:
+        """Size and mtime of the file behind the key; None when it is not a file on disk.
+
+        A cached entry whose file is gone stays served (preloaded or virtual content).
+        """
+        try:
+            stat = os.stat(cache_key)
+        except (OSError, ValueError):
+            return None
+        return stat.st_size, stat.st_mtime_ns
+
+    @classmethod
+    def is_fresh(cls, cache_key: str) -> bool:
+        if cache_key not in cls._file_data_cache:
+            return False
+        current = cls.file_signature(cache_key)
+        return current is None or current == cls._file_signatures.get(cache_key)
 
     @classmethod
     def load_file_with_cache(cls, cache_key: str):
@@ -24,7 +45,7 @@ class FileContentStorage:
         :param cache_key:
         :return:
         """
-        if cache_key in cls._file_data_cache:
+        if cls.is_fresh(cache_key):
             return cls._file_data_cache[cache_key]
         else:
             raise ValueError(f"Cannot find cache key '{cache_key}' in file content storage")
@@ -40,13 +61,15 @@ class FileContentStorage:
         if resource_reader_active():
             return read_func()
         # Try to load from storage
-        if cache_key in cls._file_data_cache:
+        if cls.is_fresh(cache_key):
             return cls._file_data_cache[cache_key]
 
         # Read file using custom function
+        signature = cls.file_signature(cache_key)
         res = read_func()
 
         # Store file into storage
         cls._file_data_cache[cache_key] = res
+        cls._file_signatures[cache_key] = signature
 
         return res
