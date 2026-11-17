@@ -153,7 +153,9 @@ def write_project_scaffold(
             _write_file(target, file.content)
         except OSError as error:
             previous = ", ".join(written) or "none"
-            raise OSError(f"could not write {file.path}; files already written: {previous}: {error}") from error
+            raise OSError(
+                f"could not write {file.path} (file may be partial); files already written: {previous}: {error}"
+            ) from error
         written.append(str(file.path))
     return tuple(file.path for file in scaffold.files)
 
