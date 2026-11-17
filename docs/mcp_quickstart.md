@@ -92,3 +92,8 @@ datamimic-mcp --transport sse --host 127.0.0.1 --port 8765
 
 `DATAMIMIC_MCP_API_KEY` enables `Authorization: Bearer <key>` or `X-API-Key: <key>`
 for SSE. Stdio uses its owning process's access controls.
+
+A `datamimic_run_project` result keeps `outcome` and reports why no execution
+occurred in `not_run_reason` (`input`, `build_rejected`, or
+`side_effects_not_allowed`; `null` after a run). Build warning diagnostics remain
+in the result after execution.

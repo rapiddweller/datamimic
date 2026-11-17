@@ -269,3 +269,15 @@ datamimic demo info demo-condition
 datamimic demo create demo-condition
 datamimic run ./demo-condition/datamimic.xml
 ```
+
+#### `authoring run-project` - Prove, Then Run a Project
+
+```bash
+datamimic authoring run-project <project> [--allow-side-effects] [--param NAME=VALUE]
+```
+
+Build runs first. A `not_run` result keeps the existing `outcome` and identifies
+its cause with `not_run_reason`: `input`, `build_rejected`, or
+`side_effects_not_allowed` (`null` when execution occurred). Build warning
+diagnostics, including open coverage gaps, are retained in the result. Review
+`build_outcome` and `action_required` before reporting a successful run.

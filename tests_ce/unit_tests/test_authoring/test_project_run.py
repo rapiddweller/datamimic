@@ -75,6 +75,7 @@ def test_rejected_build_stops_before_any_run(tmp_path: Path) -> None:
     result = workflow(rejected, (), runner).execute(ProjectRunRequest())
     assert result.outcome == "not_run" and result.build == rejected
     assert runner.calls == []
+    assert result.not_run_reason == "build_rejected"
 
 
 def test_a_build_with_open_coverage_gaps_still_runs(tmp_path: Path) -> None:
@@ -95,6 +96,19 @@ def test_a_build_with_open_coverage_gaps_still_runs(tmp_path: Path) -> None:
     assert "seeded" in (result.action_required or "")
 
 
+def test_run_preserves_build_warning_diagnostics(tmp_path: Path) -> None:
+    root = project(tmp_path, "customers")
+    entry = root / PROJECT_ENTRY_PATH
+    entry.write_text(entry.read_text(encoding="utf-8").replace(' rngSeed="7"', ""), encoding="utf-8")
+    build = create_authoring_application(root, descriptor_path=PROJECT_ENTRY_PATH).build()
+    assert any(item.severity == "warning" for item in build.diagnostics)
+
+    result = workflow(build, (), FakeRunner(execution())).execute(ProjectRunRequest())
+
+    warnings = tuple(item for item in build.diagnostics if item.severity == "warning")
+    assert all(item in result.diagnostics for item in warnings)
+
+
 def test_a_clean_ready_run_carries_the_outcome_and_no_action(tmp_path: Path) -> None:
     result = workflow(ready_build(tmp_path), (), FakeRunner(execution())).execute(ProjectRunRequest())
 
@@ -108,6 +122,7 @@ def test_effects_without_the_flag_are_listed_and_nothing_runs(tmp_path: Path) ->
     runner = FakeRunner(execution())
     result = workflow(ready_build(tmp_path), (EFFECT,), runner).execute(ProjectRunRequest())
     assert result.outcome == "not_run" and result.required_side_effects == (EFFECT,)
+    assert result.not_run_reason == "side_effects_not_allowed"
     assert result.diagnostics[0].code.value == "side_effect"
     assert runner.calls == []
 
@@ -295,3 +310,10 @@ def test_project_file_named_like_a_module_does_not_shadow_the_package(tmp_path: 
         ProjectRunRequest(timeout_seconds=300)
     )
     assert result.outcome == "completed", result.log_tail
+
+
+def test_result_rejects_contradictory_not_run_state() -> None:
+    from datamimic_ce.authoring.domain.project_run import ProjectRunResult
+
+    with pytest.raises(ValidationError):
+        ProjectRunResult(outcome="not_run", not_run_reason="input", exit_code=0)

@@ -10,7 +10,7 @@ import re
 from enum import StrEnum
 from typing import Annotated, Literal
 
-from pydantic import Field, StrictBool, StrictInt, StrictStr
+from pydantic import Field, StrictBool, StrictInt, StrictStr, model_validator
 
 from .build_rules import catalog_diagnostic
 from .common import AuthoringModel, NonEmptyStrictStr, NonNegativeStrictInt
@@ -60,6 +60,7 @@ class ProjectRunRequest(AuthoringModel):
 
 class ProjectRunResult(AuthoringModel):
     outcome: Literal["completed", "failed", "timeout", "not_run"]
+    not_run_reason: Literal["input", "build_rejected", "side_effects_not_allowed"] | None = None
     build: BuildResult | None = None
     build_outcome: Literal["ready", "ready_with_gaps"] | None = Field(
         default=None, description="The outcome of the Build that preceded the run; absent when Build rejected."
@@ -78,10 +79,60 @@ class ProjectRunResult(AuthoringModel):
     log_tail: tuple[StrictStr, ...] = ()
     diagnostics: tuple[Diagnostic, ...] = ()
 
+    @model_validator(mode="after")
+    def consistent_outcome(self) -> ProjectRunResult:
+        has_execution = any(
+            (
+                self.exit_code is not None,
+                self.duration_seconds is not None,
+                bool(self.artifacts),
+                self.artifact_count != 0,
+                bool(self.log_tail),
+            )
+        )
+        if self.outcome == "not_run":
+            if self.not_run_reason == "input":
+                valid = (
+                    self.build is None
+                    and self.build_outcome is None
+                    and self.coverage is None
+                    and not self.required_side_effects
+                    and not has_execution
+                )
+            elif self.not_run_reason == "build_rejected":
+                valid = (
+                    self.build is not None
+                    and self.build.outcome == "rejected"
+                    and self.build_outcome is None
+                    and self.coverage is None
+                    and not self.required_side_effects
+                    and not has_execution
+                )
+            else:
+                valid = (
+                    self.not_run_reason == "side_effects_not_allowed"
+                    and self.build is None
+                    and self.build_outcome is not None
+                    and self.coverage is not None
+                    and bool(self.required_side_effects)
+                    and not has_execution
+                )
+        else:
+            valid = (
+                self.not_run_reason is None
+                and self.build is None
+                and self.build_outcome is not None
+                and self.coverage is not None
+                and not self.required_side_effects
+            )
+        if not valid:
+            raise ValueError("Project run outcome contradicts its execution and Build fields")
+        return self
+
     @classmethod
     def from_input_error(cls, message: str) -> ProjectRunResult:
         diagnostic = catalog_diagnostic(AuthoringRuleId.INPUT, message, phase=DiagnosticPhase.MODEL)
-        return ProjectRunResult(outcome="not_run", diagnostics=(diagnostic,))
+        return ProjectRunResult(outcome="not_run", not_run_reason="input", diagnostics=(diagnostic,))
 
 
 class ProjectRunExecution(AuthoringModel):
