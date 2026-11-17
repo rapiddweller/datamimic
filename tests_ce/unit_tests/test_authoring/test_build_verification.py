@@ -23,6 +23,7 @@ from datamimic_ce.authoring.domain.proof import ReplayMismatchKind, Verification
 from datamimic_ce.authoring.domain.requests import (
     PROJECT_ENTRY_PATH,
     BoundedExecutionEvidence,
+    BoundedExecutionStatus,
     LintResult,
     ReadyBuild,
     ReadyWithGapsBuild,
@@ -68,8 +69,13 @@ def _captured(*, rows=({"id": 1}, {"id": 2}), ok=True, base_run_ok=True, smoke=N
         reason="Complete controlled executor-port capture",
     )
     return BoundedExecutionEvidence(
-        ok=ok,
-        base_run_ok=base_run_ok,
+        status=(
+            BoundedExecutionStatus.FAILED
+            if not base_run_ok
+            else BoundedExecutionStatus.PASSED
+            if ok
+            else BoundedExecutionStatus.SMOKE_FAILED
+        ),
         captured=CapturedProducts((CapturedProduct("items", tuple(rows), provenance),), 10),
         smoke_export=smoke or SmokeExportCapture.not_requested(),
     )

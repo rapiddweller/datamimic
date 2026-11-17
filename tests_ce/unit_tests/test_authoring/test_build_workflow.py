@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass, field
 
+import pytest
+
 from datamimic_ce.authoring.domain.capture import (
     CapturedProduct,
     CapturedProducts,
@@ -12,6 +14,7 @@ from datamimic_ce.authoring.domain.requests import (
     PROJECT_ACCEPTANCE_PATH,
     PROJECT_ENTRY_PATH,
     BoundedExecutionEvidence,
+    BoundedExecutionStatus,
     BuildRequestV5,
     IncludeGraphResult,
     LintResult,
@@ -20,9 +23,30 @@ from datamimic_ce.authoring.domain.requests import (
 SEEDED = '<setup rngSeed="7"><generate name="cities" count="3"><key name="id" constant="1"/></generate></setup>'
 
 
+def test_bounded_evidence_cannot_default_failed_base_to_success():
+    with pytest.raises(TypeError):
+        BoundedExecutionEvidence(ok=False, captured=CapturedProducts((), 10))
+    with pytest.raises(TypeError):
+        BoundedExecutionEvidence(captured=CapturedProducts((), 10))
+
+
+@pytest.mark.parametrize(
+    ("status", "ok", "base_run_ok", "stopped"),
+    [
+        (BoundedExecutionStatus.PASSED, True, True, False),
+        (BoundedExecutionStatus.SMOKE_FAILED, False, True, False),
+        (BoundedExecutionStatus.FAILED, False, False, False),
+        (BoundedExecutionStatus.STOPPED_BY_ASSERT, False, False, True),
+    ],
+)
+def test_bounded_evidence_status_properties(status, ok, base_run_ok, stopped):
+    evidence = BoundedExecutionEvidence(status=status, captured=CapturedProducts((), 10))
+    assert (evidence.ok, evidence.base_run_ok, evidence.stopped_by_assert) == (ok, base_run_ok, stopped)
+
+
 def captured(*, rows=({"id": 1}, {"id": 2}, {"id": 3}), complete=True):
     return BoundedExecutionEvidence(
-        ok=True,
+        status=BoundedExecutionStatus.PASSED,
         captured=CapturedProducts(
             (
                 CapturedProduct(
@@ -150,7 +174,9 @@ def test_unseeded_replay_fails():
 
 
 def test_missing_capture_never_ready_even_without_expectations():
-    result = workflow(Executor([BoundedExecutionEvidence(ok=True, captured=CapturedProducts((), 10))])).execute()
+    result = workflow(
+        Executor([BoundedExecutionEvidence(status=BoundedExecutionStatus.PASSED, captured=CapturedProducts((), 10))])
+    ).execute()
     assert result.outcome == "rejected"
 
 
@@ -181,7 +207,7 @@ def test_a_file_that_changed_while_build_read_it_rejects_the_build():
 
     changed = captured()
     changed = BoundedExecutionEvidence(
-        ok=changed.ok,
+        status=changed.status,
         captured=changed.captured,
         files=(ProjectFileDigest(path=PROJECT_ENTRY_PATH, sha256="0" * 64),),
     )
