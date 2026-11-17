@@ -234,7 +234,7 @@ def create_server(
         """Inspect bounded XML execution with write targets isolated."""
         root = _project_root(project, workspace_root)
         if isinstance(root, str):
-            return RunResult.from_input_error(root).model_copy(update={"phase": RunPhase.DRY_RUN})
+            return RunResult.from_input_error(root, RunPhase.DRY_RUN)
         return await to_thread.run_sync(application(root, request.descriptor_path).dry_run, request)
 
     @tool("datamimic_run", "Lower sample_rows or max_count.")
@@ -244,7 +244,7 @@ def create_server(
         """Execute bounded XML; external writes require explicit allow_side_effects."""
         root = _project_root(project, workspace_root)
         if isinstance(root, str):
-            return RunResult.from_input_error(root)
+            return RunResult.from_input_error(root, RunPhase.RUN)
         return await to_thread.run_sync(application(root, request.descriptor_path).run, request)
 
     return server

@@ -199,12 +199,12 @@ class RunResult(AuthoringModel):
     diagnostics: tuple[Diagnostic, ...] = ()
 
     @classmethod
-    def from_input_error(cls, message: str) -> RunResult:
+    def from_input_error(cls, message: str, phase: RunPhase) -> RunResult:
         from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
 
         return cls(
             ok=False,
-            phase=RunPhase.RUN,
+            phase=phase,
             diagnostics=(catalog_diagnostic(AuthoringRuleId.INPUT, message, phase=DiagnosticPhase.MODEL),),
         )
 

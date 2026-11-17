@@ -30,6 +30,7 @@ from datamimic_ce.authoring.domain.requests import (
     RejectedBuild,
     RejectedCompileDocument,
     RejectedDecompileDocument,
+    RunPhase,
     RunRequest,
     RunResult,
 )
@@ -328,7 +329,10 @@ def _run(
         )
     except (ValueError, ValidationError) as error:
         emit_authoring(
-            RunResult.from_input_error(_input_message(error, "Invalid XML input or bounded-run options.")),
+            RunResult.from_input_error(
+                _input_message(error, "Invalid XML input or bounded-run options."),
+                RunPhase.DRY_RUN if dry else RunPhase.RUN,
+            ),
             output_format,
             exit_code=1,
         )

@@ -9,6 +9,13 @@ from typer.testing import CliRunner
 from datamimic_ce.interfaces.cli import app
 
 
+@pytest.mark.parametrize(("command", "phase"), [("dry-run", "dry_run"), ("run", "run")])
+def test_missing_descriptor_reports_requested_phase(tmp_path: Path, command: str, phase: str):
+    response = CliRunner().invoke(app, ["authoring", command, str(tmp_path / "missing.xml")])
+    assert response.exit_code == 1
+    assert json.loads(response.stdout)["phase"] == phase
+
+
 @pytest.mark.parametrize("command", ["dry-run", "run"])
 @pytest.mark.parametrize("explicit_root", [False, True])
 def test_nested_descriptor_reads_its_own_relative_source(tmp_path: Path, command: str, explicit_root: bool):
