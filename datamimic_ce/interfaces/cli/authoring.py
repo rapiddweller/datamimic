@@ -278,7 +278,7 @@ def init(
     application = create_authoring_application()
     result = init_project(project, application.scaffold(pattern))
     if result.outcome == "not_written":
-        typer.echo(f"Not written: {result.diagnostics[0].message}", err=True)
+        typer.echo(f"Init failed: {result.diagnostics[0].message}", err=True)
         raise typer.Exit(code=1)
     typer.echo(f"Wrote the {pattern.value} project to {project}: {', '.join(result.files)}")
     typer.echo(NEXT_STEP_HINT)

@@ -168,10 +168,9 @@ def test_starter_run_logs_one_saving_line_per_exporter_without_init_noise(tmp_pa
 def test_refused_init_does_not_leave_a_new_project_directory(tmp_path: Path, monkeypatch) -> None:
     from typer.testing import CliRunner
 
-    from datamimic_ce.interfaces.cli import app
-    from datamimic_ce.interfaces.cli import runtime
+    from datamimic_ce.interfaces.cli import app, runtime
 
-    def refuse(project_dir: Path) -> None:
+    def refuse(project_dir: Path, *, overwrite: bool) -> None:
         raise ValueError("starter path is unsafe")
 
     monkeypatch.setattr(runtime, "create_project_structure", refuse)

@@ -93,10 +93,11 @@ def _make_directory(path: Path) -> None:
     path.mkdir(exist_ok=True)
 
 
-def _write_file(path: Path, content: str) -> None:
+def _write_file(path: Path, content: str, *, overwrite: bool) -> None:
     parent: Path = path.parent
     parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(content, encoding="utf-8")
+    with open(path, "w" if overwrite else "x", encoding="utf-8") as stream:
+        stream.write(content)
 
 
 def check_project_scaffold(
@@ -150,7 +151,7 @@ def write_project_scaffold(
     written: list[str] = []
     for file, (_, target) in zip(scaffold.files, targets, strict=True):
         try:
-            _write_file(target, file.content)
+            _write_file(target, file.content, overwrite=overwrite)
         except OSError as error:
             previous = ", ".join(written) or "none"
             raise OSError(

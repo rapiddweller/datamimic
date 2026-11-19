@@ -2,7 +2,8 @@
   "status": "independent_local_architecture_review_accepted",
   "reviewed_by": "Astra",
   "review_reference": "docs/architecture/refactoring-study/experiment-2/amendment-447-review.md",
-  "known_violations_digest": "b4a1d34718cc85510d463fed39030b3f49b34c7beffaec1a82adf80473913a69",
+  "measurement_amendment_issue_601": "Issue #601 raises calls_unresolved from 1413 to 1414 for stream.write in the exclusive starter-file creation path. The analyzer does not resolve the standard library text stream. Independent review confirmed that exclusive creation protects the file and that this call does not establish an architecture violation. The extra unresolved call remains uncertainty. No other budget or contract changes.",
+  "known_violations_digest": "4d3a6f8770cb3efe80f1c95778c9efb30e941b7e460cb4af843b95d8a30eb209",
   "contract_digest": "597078e101f72cba1024a57127ec0b09fa57f58f7a5dfd125865203e266a48dd",
   "analyzer_digest": "bb1a3262d3fdd38c3e9a6af980cc063281ae98ab1c28c89c2c5be6dfb450744f",
   "groups": [
