@@ -39,9 +39,12 @@ class ProjectRunWorkflow:
         outcome: Literal["completed", "failed", "timeout"] = (
             "timeout" if execution.timed_out else "completed" if execution.exit_code == 0 else "failed"
         )
+        message = "Build was not run. Execution does not verify the project or its effects."
+        if outcome != "completed":
+            message += " Effects may have partially persisted. Inspect the target state independently before retrying."
         return UnverifiedProjectRunResult(
             outcome=outcome,
-            message="Build was not run. Execution does not verify the project or its effects.",
+            message=message,
             execution=execution,
         )
 
