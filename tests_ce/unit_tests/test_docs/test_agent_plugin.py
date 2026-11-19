@@ -21,6 +21,8 @@ def test_native_manifests_identify_the_same_plugin() -> None:
     assert codex["name"] == PLUGIN.name
     assert codex["requires_local_executor"] is True
     assert len(codex["interface"]["shortDescription"]) <= 30
+    assert codex["interface"]["websiteURL"] == "https://github.com/rapiddweller/datamimic"
+    assert (PLUGIN / codex["interface"]["logo"]).is_file()
     assert (PLUGIN / "skills/generate-test-data/SKILL.md").is_file()
 
 

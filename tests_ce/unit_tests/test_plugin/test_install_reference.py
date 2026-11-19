@@ -73,7 +73,7 @@ def test_manifests_share_name_and_version_and_point_at_the_mcp_file() -> None:
     claude = json.loads((PLUGIN / ".claude-plugin/plugin.json").read_text())
     assert codex["mcpServers"] == "./.mcp.json" and codex["skills"] == "./skills/"
     assert (PLUGIN / codex["mcpServers"]).resolve() == MCP_FILE
-    assert codex["version"] == claude["version"] == "0.4.0"
+    assert codex["version"] == claude["version"] == "0.4.1"
     assert codex["name"] == claude["name"] == "datamimic"
     assert not (PLUGIN / "plugin.json").exists()
     marketplace = json.loads((ROOT / ".claude-plugin/marketplace.json").read_text())
