@@ -144,6 +144,7 @@
         "datamimic_ce.authoring.domain.project_run:ProjectParam",
         "datamimic_ce.authoring.domain.project_run:ProjectRunRequest",
         "datamimic_ce.authoring.domain.project_run:ProjectRunResult",
+        "datamimic_ce.authoring.domain.project_run:UnverifiedProjectRunResult",
         "datamimic_ce.authoring.domain.requests:DEFAULT_AUTHORING_DESCRIPTOR_PATH",
         "datamimic_ce.authoring.ports:DmJsonDescriptorContract",
         "datamimic_ce.authoring.ports:DslCatalog",

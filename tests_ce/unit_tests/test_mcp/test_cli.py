@@ -27,7 +27,9 @@ class FakeServer:
 def test_stdio_is_a_direct_top_level_option(monkeypatch) -> None:
     server = FakeServer()
     uvicorn_calls: list[object] = []
-    monkeypatch.setattr(mcp_server, "create_server", lambda *, workspace_root=None: server)
+    monkeypatch.setattr(
+        mcp_server, "create_server", lambda *, workspace_root=None, enable_unverified_run=False: server
+    )
     monkeypatch.setattr(cli.uvicorn, "run", lambda *args, **kwargs: uvicorn_calls.append((args, kwargs)))
 
     result = runner.invoke(cli.app, ["--transport", "stdio"])
@@ -78,10 +80,12 @@ def test_explicit_workspace_root_is_independent_of_launcher_directory(
     launcher.mkdir()
     monkeypatch.chdir(launcher)
     roots: list[Path | None] = []
+    unverified: list[bool] = []
     server = FakeServer()
 
-    def create_server(*, workspace_root: Path | None = None) -> FakeServer:
+    def create_server(*, workspace_root: Path | None = None, enable_unverified_run: bool = False) -> FakeServer:
         roots.append(workspace_root)
+        unverified.append(enable_unverified_run)
         return server
 
     monkeypatch.setattr(mcp_server, "create_server", create_server)
@@ -91,6 +95,7 @@ def test_explicit_workspace_root_is_independent_of_launcher_directory(
 
     assert result.exit_code == 0, result.output
     assert roots == [project.resolve()]
+    assert unverified == [transport == "stdio"]
     assert Path.cwd() == launcher
 
 

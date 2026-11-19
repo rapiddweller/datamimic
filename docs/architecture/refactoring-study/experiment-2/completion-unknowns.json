@@ -2,9 +2,12 @@
   "status": "independent_local_architecture_review_accepted",
   "reviewed_by": "Astra",
   "review_reference": "docs/architecture/refactoring-study/experiment-2/amendment-447-review.md",
+  "review_continuation_reference_issue_673": "docs/architecture/refactoring-study/experiment-2/issue-673-review.md",
+  "review_continuation_issue_673": "On 2026-11-19 GPT-6.2 Astra independently compared base ecc4e0db861c264dd7a6c1a34b38b4b3ccee879c with the dirty source digest fb3eff60d29757c6777ce7af1054e786dbf517bb538ee919b708bddced71b266. The 319 historical UNKNOWN identities remain; two external Pydantic type positions are added. AUTHORING-API-TYPES moves from 19/39 to 20/42 decided positions. Existing group assessments remain valid; changed evidence references do not prove closure. The publication of UnverifiedProjectRunResult is accepted for the MCP interface.",
+  "measurement_amendment_issue_673": "Issue #673 raises calls_unresolved from 1414 to 1417. Astra identified result.execution.model_copy, result.model_copy and the conditional MCP tool decorator. The changed CLI create_server(...).run replaces an existing unresolved call. These calls remain uncertainty; no other budget changes.",
   "measurement_amendment_issue_601": "Issue #601 raises calls_unresolved from 1413 to 1414 for stream.write in the exclusive starter-file creation path. The analyzer does not resolve the standard library text stream. Independent review confirmed that exclusive creation protects the file and that this call does not establish an architecture violation. The extra unresolved call remains uncertainty. No other budget or contract changes.",
-  "known_violations_digest": "4d3a6f8770cb3efe80f1c95778c9efb30e941b7e460cb4af843b95d8a30eb209",
-  "contract_digest": "597078e101f72cba1024a57127ec0b09fa57f58f7a5dfd125865203e266a48dd",
+  "known_violations_digest": "132ecd030391c3954ce03b383c3e0f332e2a2b44022248398c37b44d911a6a37",
+  "contract_digest": "f5b7819d90f66125753b466acad425f91804bfe4dcba3701e65f5600fd6a6b38",
   "analyzer_digest": "bb1a3262d3fdd38c3e9a6af980cc063281ae98ab1c28c89c2c5be6dfb450744f",
   "groups": [
     {
@@ -74,6 +77,8 @@
       "classification": "external_type",
       "reason": "Retain UNKNOWN: external library and validated aliases remain unexpanded by this observation. Their explicit runtime/validation contracts are kept, without substituting object or a wrapper to alter measurement. PR #561 adds AuthoringApplication.scaffold return.files.path: PurePosixPath is a standard-library external type, retained UNKNOWN; its path is validated by ProjectScaffoldFile, not proven by this observation.",
       "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-ca38ea26e37738cd",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-6e7d9de6ecb2fb37",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-07420409299cad0a",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-0f6e302f946057af",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-11c337f1282f7ed9",

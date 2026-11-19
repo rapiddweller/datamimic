@@ -17,7 +17,7 @@ from datamimic_ce.authoring.application.use_cases import (
     DecompileDocumentUseCase,
 )
 from datamimic_ce.authoring.domain.capabilities import CapabilityDomain, CapabilityLookupResult, DslCatalogSnapshot
-from datamimic_ce.authoring.domain.project_run import ProjectRunRequest, ProjectRunResult
+from datamimic_ce.authoring.domain.project_run import ProjectRunRequest, ProjectRunResult, UnverifiedProjectRunResult
 from datamimic_ce.authoring.domain.project_scaffold import ProjectPattern, ProjectScaffold
 from datamimic_ce.authoring.domain.reference import AuthoringAssemblyReference, ReferenceResult
 from datamimic_ce.authoring.domain.requests import (
@@ -79,6 +79,11 @@ class AuthoringApplication:
     def run_project(self, request: ProjectRunRequest) -> ProjectRunResult:
         """Build the bound project, then run it for its real output within the allowed effects."""
         return self._project_run.execute(request)
+
+    def run_project_unverified(
+        self, request: ProjectRunRequest, confirm_unverified: bool
+    ) -> UnverifiedProjectRunResult:
+        return self._project_run.execute_unverified(request, confirm_unverified)
 
     def build_protocol(self) -> str:
         """The Build contract version this package speaks; clients check it instead of the package version."""

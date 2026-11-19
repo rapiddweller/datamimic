@@ -92,3 +92,16 @@ async def test_cli_sse_exact_tools_with_api_key(anyio_backend: str) -> None:
     finally:
         process.terminate()
         process.communicate(timeout=5)
+
+
+@pytest.mark.anyio
+async def test_cli_sse_without_api_key_does_not_offer_unverified_run(anyio_backend: str, monkeypatch) -> None:
+    monkeypatch.delenv("DATAMIMIC_MCP_API_KEY", raising=False)
+    port = free_tcp_port()
+    process = spawn_server(port)
+    try:
+        async with Client(SSETransport(f"http://127.0.0.1:{port}/sse")) as client:
+            assert "datamimic_run_project_unverified" not in {tool.name for tool in await client.list_tools()}
+    finally:
+        process.terminate()
+        process.communicate(timeout=5)

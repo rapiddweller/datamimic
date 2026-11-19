@@ -152,3 +152,27 @@ class ProjectRunExecution(AuthoringModel):
     artifacts: tuple[ProjectArtifact, ...]
     artifact_count: NonNegativeStrictInt
     log_tail: tuple[StrictStr, ...]
+
+
+class UnverifiedProjectRunResult(AuthoringModel):
+    verification: Literal["not_verified"] = "not_verified"
+    outcome: Literal["not_run", "completed", "failed", "timeout"]
+    message: StrictStr
+    execution: ProjectRunExecution | None = None
+    details_truncated: StrictBool = False
+
+    @model_validator(mode="after")
+    def consistent_execution(self) -> UnverifiedProjectRunResult:
+        if self.outcome == "not_run":
+            valid = self.execution is None
+        elif self.execution is None:
+            valid = False
+        elif self.outcome == "timeout":
+            valid = self.execution.timed_out and self.execution.exit_code is None
+        elif self.outcome == "completed":
+            valid = not self.execution.timed_out and self.execution.exit_code == 0
+        else:
+            valid = not self.execution.timed_out and self.execution.exit_code not in (None, 0)
+        if not valid:
+            raise ValueError("Unverified run outcome contradicts its execution")
+        return self

@@ -65,6 +65,7 @@ async def check_mcp(schemas):
                 "dry_run",
                 "run",
                 "run_project",
+                "run_project_unverified",
                 "init",
             )
         }
@@ -91,6 +92,9 @@ async def check_mcp(schemas):
         ran = json.loads(result.content[0].text)
         assert ran["outcome"] == "completed" and ran["exit_code"] == 0, ran
         assert ran["build_outcome"] == "ready_with_gaps" and ran["action_required"], ran
+        result = await client.call_tool("datamimic_run_project_unverified", {"project": str(Path.cwd())})
+        refused = json.loads(result.content[0].text)
+        assert refused["outcome"] == "not_run" and refused["verification"] == "not_verified", refused
         result = await client.call_tool(
             "datamimic_dry_run",
             {
@@ -103,6 +107,7 @@ async def check_mcp(schemas):
         sourced = json.loads(result.content[0].text)
         assert sourced["ok"] and sourced["products"][0]["rows"][0] == {"id": "1", "name": "inside"}, sourced
     assert not protocol_errors, protocol_errors
+    return len(tools)
 
 
 def check_installed(with_mcp, checkout):
@@ -256,8 +261,7 @@ def check_installed(with_mcp, checkout):
     assert json.loads(cli("authoring", "build", str(clean), status=1))["outcome"] == "rejected"
     assert not json.loads(cli("authoring", "lint", "-", stdin=invalid, status=1))["ok"]
     assert "fastmcp" not in sys.modules and "uvicorn" not in sys.modules
-    if with_mcp:
-        asyncio.run(asyncio.wait_for(check_mcp(schemas), timeout=120))
+    mcp_tools = asyncio.run(asyncio.wait_for(check_mcp(schemas), timeout=120)) if with_mcp else 0
     print(
         json.dumps(
             {
@@ -267,7 +271,7 @@ def check_installed(with_mcp, checkout):
                 "schemas": len(schemas),
                 "rows": 2,
                 "real_child": True,
-                "mcp_tools": 12 if with_mcp else 0,
+                "mcp_tools": mcp_tools,
             }
         )
     )

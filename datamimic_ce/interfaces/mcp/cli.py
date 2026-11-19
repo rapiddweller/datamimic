@@ -87,7 +87,7 @@ def serve(
     from datamimic_ce.interfaces.mcp import server as mcp_server
 
     if transport == Transport.stdio:
-        mcp_server.create_server(workspace_root=workspace_root).run(Transport.stdio.value)
+        mcp_server.create_server(workspace_root=workspace_root, enable_unverified_run=True).run(Transport.stdio.value)
         return
 
     resolved_host = host if host is not None else os.getenv("DATAMIMIC_MCP_HOST", _DEFAULT_HOST)
