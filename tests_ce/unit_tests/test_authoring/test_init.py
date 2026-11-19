@@ -13,11 +13,13 @@ import pytest
 from typer.testing import CliRunner
 
 from datamimic_ce.authoring import create_authoring_application
+from datamimic_ce.authoring.adapters import workspace
 from datamimic_ce.authoring.adapters.workspace import write_project_scaffold
 from datamimic_ce.authoring.domain.project_scaffold import ProjectPattern, ProjectScaffold
 from datamimic_ce.authoring.domain.requests import PROJECT_ACCEPTANCE_PATH, PROJECT_ENTRY_PATH, ReadyBuild
 from datamimic_ce.interfaces.cli import app
 from datamimic_ce.interfaces.cli.presenter import NEXT_STEP_HINT
+from datamimic_ce.interfaces.project import create_project_structure
 
 
 def _init(project: Path, *extra: str):
@@ -74,7 +76,7 @@ def test_init_refuses_an_existing_file_and_writes_nothing(tmp_path: Path) -> Non
     result = _init(tmp_path)
 
     assert result.exit_code == 1
-    assert "Not written: these files exist already: datamimic.xml" in result.stderr
+    assert "Init failed: these files exist already: datamimic.xml" in result.stderr
     assert (tmp_path / PROJECT_ENTRY_PATH).read_text(encoding="utf-8") == "mine"
     assert not (tmp_path / PROJECT_ACCEPTANCE_PATH).exists()
 
@@ -145,3 +147,68 @@ def test_each_existing_file_blocks_the_whole_write(tmp_path: Path, existing: str
         write_project_scaffold(tmp_path, create_authoring_application(tmp_path).scaffold(ProjectPattern.FLAT))
 
     assert sorted(path.relative_to(tmp_path).as_posix() for path in tmp_path.rglob("*") if path.is_file()) == before
+
+
+@pytest.mark.parametrize("existing", ["datamimic.xml", "acceptance/build.json"])
+def test_init_does_not_overwrite_a_file_created_after_the_check(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, existing: str
+) -> None:
+    check = workspace.check_project_scaffold
+
+    def competing_write(*args, **kwargs):
+        targets = check(*args, **kwargs)
+        path = tmp_path / existing
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("other client", encoding="utf-8")
+        return targets
+
+    monkeypatch.setattr(workspace, "check_project_scaffold", competing_write)
+    result = _init(tmp_path)
+
+    assert result.exit_code == 1
+    assert (tmp_path / existing).read_text(encoding="utf-8") == "other client"
+    if existing == "acceptance/build.json":
+        assert (tmp_path / PROJECT_ENTRY_PATH).is_file()
+        assert "files already written: datamimic.xml" in result.stderr
+        assert "Not written:" not in result.stderr
+
+
+def test_explicit_overwrite_still_replaces_an_existing_file(tmp_path: Path) -> None:
+    (tmp_path / PROJECT_ENTRY_PATH).write_text("old", encoding="utf-8")
+    scaffold = create_authoring_application(tmp_path).scaffold(ProjectPattern.FLAT)
+
+    write_project_scaffold(tmp_path, scaffold, overwrite=True)
+
+    assert (tmp_path / PROJECT_ENTRY_PATH).read_text(encoding="utf-8") == scaffold.files[0].content
+
+
+def test_runtime_project_helper_keeps_its_default_overwrite_behavior(tmp_path: Path) -> None:
+    (tmp_path / PROJECT_ENTRY_PATH).write_text("old", encoding="utf-8")
+
+    create_project_structure(tmp_path)
+
+    assert (tmp_path / PROJECT_ENTRY_PATH).read_text(encoding="utf-8") != "old"
+
+
+@pytest.mark.parametrize("force", [False, True])
+def test_runtime_init_only_overwrites_a_competing_file_with_force(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, force: bool
+) -> None:
+    check = workspace.check_project_scaffold
+    project = tmp_path / "shop"
+
+    def competing_write(*args, **kwargs):
+        targets = check(*args, **kwargs)
+        project.mkdir(parents=True, exist_ok=True)
+        (project / PROJECT_ENTRY_PATH).write_text("other client", encoding="utf-8")
+        return targets
+
+    monkeypatch.setattr(workspace, "check_project_scaffold", competing_write)
+    args = ["init", "shop", "--target", str(tmp_path)]
+    if force:
+        args.append("--force")
+    result = CliRunner().invoke(app, args)
+
+    assert result.exit_code == (0 if force else 1)
+    content = (project / PROJECT_ENTRY_PATH).read_text(encoding="utf-8")
+    assert (content != "other client") if force else (content == "other client")

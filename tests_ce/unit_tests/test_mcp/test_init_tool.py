@@ -168,12 +168,12 @@ async def test_init_reports_write_oserror_and_files_written_so_far(
     write_file = workspace._write_file
     calls = 0
 
-    def fail_second(path: Path, content: str) -> None:
+    def fail_second(path: Path, content: str, *, overwrite: bool) -> None:
         nonlocal calls
         calls += 1
         if calls == 2:
             raise OSError("disk full")
-        write_file(path, content)
+        write_file(path, content, overwrite=overwrite)
 
     monkeypatch.setattr(workspace, "_write_file", fail_second)
     result = await call_init(str(tmp_path))
@@ -186,15 +186,16 @@ async def test_init_reports_write_oserror_and_files_written_so_far(
 async def test_init_names_a_file_that_may_be_partial_after_write_error(
     anyio_backend: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    original = Path.write_text
+    from datamimic_ce.authoring.adapters import workspace
 
-    def fail_after_open(path: Path, data: str, *args, **kwargs) -> int:
-        written = original(path, data, *args, **kwargs)
+    original = workspace._write_file
+
+    def fail_after_open(path: Path, data: str, *, overwrite: bool) -> None:
+        original(path, data, overwrite=overwrite)
         if path.name == "build.json":
             raise OSError("disk full")
-        return written
 
-    monkeypatch.setattr(Path, "write_text", fail_after_open)
+    monkeypatch.setattr(workspace, "_write_file", fail_after_open)
     result = await call_init(str(tmp_path))
     assert result["outcome"] == "not_written"
     message = result["diagnostics"][0]["message"]

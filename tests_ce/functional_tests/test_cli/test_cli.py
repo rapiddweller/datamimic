@@ -264,7 +264,7 @@ class TestCLI:
 
         project_dir = tmp_path / project_name
         assert result.exit_code == 0
-        mock_create_structure.assert_called_once_with(project_dir)
+        mock_create_structure.assert_called_once_with(project_dir, overwrite=False)
         assert "created successfully" in result.output
 
     @patch("datamimic_ce.interfaces.cli.runtime.create_project_structure")
@@ -278,7 +278,7 @@ class TestCLI:
 
             project_path = target_dir / project_name
             assert result.exit_code == 0
-            mock_create_structure.assert_called_once_with(project_path)
+            mock_create_structure.assert_called_once_with(project_path, overwrite=False)
             assert "created successfully" in result.output
         finally:
             if target_dir.exists():
@@ -295,7 +295,7 @@ class TestCLI:
 
             project_path = target_dir / project_name
             assert result.exit_code == 0
-            mock_create_structure.assert_called_once_with(project_path)
+            mock_create_structure.assert_called_once_with(project_path, overwrite=False)
         finally:
             if target_dir.exists():
                 shutil.rmtree(target_dir)
@@ -329,7 +329,7 @@ class TestCLI:
 
             assert result.exit_code == 0
             assert project_dir.exists()
-            mock_create_structure.assert_called_once_with(project_dir)
+            mock_create_structure.assert_called_once_with(project_dir, overwrite=True)
             assert "created successfully" in result.output
         finally:
             if project_dir.exists():

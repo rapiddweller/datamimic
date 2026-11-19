@@ -64,7 +64,7 @@ class ProjectScaffold:
 
 
 class ProjectInitResult(AuthoringModel):
-    """What `init` did: the files it wrote, or the one reason that it wrote none."""
+    """Whether `init` completed; on failure, diagnostics name any files already written."""
 
     outcome: Literal["written", "not_written"]
     pattern: ProjectPattern | None = None

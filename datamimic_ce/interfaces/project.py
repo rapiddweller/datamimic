@@ -46,11 +46,11 @@ def validate_project_name(name: str) -> bool:
     return bool(re.match(r"^[a-zA-Z0-9_-]+$", name))
 
 
-def create_project_structure(project_dir: Path) -> None:
-    """Create the initial project structure; the starter files overwrite same-named files.
+def create_project_structure(project_dir: Path, *, overwrite: bool = True) -> None:
+    """Create the initial project structure; overwrite starter files by default.
 
     Raises `ValueError` before anything is created when a starter path cannot be written safely.
     """
     write_project_scaffold(
-        project_dir, project_scaffold(project_dir.name), overwrite=True, directories=PROJECT_DIRECTORIES
+        project_dir, project_scaffold(project_dir.name), overwrite=overwrite, directories=PROJECT_DIRECTORIES
     )
