@@ -55,12 +55,32 @@ git checkout development
 git pull origin development
 pytest
 
-# Create release tag
-git tag -a X.Y.Z -m "Release version X.Y.Z"
+# Create the approved release tag
+VERSION=X.Y.Z
+git tag -a "$VERSION" -m "Release version $VERSION"
 git push origin development --tags
 ```
 
-2. **Update Main Branch**
+2. **Prepare the plugin after the package is on PyPI**
+
+Wait for the tag pipeline to publish the package. Download its wheel from
+PyPI into a new, empty directory. Use the same `VERSION` as the tag.
+
+```bash
+uvx --from pip pip download --index-url https://pypi.org/simple --only-binary=:all: --no-deps \
+  --dest release-wheel "datamimic-ce==$VERSION"
+.venv/bin/python script/prepare_plugin_release.py prepare release-wheel/*.whl "$VERSION"
+.venv/bin/python script/prepare_plugin_release.py verify release-wheel/*.whl "$VERSION"
+```
+
+The script checks the wheel metadata and its SHA-256 against PyPI. It updates
+both plugin versions and pins the MCP server to that package version. If a
+write fails, check all three files and any temporary file before retrying.
+Create a PR for the changes. Plugin tests refuse a pinned package version that
+differs from either manifest. Check the published plugin and its runtime after
+the PR merges.
+
+3. **Update Main Branch**
 
 ```bash
 # Squash merge release to main
@@ -111,6 +131,10 @@ git commit -m "fix: critical issue"
 ```
 
 2. **Release Hotfix**
+
+After the hotfix package is on PyPI, run the plugin preparation step in the
+release process with the hotfix version. Merge its PR before publishing the
+plugin.
 
 ```bash
 # Tag on development

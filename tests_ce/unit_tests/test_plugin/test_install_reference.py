@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[3]
 PLUGIN = ROOT / "plugins/datamimic"
 MCP_FILE = PLUGIN / ".mcp.json"
 REFERENCE_PATTERN = re.compile(
-    r"^datamimic-ce\[mcp\]( @ git\+https://github\.com/rapiddweller/datamimic@[\w./-]+|>=5\.0\.0,<6)$"
+    r"^datamimic-ce\[mcp\]( @ git\+https://github\.com/rapiddweller/datamimic@[\w./-]+|==\d+\.\d+\.\d+)$"
 )
 PYTHON_RANGE_PATTERN = re.compile(r"^>=3\.\d+,<3\.\d+$")
 
@@ -73,7 +73,10 @@ def test_manifests_share_name_and_version_and_point_at_the_mcp_file() -> None:
     claude = json.loads((PLUGIN / ".claude-plugin/plugin.json").read_text())
     assert codex["mcpServers"] == "./.mcp.json" and codex["skills"] == "./skills/"
     assert (PLUGIN / codex["mcpServers"]).resolve() == MCP_FILE
-    assert codex["version"] == claude["version"] == "0.4.1"
+    assert codex["version"] == claude["version"]
+    source = _args()[3]
+    if source.startswith("datamimic-ce[mcp]=="):
+        assert source == f"datamimic-ce[mcp]=={codex['version']}"
     assert codex["name"] == claude["name"] == "datamimic"
     assert not (PLUGIN / "plugin.json").exists()
     marketplace = json.loads((ROOT / ".claude-plugin/marketplace.json").read_text())
