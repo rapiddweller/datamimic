@@ -42,6 +42,7 @@ which projects a call may name; without it any project can be named. A project's
 | `datamimic_dry_run` | `datamimic authoring dry-run -` |
 | `datamimic_run` | `datamimic authoring run -` |
 | `datamimic_run_project` | `datamimic authoring run-project <project>` |
+| `datamimic_run_project_unverified` | `datamimic run datamimic.xml` from the project directory |
 
 `datamimic_version` also returns `build_protocol`; `5.0` is the Build contract this
 documentation describes. Persist XML. `datamimic_init` writes the flat starter
@@ -59,6 +60,19 @@ ready Build also carries bounded acceptance evidence. Target isolation does not 
 delivery to an external sink. A result over 60 000 characters is refused with a hint
 that names the narrowing argument (for example `datamimic_capability` instead of the
 full capability list). No schema resources or MCP-only compiler are registered.
+
+For an explicitly authorized persistent operation that Build cannot prove, the
+separate stdio-only `datamimic_run_project_unverified` tool runs the project without Build or
+acceptance checks. It is not an automatic fallback for a rejected Build. Ask the
+user to approve the unverified run and its persistent effects before setting both
+`confirm_unverified` and `allow_side_effects` to `true`. This includes changes
+inside the project and changes to external systems. A `completed` result means
+only that the process exited successfully. Its `verification` is always
+`not_verified`. Check the actual effects independently.
+Failed or timed-out runs can leave partial effects. The execution log can contain
+project data; share it only with authorized recipients.
+If the result is too large, `details_truncated` is true and log lines and artifact
+paths are omitted. The outcome and artifact count remain in the result.
 
 ## Codex
 

@@ -20,6 +20,7 @@ from datamimic_ce.authoring.domain.project_run import (
     ProjectParam,
     ProjectRunExecution,
     ProjectRunRequest,
+    UnverifiedProjectRunResult,
 )
 from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, BuildResult, RejectedBuild
 
@@ -78,6 +79,30 @@ def test_rejected_build_stops_before_any_run(tmp_path: Path) -> None:
     assert result.outcome == "not_run" and result.build == rejected
     assert runner.calls == []
     assert result.not_run_reason == "build_rejected"
+
+
+@pytest.mark.parametrize(
+    "run,expected",
+    [(execution(), "completed"), (execution(3), "failed"), (execution(None, timed_out=True), "timeout")],
+)
+def test_unverified_run_reports_execution_without_build(run: ProjectRunExecution, expected: str) -> None:
+    runner = FakeRunner(run)
+
+    def forbidden_build() -> BuildResult:
+        raise AssertionError("the unverified run must not invoke Build")
+
+    subject = ProjectRunWorkflow(forbidden_build, FakeEffects(()), runner)
+    result = subject.execute_unverified(ProjectRunRequest(allow_side_effects=True), True)
+    assert result.outcome == expected
+    assert result.verification == "not_verified"
+    assert result.execution == run
+
+
+def test_unverified_result_rejects_inconsistent_execution() -> None:
+    with pytest.raises(ValidationError):
+        UnverifiedProjectRunResult(outcome="completed", message="not verified", execution=execution(1))
+    with pytest.raises(ValidationError):
+        UnverifiedProjectRunResult(outcome="not_run", message="not verified", execution=execution())
 
 
 def test_a_build_with_open_coverage_gaps_still_runs(tmp_path: Path) -> None:

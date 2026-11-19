@@ -77,3 +77,7 @@ outline and a requirement-to-evidence table with the XML and raw proof. A ready
 receipt cannot replace this review or independent checks for requirements the
 runtime cannot express. Execute the real descriptor only when the user requested
 execution, using the selected project's execution interface.
+When Build cannot prove a persistent operation, do not silently bypass it.
+Ask the user to approve the unverified run and its effects. Only then call
+`datamimic_run_project_unverified` with both confirmations. Report that Build
+did not verify the run, and check its effects independently.

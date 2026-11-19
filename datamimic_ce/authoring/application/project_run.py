@@ -16,7 +16,7 @@ from datamimic_ce.authoring.domain.diagnostics import (
     Diagnostic,
     DiagnosticPhase,
 )
-from datamimic_ce.authoring.domain.project_run import ProjectRunRequest, ProjectRunResult
+from datamimic_ce.authoring.domain.project_run import ProjectRunRequest, ProjectRunResult, UnverifiedProjectRunResult
 from datamimic_ce.authoring.domain.requests import BuildResult, ReadyBuild, ReadyWithGapsBuild
 from datamimic_ce.authoring.ports import ExternalEffectsDetector, ProjectRunner
 
@@ -28,6 +28,22 @@ class ProjectRunWorkflow:
         self._build = build
         self._effects = effects
         self._runner = runner
+
+    def execute_unverified(self, request: ProjectRunRequest, confirm_unverified: bool) -> UnverifiedProjectRunResult:
+        if confirm_unverified is not True or not request.allow_side_effects:
+            return UnverifiedProjectRunResult(
+                outcome="not_run",
+                message="Confirm the unverified run and allow side effects; nothing was run.",
+            )
+        execution = self._runner.run(request.params, request.timeout_seconds)
+        outcome: Literal["completed", "failed", "timeout"] = (
+            "timeout" if execution.timed_out else "completed" if execution.exit_code == 0 else "failed"
+        )
+        return UnverifiedProjectRunResult(
+            outcome=outcome,
+            message="Build was not run. Execution does not verify the project or its effects.",
+            execution=execution,
+        )
 
     def execute(self, request: ProjectRunRequest) -> ProjectRunResult:
         build = self._build()

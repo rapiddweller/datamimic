@@ -1,0 +1,10 @@
+<setup>
+    <database id="bank" dbms="sqlite" database="bank"/>
+    <execute target="bank" type="sql"><![CDATA[
+        UPDATE bookings SET amount_cents = -1500 WHERE id = 101;
+    ]]></execute>
+    <generate name="bookings_check" source="bank" selector="SELECT id, amount_cents FROM bookings" count="1" target="">
+        <key name="id" script="this.id"/>
+        <key name="amount_cents" script="this.amount_cents"/>
+    </generate>
+</setup>

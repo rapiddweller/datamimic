@@ -1,0 +1,7 @@
+{
+  "version": "5.0",
+  "environment_bindings": [{"environment": "bank", "family": "database"}],
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "bookings_check"}, "count": 1}
+  ]
+}

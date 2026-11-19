@@ -14,7 +14,7 @@ from dotenv import dotenv_values
 from fastmcp import FastMCP
 from fastmcp.exceptions import ToolError
 from fastmcp.tools import ToolResult
-from pydantic import Field, JsonValue, ValidationError
+from pydantic import Field, JsonValue, StrictBool, ValidationError
 from pydantic_core import to_json, to_jsonable_python
 from starlette.applications import Starlette
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
@@ -25,7 +25,12 @@ from starlette.status import HTTP_401_UNAUTHORIZED
 from datamimic_ce.authoring import AuthoringApplication, create_authoring_application
 from datamimic_ce.authoring.adapters.workspace import init_project
 from datamimic_ce.authoring.domain.capabilities import CapabilityDomain, CapabilityLookupResult
-from datamimic_ce.authoring.domain.project_run import ProjectParam, ProjectRunRequest, ProjectRunResult
+from datamimic_ce.authoring.domain.project_run import (
+    ProjectParam,
+    ProjectRunRequest,
+    ProjectRunResult,
+    UnverifiedProjectRunResult,
+)
 from datamimic_ce.authoring.domain.project_scaffold import ProjectInitResult, ProjectPattern
 from datamimic_ce.authoring.domain.reference import ReferenceResult
 from datamimic_ce.authoring.domain.requests import (
@@ -110,7 +115,10 @@ def _project_root(project: str, workspace_root: Path | None, *, new: bool = Fals
 
 
 def create_server(
-    *, workspace_root: Path | None = None, descriptor_path: PurePosixPath = DEFAULT_AUTHORING_DESCRIPTOR_PATH
+    *,
+    workspace_root: Path | None = None,
+    descriptor_path: PurePosixPath = DEFAULT_AUTHORING_DESCRIPTOR_PATH,
+    enable_unverified_run: bool = False,
 ) -> FastMCP:
     """Serve the authoring tools; ``workspace_root`` only restricts which projects a call may name."""
     server = FastMCP(name="datamimic-ce", version=None)
@@ -220,6 +228,39 @@ def create_server(
         except ValidationError:
             return ProjectRunResult.from_input_error("Run options are invalid: check params and timeout_seconds.")
         return await to_thread.run_sync(application(root, PROJECT_ENTRY_PATH).run_project, request)
+
+    async def datamimic_run_project_unverified(
+        project: Annotated[str, Field(description=_PROJECT_ARGUMENT)],
+        confirm_unverified: StrictBool = False,
+        allow_side_effects: StrictBool = False,
+        params: dict[str, str] | None = None,
+        timeout_seconds: int = 600,
+    ) -> UnverifiedProjectRunResult:
+        """Run without Build or acceptance checks. Require user approval for all effects, including partial effects."""
+        root = _project_root(project, workspace_root)
+        if isinstance(root, str):
+            return UnverifiedProjectRunResult(outcome="not_run", message=root)
+        values = params or {}
+        try:
+            request = ProjectRunRequest(
+                allow_side_effects=allow_side_effects,
+                params=tuple(ProjectParam(name=name, value=values[name]) for name in values),
+                timeout_seconds=timeout_seconds,
+            )
+        except ValidationError:
+            return UnverifiedProjectRunResult(outcome="not_run", message="Run options are invalid.")
+        result = await to_thread.run_sync(
+            application(root, PROJECT_ENTRY_PATH).run_project_unverified, request, confirm_unverified
+        )
+        if result.execution is not None and len(to_json(to_jsonable_python(result))) > MAX_RESULT_CHARACTERS - 10_000:
+            execution = result.execution.model_copy(update={"log_tail": (), "artifacts": ()})
+            result = result.model_copy(update={"execution": execution, "details_truncated": True})
+        return result
+
+    if enable_unverified_run:
+        tool("datamimic_run_project_unverified", "Inspect the run result and verify its effects independently.")(
+            datamimic_run_project_unverified
+        )
 
     @tool("datamimic_lint", "Lint a smaller descriptor; split the model into included steps.")
     async def datamimic_lint(
