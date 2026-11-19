@@ -122,6 +122,7 @@ async def test_unverified_sql_update_needs_both_confirmations(anyio_backend: str
             .text
         )
         assert invalid["outcome"] == "not_run"
+        assert "partially persisted" not in invalid["message"]
         assert balance() == -1250
         result = json.loads(
             (
@@ -163,7 +164,11 @@ async def test_unverified_sql_failure_is_not_reported_as_success(anyio_backend: 
 @pytest.mark.anyio
 @pytest.mark.parametrize(
     "code,timeout,outcome,truncated",
-    [('print("x" * 100000)', 30, "completed", True), ("import time; time.sleep(30)", 3, "timeout", False)],
+    [
+        ('print("x" * 100000)', 30, "completed", True),
+        ("import time; time.sleep(30)", 3, "timeout", False),
+        ('raise RuntimeError("test failure")', 30, "failed", False),
+    ],
 )
 async def test_unverified_receipt_after_persistent_write(
     anyio_backend: str, tmp_path: Path, code: str, timeout: int, outcome: str, truncated: bool
@@ -191,11 +196,18 @@ async def test_unverified_receipt_after_persistent_write(
                         "timeout_seconds": timeout,
                     },
                 )
-            ).content[0].text
+            )
+            .content[0]
+            .text
         )
     assert result["outcome"] == outcome
     assert result["verification"] == "not_verified"
     assert result["details_truncated"] is truncated
+    if outcome == "completed":
+        assert "partially persisted" not in result["message"]
+    else:
+        assert "Effects may have partially persisted." in result["message"]
+        assert "Inspect the target state independently before retrying." in result["message"]
     with sqlite3.connect(project / "db" / "bank.sqlite") as connection:
         assert connection.execute("SELECT amount_cents FROM bookings WHERE id = 101").fetchone()[0] == -1500
 
