@@ -31,7 +31,7 @@ same application. See `docs/agent_plugin.md`.
 | Validate/inspect existing XML | `datamimic authoring lint model.xml` / `datamimic authoring dry-run model.xml` |
 | Run bounded XML with explicit write opt-in | `datamimic authoring run model.xml --allow-side-effects` |
 | Execute the persisted project normally | `datamimic run datamimic.xml` |
-| Export editor/authoring contracts | `datamimic authoring export-contract contracts.zip` |
+| Export editor/authoring contracts | `datamimic authoring export-contract contracts.tar.gz` |
 
 Authoring commands default to JSON. File input and `-` for stdin are supported.
 Exit codes: `0` succeeds, `1` rejects an input/operation or Build cannot read its input, `2` is CLI usage error.

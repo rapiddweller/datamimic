@@ -116,8 +116,12 @@ datamimic authoring build [<project>]
 datamimic authoring lint <descriptor.xml|->
 datamimic authoring dry-run <descriptor.xml|-> [--max-count 10] [--sample-rows 5] [--timeout 30]
 datamimic authoring run <descriptor.xml|-> [--allow-side-effects] [--max-count 10]
-datamimic authoring export-contract <bundle.zip> [--package-version <version>] [--commit-sha <sha>]
+datamimic authoring export-contract <bundle.tar.gz> [--package-version <version>] [--commit-sha <sha>]
 ```
+
+`export-contract` writes a gzip-compressed tar archive. The archive contains
+`manifest.json` and the JSON contract files. The output path does not change
+the archive format.
 
 Authoring defaults to `--format json`; `--format text` prints readable results.
 Compile, decompile and Build return discriminated `ready`/`rejected` results.
