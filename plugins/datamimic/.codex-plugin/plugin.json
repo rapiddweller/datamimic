@@ -1,6 +1,6 @@
 {
   "name": "datamimic",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Author and verify synthetic test data with DATAMIMIC CE or a connected Platform project.",
   "author": {
     "name": "rapiddweller"
@@ -15,6 +15,8 @@
     "displayName": "DATAMIMIC",
     "shortDescription": "Author and verify test data",
     "developerName": "rapiddweller",
-    "category": "Productivity"
+    "category": "Productivity",
+    "websiteURL": "https://github.com/rapiddweller/datamimic",
+    "logo": "./assets/icon.png"
   }
 }
