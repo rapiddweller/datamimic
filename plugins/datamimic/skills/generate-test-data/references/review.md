@@ -62,11 +62,14 @@ For local projects, return clickable paths to:
 - the project directory: `datamimic.xml`, its included steps and data, and
   `acceptance/build.json` with the requirements as expectations and roles.
 - `model-review.md`: the model outline, requirements table, samples and limits.
-- `model-proof.json`: the unmodified Build response, retained as evidence; its
-  file digests bind it to the exact project files it proved.
+- `docs/model-proof.json`: the unmodified Build response, retained as evidence;
+  its file digests bind it to the exact project files it proved. Build does not
+  count files under `docs/` as unread model inputs. Keep source data elsewhere.
+  The response can contain sample row values; protect it accordingly.
 
 Return the independent assertions/readback when they establish additional claims.
-Use the project's requested names when present. For Platform projects, use the
+Use the project's requested names when present, but keep local proof in `docs/`.
+For Platform projects, use the
 existing file/commit workflow and link the same review information to its saved
 model and execution identity; do not write local files as a substitute.
 

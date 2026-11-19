@@ -182,6 +182,26 @@ def test_a_data_file_that_the_run_read_is_not_a_gap(tmp_path: Path) -> None:
     assert result.coverage.unread_data_files == ()
 
 
+def test_saved_proof_does_not_hide_unread_json_data(tmp_path: Path) -> None:
+    result = build_project(tmp_path, _SEEDED, expectations=[_CITIES])
+    assert isinstance(result, ReadyBuild), result
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "model-proof.json").write_text(result.model_dump_json(), encoding="utf-8")
+
+    application = create_authoring_application(tmp_path, descriptor_path=PROJECT_ENTRY_PATH)
+    with_proof = application.build()
+    assert isinstance(with_proof, ReadyBuild), with_proof
+
+    run = CliRunner().invoke(app, ["authoring", "run-project", str(tmp_path)])
+    assert run.exit_code == 0, run.stdout
+    assert json.loads(run.stdout)["build_outcome"] == "ready"
+
+    (tmp_path / "unread.json").write_text("[]", encoding="utf-8")
+    with_unread = application.build()
+    assert isinstance(with_unread, ReadyWithGapsBuild), with_unread
+    assert with_unread.coverage.unread_data_files == (PurePosixPath("unread.json"),)
+
+
 _PREVIOUS_EXPORT = PurePosixPath("output/previous/regions.csv")
 
 
