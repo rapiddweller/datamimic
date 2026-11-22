@@ -1,0 +1,15 @@
+{
+  "version": "5.0",
+  "product_roles": [
+    {"product": "parents", "field": "id", "role": {"kind": "identifier"}},
+    {"product": "children", "field": "parent_id", "role": {
+      "kind": "foreign_key", "parent_product": "parents", "parent_field": "id"
+    }}
+  ],
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "parents"}, "count": 2},
+    {"kind": "per_parent_count", "subject": {
+      "kind": "per_parent", "parent_product": "parents", "child_product": "children"
+    }, "count": 2}
+  ]
+}

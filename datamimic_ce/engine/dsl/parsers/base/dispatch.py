@@ -163,6 +163,7 @@ def parse_sub_elements(
 
         if stmt is None:
             raise ValueError(f"Cannot parse element <{child_tag}>")
+        stmt.source_line = child_ele.sourceline
 
         if isinstance(stmt, IncludeStatement):
             uri: str = stmt.uri

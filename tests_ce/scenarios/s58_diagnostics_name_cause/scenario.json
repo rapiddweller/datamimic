@@ -1,0 +1,16 @@
+{
+  "title": "Runtime and model diagnostics name the cause",
+  "proves": [
+    "a unique values pool that is smaller than the count is refused with the element name and the number of distinct values (#692)"
+  ],
+  "products": {
+    "parents": 2,
+    "children": 4
+  },
+  "negatives": [
+    {"name": "unique_pool_smaller_than_count", "diagnostic": "child_execution", "issue": "I893",
+     "message": "<key 'tier' unique> exhausted: only 3 distinct values",
+     "remediation": "Reduce the generated count or provide more distinct values.",
+     "patch": {"file": "datamimic.xml", "old": "<generate name=\"parents\" count=\"2\">", "new": "<generate name=\"parents\" count=\"4\">"}}
+  ]
+}

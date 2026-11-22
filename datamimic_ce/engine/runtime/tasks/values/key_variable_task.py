@@ -416,11 +416,19 @@ class KeyVariableTask(Task):
             cursors = ctx.unique_cursors if isinstance(ctx, GenIterContext) else {}
             self._unique_iter = cursors.get(key)
             if self._unique_iter is None:
-                self._unique_iter = unique_value_iter(
-                    self._values, ctx.rng, f"<{self._element_tag}> '{self._statement.name}'"
-                )
+                self._unique_iter = unique_value_iter(self._values, ctx.rng)
                 cursors[key] = self._unique_iter
-        return next(self._unique_iter)
+        try:
+            return next(self._unique_iter)
+        except StopIteration as exhausted:
+            raise task_config_error(
+                code=IssueCode.TASK_KEY_UNIQUE_EXHAUSTED,
+                element_tag=self._element_tag,
+                name=self._statement.name,
+                distinct_count=exhausted.value,
+                location=DescriptorLocation(self._element_tag, attribute="unique", line=self._statement.source_line),
+                shown_in_build=True,
+            ) from None
 
     def _next_unique_generator_value(self, ctx: Context) -> object:
         """Call the generator repeatedly until a value not yet seen by this generation invocation
@@ -445,6 +453,8 @@ class KeyVariableTask(Task):
             element_tag=self._element_tag,
             name=self._statement.name,
             distinct_count=len(seen),
+            location=DescriptorLocation(self._element_tag, attribute="unique", line=self._statement.source_line),
+            shown_in_build=True,
         )
 
     def _parse_weights(self, values):

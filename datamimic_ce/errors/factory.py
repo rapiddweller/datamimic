@@ -367,15 +367,18 @@ def task_config_error(
     ctx: DescriptorCarrierLike | None = None,
     descriptor_name: str | None = None,
     location: DescriptorLocation | None = None,
+    shown_in_build: bool = False,
     **kwargs: object,
 ) -> TaskConfigError:
     script_error = code == IssueCode.TASK_SCRIPT_ERROR
     if script_error:
         kwargs["descriptor"] = descriptor_hint(ctx, descriptor_name) or kwargs.get("descriptor", "")
-    msg = task_config_message(code=code, guidance=guidance, **kwargs)
-    if not script_error:
-        msg = _append_descriptor_hint(msg, ctx, descriptor_name)
-    return TaskConfigError(msg, issue_code=code, location=location)
+    plain = task_config_message(code=code, guidance=guidance, **kwargs)
+    msg = plain if script_error else _append_descriptor_hint(plain, ctx, descriptor_name)
+    error = TaskConfigError(msg, issue_code=code, location=location)
+    if shown_in_build:
+        error.build_reason = plain
+    return error
 
 
 def operation_error(

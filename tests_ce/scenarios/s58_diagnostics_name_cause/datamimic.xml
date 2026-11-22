@@ -1,0 +1,12 @@
+<setup rngSeed="7">
+    <variable name="branch" values="('B01', 'B02')"/>
+    <generate name="parents" count="2">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="tier" values="('gold', 'silver', 'bronze')" unique="true"/>
+        <key name="branch_code" script="branch"/>
+        <key name="rank" type="int" min="1" max="9"/>
+        <generate name="children" count="2">
+            <key name="parent_id" script="parent.id"/>
+        </generate>
+    </generate>
+</setup>

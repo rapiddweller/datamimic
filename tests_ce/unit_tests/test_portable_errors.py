@@ -272,6 +272,7 @@ def test_every_transferred_issue_has_a_ce_caller_with_matching_template_fields()
                 "guidance",
                 "validation_errors",
                 "once",
+                "shown_in_build",
             }
             expected = _template_fields(get_issue_definition(code).template)
             if code in {IssueCode.TASK_SCRIPT_ERROR, IssueCode.GENERATOR_CREATE_FAILED}:
