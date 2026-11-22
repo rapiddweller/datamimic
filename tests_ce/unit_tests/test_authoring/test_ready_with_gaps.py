@@ -23,6 +23,9 @@ from datamimic_ce.authoring.domain.capture import CaptureStatus, ProductCaptureE
 from datamimic_ce.authoring.domain.coverage import (
     BuildCoverage,
     CoverageGapKind,
+    ExpectationResult,
+    ListedExpectation,
+    ListedExpectations,
     ProductCoverage,
     unread_data_files,
 )
@@ -31,10 +34,12 @@ from datamimic_ce.authoring.domain.expectations import (
     DeclaredSinkIdentity,
     DeclaredSinkRowsSubject,
     ExactCountExpectation,
+    ExpectationIntentKind,
     PerParentCountExpectation,
     PerParentRowsSubject,
     ProductRowsSubject,
 )
+from datamimic_ce.authoring.domain.proof import AcceptanceOrigin
 from datamimic_ce.authoring.domain.requests import (
     BuildArtifact,
     BuildAssurance,
@@ -75,6 +80,19 @@ def _ready_fields(coverage: BuildCoverage) -> dict[str, object]:
         ),
         "assurance": BuildAssurance(mode="local_bounded"),
         "coverage": coverage,
+        "expectations": ListedExpectations(
+            total=1,
+            truncated=False,
+            items=(
+                ListedExpectation(
+                    origin=AcceptanceOrigin.MODEL,
+                    kind=ExpectationIntentKind.EXACT_COUNT,
+                    subject=ProductRowsSubject(product="customers"),
+                    field=None,
+                    result=ExpectationResult.PASSED,
+                ),
+            ),
+        ),
         "evidence": (
             ProductEvidence(
                 name="customers",

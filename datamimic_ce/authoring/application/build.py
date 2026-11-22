@@ -20,7 +20,7 @@ from datamimic_ce.authoring.domain.build_verification import (
     unseeded_replay_evidence,
 )
 from datamimic_ce.authoring.domain.common import MAX_AUTHORING_MAX_COUNT, MAX_AUTHORING_XML_LENGTH
-from datamimic_ce.authoring.domain.coverage import unread_data_files
+from datamimic_ce.authoring.domain.coverage import ExpectationResult, unread_data_files
 from datamimic_ce.authoring.domain.diagnostics import (
     AuthoringCodecDiagnosticCode,
     AuthoringRuleId,
@@ -82,7 +82,11 @@ class BuildDocumentWorkflow:
 
     def execute(self) -> BuildResult:
         from datamimic_ce.authoring.domain.acceptance_contract import AcceptanceProjectionError
-        from datamimic_ce.authoring.domain.acceptance_evaluation import evaluate_acceptance
+        from datamimic_ce.authoring.domain.acceptance_evaluation import (
+            evaluate_acceptance,
+            evaluate_acceptance_with_results,
+            list_expectations,
+        )
         from datamimic_ce.authoring.domain.environment_bindings import validate_environment_bindings
         from datamimic_ce.authoring.projection.acceptance import project_acceptance
 
@@ -228,6 +232,7 @@ class BuildDocumentWorkflow:
             return RejectedBuild(
                 phase=DiagnosticPhase.POLICY,
                 diagnostics=(_row_limit_diagnostic(acceptance.declared_rows, request.max_count),),
+                expectations=list_expectations(acceptance, None),
                 verification=blocked_verification(verification_options, "The declared rows exceed the Build limit."),
             )
         execution_request = BoundedExecutionRequest(
@@ -245,11 +250,17 @@ class BuildDocumentWorkflow:
             and not first.captured.products
             and any(item.severity == "error" for item in first.diagnostics)
         )
+        evaluation = (
+            None
+            if failed
+            else evaluate_acceptance_with_results(acceptance, first.captured, stopped=first.stopped_by_assert)
+        )
+        expectations = list_expectations(acceptance, None if evaluation is None else evaluation.results)
         diagnostics = (
             *lint.diagnostics,
             *graph.diagnostics,
             *first.diagnostics,
-            *(() if failed else evaluate_acceptance(acceptance, first.captured, stopped=first.stopped_by_assert)),
+            *(() if evaluation is None else evaluation.diagnostics),
         )
         project_nodes = tuple(
             node
@@ -304,6 +315,15 @@ class BuildDocumentWorkflow:
             )
         diagnostics += deferred
         verification = BuildVerificationEvidence(smoke_export=smoke, deterministic_replay=replay)
+        if replay.status is VerificationGateStatus.FAILED and evaluation is not None:
+            # A check that passed on the first run is not proven when the replay differs.
+            expectations = list_expectations(
+                acceptance,
+                tuple(
+                    result if result is ExpectationResult.FAILED else ExpectationResult.NOT_EVALUATED
+                    for result in evaluation.results
+                ),
+            )
         digests: dict[PurePosixPath, str] = {}
         for item in read:
             if digests.setdefault(item.path, item.sha256) != item.sha256:
@@ -351,6 +371,7 @@ class BuildDocumentWorkflow:
                 diagnostics=diagnostics,
                 review_artifact=review,
                 evidence=products,
+                expectations=expectations,
                 verification=verification,
             )
         coverage = build_coverage(
@@ -374,6 +395,7 @@ class BuildDocumentWorkflow:
             ),
             evidence=products,
             coverage=coverage,
+            expectations=expectations,
             verification=verification,
             diagnostics=(*diagnostics, *coverage.warnings()),
         )

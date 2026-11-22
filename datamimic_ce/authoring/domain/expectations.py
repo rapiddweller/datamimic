@@ -407,6 +407,15 @@ def expectation_subjects(expectation: ExpectationIntent) -> tuple[ExpectationSub
     return (expectation.subject,)
 
 
+def expectation_field(expectation: ExpectationIntent) -> str | None:
+    """The field that an expectation checks; a foreign key names its referencing (child) field."""
+    if isinstance(expectation, ForeignKeyExpectation):
+        return expectation.child.field
+    if isinstance(expectation, ExactCountExpectation | PerParentCountExpectation | RowConditionExpectation):
+        return None
+    return expectation.field
+
+
 def expectation_identity(expectation: ExpectationIntent) -> tuple[object, ...]:
     """Return the complete semantic identity for an acceptance expectation."""
     if isinstance(expectation, ExactCountExpectation):
