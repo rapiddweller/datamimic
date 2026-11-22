@@ -44,12 +44,16 @@ which projects a call may name; without it any project can be named. A project's
 | `datamimic_run_project` | `datamimic authoring run-project <project>` |
 | `datamimic_run_project_unverified` | `datamimic run datamimic.xml` from the project directory |
 
-`datamimic_version` also returns `build_protocol`; `5.0` is the Build contract this
-documentation describes. Persist XML. `datamimic_init` writes the flat starter
+`datamimic_version` returns `ce_version`, `python_version`, `build_protocol` and, for a git
+install only, the `commit`; `5.0` is the Build contract this documentation describes. Persist XML. `datamimic_init` writes the flat starter
 (`datamimic.xml` and `acceptance/build.json`) that Build proves as `ready`; it creates a
 missing project directory, never overwrites a file, and refuses a symlink or a path
 outside the project with `outcome: not_written` and an `input` diagnostic. The flow
 for a new project is `datamimic_init`, `datamimic_build`, `datamimic_run_project`.
+A data file that the run does not read gives the `unread_data_files` gap; move notes
+and evidence to `docs/`. Build exempts `acceptance/`, `conf/` and `output/` at the project
+root, a `docs/` or `lib/` folder at any depth, and a file name that starts with `readme`,
+`license`, `notes` or `changelog`.
 `datamimic_build` proves a project: its
 `datamimic.xml` against `acceptance/build.json`, which holds expectations,
 `product_roles`, origin-tagged `acceptance_requirements` and smoke/replay options.

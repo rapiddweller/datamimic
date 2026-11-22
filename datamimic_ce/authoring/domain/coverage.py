@@ -110,7 +110,7 @@ class BuildCoverage(AuthoringModel):
                     "Some project data files were never read by the run, so the model does not use them.",
                     ("coverage", "unread_data_files"),
                     tuple(str(path) for path in self.unread_data_files),
-                    "Read each listed file with a source in the model, or delete the file.",
+                    "Read each listed file with a source in the model, move it to docs/, or delete it.",
                 )
             )
         if self.unchecked_declared_sinks:

@@ -239,7 +239,9 @@ def check_installed(with_mcp, checkout):
     assert "demo-condition" in set(demo_names())
     assert b"<setup" in demo_root().joinpath("demo-condition/datamimic.xml").read_bytes()
     assert "demo-condition" in cli("demo", "list")
-    assert json.loads(cli("authoring", "version")) == {"ce_version": version, "build_protocol": "5.0"}
+    reported = json.loads(cli("authoring", "version"))
+    assert reported["ce_version"] == version and reported["build_protocol"] == "5.0", reported
+    assert reported["python_version"] == platform.python_version(), reported
     assert json.loads(cli("authoring", "schema", "--name", "build_request_v5")) == schemas["build_request_v5"]
     assert json.loads(cli("authoring", "capabilities", "--full")) == capabilities
     assert json.loads(cli("authoring", "reference"))["topic"] == "overview"

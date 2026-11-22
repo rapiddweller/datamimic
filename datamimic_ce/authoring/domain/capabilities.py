@@ -205,3 +205,17 @@ class DslCatalogSnapshot(AuthoringModel):
 
     def to_index_dict(self) -> dict[str, object]:
         return {domain.value: list(self.capability_names(domain)) for domain in CapabilityDomain}
+
+
+class RuntimeVersion(AuthoringModel):
+    """What a proof or a bug report must name about the running package."""
+
+    ce_version: NonEmptyStrictStr
+    python_version: NonEmptyStrictStr
+    build_protocol: NonEmptyStrictStr
+
+
+class GitRuntimeVersion(RuntimeVersion):
+    """A package installed from a git URL also names its commit; every other install has no commit."""
+
+    commit: NonEmptyStrictStr

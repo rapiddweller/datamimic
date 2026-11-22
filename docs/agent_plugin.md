@@ -57,7 +57,7 @@ build ends; Codex waits up to 300 s. The skills load in both cases.
 
 The [setup skill](../plugins/datamimic/skills/setup-datamimic/SKILL.md) warms the
 server once with `uvx ... datamimic-mcp --help`, asks you to reconnect, and checks
-that `datamimic_version` shows `build_protocol` `5.0`. New commits on `development`
+that `datamimic_version` shows `build_protocol` `5.0`; for a git install it also shows the `commit`. New commits on `development`
 arrive only after `uvx --refresh` with the same arguments, then a reconnect.
 
 Without uv the server does not start; the skills still load. The setup skill then

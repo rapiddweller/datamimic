@@ -255,6 +255,16 @@ def test_documentation_and_library_files_are_not_unread_data(tmp_path: Path) -> 
     assert isinstance(result, ReadyBuild), result
 
 
+def test_the_documented_exempt_folders_are_the_ones_that_the_code_exempts() -> None:
+    """#691: the reference names every exempt root, folder and name prefix; one list in code, one in the text."""
+    from datamimic_ce.authoring.domain.coverage import NON_DATA_FOLDERS, NON_DATA_NAME_PREFIXES, NON_DATA_ROOTS
+
+    root = Path(__file__).resolve().parents[3] / "plugins/datamimic/skills/generate-test-data/references"
+    text = (root / "ce.md").read_text(encoding="utf-8")
+    for name in (*NON_DATA_ROOTS, *NON_DATA_FOLDERS, *NON_DATA_NAME_PREFIXES):
+        assert f"`{name}" in text, name
+
+
 def test_the_coverage_is_part_of_the_ready_json(tmp_path: Path) -> None:
     result = build_project(tmp_path, _UNSEEDED, expectations=[_CITIES])
 

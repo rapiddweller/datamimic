@@ -64,7 +64,8 @@ For local projects, return clickable paths to:
 - `model-review.md`: the model outline, requirements table, samples and limits.
 - `docs/model-proof.json`: the unmodified Build response, retained as evidence;
   its file digests bind it to the exact project files it proved. Build does not
-  count files under `docs/` as unread model inputs. Keep source data elsewhere.
+  count files under `docs/` (at any depth) as unread model inputs. Keep source data elsewhere.
+  A note or evidence file in another folder gives the `unread_data_files` gap: move it to `docs/`.
   The response can contain sample row values; protect it accordingly.
 
 Return the independent assertions/readback when they establish additional claims.

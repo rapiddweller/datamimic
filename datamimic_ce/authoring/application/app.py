@@ -6,7 +6,11 @@
 
 from __future__ import annotations
 
-from pydantic import JsonValue, TypeAdapter
+import contextlib
+import platform
+from importlib import metadata
+
+from pydantic import BaseModel, JsonValue, TypeAdapter, ValidationError
 
 from datamimic_ce.authoring.application.build import BuildDocumentWorkflow
 from datamimic_ce.authoring.application.project_run import ProjectRunWorkflow
@@ -16,7 +20,13 @@ from datamimic_ce.authoring.application.use_cases import (
     CompileDocumentUseCase,
     DecompileDocumentUseCase,
 )
-from datamimic_ce.authoring.domain.capabilities import CapabilityDomain, CapabilityLookupResult, DslCatalogSnapshot
+from datamimic_ce.authoring.domain.capabilities import (
+    CapabilityDomain,
+    CapabilityLookupResult,
+    DslCatalogSnapshot,
+    GitRuntimeVersion,
+    RuntimeVersion,
+)
 from datamimic_ce.authoring.domain.project_run import ProjectRunRequest, ProjectRunResult, UnverifiedProjectRunResult
 from datamimic_ce.authoring.domain.project_scaffold import ProjectPattern, ProjectScaffold
 from datamimic_ce.authoring.domain.reference import AuthoringAssemblyReference, ReferenceResult
@@ -46,6 +56,28 @@ from datamimic_ce.authoring.ports import (
     ProjectFiles,
     ProjectRunner,
 )
+
+
+class _VcsInfo(BaseModel):
+    vcs: str
+    commit_id: str | None = None
+
+
+class _DirectUrl(BaseModel):
+    """The part of the PEP 610 `direct_url.json` that names a VCS install."""
+
+    vcs_info: _VcsInfo | None = None
+
+
+def _git_commit(direct_url_json: str | None) -> str | None:
+    """The commit of a git install; None for every other install, so a commit is never guessed."""
+    if direct_url_json is None:
+        return None
+    try:
+        vcs_info = _DirectUrl.model_validate_json(direct_url_json).vcs_info
+    except ValidationError:
+        return None
+    return vcs_info.commit_id or None if vcs_info is not None and vcs_info.vcs == "git" else None
 
 
 class AuthoringApplication:
@@ -88,6 +120,27 @@ class AuthoringApplication:
     def build_protocol(self) -> str:
         """The Build contract version this package speaks; clients check it instead of the package version."""
         return BUILD_PROTOCOL
+
+    def version(self) -> RuntimeVersion:
+        """The package and Python versions and the Build protocol; a git install also names its commit."""
+        ce_version, direct_url = "unknown", None
+        try:
+            distribution = metadata.distribution("datamimic-ce")
+            ce_version = distribution.version
+            # PackagePath.read_text takes an encoding; Distribution.read_text does not.
+            for file in distribution.files or ():
+                if file.name == "direct_url.json":
+                    with contextlib.suppress(OSError):
+                        direct_url = file.read_text(encoding="utf-8")
+        except metadata.PackageNotFoundError:
+            pass
+        facts = {
+            "ce_version": ce_version,
+            "python_version": platform.python_version(),
+            "build_protocol": BUILD_PROTOCOL,
+        }
+        commit = _git_commit(direct_url)
+        return RuntimeVersion(**facts) if commit is None else GitRuntimeVersion(**facts, commit=commit)
 
     def reference(self, request: ReferenceRequest) -> ReferenceResult:
         return self._catalog.reference(request)
