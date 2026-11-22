@@ -67,7 +67,6 @@ def execution(exit_code: int | None = 0, timed_out: bool = False) -> ProjectRunE
 
 
 def workflow(build: BuildResult, effects: tuple[ExternalEffect, ...], runner: FakeRunner) -> ProjectRunWorkflow:
-
     return ProjectRunWorkflow(lambda: build, FakeEffects(effects), runner)
 
 
@@ -563,3 +562,26 @@ def test_an_unwritable_record_folder_does_not_fail_the_run_and_says_so(tmp_path:
     assert result.outcome == "completed" and result.record_path is None
     assert [str(item.code) for item in result.diagnostics if item.severity == "warning"] == ["environment"]
     assert list(outside.iterdir()) == []  # nothing escaped the project
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX file modes")
+def test_the_full_log_is_private_to_the_user(tmp_path: Path) -> None:
+    import stat
+
+    root = project(tmp_path, "customers")
+    result = create_authoring_application(root, descriptor_path=PROJECT_ENTRY_PATH).run_project(
+        ProjectRunRequest(timeout_seconds=300)
+    )
+
+    assert result.record_path is not None
+    assert stat.S_IMODE(os.stat(root / result.record_path / "run.log").st_mode) == 0o600
+
+
+@pytest.mark.parametrize(("record_path", "says_so"), [(None, True), ("docs/runs/x", False)])
+def test_an_unverified_run_says_when_no_record_was_written(record_path: str | None, says_so: bool) -> None:
+    run = execution().model_copy(update={"record_path": record_path})
+    result = ProjectRunWorkflow(
+        lambda: RejectedBuild.from_input_error("x"), FakeEffects(()), FakeRunner(run)
+    ).execute_unverified(ProjectRunRequest(allow_side_effects=True), True)
+
+    assert ("No run record was written" in result.message) is says_so

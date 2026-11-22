@@ -180,7 +180,10 @@ class CeProjectRunner:
         text = record.model_dump_json(indent=2) + "\n"
         try:
             os.makedirs(directory)
-            shutil.copyfile(log, directory / record.log)
+            # An error message of the engine can quote a parameter value, so the full log stays private to the user.
+            descriptor = os.open(directory / record.log, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            with os.fdopen(descriptor, "wb") as target, open(log, "rb") as source:
+                shutil.copyfileobj(source, target)
             (directory / "run.json").write_text(text, encoding="utf-8")
         except OSError:
             return None
