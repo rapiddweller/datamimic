@@ -30,7 +30,7 @@ from .common import (
     NonNegativeStrictInt,
     WorkspaceDescriptorPath,
 )
-from .coverage import BuildCoverage
+from .coverage import BuildCoverage, ListedExpectations
 from .diagnostics import AuthoringRuleId, Diagnostic, DiagnosticPhase
 from .dm_json import DmJsonDocumentV1
 from .environments import ConfiguredEnvironmentBinding
@@ -340,6 +340,12 @@ class RejectedBuild(AuthoringModel):
     diagnostics: tuple[Diagnostic, ...] = Field(min_length=1)
     review_artifact: ValidatedReviewArtifact | None = None
     evidence: tuple[ProductEvidence, ...] = ()
+    expectations: ListedExpectations = Field(
+        default_factory=lambda: ListedExpectations(total=0, truncated=False, items=()),
+        description="The expectations that Build projected, each with its result; empty when Build stopped before it "
+        "projected the acceptance. The result is that of the first run; when the replay differs, a passed check is "
+        "shown as not_evaluated.",
+    )
     verification: BuildVerificationEvidence = Field(default_factory=BuildVerificationEvidence)
 
     @model_validator(mode="after")
@@ -389,8 +395,18 @@ class _ProvenBuild(AuthoringModel):
             "What this Build did not check. Close each gap, and each warning in diagnostics, before you report success."
         )
     )
+    expectations: ListedExpectations = Field(
+        description="Each expectation of the acceptance, declared or derived, with its result in the first run. Above "
+        "the cap, failed checks come first, then declared ones, then derived ones."
+    )
     verification: BuildVerificationEvidence = Field(default_factory=BuildVerificationEvidence)
     diagnostics: tuple[Diagnostic, ...] = ()
+
+    @model_validator(mode="after")
+    def expectations_match_coverage(self) -> Self:
+        if self.expectations.total != self.coverage.expectation_count:
+            raise ValueError("the listed expectations must count the expectations of coverage")
+        return self
 
     @model_validator(mode="after")
     def reject_error_diagnostics(self) -> Self:
@@ -446,6 +462,7 @@ def proven_build(
     assurance: BuildAssurance,
     evidence: tuple[ProductEvidence, ...],
     coverage: BuildCoverage,
+    expectations: ListedExpectations,
     verification: BuildVerificationEvidence,
     diagnostics: tuple[Diagnostic, ...],
 ) -> ReadyBuild | ReadyWithGapsBuild:
@@ -457,6 +474,7 @@ def proven_build(
             assurance=assurance,
             evidence=evidence,
             coverage=coverage,
+            expectations=expectations,
             verification=verification,
             diagnostics=diagnostics,
         )
@@ -465,6 +483,7 @@ def proven_build(
         assurance=assurance,
         evidence=evidence,
         coverage=coverage,
+        expectations=expectations,
         verification=verification,
         diagnostics=diagnostics,
         action_required=action_required,

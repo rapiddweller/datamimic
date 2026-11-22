@@ -6,7 +6,7 @@
 
 import copy
 import itertools
-from collections.abc import Iterable, Iterator
+from collections.abc import Generator, Iterable, Iterator
 from random import Random
 from typing import TypeVar
 
@@ -55,11 +55,11 @@ def unique_values(pool: Iterable[T], rng: RandomSource) -> list[T]:
     return distinct
 
 
-def unique_value_iter(pool: Iterable[T], rng: RandomSource, label: str) -> Iterator[T]:
-    """Yield distinct pool items, then report exhaustion."""
+def unique_value_iter(pool: Iterable[T], rng: RandomSource) -> Generator[T, None, int]:
+    """Yield distinct pool items. The generator returns their count, which the caller names when the pool is empty."""
     distinct = unique_values(pool, rng)
     yield from distinct
-    raise ValueError(f"Cannot generate more than {len(distinct)} unique values for {label}")
+    return len(distinct)
 
 
 def get_shuffled_data_with_cyclic(

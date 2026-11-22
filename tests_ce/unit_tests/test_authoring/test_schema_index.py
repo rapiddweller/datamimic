@@ -22,6 +22,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import pytest
+from lxml import etree
 from pydantic import BaseModel
 
 from datamimic_ce.authoring.domain.rules import ALL_RULES, best_practice, cross_statement, schema_rules, semantic_rules
@@ -174,7 +175,7 @@ def test_extension_parser_receives_the_descriptor_directory_keyword() -> None:
 
     register_element_extension(ElementDefinition(tag, None, SyntheticParser))
     try:
-        root = ET.fromstring(f"<setup><{tag}/></setup>")
+        root = etree.fromstring(f"<setup><{tag}/></setup>")
         parsed = dispatch.parse_sub_elements(
             Path("descriptor-root"), root, {}, Statement(None, None), profile_loader=load_connection_profile
         )

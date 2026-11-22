@@ -220,6 +220,12 @@ _SCOPE_HINT = (
 )
 
 
+_VALUE_HINT = (
+    "A function rejected the value that the script read, for example int() or float() on text that is not a number. "
+    "Check the value the script reads. Keep a text key as text: cast only a value that holds a number."
+)
+
+
 _CONTAINMENT_HINT = (
     "Bounded execution writes only new files inside its private workspace, never the workspace files it was "
     "checked against, and starts no process (#361). Deliver data "
@@ -258,7 +264,8 @@ def _runtime_hint(err: Exception) -> str:
                     return GUIDANCE_COUNT_SCOPE if named else issue.resolution
                 if attribute == ATTR_WHERE:
                     return GUIDANCE_WHERE_SCOPE if named else issue.resolution
-                return _SCOPE_HINT
+                # A value the function rejects (int('B01')) is no scope problem, and a cast does not repair text.
+                return _VALUE_HINT if isinstance(current.__cause__, ValueError) else _SCOPE_HINT
             if isinstance(current, TaskConfigError) and current.kept_rows is not None:
                 return _KEPT_ROWS_HINT
             return issue.guidance or issue.resolution

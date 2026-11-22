@@ -42,6 +42,8 @@ class ProjectRunWorkflow:
         message = "Build was not run. Execution does not verify the project or its effects."
         if outcome != "completed":
             message += " Effects may have partially persisted. Inspect the target state independently before retrying."
+        if execution.record_path is None:
+            message += " No run record was written below docs/runs/ of the project."
         return UnverifiedProjectRunResult(
             outcome=outcome,
             message=message,

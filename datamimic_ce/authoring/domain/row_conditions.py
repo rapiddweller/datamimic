@@ -9,7 +9,9 @@ from __future__ import annotations
 import ast
 import math
 import operator
+import re
 from collections.abc import Callable, Container, Mapping
+from datetime import date, datetime, time
 from decimal import Decimal
 from enum import StrEnum
 
@@ -21,6 +23,11 @@ MAX_STRING_LENGTH = 1024
 MAX_INTEGER_BITS = 256
 MAX_FLOAT_MAGNITUDE = 1e100
 MAX_DECIMAL_ADJUSTED_EXPONENT = 128
+
+# ISO literal syntax shared with fixed_value and allowed_values. Naive only: no offset, no Z. Unlike them, a row
+# condition reads a date literal as midnight for a datetime, so that an ordering against a day is possible.
+_DATE_LITERAL_PATTERN = r"\d{4}-\d{2}-\d{2}\Z"
+_DATETIME_LITERAL_PATTERN = r"\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?\Z"
 
 # Keyed by node type because the evaluator dispatches on types, not on symbol strings.
 _OPERATORS: Mapping[type[ast.AST], str] = {
@@ -77,6 +84,13 @@ ROW_CONDITION_GRAMMAR = (
     f"Operators: {_SUPPORTED_OPERATORS}. "
     "Operands: captured field names, dot access into nested mappings, numbers, strings, booleans, None, "
     "and list, tuple or set literals; len(value) is the only call. "
+    "A date or datetime field (naive, no time zone) compares with <, <=, >, >=, == and != against an ISO text literal: "
+    "'YYYY-MM-DD' or 'YYYY-MM-DD[ T]HH:MM:SS[.ffffff]' with no offset or Z. A date field takes a date literal only. "
+    "A datetime field takes both; a date literal means 00:00:00 of that day, so "
+    "birth_date > '1936-11-22' and birth_date < '2008-11-23' keeps every time after the start of 1936-11-22 "
+    "and before the start of 2008-11-23. To include the whole last day of a datetime field, bound it with "
+    "< 'the next day': <= 'YYYY-MM-DD' ends at 00:00:00 of that day. "
+    "A date and a datetime do not mix; 'in' does not apply to dates. "
     "Indexes: constant non-negative integer indexes or constant string keys; negative indexes such as items[-1] "
     "are rejected. Arithmetic is numeric only (no string concatenation). "
     f"Numeric budget: integers up to {MAX_INTEGER_BITS} bits, finite floats up to magnitude "
@@ -91,7 +105,15 @@ class RowConditionFailure(StrEnum):
     """Why a row condition could not be evaluated; the texts are static and never echo row values."""
 
     MISSING_VALUE = "a referenced field, attribute or index is absent from a captured row"
-    UNSUPPORTED_VALUE = "a value is not None, bool, number, string, list or mapping; dates are not comparable"
+    UNSUPPORTED_VALUE = (
+        "a value is not None, bool, number, string, naive date, naive datetime, list or mapping; "
+        "a datetime with a time zone is not comparable"
+    )
+    TEMPORAL_LITERAL = (
+        "a date or datetime is compared with text that is no naive ISO literal of its kind: a date field takes "
+        "'YYYY-MM-DD'; a datetime field takes 'YYYY-MM-DD' or 'YYYY-MM-DD[ T]HH:MM:SS[.ffffff]'; "
+        "an offset or Z is refused"
+    )
     OVER_BUDGET = "a value exceeds the numeric, string length, container size or nesting budget"
     TYPE_MISMATCH = "operands have incompatible types"
     ARITHMETIC = "arithmetic failed or left the numeric budget"
@@ -185,6 +207,10 @@ def _safe_value(value: object, depth: int = 0) -> object:
         if len(value) <= MAX_STRING_LENGTH:
             return value
         raise RowConditionError(RowConditionFailure.OVER_BUDGET)
+    if isinstance(value, date):
+        if isinstance(value, datetime) and value.tzinfo is not None:
+            raise RowConditionError(RowConditionFailure.UNSUPPORTED_VALUE)
+        return value
     if isinstance(value, list | tuple | set | dict):
         if len(value) > MAX_CONTAINER_ITEMS:
             raise RowConditionError(RowConditionFailure.OVER_BUDGET)
@@ -211,9 +237,40 @@ def _comparison(operation: Callable[..., object]) -> Callable[[object, object], 
     return compare
 
 
+def parse_temporal_literal(text: str) -> date | datetime | None:
+    """The naive ISO date or datetime that text spells, or None; a datetime keeps its own type."""
+
+    try:
+        if re.fullmatch(_DATETIME_LITERAL_PATTERN, text):
+            return datetime.fromisoformat(text)
+        if re.fullmatch(_DATE_LITERAL_PATTERN, text):
+            return date.fromisoformat(text)
+    except ValueError:
+        pass
+    return None
+
+
+def _as_temporal(text: str, like: date) -> date:
+    """Text compared with a date or datetime becomes that kind; a date literal is midnight for a datetime."""
+
+    parsed = parse_temporal_literal(text)
+    if isinstance(like, datetime):
+        if type(parsed) is date:
+            return datetime.combine(parsed, time.min)
+        if isinstance(parsed, datetime):
+            return parsed
+    elif type(parsed) is date:
+        return parsed
+    raise RowConditionError(RowConditionFailure.TEMPORAL_LITERAL)
+
+
 def _contains(value: object, container: object) -> bool:
     if not isinstance(container, Container):
         raise TypeError(f"argument of type '{type(container).__name__}' is not iterable")
+    if isinstance(value, date) or (
+        isinstance(container, list | tuple | set) and any(isinstance(item, date) for item in container)
+    ):
+        raise TypeError("'in' does not compare dates")
     return operator.contains(container, value)
 
 
@@ -325,8 +382,20 @@ def _evaluate(node: ast.AST, row: Mapping[str, object]) -> object:
         for operation_node, comparator in zip(node.ops, node.comparators, strict=True):
             right = _evaluate(comparator, row)
             operation = _COMPARISONS.get(type(operation_node))
+            first, second = left, right
+            if isinstance(left, date) and isinstance(right, str):
+                second = _as_temporal(right, left)
+            elif isinstance(left, str) and isinstance(right, date):
+                first = _as_temporal(left, right)
+            # Python orders no datetime against a date and calls them unequal; a row condition refuses the mix.
+            if (
+                isinstance(first, date)
+                and isinstance(second, date)
+                and isinstance(first, datetime) != isinstance(second, datetime)
+            ):
+                raise RowConditionError(RowConditionFailure.TYPE_MISMATCH)
             try:
-                holds = operation is not None and operation(left, right)
+                holds = operation is not None and operation(first, second)
             except TypeError as error:
                 raise RowConditionError(RowConditionFailure.TYPE_MISMATCH) from error
             if not holds:
@@ -336,4 +405,4 @@ def _evaluate(node: ast.AST, row: Mapping[str, object]) -> object:
     raise ValueError(f"unsupported row condition node '{type(node).__name__}'")
 
 
-__all__ = ["evaluate_row_condition", "parse_row_condition"]
+__all__ = ["evaluate_row_condition", "parse_row_condition", "parse_temporal_literal"]

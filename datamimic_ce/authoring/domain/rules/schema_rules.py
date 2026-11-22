@@ -84,6 +84,11 @@ class RootIsSetup(Rule):
             )
 
 
+# Build shows this hint first. At the default 0.6 an unrelated name (table, record, data) got a wrong element; a
+# wrong hint costs more than the known-elements list, which is shown when no name is close enough.
+_SUGGESTION_CUTOFF = 0.7
+
+
 class UnknownElement(Rule):
     definition = authoring_rule_definition("DM101")
 
@@ -92,7 +97,7 @@ class UnknownElement(Rule):
         for element in ctx.iter():
             tag = str(element.tag)
             if tag not in known:
-                suggestion = difflib.get_close_matches(tag, sorted(known), n=1)
+                suggestion = difflib.get_close_matches(tag, sorted(known), n=1, cutoff=_SUGGESTION_CUTOFF)
                 hint = (
                     f"Did you mean <{suggestion[0]}>?" if suggestion else f"Known elements: {', '.join(sorted(known))}."
                 )
@@ -101,6 +106,7 @@ class UnknownElement(Rule):
                     element,
                     evidence=f"element is <{tag}>",
                     fix_context=hint,
+                    names_only=True,  # the registry's element names, never an attribute value
                 )
 
 
@@ -232,6 +238,7 @@ def _check_distribution_element(
         evidence=f"distribution='{distribution}' on <{tag}>",
         fix_context=hint,
         names_only=True,  # the tag and the registered distribution names, never the written value
+        allowed_names=tuple(sorted(valid_distributions)),
     )
 
 
@@ -265,6 +272,8 @@ def _check_type_element(
         element,
         evidence=f"type='{type_value}' on <{tag}>",
         fix_context=hint,
+        names_only=True,  # a static text or the registered type names, never the written value
+        allowed_names=tuple(sorted(valid_types)),
     )
 
 

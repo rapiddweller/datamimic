@@ -7,7 +7,6 @@
 from __future__ import annotations
 
 import json
-import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -21,6 +20,12 @@ from datamimic_ce.authoring.domain.acceptance_contract import MEMSTORE_READBACK_
 from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
 from datamimic_ce.authoring.domain.capture import CapturedObjectId, CapturedProducts, CaptureStatus, binary_evidence
 from datamimic_ce.authoring.domain.common import MAX_AUTHORING_MAX_COUNT
+from datamimic_ce.authoring.domain.coverage import (
+    MAX_LISTED_EXPECTATIONS,
+    ExpectationResult,
+    ListedExpectation,
+    ListedExpectations,
+)
 from datamimic_ce.authoring.domain.diagnostics import (
     AuthoringRuleId,
     AuthoringSystemDiagnosticCode,
@@ -43,17 +48,18 @@ from datamimic_ce.authoring.domain.expectations import (
     RangeExpectation,
     RowConditionExpectation,
     UniqueExpectation,
+    expectation_field,
     expectation_subjects,
 )
+from datamimic_ce.authoring.domain.proof import AcceptanceOrigin
 from datamimic_ce.authoring.domain.row_conditions import (
     RowConditionError,
     RowConditionFailure,
     evaluate_row_condition,
+    parse_temporal_literal,
 )
 
 CapturedRows = Mapping[str, tuple[Mapping[str, object], ...]]
-_DATE_LITERAL_PATTERN = r"\d{4}-\d{2}-\d{2}\Z"
-_DATETIME_LITERAL_PATTERN = r"\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?\Z"
 
 
 # Build joins a child row to its parent only through one key that copies a unique parent field.
@@ -182,19 +188,11 @@ def _display(value: object) -> str:
 
 
 def _temporal_literal_matches(actual: date, expected: str) -> bool:
+    parsed = parse_temporal_literal(expected)
+    # A datetime capture matches a datetime literal only, a date capture a date literal only.
     if isinstance(actual, datetime):
-        if re.fullmatch(_DATETIME_LITERAL_PATTERN, expected) is None:
-            return False
-        try:
-            return actual == datetime.fromisoformat(expected)
-        except ValueError:
-            return False
-    if re.fullmatch(_DATE_LITERAL_PATTERN, expected) is None:
-        return False
-    try:
-        return actual == date.fromisoformat(expected)
-    except ValueError:
-        return False
+        return isinstance(parsed, datetime) and actual == parsed
+    return type(parsed) is date and actual == parsed
 
 
 def _matches_literal(actual: object, expected: JsonValue) -> bool:
@@ -596,22 +594,69 @@ def _not_evaluated_diagnostic(not_run: set[str], skipped: tuple[tuple[str | int,
     )
 
 
+@dataclass(frozen=True)
+class AcceptanceEvaluation:
+    diagnostics: tuple[Diagnostic, ...]
+    # One result for each of spec.checks, in order. A path names no check: derived checks share their model path.
+    results: tuple[ExpectationResult, ...]
+
+
+def list_expectations(spec: AcceptanceSpecV1, results: tuple[ExpectationResult, ...] | None) -> ListedExpectations:
+    """The checks of the acceptance with their results; `None` when Build evaluated none of them. Above the cap,
+    the list keeps the failed checks first, then the declared ones, then the derived ones, in Build's order."""
+    outcomes = (ExpectationResult.NOT_EVALUATED,) * len(spec.checks) if results is None else results
+    entries = list(enumerate(zip(spec.checks, outcomes, strict=False)))
+    if len(entries) > MAX_LISTED_EXPECTATIONS:
+        # A reader of a rejected Build must see the failure, whatever its place in the check order.
+        by_importance = sorted(
+            entries,
+            key=lambda entry: (
+                entry[1][1] is not ExpectationResult.FAILED,
+                entry[1][0].origin is AcceptanceOrigin.DERIVED,
+                entry[0],
+            ),
+        )
+        entries = sorted(by_importance[:MAX_LISTED_EXPECTATIONS], key=lambda entry: entry[0])
+    listed = tuple(
+        ListedExpectation(
+            origin=check.origin,
+            kind=check.expectation.kind,
+            subject=expectation_subjects(check.expectation)[0],
+            field=expectation_field(check.expectation),
+            result=result,
+        )
+        for _, (check, result) in entries
+    )
+    return ListedExpectations(total=len(spec.checks), truncated=len(spec.checks) > len(listed), items=listed)
+
+
 def evaluate_acceptance(
     spec: AcceptanceSpecV1, captured: CapturedProducts, *, stopped: bool = False
 ) -> tuple[Diagnostic, ...]:
+    return evaluate_acceptance_with_results(spec, captured, stopped=stopped).diagnostics
+
+
+def evaluate_acceptance_with_results(
+    spec: AcceptanceSpecV1, captured: CapturedProducts, *, stopped: bool = False
+) -> AcceptanceEvaluation:
     """Reject incomplete evidence before evaluating any declared or derived check. A run ``stopped`` by a failed
     <assert> captured only the products that completed before it: Build evaluates the checks on those and names the
     checks it could not evaluate."""
+    unevaluated = (ExpectationResult.NOT_EVALUATED,) * len(spec.checks)
     diagnostics: list[Diagnostic] = []
     not_run: set[str] = set()
     names = [product.name for product in captured.products]
     if len(names) != len(set(names)):
-        return (_capture_failure("Duplicate capture product identities.", ("evidence",)),)
+        return AcceptanceEvaluation(
+            (_capture_failure("Duplicate capture product identities.", ("evidence",)),), unevaluated
+        )
     unknown = set(names) - {product.capture_name for product in spec.products}
     if unknown:
-        return (_capture_failure("Capture contains undeclared product identities.", ("evidence",)),)
+        return AcceptanceEvaluation(
+            (_capture_failure("Capture contains undeclared product identities.", ("evidence",)),), unevaluated
+        )
     if type(captured.max_count) is not int or captured.max_count < 1:
-        return (_capture_failure("Capture bound is invalid.", ("evidence",)),)
+        return AcceptanceEvaluation((_capture_failure("Capture bound is invalid.", ("evidence",)),), unevaluated)
     rows_by_name: dict[str, tuple[Mapping[str, object], ...]] = {}
     retry_counts: dict[str, int] = {}
     for product in spec.products:
@@ -705,8 +750,9 @@ def evaluate_acceptance(
                     "remediation": _retry_remediation(minimum),
                 }
             )
-        return (*diagnostics, *not_evaluated)
-    for check in spec.checks:
+        return AcceptanceEvaluation((*diagnostics, *not_evaluated), unevaluated)
+    results = list(unevaluated)
+    for index, check in enumerate(spec.checks):
         expectation = check.expectation
         if _expectation_products(spec, expectation) & not_run:
             continue
@@ -716,7 +762,10 @@ def evaluate_acceptance(
             diagnostics.append(_unevaluable_diagnostic(subject, missing, path=check.path))
             continue
         failure = _check_expectation(spec, rows_by_name, expectation)
-        if failure is not None:
+        if failure is None:
+            results[index] = ExpectationResult.PASSED
+        else:
+            results[index] = ExpectationResult.FAILED
             diagnostics.append(_diagnostic(expectation.kind, failure, path=check.path))
     for readback in spec.readbacks:
         if {readback.producer, readback.consumer} & not_run:
@@ -740,7 +789,7 @@ def evaluate_acceptance(
                     remediation=MEMSTORE_READBACK_ONCE,
                 )
             )
-    return (*diagnostics, *not_evaluated)
+    return AcceptanceEvaluation((*diagnostics, *not_evaluated), tuple(results))
 
 
-__all__ = ["evaluate_acceptance"]
+__all__ = ["AcceptanceEvaluation", "evaluate_acceptance", "evaluate_acceptance_with_results", "list_expectations"]

@@ -128,8 +128,9 @@ def test_ready_build_cannot_erase_a_failed_verification_gate() -> None:
                 },
                 "assurance": {"mode": "local_bounded"},
                 "evidence": [{"name": "cities", "count": 1, "rows": [{"id": 1}]}],
+                "expectations": {"total": 0, "truncated": False, "items": []},
                 "coverage": {
-                    "expectation_count": 1,
+                    "expectation_count": 0,
                     "products": [{"product": "cities", "expectations": 1}],
                     "products_without_expectation": [],
                     "unread_data_files": [],

@@ -20,6 +20,7 @@ from datamimic_ce.authoring.adapters.dryrun import (
 )
 from datamimic_ce.authoring.adapters.linter import _run_rules
 from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
+from datamimic_ce.authoring.adapters.xml_loader import load_source
 from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
 from datamimic_ce.authoring.domain.diagnostics import (
     AuthoringRuleId,
@@ -122,17 +123,19 @@ class CeDescriptorValidator:
                 errors = tuple(item for item in rules if item.severity == "error")
                 rest = tuple(item for item in rules if item.severity != "error")
                 return LintResult(ok=False, diagnostics=(*errors, *diagnostics, *rest))
-            return LintResult(
-                ok=False,
-                diagnostics=(
-                    _diagnostic(
-                        "Descriptor failed parser validation.",
-                        path=prefix,
-                        identity=identity,
-                        location=diagnostic_location(error.location),
-                    ),
-                ),
+            # The parser message may echo values, so a refusal that names no attribute (a mistyped element) gets the
+            # static rules that do name it. A forbidden DTD has no tree to check.
+            tree, _ = load_source(xml)
+            rules = () if tree is None else _rule_diagnostics(tree, physical_path, logical_path)
+            errors = tuple(item for item in rules if item.severity == "error")
+            refusal = _diagnostic(
+                "Descriptor failed parser validation.",
+                path=prefix,
+                identity=identity,
+                location=diagnostic_location(error.location),
             )
+            names_attribute = error.location is not None and error.location.attribute is not None
+            return LintResult(ok=False, diagnostics=(refusal, *errors) if names_attribute else (*errors, refusal))
         except etree.XMLSyntaxError as error:
             return _not_well_formed(
                 ("descriptor", logical_path.as_posix(), "line", error.position[0]),
@@ -304,6 +307,7 @@ def _rule_diagnostics(
                     element=finding.element,
                     include_chain=include_chain,
                 ),
+                allowed_values=finding.allowed_names,
                 severity="error"
                 if finding.severity is RuleSeverity.ERROR
                 else ("warning" if finding.severity is RuleSeverity.WARNING else "info"),

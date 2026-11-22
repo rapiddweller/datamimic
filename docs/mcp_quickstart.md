@@ -122,5 +122,5 @@ CE and Python version, parameter names without their values, the Build proof dig
 a verified run, outcome, exit code, written files) and `run.log` (the full log, not only
 `log_tail`). The result names that folder in `record_path`; the task id is also the name
 of the `output/<task id>/` folder. `docs/` is no Build input, so a record never opens a
-coverage gap. When the record cannot be written, the run still ends normally, `record_path`
+coverage gap. `run.log` is the raw log, not redacted: an error message can quote a parameter value, so the file is created with mode 0600 and a project should not commit `docs/runs/`. When the record cannot be written, the run still ends normally, `record_path`
 is `null` and a warning says so.

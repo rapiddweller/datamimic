@@ -1,0 +1,34 @@
+{
+  "title": "Runtime and model diagnostics name the cause",
+  "proves": [
+    "a unique values pool that is smaller than the count is refused with the element name and the number of distinct values (#692)",
+    "a script that calls int() on a text key is refused with the Python error type, the script line in the location and a remediation that does not push toward a cast (#692)",
+    "a mistyped element is named by DM101 with the registered name it resembles, where the parser refusal alone names nothing (#692)",
+    "an invalid type= value lists the valid values in the remediation and in allowed_values (#692)",
+    "a foreign-key role on a computed child field names the role, the parent field and the script that the field needs (#692)"
+  ],
+  "products": {
+    "parents": 2,
+    "children": 4
+  },
+  "negatives": [
+    {"name": "unique_pool_smaller_than_count", "diagnostic": "child_execution", "issue": "I893",
+     "message": "<key 'tier' unique> exhausted: only 3 distinct values",
+     "remediation": "Reduce the generated count or provide more distinct values.",
+     "patch": {"file": "datamimic.xml", "old": "<generate name=\"parents\" count=\"2\">", "new": "<generate name=\"parents\" count=\"4\">"}},
+    {"name": "int_on_a_text_key", "diagnostic": "child_execution", "issue": "I832",
+     "message": "ValueError",
+     "remediation": "Keep a text key as text: cast only a value that holds a number.",
+     "patch": {"file": "datamimic.xml", "old": "script=\"branch\"", "new": "script=\"int(branch)\""}},
+    {"name": "mistyped_element", "diagnostic": "DM101",
+     "remediation": "Did you mean <variable>?",
+     "patch": {"file": "datamimic.xml", "old": "<variable name=\"branch\"", "new": "<variabel name=\"branch\""}},
+    {"name": "invalid_type_value", "diagnostic": "DM105",
+     "remediation": "Use one of: binary, bool, decimal, float, int, string.",
+     "patch": {"file": "datamimic.xml", "old": "type=\"int\" min=\"1\"", "new": "type=\"integer\" min=\"1\""}},
+    {"name": "computed_child_with_foreign_key_role", "diagnostic": "input",
+     "message": "'children.parent_id' a key of 'parents.id', but the field is not exactly script=\"parent.id\"",
+     "remediation": "Set script=\"parent.id\" on the field.",
+     "patch": {"file": "datamimic.xml", "old": "script=\"parent.id\"", "new": "script=\"parent.id + 100\""}}
+  ]
+}
