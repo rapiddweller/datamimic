@@ -20,7 +20,7 @@ from datamimic_ce.authoring.domain.build_verification import (
     unseeded_replay_evidence,
 )
 from datamimic_ce.authoring.domain.common import MAX_AUTHORING_MAX_COUNT, MAX_AUTHORING_XML_LENGTH
-from datamimic_ce.authoring.domain.coverage import unread_data_files
+from datamimic_ce.authoring.domain.coverage import ExpectationResult, unread_data_files
 from datamimic_ce.authoring.domain.diagnostics import (
     AuthoringCodecDiagnosticCode,
     AuthoringRuleId,
@@ -315,6 +315,15 @@ class BuildDocumentWorkflow:
             )
         diagnostics += deferred
         verification = BuildVerificationEvidence(smoke_export=smoke, deterministic_replay=replay)
+        if replay.status is VerificationGateStatus.FAILED and evaluation is not None:
+            # A check that passed on the first run is not proven when the replay differs.
+            expectations = list_expectations(
+                acceptance,
+                tuple(
+                    result if result is ExpectationResult.FAILED else ExpectationResult.NOT_EVALUATED
+                    for result in evaluation.results
+                ),
+            )
         digests: dict[PurePosixPath, str] = {}
         for item in read:
             if digests.setdefault(item.path, item.sha256) != item.sha256:

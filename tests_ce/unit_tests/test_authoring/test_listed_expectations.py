@@ -196,3 +196,50 @@ def test_a_list_must_be_all_of_the_expectations_or_the_capped_first_ones(
 
     with pytest.raises(ValidationError, match="truncated must say so"):
         ListedExpectations(total=total, truncated=truncated, items=(item,) * items)
+
+
+def test_the_cap_keeps_the_failed_and_the_declared_checks_and_drops_derived_ones(tmp_path: Path) -> None:
+    product = AcceptanceProductV1(name="rows", runtime_name="rows", capture_name="rows")
+    derived = tuple(
+        AcceptanceCheckV1(
+            expectation=ExactCountExpectation(subject=ProductRowsSubject(product="rows"), count=index),
+            path=("expectations", index),
+            origin=AcceptanceOrigin.DERIVED,
+        )
+        for index in range(MAX_LISTED_EXPECTATIONS + 10)
+    )
+    declared = AcceptanceCheckV1(
+        expectation=ExactCountExpectation(subject=ProductRowsSubject(product="rows"), count=999),
+        path=("expectations", 999),
+        origin=AcceptanceOrigin.MODEL,
+    )
+    spec = AcceptanceSpecV1(products=(product,), checks=(*derived, declared))
+    results = [ExpectationResult.PASSED] * len(spec.checks)
+    results[len(derived) - 2] = ExpectationResult.FAILED  # a derived check late in Build's order
+
+    listed = list_expectations(spec, tuple(results))
+
+    assert (listed.total, listed.truncated, len(listed.items)) == (len(spec.checks), True, MAX_LISTED_EXPECTATIONS)
+    assert [item.result for item in listed.items].count(ExpectationResult.FAILED) == 1
+    assert [item.origin for item in listed.items].count(AcceptanceOrigin.MODEL) == 1
+    counts = [item.subject.product for item in listed.items]
+    assert counts == ["rows"] * MAX_LISTED_EXPECTATIONS
+
+
+def test_a_build_that_the_replay_rejects_does_not_list_a_check_as_passed(tmp_path: Path) -> None:
+    # The iteration order of a set of strings follows the hash seed: the replay under other seeds differs.
+    entry = (
+        '<setup rngSeed="7"><generate name="rows" count="3">'
+        "<key name=\"x\" script=\"list({'alpha', 'beta', 'gamma', 'delta'})[0]\"/></generate></setup>"
+    )
+
+    result = build_project(
+        tmp_path,
+        entry,
+        expectations=[{"kind": "exact_count", "subject": {"kind": "product", "product": "rows"}, "count": 3}],
+    )
+
+    assert isinstance(result, RejectedBuild)
+    assert result.verification.deterministic_replay.status.value == "failed"
+    assert result.expectations.total >= 1
+    assert {item.result for item in result.expectations.items} == {ExpectationResult.NOT_EVALUATED}

@@ -343,7 +343,8 @@ class RejectedBuild(AuthoringModel):
     expectations: ListedExpectations = Field(
         default_factory=lambda: ListedExpectations(total=0, truncated=False, items=()),
         description="The expectations that Build projected, each with its result; empty when Build stopped before it "
-        "projected the acceptance. The result is that of the first run.",
+        "projected the acceptance. The result is that of the first run; when the replay differs, a passed check is "
+        "shown as not_evaluated.",
     )
     verification: BuildVerificationEvidence = Field(default_factory=BuildVerificationEvidence)
 
@@ -395,7 +396,8 @@ class _ProvenBuild(AuthoringModel):
         )
     )
     expectations: ListedExpectations = Field(
-        description="Each expectation of the acceptance, declared or derived, with its result in the first run."
+        description="Each expectation of the acceptance, declared or derived, with its result in the first run. Above "
+        "the cap, failed checks come first, then declared ones, then derived ones."
     )
     verification: BuildVerificationEvidence = Field(default_factory=BuildVerificationEvidence)
     diagnostics: tuple[Diagnostic, ...] = ()

@@ -52,6 +52,7 @@ from datamimic_ce.authoring.domain.expectations import (
     expectation_field,
     expectation_subjects,
 )
+from datamimic_ce.authoring.domain.proof import AcceptanceOrigin
 from datamimic_ce.authoring.domain.row_conditions import (
     RowConditionError,
     RowConditionFailure,
@@ -611,8 +612,21 @@ class AcceptanceEvaluation:
 
 
 def list_expectations(spec: AcceptanceSpecV1, results: tuple[ExpectationResult, ...] | None) -> ListedExpectations:
-    """The checks of the acceptance with their results; `None` when Build evaluated none of them."""
+    """The checks of the acceptance with their results; `None` when Build evaluated none of them. Above the cap,
+    the list keeps the failed checks first, then the declared ones, then the derived ones, in Build's order."""
     outcomes = (ExpectationResult.NOT_EVALUATED,) * len(spec.checks) if results is None else results
+    entries = list(enumerate(zip(spec.checks, outcomes, strict=False)))
+    if len(entries) > MAX_LISTED_EXPECTATIONS:
+        # A reader of a rejected Build must see the failure, whatever its place in the check order.
+        by_importance = sorted(
+            entries,
+            key=lambda entry: (
+                entry[1][1] is not ExpectationResult.FAILED,
+                entry[1][0].origin is AcceptanceOrigin.DERIVED,
+                entry[0],
+            ),
+        )
+        entries = sorted(by_importance[:MAX_LISTED_EXPECTATIONS], key=lambda entry: entry[0])
     listed = tuple(
         ListedExpectation(
             origin=check.origin,
@@ -621,7 +635,7 @@ def list_expectations(spec: AcceptanceSpecV1, results: tuple[ExpectationResult, 
             field=expectation_field(check.expectation),
             result=result,
         )
-        for check, result in zip(spec.checks[:MAX_LISTED_EXPECTATIONS], outcomes, strict=False)
+        for _, (check, result) in entries
     )
     return ListedExpectations(total=len(spec.checks), truncated=len(spec.checks) > len(listed), items=listed)
 
