@@ -16,7 +16,7 @@ from .build_rules import catalog_diagnostic
 from .common import AuthoringModel, NonEmptyStrictStr, NonNegativeStrictInt
 from .coverage import BuildCoverage
 from .diagnostics import AuthoringRuleId, Diagnostic, DiagnosticPhase
-from .requests import BuildResult
+from .requests import BuildArtifact, BuildResult
 
 MAX_PROJECT_RUN_SECONDS = 840
 MAX_LISTED_ARTIFACTS = 200
@@ -43,6 +43,9 @@ class ExternalEffect(AuthoringModel):
 class ProjectArtifact(AuthoringModel):
     path: NonEmptyStrictStr
     bytes: NonNegativeStrictInt
+    sha256: Annotated[StrictStr, Field(pattern=r"^[0-9a-f]{64}$")] | None = Field(
+        default=None, description="Digest of the file after the run; absent when the file could not be read."
+    )
 
 
 class ProjectParam(AuthoringModel):
@@ -77,6 +80,10 @@ class ProjectRunResult(AuthoringModel):
     artifacts: tuple[ProjectArtifact, ...] = ()
     artifact_count: NonNegativeStrictInt = 0
     log_tail: tuple[StrictStr, ...] = ()
+    record_path: NonEmptyStrictStr | None = Field(
+        default=None,
+        description="Project-relative folder with run.json and the full run.log; absent when it could not be written.",
+    )
     diagnostics: tuple[Diagnostic, ...] = ()
 
     @model_validator(mode="after")
@@ -152,6 +159,27 @@ class ProjectRunExecution(AuthoringModel):
     artifacts: tuple[ProjectArtifact, ...]
     artifact_count: NonNegativeStrictInt
     log_tail: tuple[StrictStr, ...]
+    record_path: NonEmptyStrictStr | None = None
+
+
+class ProjectRunRecord(AuthoringModel):
+    """The audit record of one run (docs/runs/<start>_<task id>/run.json). docs/ is no Build input."""
+
+    schema_version: Literal["1"] = "1"
+    task_id: NonEmptyStrictStr
+    actor: StrictStr | None
+    started_utc: NonEmptyStrictStr
+    ended_utc: NonEmptyStrictStr
+    ce_version: NonEmptyStrictStr
+    python_version: NonEmptyStrictStr
+    param_names: tuple[StrictStr, ...] = Field(description="The names only: a value can be a secret.")
+    proof: BuildArtifact | None = Field(description="The Build proof the run used; absent in an unverified run.")
+    outcome: Literal["completed", "failed", "timeout"]
+    exit_code: StrictInt | None
+    duration_seconds: float = Field(ge=0)
+    outputs: tuple[ProjectArtifact, ...]
+    output_count: NonNegativeStrictInt
+    log: NonEmptyStrictStr = Field(description="The full log, relative to the record folder.")
 
 
 class UnverifiedProjectRunResult(AuthoringModel):
