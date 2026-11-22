@@ -4,9 +4,12 @@
 
 """A failed Build, lint or bounded run names the cause, not only a title or a generic refusal (#692)."""
 
+from pathlib import Path
+
+from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.adapters.bounded_executor import CeBoundedExecutor
 from datamimic_ce.authoring.domain.diagnostics import AuthoringSystemDiagnosticCode
-from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest
+from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, BoundedExecutionRequest, LintRequest
 from datamimic_ce.errors.codes import IssueCode
 
 
@@ -15,6 +18,11 @@ def _failure(xml: str):
     (diagnostic,) = evidence.diagnostics
     assert diagnostic.code is AuthoringSystemDiagnosticCode.CHILD_EXECUTION
     return diagnostic
+
+
+def _lint(tmp_path: Path, xml: str):
+    (tmp_path / PROJECT_ENTRY_PATH).write_text(xml, encoding="utf-8")
+    return create_authoring_application(tmp_path, descriptor_path=PROJECT_ENTRY_PATH).lint(LintRequest(xml=xml))
 
 
 def test_unique_values_pool_names_the_key_the_count_and_the_line() -> None:
@@ -79,3 +87,24 @@ def test_a_failed_name_lookup_keeps_the_scope_remediation() -> None:
     )
     assert "NameError: name 'ghost' is not defined" in diagnostic.message
     assert "cast: int(parent.col)" in (diagnostic.remediation or "")
+
+
+def test_mistyped_element_with_open_and_close_tag_is_named_by_dm101(tmp_path: Path) -> None:
+    result = _lint(
+        tmp_path,
+        """<setup rngSeed="1">
+    <generat name="rows" count="2" target="CSV">
+        <key name="id" generator="IncrementGenerator"/>
+    </generat>
+</setup>""",
+    )
+    first = result.diagnostics[0]
+    assert first.code == "DM101"
+    assert first.location is not None and (first.location.element, first.location.line) == ("generat", 2)
+    assert first.remediation is not None and "Did you mean <generate>?" in first.remediation
+    assert [item.code for item in result.diagnostics][-1] == "descriptor"
+
+
+def test_a_forbidden_dtd_still_reports_the_parser_refusal_only(tmp_path: Path) -> None:
+    result = _lint(tmp_path, '<!DOCTYPE setup [<!ENTITY x "y">]><setup rngSeed="1"/>')
+    assert [item.code for item in result.diagnostics] == ["descriptor"]

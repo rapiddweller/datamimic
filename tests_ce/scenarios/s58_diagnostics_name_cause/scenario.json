@@ -2,7 +2,8 @@
   "title": "Runtime and model diagnostics name the cause",
   "proves": [
     "a unique values pool that is smaller than the count is refused with the element name and the number of distinct values (#692)",
-    "a script that calls int() on a text key is refused with the Python error type, the script line in the location and a remediation that does not push toward a cast (#692)"
+    "a script that calls int() on a text key is refused with the Python error type, the script line in the location and a remediation that does not push toward a cast (#692)",
+    "a mistyped element is named by DM101 with the registered name it resembles, where the parser refusal alone names nothing (#692)"
   ],
   "products": {
     "parents": 2,
@@ -16,6 +17,9 @@
     {"name": "int_on_a_text_key", "diagnostic": "child_execution", "issue": "I832",
      "message": "ValueError",
      "remediation": "Keep a text key as text: cast only a value that holds a number.",
-     "patch": {"file": "datamimic.xml", "old": "script=\"branch\"", "new": "script=\"int(branch)\""}}
+     "patch": {"file": "datamimic.xml", "old": "script=\"branch\"", "new": "script=\"int(branch)\""}},
+    {"name": "mistyped_element", "diagnostic": "DM101",
+     "remediation": "Did you mean <variable>?",
+     "patch": {"file": "datamimic.xml", "old": "<variable name=\"branch\"", "new": "<variabel name=\"branch\""}}
   ]
 }

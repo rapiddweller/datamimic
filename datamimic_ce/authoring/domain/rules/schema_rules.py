@@ -101,6 +101,7 @@ class UnknownElement(Rule):
                     element,
                     evidence=f"element is <{tag}>",
                     fix_context=hint,
+                    names_only=True,  # the registry's element names, never an attribute value
                 )
 
 

@@ -72,7 +72,8 @@ class LintContext:
             severity=severity or definition.severity,
             message=message,
             fix_hint=fix_hint,
-            element=str(element.tag),
+            # A namespaced tag is {uri}local and the URI is a value that can carry credentials.
+            element=etree.QName(element).localname,
             path=element.getroottree().getpath(element),
             name=element.get("name") or element.get("id"),
             line=element.sourceline,
