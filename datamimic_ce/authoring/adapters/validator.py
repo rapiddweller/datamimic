@@ -307,6 +307,7 @@ def _rule_diagnostics(
                     element=finding.element,
                     include_chain=include_chain,
                 ),
+                allowed_values=finding.allowed_names,
                 severity="error"
                 if finding.severity is RuleSeverity.ERROR
                 else ("warning" if finding.severity is RuleSeverity.WARNING else "info"),

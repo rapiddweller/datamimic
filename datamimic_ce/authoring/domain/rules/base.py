@@ -58,6 +58,7 @@ class LintContext:
         fix_context: str | None = None,
         severity: RuleSeverity | None = None,
         names_only: bool = False,
+        allowed_names: tuple[str, ...] | None = None,
     ) -> Diagnostic:
         """``names_only`` marks a ``fix_context`` built from element, attribute and schema names only."""
         definition = rule.definition
@@ -79,6 +80,7 @@ class LintContext:
             line=element.sourceline,
             docs=definition.docs,
             names_only_fix=fix_context if names_only else None,
+            allowed_names=allowed_names,
         )
 
 

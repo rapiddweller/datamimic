@@ -233,6 +233,7 @@ def _check_distribution_element(
         evidence=f"distribution='{distribution}' on <{tag}>",
         fix_context=hint,
         names_only=True,  # the tag and the registered distribution names, never the written value
+        allowed_names=tuple(sorted(valid_distributions)),
     )
 
 
@@ -266,6 +267,8 @@ def _check_type_element(
         element,
         evidence=f"type='{type_value}' on <{tag}>",
         fix_context=hint,
+        names_only=True,  # a static text or the registered type names, never the written value
+        allowed_names=tuple(sorted(valid_types)),
     )
 
 

@@ -3,7 +3,8 @@
   "proves": [
     "a unique values pool that is smaller than the count is refused with the element name and the number of distinct values (#692)",
     "a script that calls int() on a text key is refused with the Python error type, the script line in the location and a remediation that does not push toward a cast (#692)",
-    "a mistyped element is named by DM101 with the registered name it resembles, where the parser refusal alone names nothing (#692)"
+    "a mistyped element is named by DM101 with the registered name it resembles, where the parser refusal alone names nothing (#692)",
+    "an invalid type= value lists the valid values in the remediation and in allowed_values (#692)"
   ],
   "products": {
     "parents": 2,
@@ -20,6 +21,9 @@
      "patch": {"file": "datamimic.xml", "old": "script=\"branch\"", "new": "script=\"int(branch)\""}},
     {"name": "mistyped_element", "diagnostic": "DM101",
      "remediation": "Did you mean <variable>?",
-     "patch": {"file": "datamimic.xml", "old": "<variable name=\"branch\"", "new": "<variabel name=\"branch\""}}
+     "patch": {"file": "datamimic.xml", "old": "<variable name=\"branch\"", "new": "<variabel name=\"branch\""}},
+    {"name": "invalid_type_value", "diagnostic": "DM105",
+     "remediation": "Use one of: binary, bool, decimal, float, int, string.",
+     "patch": {"file": "datamimic.xml", "old": "type=\"int\" min=\"1\"", "new": "type=\"integer\" min=\"1\""}}
   ]
 }

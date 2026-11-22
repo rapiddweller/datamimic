@@ -108,3 +108,17 @@ def test_mistyped_element_with_open_and_close_tag_is_named_by_dm101(tmp_path: Pa
 def test_a_forbidden_dtd_still_reports_the_parser_refusal_only(tmp_path: Path) -> None:
     result = _lint(tmp_path, '<!DOCTYPE setup [<!ENTITY x "y">]><setup rngSeed="1"/>')
     assert [item.code for item in result.diagnostics] == ["descriptor"]
+
+
+def test_invalid_type_lists_the_valid_types_in_allowed_values_and_remediation(tmp_path: Path) -> None:
+    result = _lint(
+        tmp_path,
+        '<setup rngSeed="1"><generate name="rows" count="2" target="CSV">'
+        '<key name="id" type="integer"/></generate></setup>',
+    )
+    dm105 = next(item for item in result.diagnostics if item.code == "DM105")
+    assert dm105.allowed_values == ("binary", "bool", "decimal", "float", "int", "string")
+    assert (
+        dm105.remediation is not None and "Use one of: binary, bool, decimal, float, int, string." in dm105.remediation
+    )
+    assert "integer" not in dm105.remediation  # the written value is never repeated
