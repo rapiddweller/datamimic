@@ -15,15 +15,22 @@ from datamimic_ce.authoring.domain.capabilities import GitRuntimeVersion, Runtim
 _SHA = "0123456789abcdef0123456789abcdef01234567"
 
 
+class _File:
+    def __init__(self, name: str, text: str) -> None:
+        self.name = name
+        self._text = text
+
+    def read_text(self, encoding: str) -> str:
+        assert encoding == "utf-8"  # the architecture gate: a text read names its encoding
+        return self._text
+
+
 class _Distribution:
     version = "9.9.9"
 
     def __init__(self, direct_url: str | None) -> None:
-        self._direct_url = direct_url
-
-    def read_text(self, filename: str) -> str | None:
-        assert filename == "direct_url.json"
-        return self._direct_url
+        # A wheel from an index has other metadata files but no direct_url.json.
+        self.files = [_File("RECORD", "x")] + ([] if direct_url is None else [_File("direct_url.json", direct_url)])
 
 
 def _version(monkeypatch: pytest.MonkeyPatch, direct_url: str | None) -> RuntimeVersion:

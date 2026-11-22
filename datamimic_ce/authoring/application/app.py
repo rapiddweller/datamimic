@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import platform
 from importlib import metadata
 
@@ -125,7 +126,12 @@ class AuthoringApplication:
         ce_version, direct_url = "unknown", None
         try:
             distribution = metadata.distribution("datamimic-ce")
-            ce_version, direct_url = distribution.version, distribution.read_text("direct_url.json")
+            ce_version = distribution.version
+            # PackagePath.read_text takes an encoding; Distribution.read_text does not.
+            for file in distribution.files or ():
+                if file.name == "direct_url.json":
+                    with contextlib.suppress(OSError):
+                        direct_url = file.read_text(encoding="utf-8")
         except metadata.PackageNotFoundError:
             pass
         facts = {
