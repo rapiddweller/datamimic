@@ -316,3 +316,8 @@ class ExternalFailureCause(Exception):
 
     def __str__(self) -> str:
         return f"External operation failed ({self.vendor_type})"
+
+
+# The functions that pickle stores for the errors above (see __reduce__). A reader that allows only named globals
+# takes them from here, so that no other module reaches for a private name.
+PICKLE_RESTORERS = (_restore_domain_error, _restore_locale_error, _restore_user_error)

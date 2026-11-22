@@ -2,6 +2,7 @@ import pickle
 
 import datamimic_ce.errors as package_errors
 from datamimic_ce.errors import DomainError, DomainErrorCode, ErrorCode, InvalidLocaleError
+from datamimic_ce.errors.base import PICKLE_RESTORERS, UserRuntimeError
 from datamimic_ce.errors.base import DomainError as BaseDomainError
 from datamimic_ce.errors.base import InvalidLocaleError as BaseInvalidLocaleError
 from datamimic_ce.errors.codes import DomainErrorCode as CodesDomainErrorCode
@@ -57,3 +58,12 @@ def test_invalid_locale_error_round_trip_keeps_typed_fields_and_message() -> Non
     assert str(restored) == str(error)
     assert restored.locale == error.locale
     assert restored.to_dict() == error.to_dict()
+
+
+def test_every_error_reduces_to_a_published_restorer() -> None:
+    # The bounded child reads pickled errors against a list of allowed globals that comes from PICKLE_RESTORERS.
+    # A restorer that is missing there would turn a real error into a refused pickle.
+    request = {"code": DomainErrorCode.INVALID_REQUEST, "message": "m", "hint": None, "path": "/p", "request_hash": "h"}
+    errors = [DomainError(**request), InvalidLocaleError(**request, details=None, locale="xx"), UserRuntimeError("m")]
+
+    assert {error.__reduce__()[0] for error in errors} == set(PICKLE_RESTORERS)
