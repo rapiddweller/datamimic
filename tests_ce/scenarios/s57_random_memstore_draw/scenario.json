@@ -1,0 +1,42 @@
+{
+  "title": "A random draw from a memstore gives the same rows in the Build capture and in the run",
+  "proves": [
+    "<variable source=\"mem\" distribution=\"random\"> takes its seed from the run's root stream, so the draw depends on every record built before it",
+    "Build bounds the readback of a memstore producer by the Build limit; the run reads exactly the producer rows. The first 8 payments in the Build evidence equal the 8 payments of the run (#689)",
+    "a readback with a count above its source stops at the source end and gives the same payments as a readback without a count"
+  ],
+  "products": {
+    "accounts": 20,
+    "accounts_copy": 20,
+    "payments": 8
+  },
+  "equivalents": [
+    {
+      "name": "readback_count_equals_source",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "distribution=\"ordered\" target=\"CSV\">",
+        "new": "distribution=\"ordered\" count=\"20\" target=\"CSV\">"
+      }
+    },
+    {
+      "name": "readback_count_above_source_stops_at_source_end",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "distribution=\"ordered\" target=\"CSV\">",
+        "new": "distribution=\"ordered\" count=\"25\" target=\"CSV\">"
+      }
+    }
+  ],
+  "negatives": [
+    {
+      "name": "a_payment_of_an_unknown_account_breaks_the_foreign_key",
+      "diagnostic": "foreign_key",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "script=\"acc.account_no\"",
+        "new": "script=\"acc.account_no + 100\""
+      }
+    }
+  ]
+}

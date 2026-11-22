@@ -154,6 +154,21 @@ def test_unread_data_file_outside_output_is_still_reported_after_a_run(
     assert [str(path) for path in built.coverage.unread_data_files] == ["data/spare.csv"]
 
 
+def test_build_capture_equals_the_run_for_a_random_memstore_draw(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """#689: a random draw seeds from the run's root stream. The bounded capture must consume that stream like the
+    run, or Build proves rows that the run does not write."""
+    project = _copy(_ROOT / "s57_random_memstore_draw", tmp_path / "project")
+    monkeypatch.chdir(project)
+    built = _build(project)
+    assert isinstance(built, ReadyBuild | ReadyWithGapsBuild), [str(item.code) for item in built.diagnostics]
+    captured = {item.name: [dict(row) for row in item.rows] for item in built.evidence}
+    ran = _run(project)
+    assert captured["payments"] == ran["payments"][: len(captured["payments"])]
+    assert len(captured["payments"]) == 8, "the capture must hold every payment, or the comparison proves nothing"
+
+
 @pytest.mark.parametrize(
     ("directory", "negative"),
     _NEGATIVES,

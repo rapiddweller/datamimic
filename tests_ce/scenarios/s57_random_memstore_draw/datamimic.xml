@@ -1,0 +1,16 @@
+<setup rngSeed="42">
+    <memstore id="mem"/>
+    <generate name="accounts" count="20" target="mem">
+        <key name="account_no" generator="IncrementGenerator"/>
+    </generate>
+    <!-- Build needs a readback of the memstore producer. It has no count: the run reads exactly the 20 rows. -->
+    <generate name="accounts_copy" source="mem" sourceEntity="accounts" distribution="ordered" target="CSV">
+        <key name="account_no" script="this.account_no"/>
+    </generate>
+    <!-- A random draw takes its seed from the run's root stream, so it depends on the draws made before it. -->
+    <generate name="payments" count="8" target="JSON">
+        <key name="payment_id" generator="IncrementGenerator"/>
+        <variable name="acc" source="mem" sourceEntity="accounts" distribution="random"/>
+        <key name="account_no" script="acc.account_no"/>
+    </generate>
+</setup>
