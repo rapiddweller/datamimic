@@ -285,3 +285,11 @@ def test_authoring_help_points_to_the_data_file_guidance():
 
     assert result.exit_code == 0
     assert "data_files" in result.stdout
+
+
+def test_learning_clock_states_the_seeded_anchor_and_age_bounds(application):
+    from datamimic_ce.domains.domain_core.runtime.clock import DETERMINISTIC_ANCHOR
+
+    [entry] = application.reference(ReferenceRequest(topic=ReferenceTopic.LEARNING, name="clock")).entries
+    assert DETERMINISTIC_ANCHOR.strftime("%Y-%m-%d %H:%M:%S") in entry.description
+    assert "reference_now" in entry.description and "max_age + 1" in entry.description

@@ -1,0 +1,21 @@
+{
+  "version": "5.0",
+  "product_roles": [
+    {"product": "people", "field": "person_id", "role": {"kind": "identifier"}},
+    {"product": "edges", "field": "edge_id", "role": {"kind": "identifier"}}
+  ],
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "people"}, "count": 200},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "people"}, "condition": "born >= '1934-01-02' and born <= '2007-01-01'"},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "edges"}, "count": 1},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "edges"}, "condition": "day_in > '1936-11-22' and day_in < '2008-11-23'"},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "edges"}, "condition": "day_min > '1936-11-22' and day_min < '2008-11-23'"},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "edges"}, "condition": "day_max > '1936-11-22' and day_max < '2008-11-23'"},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "edges"}, "condition": "at_in > '1936-11-22' and at_in < '2008-11-23'"},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "edges"}, "condition": "at_min > '1936-11-22' and at_min < '2008-11-23'"},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "edges"}, "condition": "at_max > '1936-11-22' and at_max < '2008-11-23'"},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "edges"}, "condition": "at_in >= '2000-06-15T13:45:10' and at_in <= '2000-06-15 13:45:10.000000'"},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "edges"}, "condition": "'1936-11-22' < day_min < '2008-11-23'"},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "edges"}, "condition": "at_text >= '2000-06-15 13:45:10' and at_text < '2000-06-15 13:45:11'"}
+  ]
+}

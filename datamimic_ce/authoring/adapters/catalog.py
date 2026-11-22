@@ -448,6 +448,23 @@ class CeDslCatalog:
                         ),
                     ),
                     AuthoringLearningReference(
+                        name="clock",
+                        path="datamimic_ce/domains/domain_core/runtime/clock.py",
+                        description=(
+                            "A seeded run (rngSeed on <setup>) reads 'now' from the fixed anchor 2025-01-01 12:00:00, "
+                            "not from the system clock; an unseeded run reads live UTC. Domain generators that derive "
+                            "a value from 'now' use this anchor, for example the age in BirthdateGenerator. "
+                            "BirthdateGenerator(min_age=1, max_age=100) returns a datetime with a random time of day "
+                            "from (anchor year - max_age - 1)-MM-DD plus one day to (anchor year - min_age)-MM-DD, "
+                            "both at 00:00:00. At the anchor the completed ages are min_age to max_age and the exact "
+                            "age is below max_age + 1. With min_age=18 and max_age=90 the births lie from 1934-01-02 "
+                            "to 2007-01-01; on 2026-11-22 the oldest possible person is 92. To set another 'now', pass "
+                            'reference_now: generator="BirthdateGenerator(min_age=18, max_age=90, '
+                            'reference_now=datetime.datetime(2026, 11, 22))". To prove a window, use a row_condition '
+                            "such as born >= '1934-01-02' and born <= '2007-01-01'; a date literal means 00:00:00."
+                        ),
+                    ),
+                    AuthoringLearningReference(
                         name="timeseries",
                         path="datamimic_ce/engine/dsl/model/generation/timeseries.py",
                         description=(
@@ -468,8 +485,8 @@ class CeDslCatalog:
                 return ReferenceResult(
                     topic=request.topic,
                     name=request.name,
-                    content="CE migration, script scope, file sources, file lookup, data files, assert or expectation "
-                    "and time-series guidance."
+                    content="CE migration, script scope, file sources, file lookup, data files, assert or expectation, "
+                    "time-series and clock guidance."
                     if learning_entries
                     else "No matching learning resource.",
                     entries=learning_entries,

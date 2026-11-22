@@ -1,0 +1,82 @@
+{
+  "title": "row_condition compares a captured date or datetime with an ISO literal, so Build checks a date window",
+  "proves": [
+    "a naive date or datetime field compares with <, <=, >, >= against 'YYYY-MM-DD' or 'YYYY-MM-DD[ T]HH:MM:SS[.ffffff]'; a date literal is 00:00:00 of that day for a datetime (#690)",
+    "the window after 1936-11-22 and before 2008-11-23 holds at min (the day after the start), max (the last day before the end), and for a datetime just after midnight and just before the next midnight",
+    "a chained comparison and a literal on the left work; a text capture still compares as text",
+    "seeded BirthdateGenerator(min_age=18, max_age=90) draws between 1934-01-02 and 2007-01-01: the anchor is 2025-01-01, not today",
+    "a date outside the window, a non-ISO literal, an offset or Z, a date field with a datetime literal, a datetime with a time zone and an absent field are refused"
+  ],
+  "products": {
+    "people": 200,
+    "edges": 1
+  },
+  "negatives": [
+    {
+      "name": "min_minus_1_day_fails",
+      "diagnostic": "row_condition",
+      "message": "row condition failed",
+      "patch": {"file": "datamimic.xml", "old": "datetime.date(1936, 11, 23)", "new": "datetime.date(1936, 11, 22)"}
+    },
+    {
+      "name": "max_plus_1_day_fails",
+      "diagnostic": "row_condition",
+      "message": "row condition failed",
+      "patch": {"file": "datamimic.xml", "old": "datetime.date(2008, 11, 22)", "new": "datetime.date(2008, 11, 23)"}
+    },
+    {
+      "name": "datetime_at_start_midnight_fails_the_strict_bound",
+      "diagnostic": "row_condition",
+      "message": "row condition failed",
+      "patch": {"file": "datamimic.xml", "old": "datetime.datetime(1936, 11, 22, 0, 0, 1)", "new": "datetime.datetime(1936, 11, 22, 0, 0, 0)"}
+    },
+    {
+      "name": "datetime_at_end_midnight_fails_the_strict_bound",
+      "diagnostic": "row_condition",
+      "message": "row condition failed",
+      "patch": {"file": "datamimic.xml", "old": "datetime.datetime(2008, 11, 22, 23, 59, 59, 999999)", "new": "datetime.datetime(2008, 11, 23, 0, 0, 0)"}
+    },
+    {
+      "name": "a_tighter_age_window_fails_for_generated_births",
+      "diagnostic": "row_condition",
+      "message": "row condition failed",
+      "patch": {"file": "acceptance/build.json", "old": "born <= '2007-01-01'", "new": "born <= '1990-01-01'"}
+    },
+    {
+      "name": "a_non_iso_literal_is_refused",
+      "diagnostic": "row_condition",
+      "message": "no naive ISO literal",
+      "patch": {"file": "acceptance/build.json", "old": "day_in < '2008-11-23'", "new": "day_in < '23.11.2008'"}
+    },
+    {
+      "name": "an_offset_literal_is_refused",
+      "diagnostic": "row_condition",
+      "message": "no naive ISO literal",
+      "patch": {"file": "acceptance/build.json", "old": "at_in < '2008-11-23'", "new": "at_in < '2008-11-23T00:00:00+00:00'"}
+    },
+    {
+      "name": "a_z_literal_is_refused",
+      "diagnostic": "row_condition",
+      "message": "no naive ISO literal",
+      "patch": {"file": "acceptance/build.json", "old": "at_in < '2008-11-23'", "new": "at_in < '2008-11-23T00:00:00Z'"}
+    },
+    {
+      "name": "a_datetime_literal_for_a_date_field_is_refused",
+      "diagnostic": "row_condition",
+      "message": "no naive ISO literal",
+      "patch": {"file": "acceptance/build.json", "old": "day_max < '2008-11-23'", "new": "day_max < '2008-11-23 00:00:00'"}
+    },
+    {
+      "name": "a_datetime_with_a_time_zone_is_refused",
+      "diagnostic": "row_condition",
+      "message": "time zone",
+      "patch": {"file": "datamimic.xml", "old": "datetime.datetime(2000, 6, 15, 13, 45, 10)", "new": "datetime.datetime(2000, 6, 15, 13, 45, 10, tzinfo=datetime.timezone.utc)"}
+    },
+    {
+      "name": "an_absent_field_is_refused",
+      "diagnostic": "input",
+      "message": "unknown field",
+      "patch": {"file": "acceptance/build.json", "old": "day_min > '1936-11-22' and day_min < '2008-11-23'", "new": "day_none > '1936-11-22' and day_min < '2008-11-23'"}
+    }
+  ]
+}
