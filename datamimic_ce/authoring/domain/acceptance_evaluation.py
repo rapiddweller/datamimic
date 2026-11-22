@@ -7,7 +7,6 @@
 from __future__ import annotations
 
 import json
-import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -57,11 +56,10 @@ from datamimic_ce.authoring.domain.row_conditions import (
     RowConditionError,
     RowConditionFailure,
     evaluate_row_condition,
+    parse_temporal_literal,
 )
 
 CapturedRows = Mapping[str, tuple[Mapping[str, object], ...]]
-_DATE_LITERAL_PATTERN = r"\d{4}-\d{2}-\d{2}\Z"
-_DATETIME_LITERAL_PATTERN = r"\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?\Z"
 
 
 # Build joins a child row to its parent only through one key that copies a unique parent field.
@@ -190,19 +188,11 @@ def _display(value: object) -> str:
 
 
 def _temporal_literal_matches(actual: date, expected: str) -> bool:
+    parsed = parse_temporal_literal(expected)
+    # A datetime capture matches a datetime literal only, a date capture a date literal only.
     if isinstance(actual, datetime):
-        if re.fullmatch(_DATETIME_LITERAL_PATTERN, expected) is None:
-            return False
-        try:
-            return actual == datetime.fromisoformat(expected)
-        except ValueError:
-            return False
-    if re.fullmatch(_DATE_LITERAL_PATTERN, expected) is None:
-        return False
-    try:
-        return actual == date.fromisoformat(expected)
-    except ValueError:
-        return False
+        return isinstance(parsed, datetime) and actual == parsed
+    return type(parsed) is date and actual == parsed
 
 
 def _matches_literal(actual: object, expected: JsonValue) -> bool:

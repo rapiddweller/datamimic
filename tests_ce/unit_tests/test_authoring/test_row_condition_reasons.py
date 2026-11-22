@@ -6,7 +6,7 @@
 
 import ast
 import math
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -76,7 +76,8 @@ def test_reference_row_condition_describes_the_grammar(tmp_path: Path):
 @pytest.mark.parametrize(
     "condition,row,failure",
     [
-        ("when > '2026-01-01'", {"when": datetime(2026, 1, 1)}, RowConditionFailure.UNSUPPORTED_VALUE),
+        ("when > '2026-01-01'", {"when": datetime(2026, 1, 1, tzinfo=UTC)}, RowConditionFailure.UNSUPPORTED_VALUE),
+        ("when > '01.01.2026'", {"when": datetime(2026, 1, 1)}, RowConditionFailure.TEMPORAL_LITERAL),
         ("id > 'x'", {"id": 5}, RowConditionFailure.TYPE_MISMATCH),
         ("id / 0 > 1", {"id": 1}, RowConditionFailure.ARITHMETIC),
         ("value * value > 0", {"value": 2**200}, RowConditionFailure.ARITHMETIC),
@@ -99,11 +100,11 @@ def test_evaluation_failures_carry_a_typed_reason(condition, row, failure):
     assert error.value.failure is failure
 
 
-def test_build_reports_a_date_operand_with_the_unsupported_reason(tmp_path: Path):
+def test_build_reports_a_time_zone_operand_with_the_unsupported_reason(tmp_path: Path):
     build = build_project(
         tmp_path,
         '<setup rngSeed="1"><generate name="rows" count="2">'
-        '<key name="when" generator="DateTimeGenerator"/></generate></setup>',
+        '<key name="when" script="datetime.datetime(2026, 1, 1, tzinfo=datetime.timezone.utc)"/></generate></setup>',
         expectations=[
             {
                 "kind": "row_condition",

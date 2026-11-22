@@ -1,0 +1,18 @@
+<setup rngSeed="58">
+    <!-- Seeded BirthdateGenerator uses the fixed anchor 2025-01-01 12:00:00, not today (#690). -->
+    <generate name="people" count="200">
+        <key name="person_id" generator="IncrementGenerator"/>
+        <key name="born" generator="BirthdateGenerator(min_age=18, max_age=90)"/>
+    </generate>
+    <!-- One row of boundary dates: each field sits at the edge of the window after 1936-11-22 and before 2008-11-23. -->
+    <generate name="edges" count="1">
+        <key name="edge_id" generator="IncrementGenerator"/>
+        <key name="day_in" script="datetime.date(2000, 6, 15)"/>
+        <key name="day_min" script="datetime.date(1936, 11, 23)"/>
+        <key name="day_max" script="datetime.date(2008, 11, 22)"/>
+        <key name="at_in" script="datetime.datetime(2000, 6, 15, 13, 45, 10)"/>
+        <key name="at_min" script="datetime.datetime(1936, 11, 22, 0, 0, 1)"/>
+        <key name="at_max" script="datetime.datetime(2008, 11, 22, 23, 59, 59, 999999)"/>
+        <key name="at_text" script="'2000-06-15 13:45:10'"/>
+    </generate>
+</setup>
