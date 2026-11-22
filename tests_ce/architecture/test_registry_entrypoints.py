@@ -76,8 +76,11 @@ def test_cli_entrypoints_resolve_live_registries_outside_checkout(tmp_path: Path
     rejected = _cli(tmp_path, "authoring", "lint", unsupported.name)
     assert rejected.returncode == 1
     diagnostics = json.loads(rejected.stdout)["diagnostics"]
+    # A DM rule (DM101 names the element) has no catalog error; the parser refusal still carries its issue code.
     assert any(
-        diagnostic["ce_error"]["issue_code"] == IssueCode.PARSER_INVALID_CHILD.value for diagnostic in diagnostics
+        diagnostic["ce_error"] is not None
+        and diagnostic["ce_error"]["issue_code"] == IssueCode.PARSER_INVALID_CHILD.value
+        for diagnostic in diagnostics
     )
 
 
