@@ -7,7 +7,8 @@
   "measurement_amendment_issue_673": "Issue #673 raises calls_unresolved from 1414 to 1417. Astra identified result.execution.model_copy, result.model_copy and the conditional MCP tool decorator. The changed CLI create_server(...).run replaces an existing unresolved call. These calls remain uncertainty; no other budget changes.",
   "measurement_amendment_issue_601": "Issue #601 raises calls_unresolved from 1413 to 1414 for stream.write in the exclusive starter-file creation path. The analyzer does not resolve the standard library text stream. Independent review confirmed that exclusive creation protects the file and that this call does not establish an architecture violation. The extra unresolved call remains uncertainty. No other budget or contract changes.",
   "measurement_amendment_issue_686": "Issue #686 raises calls_unresolved from 1417 to 1421. The four calls are the digest helper (a hash digest object and Path.open) and the record writer (Path.write_text and a pydantic model_dump_json) in datamimic_ce/authoring/adapters/project_runner.py. The analyzer does not resolve methods on standard library and pydantic objects. Direct user acceptance on 2026-11-22: the owner said that the budget may be raised and lowered as long as it is not fixed, then answered Ja, eintragen. This is no independent Astra review of the four calls; Claude Code named them and wrote the digest.",
-  "known_violations_digest": "a0f4ea91cdd875e1ada7cd0d0896ec0e239742f838170104c74f678fd4989c21",
+  "measurement_amendment_issue_693": "Issue #693 raises calls_unresolved from 1421 to 1422. The call is the read of direct_url.json through the PackagePath that the distribution lists (PackagePath.read_text) in AuthoringApplication.version in datamimic_ce/authoring/application/app.py. The analyzer does not resolve methods on standard library objects. Direct user acceptance on 2026-11-22: the owner said that the budget may be raised and lowered as long as it is not fixed, and that new findings are acceptable after the move to ArchKeel 5.0. This is no independent Astra review of the call; Claude Code named it and wrote the digest.",
+  "known_violations_digest": "75a500c05c7091a68d482f4a22e1664a5aa7c6b08dfaeebaa6806f969232bfc4",
   "contract_digest": "f5b7819d90f66125753b466acad425f91804bfe4dcba3701e65f5600fd6a6b38",
   "analyzer_digest": "bb1a3262d3fdd38c3e9a6af980cc063281ae98ab1c28c89c2c5be6dfb450744f",
   "groups": [
@@ -325,7 +326,7 @@
     },
     {
       "classification": "other",
-      "reason": "Retain UNKNOWN: property/decorator/alias and recursive value-shape binding remains unresolved. Existing annotations include broad maps and opaque positions; this classification neither clears source-contract debt nor establishes their full shape. Issue 268 adds the explicitly annotated SetupContext included_statement_transformer parameter (StatementTransformer | None); the analyzer still cannot establish its effective binding. Slice (c) of ADR #356 (BuildRequestV5) removes the AuthoringApplication.build request position (UNKNOWN-BOUNDARY-TYPE-POSITION-607498d48e034dc8): build() takes no argument, so that record no longer exists natively; no other record of this group changes.",
+      "reason": "Retain UNKNOWN: property/decorator/alias and recursive value-shape binding remains unresolved. Existing annotations include broad maps and opaque positions; this classification neither clears source-contract debt nor establishes their full shape. Issue 268 adds the explicitly annotated SetupContext included_statement_transformer parameter (StatementTransformer | None); the analyzer still cannot establish its effective binding. Slice (c) of ADR #356 (BuildRequestV5) removes the AuthoringApplication.build request position (UNKNOWN-BOUNDARY-TYPE-POSITION-607498d48e034dc8): build() takes no argument, so that record no longer exists natively; no other record of this group changes. Issue 693 adds the return position of AuthoringApplication.version (RuntimeVersion, field ce_version, UNKNOWN-BOUNDARY-TYPE-POSITION-73e4be4fe1a4c435): a strict string alias that the analyzer cannot bind; accepted by the owner on 2026-11-22, no independent Astra assessment of this record.",
       "ids": [
         "UNKNOWN-BOUNDARY-TYPE-POSITION-047311406b26c7e6",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-08ad9b9d956f3aff",
@@ -362,6 +363,8 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-69d53701b2d3845c",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-6d1c3cb4950381d4",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-6f05729162fe9b5e",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-702d03edd589ab64",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-73e4be4fe1a4c435",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-76a2f343dc40db7f",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-7b5ad38256894734",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-7e160041d9e01aab",
@@ -400,8 +403,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-f24ae27309d4ceef",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-f2c95ea1f9e1527c",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-f32ad09e1dbbe20d",
-        "UNKNOWN-BOUNDARY-TYPE-POSITION-f863f4c1d137803d",
-        "UNKNOWN-BOUNDARY-TYPE-POSITION-702d03edd589ab64"
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-f863f4c1d137803d"
       ]
     }
   ],
