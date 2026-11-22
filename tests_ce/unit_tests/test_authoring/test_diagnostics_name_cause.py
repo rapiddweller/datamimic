@@ -44,3 +44,38 @@ def test_unique_generator_that_repeats_names_the_key_and_the_distinct_values() -
     )
     assert "<key 'flag' unique> exhausted: only 2 distinct values" in diagnostic.message
     assert diagnostic.location is not None and diagnostic.location.attribute == "unique"
+
+
+def test_int_on_text_names_the_error_type_the_line_and_keeps_text_as_text() -> None:
+    diagnostic = _failure(
+        """<setup rngSeed="1">
+    <generate name="rows" count="2" target="CSV">
+        <variable name="branch" values="('B01', 'B02')"/>
+        <key name="n" script="int(branch)"/>
+    </generate>
+</setup>"""
+    )
+    assert diagnostic.message.endswith("ValueError.")
+    assert "B01" not in diagnostic.message and "B01" not in (diagnostic.remediation or "")  # a value is never shown
+    assert diagnostic.path == ("descriptor", "model.xml", "key", "script")
+    assert diagnostic.location is not None and diagnostic.location.line == 4
+    assert "Keep a text key as text" in (diagnostic.remediation or "")
+    assert "cast: int(parent.col)" not in (diagnostic.remediation or "")
+
+
+def test_a_type_error_keeps_the_cast_remediation_that_fits_text_plus_number() -> None:
+    diagnostic = _failure(
+        """<setup rngSeed="1"><generate name="rows" count="2" target="CSV">
+        <variable name="branch" values="('B01', 'B02')"/><key name="n" script="branch + 1"/></generate></setup>"""
+    )
+    assert "wrong structure" in diagnostic.message
+    assert "cast: int(parent.col)" in (diagnostic.remediation or "")
+
+
+def test_a_failed_name_lookup_keeps_the_scope_remediation() -> None:
+    diagnostic = _failure(
+        """<setup rngSeed="1"><generate name="rows" count="2" target="CSV">
+        <key name="n" script="ghost + 1"/></generate></setup>"""
+    )
+    assert "NameError: name 'ghost' is not defined" in diagnostic.message
+    assert "cast: int(parent.col)" in (diagnostic.remediation or "")

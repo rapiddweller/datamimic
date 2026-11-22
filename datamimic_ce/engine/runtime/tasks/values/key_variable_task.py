@@ -258,13 +258,17 @@ class KeyVariableTask(Task):
                 else:
                     if is_user_error(e):
                         if isinstance(e, UserErrorBase) and e.location is None:
-                            e.location = DescriptorLocation(self._element_tag, attribute="script")
+                            e.location = DescriptorLocation(
+                                self._element_tag, attribute="script", line=self._statement.source_line
+                            )
                         raise
                     raise task_config_error(
                         code=IssueCode.TASK_SCRIPT_ERROR,
                         element_label=f"<{self._element_tag}> '{self._statement.name}'",
                         error=type(e).__name__,
-                        location=DescriptorLocation(self._element_tag, attribute="script"),
+                        location=DescriptorLocation(
+                            self._element_tag, attribute="script", line=self._statement.source_line
+                        ),
                     ) from e
             # Throw error if <key> evaluated script get not simple data type
             if (

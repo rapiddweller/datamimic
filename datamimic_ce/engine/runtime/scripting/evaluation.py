@@ -312,12 +312,14 @@ def evaluate_python(
                 f"{_lookup_failure(error, nodes)}: {_SCOPE_GUIDANCE}"
                 f"{_replaced_engine_names(receivers, global_namespace, local_namespace)}"
             ),
+            shown_in_build=True,
         ) from error
     except KeyError as error:
         raise task_config_error(
             code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
             expr=diagnostic,
             error="KeyError: missing mapping key",
+            shown_in_build=True,
         ) from error
     except TypeError as error:
         read = (node.id for node in _written_nodes(shown) if isinstance(node, ast.Name))
@@ -328,6 +330,7 @@ def evaluate_python(
                 f"Failed while evaluate '{diagnostic}': '{diagnostic}' have undefined item or wrong structure"
                 f"{_replaced_engine_names(read, global_namespace, local_namespace)}"
             ),
+            shown_in_build=True,
         ) from error
     except SyntaxError as error:
         if ":" not in expression:
@@ -380,6 +383,7 @@ def evaluate_python(
             code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
             expr=diagnostic,
             error=type(error).__name__,
+            shown_in_build=True,
         ) from error
 
 
