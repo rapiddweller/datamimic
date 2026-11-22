@@ -74,7 +74,7 @@ class ProjectRunWorkflow:
                     *tuple(item for item in build.diagnostics if item.severity == "warning"),
                 ),
             )
-        execution = self._runner.run(request.params, request.timeout_seconds)
+        execution = self._runner.run(request.params, request.timeout_seconds, build.artifact)
         outcome: Literal["completed", "failed", "timeout"] = (
             "timeout" if execution.timed_out else "completed" if execution.exit_code == 0 else "failed"
         )
@@ -88,6 +88,16 @@ class ProjectRunWorkflow:
                     remediation="Read log_tail, repair the project, then run Build again.",
                 ),
             )
+        if execution.record_path is None:
+            diagnostics += (
+                Diagnostic(
+                    code=AuthoringSystemDiagnosticCode.ENVIRONMENT,
+                    phase=DiagnosticPhase.EVIDENCE,
+                    severity="warning",
+                    message="The run record could not be written below docs/runs/ of the project.",
+                    remediation="Make docs/ writable inside the project; this run has no record or full log on disk.",
+                ),
+            )
         return ProjectRunResult(
             outcome=outcome,
             exit_code=execution.exit_code,
@@ -98,5 +108,6 @@ class ProjectRunWorkflow:
             artifacts=execution.artifacts,
             artifact_count=execution.artifact_count,
             log_tail=execution.log_tail,
+            record_path=execution.record_path,
             diagnostics=diagnostics,
         )

@@ -19,10 +19,11 @@ from datamimic_ce.authoring.domain.project_run import (
     ExternalEffectKind,
     ProjectParam,
     ProjectRunExecution,
+    ProjectRunRecord,
     ProjectRunRequest,
     UnverifiedProjectRunResult,
 )
-from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, BuildResult, RejectedBuild
+from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, BuildArtifact, BuildResult, RejectedBuild
 
 FIXTURES = Path(__file__).parent / "project_run"
 EFFECT = ExternalEffect(kind=ExternalEffectKind.DATABASE, name="db", descriptor="datamimic.xml")
@@ -39,7 +40,9 @@ class FakeRunner:
         self.execution = execution
         self.calls: list[tuple[ProjectParam, ...]] = []
 
-    def run(self, params: tuple[ProjectParam, ...], timeout_seconds: int) -> ProjectRunExecution:
+    def run(
+        self, params: tuple[ProjectParam, ...], timeout_seconds: int, proof: BuildArtifact | None = None
+    ) -> ProjectRunExecution:
         self.calls.append(params)
         return self.execution
 
@@ -469,3 +472,94 @@ def test_cli_text_shows_gaps_build_outcome_and_action_required(tmp_path: Path) -
     assert result.exit_code == 0, result.output
     assert "Build outcome: ready_with_gaps" in result.output
     assert "Action required:" in result.output
+
+
+def _record(root: Path, record_path: str | None) -> ProjectRunRecord:
+    assert record_path is not None
+    return ProjectRunRecord.model_validate_json((root / record_path / "run.json").read_text(encoding="utf-8"))
+
+
+def test_a_real_run_keeps_the_full_log_and_an_audit_record(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import hashlib
+
+    from datamimic_ce.authoring.adapters import project_runner
+
+    monkeypatch.setattr(project_runner, "LOG_TAIL_LINES", 3)  # the tail is short; the file must hold the whole log
+    root = project(tmp_path, "customers")
+    application = create_authoring_application(root, descriptor_path=PROJECT_ENTRY_PATH)
+    proof = application.build().artifact
+
+    result = application.run_project(
+        ProjectRunRequest(timeout_seconds=300, params=(ProjectParam(name="TOKEN", value="s3cret"),))
+    )
+
+    assert result.outcome == "completed", result.log_tail
+    record = _record(root, result.record_path)
+    assert result.record_path == f"docs/runs/{result.record_path.split('/')[-1]}"
+    assert result.record_path.endswith(f"_{record.task_id}")
+    log = (root / result.record_path / "run.log").read_text(encoding="utf-8").splitlines()
+    assert len(log) > len(result.log_tail) == 3 and tuple(log[-3:]) == result.log_tail
+    assert any(f"Task ID: {record.task_id}" in line for line in log)
+    assert record.proof == proof and record.outcome == "completed" and record.exit_code == 0
+    assert record.param_names == ("TOKEN",) and "s3cret" not in (root / result.record_path / "run.json").read_text()
+    csv_file = next(artifact for artifact in record.outputs if artifact.path.endswith(".csv"))
+    assert csv_file.path.startswith(f"output/{record.task_id}/")  # the output folder carries the task id of the record
+    assert csv_file.sha256 == hashlib.sha256((root / csv_file.path).read_bytes()).hexdigest()
+    assert not [item for item in result.artifacts if item.path.startswith("docs/")]
+
+
+def test_a_second_run_writes_a_second_record_and_build_ignores_both(tmp_path: Path) -> None:
+    root = project(tmp_path, "customers")
+    application = create_authoring_application(root, descriptor_path=PROJECT_ENTRY_PATH)
+
+    first = application.run_project(ProjectRunRequest(timeout_seconds=300))
+    second = application.run_project(ProjectRunRequest(timeout_seconds=300))
+
+    assert first.record_path and second.record_path and first.record_path != second.record_path
+    assert len(list((root / "docs" / "runs").iterdir())) == 2
+    rebuilt = application.build()
+    assert rebuilt.outcome == "ready", [str(item.code) for item in rebuilt.diagnostics]  # docs/ is no unread data
+
+
+@pytest.mark.parametrize(
+    "script", ["import sys; print('boom'); sys.exit(3)", "import time; print('start', flush=True); time.sleep(60)"]
+)
+def test_a_failed_or_timed_out_run_still_gets_a_record(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, script: str
+) -> None:
+    import subprocess
+    import sys
+
+    from datamimic_ce.authoring.adapters import project_runner
+
+    root = project(tmp_path, "customers")
+    real_popen = subprocess.Popen
+    monkeypatch.setattr(
+        project_runner.subprocess, "Popen", lambda command, **kw: real_popen([sys.executable, "-c", script], **kw)
+    )
+
+    run = project_runner.CeProjectRunner(AuthoringWorkspaceContext(root, PROJECT_ENTRY_PATH)).run((), 1)
+
+    record = _record(root, run.record_path)
+    assert record.exit_code == run.exit_code and record.proof is None
+    assert record.outcome == ("timeout" if run.timed_out else "failed")
+    assert (root / run.record_path / "run.log").read_text(encoding="utf-8").splitlines()[0] in {"boom", "start"}
+
+
+@pytest.mark.parametrize("blocker", ["file", "link_out"])
+def test_an_unwritable_record_folder_does_not_fail_the_run_and_says_so(tmp_path: Path, blocker: str) -> None:
+    root = project(tmp_path, "customers")
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    if blocker == "file":
+        (root / "docs").write_text("not a folder", encoding="utf-8")
+    else:
+        (root / "docs").symlink_to(outside, target_is_directory=True)
+
+    result = create_authoring_application(root, descriptor_path=PROJECT_ENTRY_PATH).run_project(
+        ProjectRunRequest(timeout_seconds=300)
+    )
+
+    assert result.outcome == "completed" and result.record_path is None
+    assert [str(item.code) for item in result.diagnostics if item.severity == "warning"] == ["environment"]
+    assert list(outside.iterdir()) == []  # nothing escaped the project

@@ -111,3 +111,12 @@ A `datamimic_run_project` result keeps `outcome` and reports why no execution
 occurred in `not_run_reason` (`input`, `build_rejected`, or
 `side_effects_not_allowed`; `null` after a run). Build warning diagnostics remain
 in the result after execution.
+
+Every execution of the project entry also leaves an audit record beside the project:
+`docs/runs/<UTC start>_<task id>/` holds `run.json` (task id, actor, UTC start and end,
+CE and Python version, parameter names without their values, the Build proof digests of
+a verified run, outcome, exit code, written files) and `run.log` (the full log, not only
+`log_tail`). The result names that folder in `record_path`; the task id is also the name
+of the `output/<task id>/` folder. `docs/` is no Build input, so a record never opens a
+coverage gap. When the record cannot be written, the run still ends normally, `record_path`
+is `null` and a warning says so.

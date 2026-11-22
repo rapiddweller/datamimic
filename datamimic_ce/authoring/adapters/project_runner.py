@@ -6,15 +6,22 @@
 
 from __future__ import annotations
 
+import getpass
+import hashlib
 import io
 import os
+import platform
+import shutil
 import subprocess
 import sys
 import tempfile
 import time
+import uuid
 from collections import deque
 from collections.abc import Mapping
+from importlib import metadata
 from pathlib import Path, PurePath, PurePosixPath
+from typing import Literal
 
 from datamimic_ce.authoring.adapters.bounded_executor import _terminate_process_tree
 from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
@@ -24,8 +31,13 @@ from datamimic_ce.authoring.domain.project_run import (
     ProjectArtifact,
     ProjectParam,
     ProjectRunExecution,
+    ProjectRunRecord,
 )
-from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH
+from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, BuildArtifact
+
+RECORD_FOLDER = "docs/runs"
+_UTC_SECONDS = "%Y-%m-%dT%H:%M:%SZ"
+_UTC_STAMP = "%Y%m%dT%H%M%SZ"
 
 _FileStamp = tuple[int, int]
 _LOG_READ_BYTES = 1024 * 1024
@@ -48,6 +60,22 @@ def _snapshot(root: Path) -> dict[str, _FileStamp]:
     return stamps
 
 
+def _sha256(path: Path) -> str | None:
+    try:
+        with path.open("rb") as handle:
+            digest = hashlib.file_digest(handle, "sha256")
+    except OSError:
+        return None
+    return digest.hexdigest()
+
+
+def _actor() -> str | None:
+    try:
+        return getpass.getuser()
+    except (KeyError, OSError):
+        return None
+
+
 def _log_tail(descriptor: int) -> tuple[str, ...]:
     size = os.fstat(descriptor).st_size
     os.lseek(descriptor, max(0, size - _LOG_READ_BYTES), os.SEEK_SET)
@@ -61,50 +89,99 @@ class CeProjectRunner:
         self._root = workspace.root
         self._environment = {**os.environ, **(environment or {})}
 
-    def run(self, params: tuple[ProjectParam, ...], timeout_seconds: int) -> ProjectRunExecution:
+    def run(
+        self, params: tuple[ProjectParam, ...], timeout_seconds: int, proof: BuildArtifact | None = None
+    ) -> ProjectRunExecution:
+        # The task id names output/<task id>, so the record and the output files link to each other.
+        task_id = uuid.uuid4().hex
         # -P keeps the project directory off sys.path: a project file named like a module must not replace it.
         command = [sys.executable, "-P", "-m", "datamimic_ce.interfaces.cli", "run", PROJECT_ENTRY_PATH.as_posix()]
+        command += ["--task-id", task_id]
         for param in params:
             command += ["--param", f"{param.name}={param.value}"]
         before = _snapshot(self._root)
+        started_at = time.gmtime()
         started = time.monotonic()
         descriptor, log_path = tempfile.mkstemp(prefix="datamimic-run-")
         try:
-            process = subprocess.Popen(  # noqa: S603 - fixed interpreter and arguments, no shell
-                command,
-                cwd=self._root,
-                env=self._environment,
-                stdin=subprocess.DEVNULL,
-                stdout=descriptor,
-                stderr=subprocess.STDOUT,
-                start_new_session=os.name == "posix",
+            try:
+                process = subprocess.Popen(  # noqa: S603 - fixed interpreter and arguments, no shell
+                    command,
+                    cwd=self._root,
+                    env=self._environment,
+                    stdin=subprocess.DEVNULL,
+                    stdout=descriptor,
+                    stderr=subprocess.STDOUT,
+                    start_new_session=os.name == "posix",
+                )
+                exit_code: int | None = None
+                timed_out = False
+                # The second pass reaps the child that the stop ended.
+                for limit in (timeout_seconds, None):
+                    try:
+                        exit_code = process.wait(timeout=limit)
+                        break
+                    except subprocess.TimeoutExpired:
+                        _terminate_process_tree(process)
+                        timed_out = True
+                if timed_out:
+                    exit_code = None
+                tail = _log_tail(descriptor)
+            finally:
+                os.close(descriptor)
+            duration = time.monotonic() - started
+            after = _snapshot(self._root)
+            changed = sorted(path for path in after if before.get(path) != after[path])
+            artifacts = tuple(
+                ProjectArtifact(path=path, bytes=after[path][0], sha256=_sha256(self._root / path))
+                for path in changed[:MAX_LISTED_ARTIFACTS]
             )
-            exit_code: int | None = None
-            timed_out = False
-            # The second pass reaps the child that the stop ended.
-            for limit in (timeout_seconds, None):
-                try:
-                    exit_code = process.wait(timeout=limit)
-                    break
-                except subprocess.TimeoutExpired:
-                    _terminate_process_tree(process)
-                    timed_out = True
-            if timed_out:
-                exit_code = None
-            tail = _log_tail(descriptor)
+            outcome: Literal["completed", "failed", "timeout"] = (
+                "timeout" if timed_out else "completed" if exit_code == 0 else "failed"
+            )
+            ended_at = time.gmtime()
+            record = ProjectRunRecord(
+                task_id=task_id,
+                actor=_actor(),
+                started_utc=time.strftime(_UTC_SECONDS, started_at),
+                ended_utc=time.strftime(_UTC_SECONDS, ended_at),
+                ce_version=metadata.version("datamimic_ce"),
+                python_version=platform.python_version(),
+                param_names=tuple(param.name for param in params),
+                proof=proof,
+                outcome=outcome,
+                exit_code=exit_code,
+                duration_seconds=round(duration, 3),
+                outputs=artifacts,
+                output_count=len(changed),
+                log="run.log",
+            )
+            record_path = self._write_record(record, started_at, Path(log_path))
         finally:
-            os.close(descriptor)
             os.unlink(log_path)
-        duration = time.monotonic() - started
-        after = _snapshot(self._root)
-        changed = sorted(path for path in after if before.get(path) != after[path])
         return ProjectRunExecution(
             exit_code=exit_code,
             timed_out=timed_out,
             duration_seconds=round(duration, 3),
-            artifacts=tuple(
-                ProjectArtifact(path=path, bytes=after[path][0]) for path in changed[:MAX_LISTED_ARTIFACTS]
-            ),
+            artifacts=artifacts,
             artifact_count=len(changed),
             log_tail=tail,
+            record_path=record_path,
         )
+
+    def _write_record(self, record: ProjectRunRecord, started_at: time.struct_time, log: Path) -> str | None:
+        """Keep the full log and the record beside the project. A run that already ended must not fail here."""
+        folder = f"{RECORD_FOLDER}/{time.strftime(_UTC_STAMP, started_at)}_{record.task_id}"
+        directory = self._root / folder
+        root = os.path.realpath(self._root)
+        # docs/ may be a link out of the project: the record must stay inside it.
+        if os.path.commonpath([root, os.path.realpath(directory)]) != root:
+            return None
+        text = record.model_dump_json(indent=2) + "\n"
+        try:
+            os.makedirs(directory)
+            shutil.copyfile(log, directory / record.log)
+            (directory / "run.json").write_text(text, encoding="utf-8")
+        except OSError:
+            return None
+        return folder
