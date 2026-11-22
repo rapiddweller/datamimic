@@ -272,6 +272,17 @@ def test_the_coverage_is_part_of_the_ready_json(tmp_path: Path) -> None:
     }
 
 
+def test_the_ready_json_lists_each_expectation_declared_and_derived(tmp_path: Path) -> None:
+    result = build_project(tmp_path, _SEEDED, expectations=[{**_CITIES, "count": 3}])
+
+    assert isinstance(result, ReadyBuild), result
+    payload = result.model_dump(mode="json")
+    items = payload["expectations"]["items"]
+    assert len(items) == payload["expectations"]["total"] == payload["coverage"]["expectation_count"]
+    assert {item["origin"] for item in items} == {"model", "derived"}
+    assert {item["result"] for item in items} == {"passed"}
+
+
 def test_the_workspace_lists_only_regular_files_sorted_and_relative(tmp_path: Path) -> None:
     from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
 

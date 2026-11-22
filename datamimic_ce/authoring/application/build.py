@@ -82,7 +82,11 @@ class BuildDocumentWorkflow:
 
     def execute(self) -> BuildResult:
         from datamimic_ce.authoring.domain.acceptance_contract import AcceptanceProjectionError
-        from datamimic_ce.authoring.domain.acceptance_evaluation import evaluate_acceptance
+        from datamimic_ce.authoring.domain.acceptance_evaluation import (
+            evaluate_acceptance,
+            evaluate_acceptance_with_results,
+            list_expectations,
+        )
         from datamimic_ce.authoring.domain.environment_bindings import validate_environment_bindings
         from datamimic_ce.authoring.projection.acceptance import project_acceptance
 
@@ -228,6 +232,7 @@ class BuildDocumentWorkflow:
             return RejectedBuild(
                 phase=DiagnosticPhase.POLICY,
                 diagnostics=(_row_limit_diagnostic(acceptance.declared_rows, request.max_count),),
+                expectations=list_expectations(acceptance, None),
                 verification=blocked_verification(verification_options, "The declared rows exceed the Build limit."),
             )
         execution_request = BoundedExecutionRequest(
@@ -245,11 +250,17 @@ class BuildDocumentWorkflow:
             and not first.captured.products
             and any(item.severity == "error" for item in first.diagnostics)
         )
+        evaluation = (
+            None
+            if failed
+            else evaluate_acceptance_with_results(acceptance, first.captured, stopped=first.stopped_by_assert)
+        )
+        expectations = list_expectations(acceptance, None if evaluation is None else evaluation.results)
         diagnostics = (
             *lint.diagnostics,
             *graph.diagnostics,
             *first.diagnostics,
-            *(() if failed else evaluate_acceptance(acceptance, first.captured, stopped=first.stopped_by_assert)),
+            *(() if evaluation is None else evaluation.diagnostics),
         )
         project_nodes = tuple(
             node
@@ -351,6 +362,7 @@ class BuildDocumentWorkflow:
                 diagnostics=diagnostics,
                 review_artifact=review,
                 evidence=products,
+                expectations=expectations,
                 verification=verification,
             )
         coverage = build_coverage(
@@ -374,6 +386,7 @@ class BuildDocumentWorkflow:
             ),
             evidence=products,
             coverage=coverage,
+            expectations=expectations,
             verification=verification,
             diagnostics=(*diagnostics, *coverage.warnings()),
         )

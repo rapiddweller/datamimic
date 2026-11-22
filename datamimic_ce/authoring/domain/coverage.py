@@ -9,15 +9,17 @@ from __future__ import annotations
 from collections.abc import Iterable
 from enum import StrEnum
 from pathlib import PurePosixPath
+from typing import Annotated
 
-from pydantic import Field, JsonValue, StrictBool
+from pydantic import Field, JsonValue, StrictBool, model_validator
 
 from datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants import EXPORTER_OUTPUT_DIR
 
 from .build_rules import catalog_diagnostic
 from .common import AuthoringModel, NonEmptyStrictStr, NonNegativeStrictInt, WorkspaceDescriptorPath
 from .diagnostics import AuthoringRuleId, Diagnostic, DiagnosticPhase
-from .expectations import DeclaredSinkIdentity
+from .expectations import DeclaredSinkIdentity, ExpectationIntentKind, ExpectationSubject
+from .proof import AcceptanceOrigin
 
 # A file with one of these suffixes holds project data. Other files (scripts, notes, XML steps) are not data.
 DATA_FILE_SUFFIXES = frozenset((".csv", ".json", ".jsonl", ".txt", ".xlsx", ".parquet"))
@@ -170,4 +172,56 @@ def _warning(message: str, path: tuple[str, ...], actual: tuple[str, ...] | None
     )
 
 
-__all__ = ["BuildCoverage", "CoverageGapKind", "ProductCoverage", "unread_data_files"]
+# The MCP server refuses a result over 60 000 characters; one item of this list needs 150 to 210 of them.
+MAX_LISTED_EXPECTATIONS = 100
+
+
+class ExpectationResult(StrEnum):
+    PASSED = "passed"
+    FAILED = "failed"
+    # The run stopped, or its capture was incomplete, before Build could evaluate the expectation.
+    NOT_EVALUATED = "not_evaluated"
+
+
+class ListedExpectation(AuthoringModel):
+    origin: AcceptanceOrigin = Field(
+        description="model: in expectations. caller: in acceptance_requirements. derived: Build added it."
+    )
+    kind: ExpectationIntentKind
+    subject: Annotated[ExpectationSubject, Field(discriminator="kind")] = Field(
+        description="The row set that the expectation checks; for a foreign_key, the referencing (child) side."
+    )
+    field: NonEmptyStrictStr | None = Field(
+        description="The checked field; none for a count or a row condition. For a foreign_key, the child field."
+    )
+    result: ExpectationResult
+
+
+class ListedExpectations(AuthoringModel):
+    """Counted facts, not rows: at most `MAX_LISTED_EXPECTATIONS` items, in the order that Build checks them."""
+
+    total: NonNegativeStrictInt = Field(description="Every expectation of the acceptance, listed or not.")
+    truncated: StrictBool = Field(description="True when total is above the number of items.")
+    items: tuple[ListedExpectation, ...]
+
+    @model_validator(mode="after")
+    def items_are_the_first_of_total_up_to_the_cap(self) -> ListedExpectations:
+        if len(self.items) != min(self.total, MAX_LISTED_EXPECTATIONS) or self.truncated != (
+            self.total > MAX_LISTED_EXPECTATIONS
+        ):
+            raise ValueError(
+                "the items must be the first MAX_LISTED_EXPECTATIONS of the total, and truncated must say so"
+            )
+        return self
+
+
+__all__ = [
+    "MAX_LISTED_EXPECTATIONS",
+    "BuildCoverage",
+    "CoverageGapKind",
+    "ExpectationResult",
+    "ListedExpectation",
+    "ListedExpectations",
+    "ProductCoverage",
+    "unread_data_files",
+]
