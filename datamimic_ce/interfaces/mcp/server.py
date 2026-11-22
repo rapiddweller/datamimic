@@ -24,7 +24,7 @@ from starlette.status import HTTP_401_UNAUTHORIZED
 
 from datamimic_ce.authoring import AuthoringApplication, create_authoring_application
 from datamimic_ce.authoring.adapters.workspace import init_project
-from datamimic_ce.authoring.domain.capabilities import CapabilityDomain, CapabilityLookupResult
+from datamimic_ce.authoring.domain.capabilities import CapabilityDomain, CapabilityLookupResult, RuntimeVersion
 from datamimic_ce.authoring.domain.project_run import (
     ProjectParam,
     ProjectRunRequest,
@@ -52,7 +52,6 @@ from datamimic_ce.authoring.domain.requests import (
     RunRequest,
     RunResult,
 )
-from datamimic_ce.domains.api import get_datamimic_lib_version
 from mcp.types import TextContent
 
 
@@ -141,10 +140,9 @@ def create_server(
         return create_authoring_application()
 
     @tool("datamimic_version", "This result cannot be narrowed.")
-    async def datamimic_version() -> dict[str, str]:
-        """Show the installed CE package version and the Build protocol it speaks."""
-        version = await to_thread.run_sync(get_datamimic_lib_version)
-        return {"ce_version": version or "unknown", "build_protocol": catalog_application().build_protocol()}
+    async def datamimic_version() -> RuntimeVersion:
+        """Show the installed CE package version, Python version, git commit (git install only) and Build protocol."""
+        return await to_thread.run_sync(catalog_application().version)
 
     @tool("datamimic_schema", "Read a smaller schema: build_request_v5, expectation_intent, diagnostic, build_result.")
     async def datamimic_schema(name: AuthoringSchemaId = AuthoringSchemaId.DM_JSON_DOCUMENT_V1) -> dict[str, JsonValue]:

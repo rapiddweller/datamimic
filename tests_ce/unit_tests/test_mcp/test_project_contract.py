@@ -38,14 +38,32 @@ def test_build_protocol_matches_the_acceptance_contract() -> None:
     assert BuildRequestV5().version == BUILD_PROTOCOL == "5.0"
 
 
-def test_cli_version_reports_build_protocol() -> None:
+def test_cli_version_reports_build_protocol_and_the_runtime_versions() -> None:
+    import platform
+
     from typer.testing import CliRunner
 
     from datamimic_ce.interfaces.cli import app
 
     result = CliRunner().invoke(app, ["authoring", "version"])
     assert result.exit_code == 0, result.stdout
-    assert json.loads(result.stdout)["build_protocol"] == BUILD_PROTOCOL
+    reported = json.loads(result.stdout)
+    assert reported["build_protocol"] == BUILD_PROTOCOL
+    assert reported["python_version"] == platform.python_version()
+    assert reported["ce_version"]
+
+
+def test_cli_version_names_the_commit_of_a_git_install(monkeypatch: pytest.MonkeyPatch) -> None:
+    from typer.testing import CliRunner
+
+    import datamimic_ce.authoring.application.app as application
+    from datamimic_ce.authoring.domain.capabilities import GitRuntimeVersion
+    from datamimic_ce.interfaces.cli import app
+
+    git = GitRuntimeVersion(ce_version="1", python_version="3", build_protocol="5.0", commit="abc")
+    monkeypatch.setattr(application.AuthoringApplication, "version", lambda self: git)
+    reported = json.loads(CliRunner().invoke(app, ["authoring", "version"]).stdout)
+    assert reported == {"ce_version": "1", "python_version": "3", "build_protocol": "5.0", "commit": "abc"}
 
 
 @pytest.mark.anyio
@@ -131,8 +149,12 @@ def test_child_environment_adds_project_values_without_touching_this_process(
 
 @pytest.mark.anyio
 async def test_version_text_only_and_exact_size_boundary(anyio_backend: str, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(mcp_server, "get_datamimic_lib_version", lambda: "é")
-    expected = '{"ce_version":"é","build_protocol":"5.0"}'
+    import datamimic_ce.authoring.application.app as application
+    from datamimic_ce.authoring.domain.capabilities import RuntimeVersion
+
+    versions = RuntimeVersion(ce_version="é", python_version="3.11.0", build_protocol="5.0")
+    monkeypatch.setattr(application.AuthoringApplication, "version", lambda self: versions)
+    expected = '{"ce_version":"é","python_version":"3.11.0","build_protocol":"5.0"}'
     monkeypatch.setattr(mcp_server, "MAX_RESULT_CHARACTERS", len(expected))
     async with Client(create_server()) as client:
         result = await client.call_tool("datamimic_version", {})
