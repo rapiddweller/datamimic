@@ -1,0 +1,23 @@
+{
+  "version": "5.0",
+  "sample_rows": 8,
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "accounts"}, "count": 20},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "accounts_copy"}, "count": 20},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "payments"}, "count": 8},
+    {"kind": "unique", "subject": {"kind": "product", "product": "payments"}, "field": "payment_id"},
+    {
+      "kind": "foreign_key",
+      "child": {"subject": {"kind": "product", "product": "payments"}, "field": "account_no"},
+      "parent": {"subject": {"kind": "product", "product": "accounts"}, "field": "account_no"}
+    }
+  ],
+  "product_roles": [
+    {"product": "accounts", "field": "account_no", "role": {"kind": "identifier"}},
+    {
+      "product": "accounts_copy",
+      "field": "account_no",
+      "role": {"kind": "foreign_key", "parent_product": "accounts", "parent_field": "account_no"}
+    }
+  ]
+}

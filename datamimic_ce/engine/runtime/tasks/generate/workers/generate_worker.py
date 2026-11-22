@@ -365,6 +365,10 @@ class GenerateWorker:
 
         # 3: Modify/Generate data by executing sub-tasks
         for idx in range(processed_data_count):
+            # A source that has ended builds no record. This check stays before GenIterContext: a context draws a
+            # child seed from the run's root stream, so an unused one would shift every later random draw (#689).
+            if build_from_source and idx >= len(source_data):
+                break
             # Create sub-context for each product record creation
             ctx = GenIterContext(context, stmt.name, unique_cursors=unique_cursors)
             # Get current worker_id from outermost gen_stmt
@@ -376,8 +380,6 @@ class GenerateWorker:
                 ctx.current_variables["ts"] = ts_config.at(page_start + idx)
 
             # Set current product to the product from data source if building from datasource
-            if build_from_source and idx >= len(source_data):
-                break
             budget = root_context.total_row_budget
             if isinstance(budget, TotalRowBudget):
                 budget.reserve()
