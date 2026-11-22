@@ -154,6 +154,28 @@ def test_unread_data_file_outside_output_is_still_reported_after_a_run(
     assert [str(path) for path in built.coverage.unread_data_files] == ["data/spare.csv"]
 
 
+def test_unread_note_in_a_custom_folder_names_docs_and_moving_it_there_clears_the_gap(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """#691: the remediation of the unread-file gap names the exempt `docs/` folder, and `docs/` is exempt."""
+    project = _copy(_ROOT / "s54_export_after_run", tmp_path / "project")
+    monkeypatch.chdir(project)
+    (project / "evidence").mkdir()
+    note = project / "evidence" / "note.csv"
+    note.write_text("id\n1\n", encoding="utf-8")
+
+    built = _build(project)
+
+    assert isinstance(built, ReadyWithGapsBuild)
+    gap = next(item for item in built.diagnostics if item.path == ("coverage", "unread_data_files"))
+    assert gap.actual == ["evidence/note.csv"]
+    assert gap.remediation is not None and "move it to docs/" in gap.remediation
+
+    (project / "docs").mkdir()
+    note.rename(project / "docs" / "note.csv")
+    assert isinstance(_build(project), ReadyBuild)
+
+
 def test_build_capture_equals_the_run_for_a_random_memstore_draw(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

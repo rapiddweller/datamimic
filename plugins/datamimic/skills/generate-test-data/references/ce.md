@@ -94,6 +94,12 @@ Build exit code 3 means `ready_with_gaps`: repair the gaps before reporting
 success. Build and dry-run JSON can contain sample row values; do not share
 transcripts of real data.
 
+The `unread_data_files` gap lists a `.csv`, `.json`, `.jsonl`, `.txt`, `.xlsx` or
+`.parquet` file that the run did not read. Read it with a source, move it to `docs/`
+or delete it. Build exempts `acceptance/`, `conf/` and `output/` at the project root,
+a `docs/` or `lib/` folder at any depth, and a file name that starts with `readme`,
+`license`, `notes` or `changelog`. Any other folder, such as `evidence/`, is not exempt.
+
 ## Projects with steps
 
 Build proves the entry descriptor together with its literal include graph; follow

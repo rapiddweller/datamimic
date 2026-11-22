@@ -50,6 +50,10 @@ documentation describes. Persist XML. `datamimic_init` writes the flat starter
 missing project directory, never overwrites a file, and refuses a symlink or a path
 outside the project with `outcome: not_written` and an `input` diagnostic. The flow
 for a new project is `datamimic_init`, `datamimic_build`, `datamimic_run_project`.
+A data file that the run does not read gives the `unread_data_files` gap; move notes
+and evidence to `docs/`. Build exempts `acceptance/`, `conf/` and `output/` at the project
+root, a `docs/` or `lib/` folder at any depth, and a file name that starts with `readme`,
+`license`, `notes` or `changelog`.
 `datamimic_build` proves a project: its
 `datamimic.xml` against `acceptance/build.json`, which holds expectations,
 `product_roles`, origin-tagged `acceptance_requirements` and smoke/replay options.
