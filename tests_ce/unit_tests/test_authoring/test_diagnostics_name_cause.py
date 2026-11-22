@@ -6,6 +6,8 @@
 
 from pathlib import Path
 
+import pytest
+
 from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.adapters.bounded_executor import CeBoundedExecutor
 from datamimic_ce.authoring.domain.diagnostics import AuthoringSystemDiagnosticCode
@@ -122,3 +124,15 @@ def test_invalid_type_lists_the_valid_types_in_allowed_values_and_remediation(tm
         dm105.remediation is not None and "Use one of: binary, bool, decimal, float, int, string." in dm105.remediation
     )
     assert "integer" not in dm105.remediation  # the written value is never repeated
+
+
+@pytest.mark.parametrize("tag", ["table", "record", "data"])
+def test_an_unrelated_element_name_gets_the_known_elements_not_a_wrong_suggestion(tmp_path: Path, tag: str) -> None:
+    result = _lint(
+        tmp_path,
+        f'<setup rngSeed="1"><generate name="rows" count="2"><{tag} name="x"/></generate></setup>',
+    )
+
+    first = next(item for item in result.diagnostics if item.code == "DM101")
+    assert first.remediation is not None
+    assert "Did you mean" not in first.remediation and "Known elements:" in first.remediation

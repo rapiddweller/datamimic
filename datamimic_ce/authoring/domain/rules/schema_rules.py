@@ -84,6 +84,11 @@ class RootIsSetup(Rule):
             )
 
 
+# Build shows this hint first. At the default 0.6 an unrelated name (table, record, data) got a wrong element; a
+# wrong hint costs more than the known-elements list, which is shown when no name is close enough.
+_SUGGESTION_CUTOFF = 0.7
+
+
 class UnknownElement(Rule):
     definition = authoring_rule_definition("DM101")
 
@@ -92,7 +97,7 @@ class UnknownElement(Rule):
         for element in ctx.iter():
             tag = str(element.tag)
             if tag not in known:
-                suggestion = difflib.get_close_matches(tag, sorted(known), n=1)
+                suggestion = difflib.get_close_matches(tag, sorted(known), n=1, cutoff=_SUGGESTION_CUTOFF)
                 hint = (
                     f"Did you mean <{suggestion[0]}>?" if suggestion else f"Known elements: {', '.join(sorted(known))}."
                 )
