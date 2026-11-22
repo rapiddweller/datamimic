@@ -99,3 +99,10 @@ def test_a_date_in_a_nested_mapping_compares():
 )
 def test_the_iso_literal_rule(text, expected):
     assert parse_temporal_literal(text) == expected
+
+
+def test_the_grammar_says_how_to_include_the_whole_last_day() -> None:
+    from datamimic_ce.authoring.domain.row_conditions import ROW_CONDITION_GRAMMAR
+
+    # A date literal is 00:00:00: an author who writes <= 'last day' loses the rest of that day.
+    assert "next day" in ROW_CONDITION_GRAMMAR and "ends at 00:00:00 of that day" in ROW_CONDITION_GRAMMAR

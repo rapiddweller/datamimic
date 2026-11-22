@@ -461,7 +461,8 @@ class CeDslCatalog:
                             "to 2007-01-01; on 2026-11-22 the oldest possible person is 92. To set another 'now', pass "
                             'reference_now: generator="BirthdateGenerator(min_age=18, max_age=90, '
                             'reference_now=datetime.datetime(2026, 11, 22))". To prove a window, use a row_condition '
-                            "such as born >= '1934-01-02' and born <= '2007-01-01'; a date literal means 00:00:00."
+                            "such as born >= '1934-01-02' and born <= '2007-01-01'; a date literal means 00:00:00, "
+                            "so to include the whole last day of a datetime field bound it with < 'the next day'."
                         ),
                     ),
                     AuthoringLearningReference(
