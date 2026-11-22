@@ -25,6 +25,8 @@ class Diagnostic(BaseModel):
     docs: str | None = None  # e.g. "reference://element/generate" — resolvable via the reference tool
     # A fix built from element, attribute and schema names only; Build may show it because it holds no value.
     names_only_fix: str | None = Field(default=None, exclude=True)
+    # The registered values of the attribute, shown by Build as allowed_values; the written value is never in it.
+    allowed_names: tuple[str, ...] | None = Field(default=None, exclude=True)
 
 
 class LintResult(BaseModel):

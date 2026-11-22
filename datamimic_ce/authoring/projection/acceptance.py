@@ -353,7 +353,15 @@ def project_acceptance(
                 if not isinstance(script, str) or not is_exact_scope_field_reference(
                     script, ScriptScope.PARENT, role.parent_field
                 ):
-                    _reject("A nested foreign-key role must copy the exact parent field using parent.field.", path)
+                    _reject(
+                        "A nested foreign-key role must copy the exact parent field using parent.field. "
+                        f"The role makes '{declaration.product}.{declaration.field}' a key of "
+                        f"'{role.parent_product}.{role.parent_field}', but the field is not exactly "
+                        f'script="parent.{role.parent_field}": a computed value matches no parent row.',
+                        path,
+                        remediation=f'Set script="parent.{role.parent_field}" on the field. Remove the role only '
+                        "when the field holds a derived value on purpose.",
+                    )
             parent_subject = ProductRowsSubject(product=role.parent_product)
             validate_acceptance_subject(spec, parent_subject, path + ("role",), role.parent_field)
             derive(

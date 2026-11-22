@@ -104,6 +104,7 @@ class _UserErrorState(TypedDict):
     validation_errors: NotRequired[tuple[dict[str, object], ...]]
     constructor_reason: NotRequired[str | None]
     kept_rows: NotRequired[int | None]
+    build_reason: NotRequired[str | None]
 
 
 class UserErrorBase(Exception):
@@ -136,6 +137,7 @@ class UserErrorBase(Exception):
             state["constructor_reason"] = self.constructor_reason
         if isinstance(self, TaskConfigError):
             state["kept_rows"] = self.kept_rows
+            state["build_reason"] = self.build_reason
         return _restore_user_error, (type(self), str(self.args[0]), state, self.__cause__)
 
 
@@ -253,6 +255,8 @@ class TaskConfigError(UserValueError):
     error_code = ErrorCode.TASK_CONFIG
     # The rows a where= condition kept, when that count is above the bounded limit (I800).
     kept_rows: int | None = None
+    # The message without its descriptor hint, set only where it names structure (element, name, counts) and no value.
+    build_reason: str | None = None
 
 
 class OperationError(UserRuntimeError):
@@ -288,6 +292,7 @@ def _restore_user_error(
         error.constructor_reason = state.get("constructor_reason")
     if isinstance(error, TaskConfigError):
         error.kept_rows = state.get("kept_rows")
+        error.build_reason = state.get("build_reason")
     error.__cause__ = cause
     return error
 

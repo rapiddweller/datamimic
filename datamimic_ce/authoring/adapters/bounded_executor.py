@@ -357,6 +357,10 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
                 f"ceiling is {MAX_AUTHORING_MAX_COUNT}."
                 if over_limit
                 else constructor_reason
+                if constructor_reason is not None
+                else message.error.build_reason
+                if isinstance(message.error, TaskConfigError)
+                else None
             )
             diagnostic = Diagnostic(
                 code=AuthoringRuleId.SIDE_EFFECT

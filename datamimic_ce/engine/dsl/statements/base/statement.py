@@ -13,6 +13,8 @@ from datamimic_ce.engine.dsl.vocabulary.constants.convention_constants import NA
 class Statement(ABC):  # noqa: B024
     def __init__(self, name: str | None, parent_stmt: Optional["Statement"]):
         self._name = name
+        # Set by the parser dispatch, so a runtime error can name the descriptor line of the element.
+        self.source_line: int | None = None
         parent_stmt = self._adjust_parent_stmt(parent_stmt)
         self._parent_stmt = parent_stmt
         self._full_name = (
