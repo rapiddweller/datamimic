@@ -401,6 +401,23 @@ class CeDslCatalog:
                         ),
                     ),
                     AuthoringLearningReference(
+                        name="database_sink",
+                        path="tests_ce/scenarios/s59_create_table",
+                        description=(
+                            'A database target writes rows into an existing table. createTable="line_id" on the '
+                            "<generate> creates the missing table, once, before the first row: write no DDL file and "
+                            "no <execute>. The value lists the primary-key columns, each a <key> of this root "
+                            "generate, which needs a <database> target such as ledger or ledger.upsert. The columns "
+                            "are the fields of the written rows; a key's type= sets the column type, else the first "
+                            'non-null value does. Set type= on a key whose values are all null (script="None") or '
+                            "of another type than str, int, float, bool, Decimal, date or datetime, else I929. The "
+                            "run never alters a table: an existing table with other columns or another primary key "
+                            "fails with I930. Use ledger.upsert so that a second run does not fail on the primary "
+                            "key. Build creates nothing and shows the CREATE TABLE in planned_operations; "
+                            "run-project lists a schema side effect and needs allow_side_effects."
+                        ),
+                    ),
+                    AuthoringLearningReference(
                         name="data_files",
                         path="tests_ce/scenarios/s24_project_data_files",
                         description=(
@@ -486,7 +503,8 @@ class CeDslCatalog:
                 return ReferenceResult(
                     topic=request.topic,
                     name=request.name,
-                    content="CE migration, script scope, file sources, file lookup, data files, assert or expectation, "
+                    content="CE migration, script scope, file sources, file lookup, data files, database sink table, "
+                    "assert or expectation, "
                     "time-series and clock guidance."
                     if learning_entries
                     else "No matching learning resource.",
