@@ -69,6 +69,9 @@ columns; for both and for the place where `datamimic run` writes a file target, 
 `datamimic authoring reference --topic learning --name file_sources`.
 A row of a second file by a key (a join) is a lookup, not a filter: read
 `datamimic authoring reference --topic learning --name lookup`.
+Write a primary-key field as `<id>` and every other field as `<key>`. A database sink
+table comes from `createTable="true"` on its `<generate>` (the `<id>` fields are its primary
+key), not from a DDL file: read `datamimic authoring reference --topic learning --name database_sink`.
 A rule that must stop `datamimic run` is an `<assert>`; Build checks only `expectations`. Read
 `datamimic authoring reference --topic learning --name assert_or_expectation`.
 

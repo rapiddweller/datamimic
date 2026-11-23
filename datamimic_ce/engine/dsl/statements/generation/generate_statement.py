@@ -38,7 +38,7 @@ class GenerateStatement(CompositeStatement):
         self._selector = model.selector
         self._separator = model.separator
         self._targets: set[str] = parse_consumer(model.target)
-        self._create_table = None if model.create_table is None else GenerateModel.column_names(model.create_table)
+        self._create_table = bool(model.create_table)
         self._page_size = model.page_size
         self._mp = model.multiprocessing
         self._export_uri = model.export_uri
@@ -147,8 +147,11 @@ class GenerateStatement(CompositeStatement):
 
     @property
     def create_table(self) -> tuple[str, ...] | None:
-        """The primary-key columns of the table this generate creates when it is missing; None without createTable."""
-        return self._create_table
+        """The primary-key columns of the table this generate creates when it is missing: the names of its direct-child
+        <id> elements, in order. None without createTable="true"."""
+        if not self._create_table:
+            return None
+        return tuple(child.name for child in self.sub_statements if isinstance(child, KeyStatement) and child.is_id)
 
     # The rule that a createTable generate writes to a database (RDBMS) client: Build checks it against its parsed
     # <database> clients, the run against the exporters of the product.
@@ -160,7 +163,8 @@ class GenerateStatement(CompositeStatement):
     def create_table_problem(self, *, nested: bool) -> tuple[str, str] | None:
         """``(reason, migration)`` of the first statement rule a createTable breaks, None for a valid one or without
         it. The runtime and bounded authoring run this same check before any database access."""
-        if self._create_table is None:
+        primary_key = self.create_table
+        if primary_key is None:
             return None
         if nested:
             return (
@@ -177,12 +181,10 @@ class GenerateStatement(CompositeStatement):
                 f"{', '.join(changing)} changes existing rows, so a table that createTable creates would be empty",
                 "use createTable with an insert (db) or upsert (db.upsert) target",
             )
-        keys = {child.name for child in self.sub_statements if isinstance(child, KeyStatement)}
-        unknown = [name for name in self._create_table if name not in keys]
-        if unknown:
+        if not primary_key:
             return (
-                f"the primary-key column(s) {', '.join(unknown)} are not a <key> of this generate",
-                "name only <key> elements of this generate in createTable, or add a <key> for each column",
+                "createTable needs an <id> for the primary key",
+                "write each primary-key field as <id> instead of <key>; several <id> make a composite key",
             )
         return None
 
@@ -240,7 +242,7 @@ class GenerateStatement(CompositeStatement):
         present = {
             "children": bool(self.sub_statements),
             "count": any(value is not None for value in (self._count, self._min_count, self._max_count)),
-            "createTable": self._create_table is not None,
+            "createTable": self._create_table,
             "interval": any(value is not None for value in (self._start, self._end, self._interval)),
             "otherTargets": len(self._targets) > 1,
             "script": self._script is not None,

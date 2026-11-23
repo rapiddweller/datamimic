@@ -177,15 +177,16 @@ the directory is a new task id for each run. The example above writes
 
 ## Database sink table
 
-`createTable="<primary-key columns>"` on a `<generate>` with a database target
-creates the table when it is missing. The project needs no DDL file and no
-`sqlite3` step. The value lists the primary-key columns, separated by commas.
+`createTable="true"` on a `<generate>` with a database target creates the table
+when it is missing. The project needs no DDL file and no `sqlite3` step. Write a
+primary-key field as `<id>` and every other field as `<key>`; several `<id>` make
+a composite key. The table name is `targetEntity` (else `type`, else `name`).
 
 ```xml
 <setup rngSeed="59">
     <database id="ledger" dbms="sqlite" database="s59_ledger"/>
-    <generate name="lines" count="6" target="CSV,ledger.upsert" targetEntity="journal_lines" createTable="line_id">
-        <key name="line_id" generator="IncrementGenerator"/>
+    <generate name="lines" count="6" target="CSV,ledger.upsert" targetEntity="journal_lines" createTable="true">
+        <id name="line_id" generator="IncrementGenerator"/>
         <key name="account" values="('1000', '1200', '8400')"/>
         <key name="amount_cents" type="int" min="100" max="9999"/>
         <key name="posted_on" script="datetime.date(2026, 3, 1)"/>
@@ -216,7 +217,10 @@ later page that writes a field the table lacks (for example a key with a
 `condition` that is false in the whole first page) also fails with `I930`: write
 each field in the first page.
 
-Each primary-key column must be a `<key>` of the generate. The generate needs a
+`createTable="true"` needs at least one direct-child `<id>` (`I929`). Without
+`createTable`, or with `createTable="false"`, an `<id>` is a plain `<key>`. Build
+derives a `unique` check on a single `<id>`; a composite key derives none, because
+a `unique` expectation names one field. The generate needs a
 `<database>` target with `dbms="sqlite"` or `dbms="postgresql"`, plain or with
 `.upsert`; other dbms, `.update` and `.delete` fail with `I929`. It must be a root
 generate, and `createTable` is not allowed with `clear` or

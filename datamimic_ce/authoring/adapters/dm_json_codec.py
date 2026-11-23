@@ -26,6 +26,7 @@ from datamimic_ce.authoring.domain.dm_json import (
 )
 from datamimic_ce.authoring.domain.script_semantics import names_statement_operation
 from datamimic_ce.engine.dsl.api import (
+    EL_ID,
     EXIST_COUNT,
     DTDForbiddenError,
     canonical_tag,
@@ -40,6 +41,14 @@ from datamimic_ce.engine.dsl.api import (
 from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import ATTR_COUNT, ATTR_MAX_COUNT, ATTR_SOURCE
 from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_GENERATE
 from datamimic_ce.engine.dsl.vocabulary.contracts.dsl_element import ElementContentMode, ElementContentModeKind
+
+# An alias whose spelling carries meaning keeps its kind: an <id> is a primary-key column under createTable.
+_KEPT_ALIASES = frozenset({EL_ID})
+
+
+def _document_kind(tag: str) -> str:
+    """The DM JSON kind of an XML tag: its canonical tag, except for an alias that carries meaning."""
+    return tag if tag in _KEPT_ALIASES else canonical_tag(tag)
 
 
 class CeDmJsonCodec:
@@ -115,7 +124,7 @@ def _normalize_node(node: DmJsonNodeV1, *, path: tuple[str | int, ...]) -> DmJso
     )
     if definition.allowed_children is not None:
         for index, child in enumerate(children):
-            if child.kind not in {canonical_tag(tag) for tag in definition.allowed_children}:
+            if canonical_tag(child.kind) not in {canonical_tag(tag) for tag in definition.allowed_children}:
                 raise DmJsonCodecError(
                     f"element {tag!r} does not allow child element {child.kind!r}",
                     path=path + ("children", index, "kind"),
@@ -156,7 +165,7 @@ def _normalize_node(node: DmJsonNodeV1, *, path: tuple[str | int, ...]) -> DmJso
             "Element properties violate registered DSL constraints.", path=path + ("properties",)
         ) from error
     return DmJsonNodeV1(
-        kind=tag,
+        kind=_document_kind(node.kind),
         properties=properties,
         content=node.content,
         comment=node.comment,
@@ -550,7 +559,7 @@ def _project_dm_json_variants_into_schema(schema: Mapping[str, object]) -> dict[
     raw_definitions = projected.get("$defs")
     if not isinstance(raw_definitions, dict) or "DmJsonNodeV1" not in raw_definitions:
         return projected
-    tags = tuple(dict.fromkeys(canonical_tag(tag) for tag in list_element_tags()))
+    tags = tuple(dict.fromkeys(_document_kind(tag) for tag in list_element_tags()))
     mapping: dict[str, str] = {}
     for tag in tags:
         definition_name = f"DmJsonNode_{_enum_member_name(tag)}"
@@ -629,7 +638,7 @@ def _node_variant_schema(tag: str) -> dict[str, object]:
             children_schema["items"] = {
                 "oneOf": [
                     {"$ref": f"#/$defs/DmJsonNode_{_enum_member_name(child)}"}
-                    for child in sorted({canonical_tag(child) for child in definition.allowed_children})
+                    for child in sorted({_document_kind(child) for child in definition.allowed_children})
                 ]
             }
     return node_schema

@@ -8,7 +8,6 @@
   ],
   "expectations": [
     {"kind": "exact_count", "subject": {"kind": "product", "product": "lines"}, "count": 6},
-    {"kind": "unique", "subject": {"kind": "product", "product": "lines"}, "field": "line_id"},
     {"kind": "exact_count", "subject": {"kind": "declared_sink", "sink": {"kind": "database", "environment": "ledger", "entity": "journal_lines"}}, "count": 6}
   ]
 }

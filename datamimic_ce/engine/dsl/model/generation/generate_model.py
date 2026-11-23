@@ -181,17 +181,18 @@ class GenerateModel(BaseModel):
         "clientId.upsert/update/delete. Comma-separate multiple targets.",
         examples=["CSV", "JSON", "mem", "db.upsert", "mem,JSON"],
     )
-    create_table: str | None = Field(
+    create_table: bool | None = Field(
         None,
         alias=ATTR_CREATE_TABLE,
-        description="Comma-separated primary-key columns of the database table this generate writes. The run creates "
-        "the table when it is missing, once, before the first row; it never alters or drops it. The columns are the "
-        "fields of the written rows; a key's type= sets the column type, else the first non-null value does. An "
+        description="true: the run creates the database table this generate writes (targetEntity, else type, else "
+        "name) when it is missing, once, before the first row; it never alters or drops it. Each direct-child <id> is "
+        "a primary-key column (several <id> make a composite key); write every other field as <key>. The columns are "
+        "the fields of the written rows; a key's type= sets the column type, else the first non-null value does. An "
         "existing table with other columns or another primary key, or a later page with a field the table lacks, fails "
-        "the run. Each name must be a <key> of this generate, and the generate needs a sqlite or postgresql "
-        "<database> target, plain or .upsert; not with .update/.delete, on a nested generate or with clear/drop. "
-        "Build shows the planned table in planned_operations and creates nothing.",
-        examples=["line_id", "order_id, line_no"],
+        "the run. Needs at least one <id> and a sqlite or postgresql <database> target, plain or .upsert; not with "
+        ".update/.delete, on a nested generate or with clear/drop. Build shows the planned table in planned_operations "
+        "and creates nothing.",
+        examples=[True, False],
     )
     # Explicit physical entity to read/write (table/collection). Precedence: sourceEntity/targetEntity
     # -> type -> name; absent -> existing behaviour.
@@ -369,18 +370,6 @@ class GenerateModel(BaseModel):
             raise ValueError("columns must not hold an empty name: remove the extra comma")
         if len(set(names)) != len(names):
             raise ValueError("columns must name each column once")
-        return value
-
-    @field_validator("create_table")
-    @classmethod
-    def _create_table_names_distinct_columns(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        names = cls.column_names(value)
-        if not names or any(not name for name in names):
-            raise ValueError("createTable must name the primary-key columns, separated by commas, with no empty name")
-        if len(set(names)) != len(names):
-            raise ValueError("createTable must name each primary-key column once")
         return value
 
     @field_validator("source_entity", "target_entity")

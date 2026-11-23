@@ -1,8 +1,9 @@
 <setup rngSeed="59">
     <!-- No ddl.sql: createTable creates the ledger table once, before the first row, when it is missing -->
     <database id="ledger" dbms="sqlite" database="s59_ledger"/>
-    <generate name="lines" count="6" target="CSV,ledger.upsert" targetEntity="journal_lines" createTable="line_id">
-        <key name="line_id" generator="IncrementGenerator"/>
+    <generate name="lines" count="6" target="CSV,ledger.upsert" targetEntity="journal_lines" createTable="true">
+        <!-- <id> marks the primary-key column; every other field is a <key> -->
+        <id name="line_id" generator="IncrementGenerator"/>
         <key name="account" values="('1000', '1200', '8400')"/>
         <key name="amount_cents" type="int" min="100" max="9999"/>
         <key name="posted_on" script="datetime.date(2026, 3, 1)"/>

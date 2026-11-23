@@ -303,15 +303,18 @@ the literal `1` does not match a `True` capture. Case: `tests_ce/scenarios/s38_t
 
 ### createTable creates the sink table (P10)
 
-`<generate createTable="line_id">` creates its database table when the table is missing. Before, a database target
+`<generate createTable="true">` creates its database table when the table is missing. Each direct-child `<id>` is a
+primary-key column (several make a composite key); every other field stays a `<key>`. Without `createTable`, `<id>`
+is a plain alias of `<key>` as before. DM JSON now keeps the kind `id` (decompile and compile no longer turn it into
+`key`). Before, a database target
 failed with `table_not_found` until a hand-written DDL script ran outside the proof. The run creates the table once,
 before the first row, with SQLAlchemy for the client's dbms. It never alters or drops a table.
 
-- `I929` (`OPERATION_CREATE_TABLE_INVALID`): a column that is not a `<key>`, no database (RDBMS) target, a dbms
+- `I929` (`OPERATION_CREATE_TABLE_INVALID`): no `<id>` element, no database (RDBMS) target, a dbms
   other than `sqlite` or `postgresql` (their inferred TEXT keys and NUMERIC columns are invalid or rounded
   elsewhere), an `.update` or `.delete` target, a nested generate, or a column without a type (only null values, or a value type other than `str`, `int`, `float`, `bool`,
-  `Decimal`, `date`, `datetime`). Fix: name `<key>` elements, add the database target, or set `type=` on the key.
-  An empty or repeated column list fails as a model error; `createTable` on `clear` or `drop` fails with `I928`.
+  `Decimal`, `date`, `datetime`). Fix: write the primary-key field as `<id>`, add the database target, or set
+  `type=` on the key. A `createTable` value other than `true` or `false` fails as a model error; `createTable` on `clear` or `drop` fails with `I928`.
 - `I930` (`OPERATION_TABLE_DRIFT`): the table exists with other columns or another primary key. The message lists
   the missing and extra columns and both primary keys. Column types are not compared. A later page that writes a
   field the created table lacks fails too, instead of losing the field. Change the model, or migrate

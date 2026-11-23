@@ -1,8 +1,8 @@
 <setup rngSeed="60">
     <database id="shop" dbms="sqlite" database="s60_shop"/>
     <!-- The table comes from createTable. The first generate upserts 3 orders as new, so a second run starts from the same state. -->
-    <generate name="seed" count="3" target="shop.upsert" targetEntity="orders" createTable="id">
-        <key name="id" generator="IncrementGenerator"/>
+    <generate name="seed" count="3" target="shop.upsert" targetEntity="orders" createTable="true">
+        <id name="id" generator="IncrementGenerator"/>
         <key name="status" constant="new"/>
     </generate>
     <!-- The second generate updates the same 3 rows by their primary key. -->

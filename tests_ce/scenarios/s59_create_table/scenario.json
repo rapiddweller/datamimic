@@ -1,14 +1,15 @@
 {
   "title": "createTable creates the SQLite sink table from the model, and a re-run upserts into it",
   "proves": [
-    "the project has no DDL file and no sqlite3 step: the first run creates journal_lines from the keys of the generate, with line_id as primary key",
+    "the project has no DDL file and no sqlite3 step: the first run creates journal_lines from the fields of the generate; createTable=\"true\" is the consent and the <id> element line_id is the primary key",
     "a second run finds the table, its columns and primary key match, and the upsert writes the same 6 rows again without an error",
     "type= on a key sets the column type, so a key whose values are all null still gets a column; the other columns take the type of their first value",
-    "Build creates no table: it shows the planned CREATE TABLE in planned_operations and proves the rows only",
-    "each rejected class stops Build: an unknown key column, no database target, createTable on a clear, createTable on a nested generate, an empty or repeated column list, an all-null column without type= and a value type without a column type",
+    "Build creates no table: it shows the planned CREATE TABLE in planned_operations and proves the rows only; it derives a unique check on the single <id> field (the acceptance declares none)",
+    "each rejected class stops Build: no <id> element, no database target, createTable on a clear, createTable on a nested generate, a value that is no boolean, an all-null column without type= and a value type without a column type",
     "a table that exists with other columns or another primary key is never altered: the run stops with I930 and names the difference (Build connects to no database, so only the run sees the table)",
     "a field that first appears after the first page is not dropped silently: the run stops with I930 (Build rejects it on its captured rows)",
-    "createTable is limited to sqlite and postgresql, and to plain, upsert targets: mysql, mssql, oracle and an update target are rejected with I929"
+    "createTable is limited to sqlite and postgresql, and to plain, upsert targets: mysql, mssql, oracle and an update target are rejected with I929",
+    "createTable=\"false\" creates nothing: the run then fails on the missing table"
   ],
   "products": {
     "lines": 6
@@ -18,13 +19,13 @@
   ],
   "negatives": [
     {
-      "name": "key_column_unknown",
+      "name": "no_id_element",
       "diagnostic": "child_execution",
       "issue": "I929",
       "patch": {
         "file": "datamimic.xml",
-        "old": "createTable=\"line_id\"",
-        "new": "createTable=\"line_no\""
+        "old": "<id name=\"line_id\"",
+        "new": "<key name=\"line_id\""
       }
     },
     {
@@ -44,7 +45,7 @@
       "patch": {
         "file": "datamimic.xml",
         "old": "</setup>",
-        "new": "    <generate name=\"reset\" target=\"ledger.clear\" targetEntity=\"journal_lines\" createTable=\"line_id\"/>\n</setup>"
+        "new": "    <generate name=\"reset\" target=\"ledger.clear\" targetEntity=\"journal_lines\" createTable=\"true\"/>\n</setup>"
       }
     },
     {
@@ -54,27 +55,27 @@
       "patch": {
         "file": "datamimic.xml",
         "old": "    </generate>",
-        "new": "        <generate name=\"splits\" count=\"1\" target=\"ledger.upsert\" createTable=\"split_id\"><key name=\"split_id\" constant=\"1\"/></generate>\n    </generate>"
+        "new": "        <generate name=\"splits\" count=\"1\" target=\"ledger.upsert\" createTable=\"true\"><id name=\"split_id\" constant=\"1\"/></generate>\n    </generate>"
       }
     },
     {
-      "name": "empty_column_list",
+      "name": "empty_value",
       "diagnostic": "descriptor",
       "issue": "I605",
       "patch": {
         "file": "datamimic.xml",
-        "old": "createTable=\"line_id\"",
+        "old": "createTable=\"true\"",
         "new": "createTable=\"\""
       }
     },
     {
-      "name": "repeated_column",
+      "name": "column_list_is_no_boolean",
       "diagnostic": "descriptor",
       "issue": "I605",
       "patch": {
         "file": "datamimic.xml",
-        "old": "createTable=\"line_id\"",
-        "new": "createTable=\"line_id, line_id\""
+        "old": "createTable=\"true\"",
+        "new": "createTable=\"line_id\""
       }
     },
     {
@@ -143,8 +144,17 @@
       "issue": "I930",
       "patch": {
         "file": "datamimic.xml",
-        "old": "createTable=\"line_id\">\n        <key name=\"line_id\" generator=\"IncrementGenerator\"/>",
-        "new": "createTable=\"line_id\" pageSize=\"3\">\n        <key name=\"line_id\" generator=\"IncrementGenerator\"/>\n        <key name=\"note\" script=\"'late'\" condition=\"line_id > 3\"/>"
+        "old": "createTable=\"true\">\n        <!-- <id> marks the primary-key column; every other field is a <key> -->\n        <id name=\"line_id\" generator=\"IncrementGenerator\"/>",
+        "new": "createTable=\"true\" pageSize=\"3\">\n        <!-- <id> marks the primary-key column; every other field is a <key> -->\n        <id name=\"line_id\" generator=\"IncrementGenerator\"/>\n        <key name=\"note\" script=\"'late'\" condition=\"line_id > 3\"/>"
+      }
+    },
+    {
+      "name": "id_values_repeat",
+      "diagnostic": "unique",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "<id name=\"line_id\" generator=\"IncrementGenerator\"/>",
+        "new": "<id name=\"line_id\" constant=\"1\"/>"
       }
     }
   ],
@@ -155,7 +165,16 @@
       "patch": {
         "file": "datamimic.xml",
         "old": "</setup>",
-        "new": "    <generate name=\"again\" count=\"1\" target=\"ledger.upsert\" targetEntity=\"journal_lines\" createTable=\"line_id\">\n        <key name=\"line_id\" constant=\"99\"/>\n    </generate>\n</setup>"
+        "new": "    <generate name=\"again\" count=\"1\" target=\"ledger.upsert\" targetEntity=\"journal_lines\" createTable=\"true\">\n        <id name=\"line_id\" constant=\"99\"/>\n    </generate>\n</setup>"
+      }
+    },
+    {
+      "name": "create_table_false_creates_nothing",
+      "run_error": "I901",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "createTable=\"true\"",
+        "new": "createTable=\"false\""
       }
     }
   ]

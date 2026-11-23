@@ -31,16 +31,20 @@ from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 _DB = frozenset({"db"})
 
 
-def _generate(keys: tuple[str, ...] = ("id",), **attributes: object) -> GenerateStatement:
+def _generate(keys: tuple[str, ...] = (), ids: tuple[str, ...] = ("id",), **attributes: object) -> GenerateStatement:
+    """A generate whose ``ids`` are written <id> and whose ``keys`` are written <key>, ids first."""
     attributes.setdefault("target", "CSV,db.upsert")
     attributes.setdefault("count", "1")
     stmt = GenerateStatement(GenerateModel(name="lines", **attributes), None)
-    stmt.sub_statements = [_key(KeyModel(name=name, script=name), stmt) for name in keys]
+    stmt.sub_statements = [
+        *(_key(KeyModel(name=name, script=name), stmt, is_id=True) for name in ids),
+        *(_key(KeyModel(name=name, script=name), stmt) for name in keys),
+    ]
     return stmt
 
 
-def _key(model: KeyModel, parent: GenerateStatement) -> KeyStatement:
-    key = KeyStatement(model, parent)
+def _key(model: KeyModel, parent: GenerateStatement, *, is_id: bool = False) -> KeyStatement:
+    key = KeyStatement(model, parent, is_id=is_id)
     key.sub_statements = []
     return key
 
@@ -73,7 +77,7 @@ _COLUMNS = (("id", ColumnKind.INTEGER), ("name", ColumnKind.TEXT))
 
 
 def test_valid_create_table_has_no_problem():
-    assert _generate(createTable="id").create_table_problem(nested=False) is None
+    assert _generate(createTable="true").create_table_problem(nested=False) is None
 
 
 def test_without_create_table_nothing_is_checked():
@@ -81,24 +85,36 @@ def test_without_create_table_nothing_is_checked():
 
 
 @pytest.mark.parametrize(
-    ("attributes", "nested", "reason"),
+    ("ids", "nested", "reason"),
     [
-        ({"createTable": "id, line_no"}, False, "line_no are not a <key>"),
-        ({"createTable": "id"}, True, "nested generate"),
+        ((), False, "createTable needs an <id> for the primary key"),
+        (("id",), True, "nested generate"),
     ],
-    ids=["unknown_key", "nested"],
+    ids=["no_id", "nested"],
 )
-def test_rejected_create_table_names_the_broken_rule(attributes, nested, reason):
-    problem = _generate(**attributes).create_table_problem(nested=nested)
+def test_rejected_create_table_names_the_broken_rule(ids, nested, reason):
+    problem = _generate(("note",), ids=ids, createTable="true").create_table_problem(nested=nested)
     assert problem is not None and reason in problem[0]
+
+
+def test_every_direct_id_is_a_primary_key_column_in_order():
+    assert _generate(("note",), ids=("order_id", "line_no"), createTable="true").create_table == ("order_id", "line_no")
+
+
+@pytest.mark.parametrize("value", [None, False], ids=["absent", "false"])
+def test_without_create_table_an_id_is_a_plain_key(value):
+    attributes = {} if value is None else {"createTable": value}
+    stmt = _generate(("note",), **attributes)
+    assert stmt.create_table is None
+    assert stmt.create_table_problem(nested=True) is None
 
 
 @pytest.mark.parametrize("target", ["CSV", "CSV,mem"], ids=["csv_only", "memstore_and_csv"])
 def test_a_run_without_a_database_target_fails_before_the_first_row(tmp_path, monkeypatch, target):
     monkeypatch.chdir(tmp_path)
     (tmp_path / "datamimic.xml").write_text(
-        f'<setup><memstore id="mem"/><generate name="lines" count="2" target="{target}" createTable="id">'
-        '<key name="id" generator="IncrementGenerator"/></generate></setup>',
+        f'<setup><memstore id="mem"/><generate name="lines" count="2" target="{target}" createTable="true">'
+        '<id name="id" generator="IncrementGenerator"/></generate></setup>',
         encoding="utf-8",
     )
     with pytest.raises(OperationError) as caught:
@@ -110,7 +126,7 @@ def test_a_run_without_a_database_target_fails_before_the_first_row(tmp_path, mo
 
 @pytest.mark.parametrize("operation", ["update", "delete"])
 def test_create_table_with_an_update_or_delete_target_is_rejected(operation):
-    problem = _generate(createTable="id", target=f"db.{operation}").create_table_problem(nested=False)
+    problem = _generate(createTable="true", target=f"db.{operation}").create_table_problem(nested=False)
     assert problem is not None and f"db.{operation} changes existing rows" in problem[0]
 
 
@@ -118,8 +134,8 @@ def test_a_later_page_with_a_new_field_fails_instead_of_dropping_it(tmp_path, mo
     monkeypatch.chdir(tmp_path)
     (tmp_path / "datamimic.xml").write_text(
         '<setup><database id="db" dbms="sqlite" database="sparse"/>'
-        '<generate name="lines" count="4" pageSize="2" target="db" createTable="line_id">'
-        '<key name="line_id" generator="IncrementGenerator"/>'
+        '<generate name="lines" count="4" pageSize="2" target="db" createTable="true">'
+        '<id name="line_id" generator="IncrementGenerator"/>'
         '<key name="note" constant="late" condition="this.line_id &gt; 2"/></generate></setup>',
         encoding="utf-8",
     )
@@ -133,22 +149,22 @@ def test_a_field_in_every_page_passes_the_page_check(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     (tmp_path / "datamimic.xml").write_text(
         '<setup><database id="db" dbms="sqlite" database="dense"/>'
-        '<generate name="lines" count="4" pageSize="2" target="db" createTable="line_id">'
-        '<key name="line_id" generator="IncrementGenerator"/><key name="note" constant="x"/></generate></setup>',
+        '<generate name="lines" count="4" pageSize="2" target="db" createTable="true">'
+        '<id name="line_id" generator="IncrementGenerator"/><key name="note" constant="x"/></generate></setup>',
         encoding="utf-8",
     )
     DataMimicTest(test_dir=tmp_path, filename="datamimic.xml").test_with_timer()
 
 
 def test_create_table_on_a_clear_is_a_forbidden_attribute():
-    stmt = GenerateStatement(GenerateModel(name="reset", target="db.clear", targetEntity="t", createTable="id"), None)
+    stmt = GenerateStatement(GenerateModel(name="reset", target="db.clear", targetEntity="t", createTable="true"), None)
     stmt.sub_statements = []
     problem = stmt.operation_intent_problem(nested=False)
     assert problem is not None and problem[0].endswith("forbidden attributes: createTable")
 
 
-@pytest.mark.parametrize("value", ["", " , ", "id,", "id, id"])
-def test_empty_or_repeated_column_list_is_a_model_error(value):
+@pytest.mark.parametrize("value", ["", "line_id", "maybe"])
+def test_a_value_that_is_no_boolean_is_a_model_error(value):
     with pytest.raises(ValidationError, match="createTable"):
         GenerateModel(name="lines", count="1", target="db", createTable=value)
 
@@ -157,7 +173,7 @@ def test_empty_or_repeated_column_list_is_a_model_error(value):
 
 
 def test_columns_follow_the_rows_and_take_declared_then_inferred_types():
-    stmt = _generate(("id", "note"), createTable="id")
+    stmt = _generate(("note",), createTable="true")
     stmt.sub_statements = [*stmt.sub_statements[:1], _typed("note", "string", stmt)]
     rows = [
         {"id": 1, "note": None, "flag": True, "amount": Decimal("1.5"), "rate": 0.5},
@@ -186,7 +202,7 @@ def test_columns_follow_the_rows_and_take_declared_then_inferred_types():
 )
 def test_a_column_without_type_fails_and_asks_for_type(rows, reason):
     with pytest.raises(OperationError) as caught:
-        _create_table_columns(_generate(("id", "note"), createTable="id"), rows)
+        _create_table_columns(_generate(("note",), createTable="true"), rows)
     assert caught.value.issue_code is IssueCode.OPERATION_CREATE_TABLE_INVALID
     assert reason in str(caught.value)
     assert "set type=" in str(caught.value)
@@ -258,13 +274,13 @@ def test_build_compiles_the_ddl_for_the_client_dbms_without_a_connection(dbms, t
 
 
 def test_create_table_runs_single_process():
-    assert resolve_single_process(_generate(createTable="id"), 4) == 1
+    assert resolve_single_process(_generate(createTable="true"), 4) == 1
     assert resolve_single_process(_generate(), 4) is None
 
 
 def test_create_table_is_a_schema_side_effect_per_database_target():
     setup = SetupStatement(SetupModel())
-    setup.sub_statements = [_generate(createTable="id", targetEntity="journal")]
+    setup.sub_statements = [_generate(createTable="true", targetEntity="journal")]
     effects = external_effects(setup, "datamimic.xml", frozenset(), _DB)
     assert [(item.kind, item.name) for item in effects if item.kind is ExternalEffectKind.SCHEMA] == [
         (ExternalEffectKind.SCHEMA, "db.journal")
@@ -281,8 +297,8 @@ def test_build_refuses_create_table_on_a_dbms_without_exact_types(tmp_path, dbms
 
     xml = (
         f'<setup><database id="db" dbms="{dbms}" host="h" port="1" database="d" user="u" password="p"/>'
-        '<generate name="lines" count="2" target="db.upsert" createTable="id">'
-        '<key name="id" generator="IncrementGenerator"/></generate></setup>'
+        '<generate name="lines" count="2" target="db.upsert" createTable="true">'
+        '<id name="id" generator="IncrementGenerator"/></generate></setup>'
     )
     root = DescriptorParser.parse_xml(xml, tmp_path / "model.xml", None, "production", profile_loader=lambda *_: {})
     with pytest.raises(OperationError) as caught:
@@ -299,8 +315,8 @@ def test_build_rejects_create_table_without_a_database_target_with_i929(tmp_path
     (tmp_path / "acceptance").mkdir()
     (tmp_path / "datamimic.xml").write_text(
         '<setup rngSeed="1"><database id="ledger" dbms="sqlite" database="ledger"/>'
-        '<generate name="lines" count="2" target="CSV" createTable="id">'
-        '<key name="id" generator="IncrementGenerator"/></generate></setup>',
+        '<generate name="lines" count="2" target="CSV" createTable="true">'
+        '<id name="id" generator="IncrementGenerator"/></generate></setup>',
         encoding="utf-8",
     )
     (tmp_path / "acceptance" / "build.json").write_text(
@@ -312,3 +328,32 @@ def test_build_rejects_create_table_without_a_database_target_with_i929(tmp_path
     assert isinstance(built, RejectedBuild)
     issues = [str(item.ce_error.issue_code) for item in built.diagnostics if item.ce_error is not None]
     assert issues == ["I929"], [(str(item.code), item.message) for item in built.diagnostics]
+
+
+def test_build_plans_a_composite_key_and_derives_no_per_field_unique(tmp_path, monkeypatch):
+    """Each field of a composite key repeats; only the pair is unique. A per-field unique check would be wrong."""
+    from datamimic_ce.authoring import create_authoring_application
+    from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, ReadyBuild, ReadyWithGapsBuild
+
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "acceptance").mkdir()
+    (tmp_path / "datamimic.xml").write_text(
+        '<setup rngSeed="1"><database id="ledger" dbms="sqlite" database="ledger"/>'
+        '<generate name="lines" count="4" target="ledger.upsert" createTable="true">'
+        '<variable name="line" generator="IncrementGenerator"/>'
+        '<id name="order_id" script="(line + 1) // 2"/><id name="line_no" script="line % 2"/><key name="qty" constant="1"/>'
+        "</generate></setup>",
+        encoding="utf-8",
+    )
+    (tmp_path / "acceptance" / "build.json").write_text(
+        '{"version": "5.0", "environment_bindings": [{"environment": "ledger", "family": "database"}], '
+        '"expectations": [{"kind": "exact_count", "subject": {"kind": "product", "product": "lines"}, "count": 4}]}',
+        encoding="utf-8",
+    )
+    built = create_authoring_application(tmp_path, descriptor_path=PROJECT_ENTRY_PATH).build()
+    # The only gap is the sink without an expectation, which this test does not declare.
+    assert isinstance(built, ReadyBuild | ReadyWithGapsBuild), [
+        (str(item.code), item.message) for item in built.diagnostics
+    ]
+    assert "PRIMARY KEY (order_id, line_no)" in built.planned_operations[0].ddl
+    assert not [item for item in built.expectations.items if str(item.kind) == "unique"]

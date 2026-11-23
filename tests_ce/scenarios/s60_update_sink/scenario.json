@@ -2,7 +2,7 @@
   "title": "An update target is a declared sink: upsert 3 orders, then update the same 3 by primary key",
   "proves": [
     "a target with the update operation (shop.update) is a declared sink, like a plain or an upsert target: Build counts its routed rows on the sink and does not report 'sink without captured contributors'",
-    "the table comes from createTable on the first generate, so the project needs no DDL file; the second generate updates the rows by the primary key",
+    "the table comes from createTable=\"true\" on the first generate, with its <id> element id as primary key, so the project needs no DDL file; the second generate updates the rows by the primary key",
     "the sink counts the routed rows of both generates (3 inserted + 3 updated = 6); it does not count the rows that the table holds at the end",
     "what the update writes into the table is the engine behaviour that already existed; this scenario proves the Build side only"
   ],

@@ -256,6 +256,9 @@ class CeDslCatalog:
                         "datamimic authoring reference --topic learning --name data_files. "
                         "A row of a second file by a key (a join): "
                         "datamimic authoring reference --topic learning --name lookup. "
+                        "Write a primary-key field as <id> and every other field as <key>; a database sink table "
+                        'comes from createTable="true", with the <id> fields as its primary key: '
+                        "datamimic authoring reference --topic learning --name database_sink. "
                         f"{SCRIPT_IMPORT_FIX} In an XML file: {ATTRIBUTE_ESCAPE}; DM JSON takes a raw <."
                     ),
                     next_topics=tuple(topic for topic in ReferenceTopic if topic != ReferenceTopic.OVERVIEW),
@@ -405,10 +408,11 @@ class CeDslCatalog:
                         name="database_sink",
                         path="tests_ce/scenarios/s59_create_table",
                         description=(
-                            'A database target writes rows into an existing table. createTable="line_id" on the '
+                            'A database target writes rows into an existing table. createTable="true" on the '
                             "<generate> creates the missing table, once, before the first row: write no DDL file and "
-                            "no <execute>. The value lists the primary-key columns, each a <key> of this root "
-                            "generate, which needs a sqlite or postgresql <database> target such as ledger or "
+                            "no <execute>. Write a primary-key field as <id> and every other field as <key>; several "
+                            "<id> make a composite key, and createTable needs at least one. The root generate needs a "
+                            "sqlite or postgresql <database> target such as ledger or "
                             "ledger.upsert (not .update or .delete). The columns "
                             "are the fields of the written rows; a key's type= sets the column type, else the first "
                             'non-null value does. Set type= on a key whose values are all null (script="None") or '

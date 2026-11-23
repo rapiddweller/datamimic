@@ -56,6 +56,8 @@ from datamimic_ce.authoring.domain.script_semantics import (
     references_current_scope_field,
 )
 from datamimic_ce.engine.dsl.api import (
+    EL_ID,
+    EL_KEY,
     NAME_SEPARATOR,
     ExportOperation,
     GenerateStatement,
@@ -68,6 +70,9 @@ from datamimic_ce.engine.dsl.api import (
     split_targets,
 )
 from datamimic_ce.errors import GUIDANCE_LOOKUP_POINTER
+
+# The DM JSON kinds of a scalar field: <id> keeps its kind in DM JSON because it marks a createTable primary key.
+_KEY_KINDS = frozenset({EL_KEY, EL_ID})
 
 
 @dataclass(frozen=True)
@@ -113,7 +118,7 @@ def _fields(node: DmJsonNodeV1) -> tuple[str, ...]:
         if child.kind == "generate":
             continue
         name = child.properties.get("name")
-        if child.kind in {"key", "nestedKey", "array"} and isinstance(name, str):
+        if child.kind in {*_KEY_KINDS, "nestedKey", "array"} and isinstance(name, str):
             fields.append(name)
         elif child.kind == "reference":
             mapped = tuple(item.properties.get("target") for item in child.children if item.kind == "field")
@@ -292,7 +297,7 @@ def project_acceptance(
             joins = tuple(
                 AcceptanceJoinV1(child_field=_name(child, entry.path), parent_field=parent_field)
                 for child in entry.node.children
-                if child.kind == "key"
+                if child.kind in _KEY_KINDS
                 if (parent_field := _parent_reference(child.properties.get("script"))) is not None
                 # A <variable> of the parent is no output field, so it joins nothing; the run resolves it (#442 T1).
                 if parent_field in by_name[entry.parent].product.fields or parent_field not in parent_variables
@@ -311,14 +316,19 @@ def project_acceptance(
             counts[name] = entry.count
         if name in counts:
             derive(ExactCountExpectation(subject=subject, count=counts[name]), entry.path)
+        primary_key = [child for child in entry.node.children if child.kind == EL_ID]
+        # A createTable primary key must be unique. A unique expectation names one field, so a composite key (several
+        # <id>) derives nothing: each of its fields alone may repeat.
+        if entry.node.properties.get("create_table") is True and len(primary_key) == 1:
+            derive(UniqueExpectation(subject=subject, field=_name(primary_key[0], entry.path)), entry.path)
         for index, field in enumerate(entry.node.children):
-            if field.kind == "key":
+            if field.kind in _KEY_KINDS:
                 _derive_field(field, subject, entry.path + ("children", index), derive)
             elif field.kind == "nestedKey" and field.properties.get("type") == "list":
                 list_name = _name(field, entry.path)
                 list_subject = ProductRowsSubject(product=name, list_field=list_name)
                 for inner_index, inner in enumerate(field.children):
-                    if inner.kind == "key":
+                    if inner.kind in _KEY_KINDS:
                         _derive_field(
                             inner, list_subject, entry.path + ("children", index, "children", inner_index), derive
                         )
@@ -530,7 +540,7 @@ def _copied_fields(consumer: DmJsonNodeV1, producer_fields: tuple[str, ...]) -> 
     copies: dict[str, str] = {}
     for child in consumer.children:
         name, script = child.properties.get("name"), child.properties.get("script")
-        if child.kind == "key" and isinstance(name, str) and isinstance(script, str):
+        if child.kind in _KEY_KINDS and isinstance(name, str) and isinstance(script, str):
             for field in producer_fields:
                 if field not in copies and is_exact_scope_field_reference(script, ScriptScope.CURRENT, field):
                     copies[field] = name
