@@ -107,9 +107,11 @@ class IncludeTask(CommonSubTask):
                     SetupTask.execute_statements(sub_setup_stmt, copied_root_context)
                 finally:
                     for name in row_values:
+                        if name not in shared or shared[name] is not row_values[name]:
+                            continue  # the step defined this variable itself: it stays, as before
                         if name in before:
                             shared[name] = before[name]
-                        elif name in shared:
+                        else:
                             del shared[name]
         else:
             raise include_error(code=IssueCode.INCLUDE_UNSUPPORTED_FILE_TYPE_GENERATE, uri=uri)

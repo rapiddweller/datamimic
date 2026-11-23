@@ -207,7 +207,7 @@ class GenerateModel(BaseModel):
         None,
         description="Has no effect: the number of worker processes comes from numProcess (or the setup default), "
         "never from this flag. Kept so that existing descriptors still parse. Set numProcess to use several CPU "
-        "cores; a seeded run (rngSeed) and finite positional numeric sequences force one process.",
+        "cores.",
         examples=[True, False],
     )
     export_uri: str | None = Field(
@@ -254,7 +254,8 @@ class GenerateModel(BaseModel):
         None,
         alias=ATTR_NUM_PROCESS,
         description="Number of worker processes for this statement. A value above 1 uses several CPU cores, unless a "
-        "rule forces one process (rngSeed, createTable, finite positional numeric sequences).",
+        "single-process rule applies (rngSeed, unique or composite keys, delete targets, global counters). A "
+        "positional number sequence (step, shuffle, wedge) fails with more than one process.",
         examples=[2, 4, 8],
     )
     script: str | None = Field(
