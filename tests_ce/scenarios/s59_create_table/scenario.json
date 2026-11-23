@@ -18,8 +18,7 @@
     },
     {
       "name": "no_database_target",
-      "diagnostic": "child_execution",
-      "issue": "I929",
+      "diagnostic": "input",
       "patch": {"file": "datamimic.xml", "old": "target=\"CSV,ledger.upsert\"", "new": "target=\"CSV\""}
     },
     {

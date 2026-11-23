@@ -199,7 +199,8 @@ creates the table when it is missing. The project needs no DDL file and no
   "version": "5.0",
   "environment_bindings": [{"environment": "ledger", "family": "database"}],
   "expectations": [
-    {"kind": "exact_count", "subject": {"kind": "product", "product": "lines"}, "count": 6}
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "lines"}, "count": 6},
+    {"kind": "exact_count", "subject": {"kind": "declared_sink", "sink": {"kind": "database", "environment": "ledger", "entity": "journal_lines"}}, "count": 6}
   ]
 }
 ```
