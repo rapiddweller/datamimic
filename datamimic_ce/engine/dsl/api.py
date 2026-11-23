@@ -125,6 +125,7 @@ from datamimic_ce.engine.dsl.vocabulary.constants.data_type_constants import (
     DATA_TYPE_STRING,
 )
 from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import (
+    EL_ARRAY,
     EL_COMMENT,
     EL_CONDITION,
     EL_DATABASE,
@@ -132,6 +133,7 @@ from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import (
     EL_ELSE,
     EL_ELSE_IF,
     EL_EXECUTE,
+    EL_FIELD,
     EL_GENERATE,
     EL_ID,
     EL_IF,
@@ -236,6 +238,7 @@ __all__ = [
     "DynamicSourceKind",
     "EXIST_COUNT",
     "EchoStatement",
+    "EL_ARRAY",
     "EL_COMMENT",
     "EL_CONDITION",
     "EL_DATABASE",
@@ -243,6 +246,7 @@ __all__ = [
     "EL_ELSE",
     "EL_ELSE_IF",
     "EL_EXECUTE",
+    "EL_FIELD",
     "EL_GENERATE",
     "EL_ID",
     "EL_IF",

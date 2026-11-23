@@ -56,8 +56,22 @@ from datamimic_ce.authoring.domain.script_semantics import (
     references_current_scope_field,
 )
 from datamimic_ce.engine.dsl.api import (
+    DATA_TYPE_LIST,
+    EL_ARRAY,
+    EL_CONDITION,
+    EL_DATABASE,
+    EL_ELEMENT,
+    EL_FIELD,
+    EL_GENERATE,
     EL_ID,
     EL_KEY,
+    EL_MEMSTORE,
+    EL_MONGODB,
+    EL_NESTED_KEY,
+    EL_REFERENCE,
+    EL_VARIABLE,
+    META_TARGET_ENTITY,
+    META_TYPE,
     NAME_SEPARATOR,
     ExportOperation,
     GenerateStatement,
@@ -107,7 +121,7 @@ def _name(node: DmJsonNodeV1, path: tuple[str | int, ...]) -> str:
 
 
 def _fields(node: DmJsonNodeV1) -> tuple[str, ...]:
-    if node.kind == "condition":
+    if node.kind == EL_CONDITION:
         # Branches are exclusive; retain duplicates within each branch.
         alternatives: Counter[str] = Counter()
         for branch in node.children:
@@ -115,17 +129,17 @@ def _fields(node: DmJsonNodeV1) -> tuple[str, ...]:
         return tuple(alternatives.elements())
     fields: list[str] = []
     for child in node.children:
-        if child.kind == "generate":
+        if child.kind == EL_GENERATE:
             continue
         name = child.properties.get("name")
-        if child.kind in {*_KEY_KINDS, "nestedKey", "array"} and isinstance(name, str):
+        if child.kind in {*_KEY_KINDS, EL_NESTED_KEY, EL_ARRAY} and isinstance(name, str):
             fields.append(name)
-        elif child.kind == "reference":
-            mapped = tuple(item.properties.get("target") for item in child.children if item.kind == "field")
+        elif child.kind == EL_REFERENCE:
+            mapped = tuple(item.properties.get("target") for item in child.children if item.kind == EL_FIELD)
             fields.extend(item for item in mapped if isinstance(item, str))
             if not mapped and isinstance(name, str):
                 fields.append(name)
-        elif child.kind not in {"variable", "element"}:
+        elif child.kind not in {EL_VARIABLE, EL_ELEMENT}:
             fields.extend(_fields(child))
     return tuple(fields)
 
@@ -176,13 +190,13 @@ def _parent_reference(script: object) -> str | None:
 
 
 def _memstore_entity(node: DmJsonNodeV1, name: str) -> str:
-    target_entity = node.properties.get("target_entity")
+    target_entity = node.properties.get(META_TARGET_ENTITY)
     return GenerateStatement.memstore_entity(target_entity if isinstance(target_entity, str) else None, name)
 
 
 def _target_entity(node: DmJsonNodeV1, name: str) -> str:
     """A database or MongoDB sink's entity; type takes part here, unlike a memstore write."""
-    for attribute in ("target_entity", "type"):
+    for attribute in (META_TARGET_ENTITY, META_TYPE):
         value = node.properties.get(attribute)
         if isinstance(value, str) and value:
             return value
@@ -191,14 +205,16 @@ def _target_entity(node: DmJsonNodeV1, name: str) -> str:
 
 def _products(document: DmJsonDocumentV1, included: tuple[tuple[str, DmJsonDocumentV1], ...]) -> tuple[_Product, ...]:
     declarations = {
-        node.properties.get("id"): node.kind for node in document.root.children if node.kind in {"database", "mongodb"}
+        node.properties.get("id"): node.kind
+        for node in document.root.children
+        if node.kind in {EL_DATABASE, EL_MONGODB}
     }
     entries: list[_Product] = []
 
     def visit(node: DmJsonNodeV1, path: tuple[str | int, ...], parent: _Product | None) -> None:
         # A source-free clear or drop produces no rows: it is an operation, not a product to prove.
         target = node.properties.get("target")
-        if node.kind == "generate" and not (isinstance(target, str) and names_statement_operation(target)):
+        if node.kind == EL_GENERATE and not (isinstance(target, str) and names_statement_operation(target)):
             name = _name(node, path)
             runtime_name = NAME_SEPARATOR.join((parent.product.runtime_name, name)) if parent else name
             entity = _target_entity(node, name)
@@ -211,9 +227,9 @@ def _products(document: DmJsonDocumentV1, included: tuple[tuple[str, DmJsonDocum
                     if operation not in (None, ExportOperation.UPDATE, ExportOperation.UPSERT):
                         continue
                     family = declarations.get(client)
-                    if family == "database":
+                    if family == EL_DATABASE:
                         sinks.append(DeclaredSinkIdentity(kind="database", environment=client, entity=entity))
-                    elif family == "mongodb":
+                    elif family == EL_MONGODB:
                         sinks.append(DeclaredSinkIdentity(kind="mongodb", environment=client, entity=entity))
             lists = tuple(
                 AcceptanceListV1(
@@ -222,7 +238,7 @@ def _products(document: DmJsonDocumentV1, included: tuple[tuple[str, DmJsonDocum
                     count_per_row=_count(child, path + ("children", index)),
                 )
                 for index, child in enumerate(node.children)
-                if child.kind == "nestedKey" and child.properties.get("type") == "list"
+                if child.kind == EL_NESTED_KEY and child.properties.get(META_TYPE) == DATA_TYPE_LIST
             )
             source = node.properties.get("source")
             fields = _fields(node)
@@ -292,7 +308,7 @@ def project_acceptance(
         if entry.parent:
             parent_node = by_name[entry.parent].node
             parent_variables = {
-                child.properties.get("name") for child in parent_node.children if child.kind == "variable"
+                child.properties.get("name") for child in parent_node.children if child.kind == EL_VARIABLE
             }
             joins = tuple(
                 AcceptanceJoinV1(child_field=_name(child, entry.path), parent_field=parent_field)
@@ -324,7 +340,7 @@ def project_acceptance(
         for index, field in enumerate(entry.node.children):
             if field.kind in _KEY_KINDS:
                 _derive_field(field, subject, entry.path + ("children", index), derive)
-            elif field.kind == "nestedKey" and field.properties.get("type") == "list":
+            elif field.kind == EL_NESTED_KEY and field.properties.get(META_TYPE) == DATA_TYPE_LIST:
                 list_name = _name(field, entry.path)
                 list_subject = ProductRowsSubject(product=name, list_field=list_name)
                 for inner_index, inner in enumerate(field.children):
@@ -674,7 +690,7 @@ def _readbacks(
         identifier
         for _, step in documents
         for node in step.root.children
-        if node.kind == "memstore"
+        if node.kind == EL_MEMSTORE
         if isinstance(identifier := node.properties.get("id"), str)
     }
     result = []
@@ -729,7 +745,7 @@ def _readbacks(
     for prefix, step in documents:
         for node, path in iter_dm_json_nodes(step):
             source = node.properties.get("source")
-            if node.kind == "variable" and isinstance(source, str) and source in stores:
+            if node.kind == EL_VARIABLE and isinstance(source, str) and source in stores:
                 reader_path = (*prefix, *path[1:])
                 producer = _writer(entries, _read_entity(node, node.properties.get("name")), source, reader_path)
                 producers_read.add((producer.product.name, source))

@@ -8,6 +8,8 @@ import copy
 import logging
 import sys
 from contextlib import suppress
+from datetime import date, datetime
+from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
 from typing import Protocol, runtime_checkable
@@ -65,6 +67,23 @@ class ColumnKind(StrEnum):
     BINARY = "binary"
     DATE = "date"
     DATETIME = "datetime"
+
+
+# bool before int and datetime before date: each is a subclass of the type after it.
+_VALUE_KINDS: tuple[tuple[type, ColumnKind], ...] = (
+    (bool, ColumnKind.BOOLEAN),
+    (int, ColumnKind.INTEGER),
+    (float, ColumnKind.FLOAT),
+    (Decimal, ColumnKind.DECIMAL),
+    (datetime, ColumnKind.DATETIME),
+    (date, ColumnKind.DATE),
+    (str, ColumnKind.TEXT),
+)
+
+
+def column_kind_of_type(python_type: type) -> ColumnKind | None:
+    """The column kind of a Python value type; None for a type no kind covers (NoneType included)."""
+    return next((kind for covered, kind in _VALUE_KINDS if issubclass(python_type, covered)), None)
 
 
 # SQLAlchemy create_engine kwargs DATAMIMIC forwards (pooling/behavior). Anything else in the

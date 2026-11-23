@@ -7,8 +7,6 @@ import copy
 import os
 import pickle
 from contextlib import suppress
-from datetime import date, datetime
-from decimal import Decimal
 from io import BytesIO
 
 import dill
@@ -33,6 +31,7 @@ from datamimic_ce.engine.io.api import (
     MongoDBConnectionConfig,
     RdbmsConnectionConfig,
     RegisteredClient,
+    column_kind_of_type,
     create_mongodb_client,
     create_rdbms_client,
     dispose_client_engine,
@@ -56,8 +55,8 @@ from datamimic_ce.engine.runtime.tasks.sources.chunk_source_reader import ChunkS
 from datamimic_ce.engine.runtime.tasks.values.construction.converters import create_converter_list
 from datamimic_ce.errors import IssueCode, operation_error
 
-# The column kind of each key type= value (KEY_TYPE_VALUES).
-_DECLARED_COLUMN_KINDS = {
+# The DSL key type= values are runtime-side: IO may not import DSL vocabulary (REQUIRES-COMPLETE), so the seam is here.
+_KEY_TYPE_KINDS = {
     DATA_TYPE_STRING: ColumnKind.TEXT,
     DATA_TYPE_INT: ColumnKind.INTEGER,
     DATA_TYPE_FLOAT: ColumnKind.FLOAT,
@@ -65,23 +64,13 @@ _DECLARED_COLUMN_KINDS = {
     DATA_TYPE_BOOL: ColumnKind.BOOLEAN,
     DATA_TYPE_BINARY: ColumnKind.BINARY,
 }
-# bool before int and datetime before date: each is a subclass of the type after it.
-_VALUE_COLUMN_KINDS: tuple[tuple[type, ColumnKind], ...] = (
-    (bool, ColumnKind.BOOLEAN),
-    (int, ColumnKind.INTEGER),
-    (float, ColumnKind.FLOAT),
-    (Decimal, ColumnKind.DECIMAL),
-    (datetime, ColumnKind.DATETIME),
-    (date, ColumnKind.DATE),
-    (str, ColumnKind.TEXT),
-)
 
 
 def _create_table_columns(stmt: GenerateStatement, rows: list[dict[str, object]]) -> tuple[tuple[str, ColumnKind], ...]:
     """The createTable columns: each field of the first written rows in first-seen order, typed by its key's type=,
     else by its first non-null value. Fails with I929 when a column has no type or a primary-key field is missing."""
     declared = {
-        child.name: _DECLARED_COLUMN_KINDS[child.type]
+        child.name: _KEY_TYPE_KINDS[child.type]
         for child in stmt.sub_statements
         if isinstance(child, KeyStatement) and child.type is not None
     }
@@ -93,7 +82,7 @@ def _create_table_columns(stmt: GenerateStatement, rows: list[dict[str, object]]
         kind = declared.get(name)
         if kind is None:
             value = next((row[name] for row in rows if row.get(name) is not None), None)
-            kind = next((found for python_type, found in _VALUE_COLUMN_KINDS if isinstance(value, python_type)), None)
+            kind = column_kind_of_type(type(value))
             if kind is None:
                 held = "only null values" if value is None else f"a {type(value).__name__} value"
                 reason = f"column '{name}' holds {held} in the first written rows, so its type is unknown"
