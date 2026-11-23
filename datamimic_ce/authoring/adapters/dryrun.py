@@ -1377,6 +1377,29 @@ def _check_runtime_counts(
             budgets[name] = replace(budget, bounded_without_cap=False, reason=_UNDERRUN_REASON)
 
 
+def _check_memstore_rows(
+    budgets: _ProductBudgets,
+    statements: dict[str, GenerateStatement],
+    captured: dict[str, list[object]],
+    memstore_rows: Callable[[str, str], list[object] | None],
+) -> None:
+    """A script can change a memstore after the product wrote its rows (consume, removeNotExistingIds). A reader then
+    sees rows that Build did not capture, so the capture of the product proves nothing about them. Both mutators only
+    add or remove rows, so the final store shows every lasting change."""
+    for name, stmt in statements.items():
+        entity = GenerateStatement.memstore_entity(stmt.target_entity, stmt.name)
+        # Only the first memstore target of a product receives its rows; a store that never got them is not a change.
+        held = {store: rows for store in sorted(stmt.targets) if (rows := memstore_rows(store, entity)) is not None}
+        if held and captured.get(name, []) not in held.values():
+            store = next(iter(held))
+            budgets[name] = replace(
+                budgets[name],
+                bounded_without_cap=False,
+                source_exhaustible=False,
+                reason=f"a script changed memstore '{store}': it does not hold the captured rows of entity '{entity}'",
+            )
+
+
 def _nested_list_ended_early(stmt: CompositeStatement) -> bool:
     """Whether a <nestedKey> list of this product ended before its count (#450). A nested <generate> is a product of
     its own and has its own budget."""
@@ -1484,6 +1507,7 @@ def _run_engine_capture(
             # The engine omits zero-row products; keep their explicit empty capture.
             raw_capture = {name: raw_capture.get(name, ()) for name in budgets}
             _check_runtime_counts(budgets, statements, raw_capture)
+            _check_memstore_rows(budgets, statements, capture if capture is not None else {}, session.memstore_rows)
             _validated_worker_success(
                 _WorkerSuccess(raw_capture, tuple(budgets.values()), (), SmokeExportCapture.not_requested()),
                 max_count=max_count,

@@ -771,6 +771,41 @@ def test_a_memstore_read_that_no_product_writes_names_the_cause():
         )
 
 
+_STORE = '<memstore id="store"/><generate name="rows" count="2" target="store"><key name="id" constant="1"/></generate>'
+
+
+@pytest.mark.parametrize(
+    "reader",
+    [
+        '<variable name="x" source="store" sourceEntity="rows"/>',
+        '<variable name="x" source="store" type="rows"/>',
+        '<variable name="rows" source="store"/>',
+        '<condition><if condition="True"><variable name="x" source="store" sourceEntity="rows"/></if></condition>',
+    ],
+    ids=["source_entity", "type", "name", "in_condition"],
+)
+def test_a_memstore_variable_read_counts_as_a_reader_without_a_role_pair(reader):
+    report = f'<generate name="report" count="1">{reader}<key name="n" constant="1"/></generate>'
+    spec = project(f"<setup>{_STORE}{report}</setup>")
+    assert spec.readbacks == ()
+
+
+@pytest.mark.parametrize(
+    ("reader", "message"),
+    [
+        ('<variable name="x" source="store" sourceEntity="rowz"/>', "No product writes the memstore entity"),
+        ('<variable name="x" source="other" sourceEntity="rows"/>', "No product writes the memstore entity"),
+        (None, "A memstore target requires a reader"),
+    ],
+    ids=["misspelled_entity", "other_store", "no_reader"],
+)
+def test_a_memstore_target_without_a_matching_variable_read_is_rejected(reader, message):
+    report = f'<generate name="report" count="1">{reader}<key name="n" constant="1"/></generate>'
+    body = "" if reader is None else report
+    with pytest.raises(AcceptanceProjectionError, match=message):
+        project(f'<setup><memstore id="other"/>{_STORE}{body}</setup>')
+
+
 def test_mutually_exclusive_branches_share_output_fields():
     spec = project(
         '<setup><generate name="rows" count="3"><condition>'

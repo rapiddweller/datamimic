@@ -15,8 +15,9 @@ class MemstoreModel(BaseModel):
     id: str = Field(
         ...,
         description="Identifier for this in-memory store within one run: a <generate target=> writes rows into "
-        "it, and a later <generate source= sourceEntity=> reads the rows back. Build proves only that <generate> "
-        "readback, and it must read every row exactly once; Build does not prove a <variable source=> read. "
+        "it, and a later <generate source= sourceEntity=> or <variable source= sourceEntity=> reads the rows back. "
+        "A <generate> readback must read every row exactly once and needs the identifier and foreign-key roles; a "
+        "<variable> read needs only a written entity. Build checks that the store still holds the captured rows. "
         "Use 'mem' to stay portable: EE ignores the declaration (warning W005) and provides only 'mem'.",
         examples=["mem"],
     )

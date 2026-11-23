@@ -60,7 +60,8 @@ _EXAMPLE_ROUTES = (
     "nested: rows made from the rows of another product (rows for each parent row, some of the rows, or a "
     "match on its values) are a <generate> inside that product's <generate>; the keys copy parent.<field> "
     f"and no memstore is needed. {nested_count_scope('id')} {BRACES_COUNT_MAX_COUNT} "
-    "memstore: a later product that copies every row of a product exactly once."
+    "memstore: a later product that copies every row of a product exactly once, or a <variable source> in a later "
+    "step that reads every stored row."
 )
 
 

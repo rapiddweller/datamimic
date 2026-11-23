@@ -102,8 +102,9 @@ Target-isolated bounded evidence does not prove external database delivery.
 
 See [worked projects](docs/examples/authoring.md) for nested FK, memstore and
 time-series cases. Child rows must hold actual `parent.id` values; random FKs can
-pass membership while failing per-parent acceptance. Memstore readback needs the
-producer identifier and consumer foreign-key role pair. For time series, literal
+pass membership while failing per-parent acceptance. A `<generate source>` memstore
+readback needs the producer identifier and consumer foreign-key role pair; a
+`<variable source>` read needs only a written entity. For time series, literal
 `count` is the parallel series count; expected rows are window points × series.
 
 For an existing XML descriptor: `authoring lint` → `authoring dry-run`, inspect the

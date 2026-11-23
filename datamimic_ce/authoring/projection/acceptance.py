@@ -32,7 +32,7 @@ from datamimic_ce.authoring.domain.acceptance_contract import (
 )
 from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
 from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId, DiagnosticPhase
-from datamimic_ce.authoring.domain.dm_json import DmJsonDocumentV1, DmJsonNodeV1
+from datamimic_ce.authoring.domain.dm_json import DmJsonDocumentV1, DmJsonNodeV1, iter_dm_json_nodes
 from datamimic_ce.authoring.domain.expectations import (
     AllowedValuesExpectation,
     DeclaredSinkIdentity,
@@ -397,7 +397,7 @@ def project_acceptance(
         )
         for index, item in enumerate(request.acceptance_requirements)
     )
-    readbacks = _readbacks(request, entries, (canonical_document, *(step for _, step in included)))
+    readbacks = _readbacks(request, entries, canonical_document, included)
     spec = AcceptanceSpecV1(products=spec.products, relationships=tuple(relationships), readbacks=readbacks)
     for check in checks:
         validate_acceptance_check(spec, check)
@@ -548,7 +548,9 @@ def _unread_memstore_remediation(producer: _Product, store: str, identifiers: se
     producer_role, consumer_role = _readback_roles(name, copy, key, holder)
     entity = _memstore_entity(producer.node, name)
     return (
-        f'Nothing reads "{name}" back as a product: a <variable source="{store}"> read is not a readback. '
+        f'Nothing reads "{name}" from the memstore. To use its rows in a step, read them with '
+        f'<variable name="rows" source="{store}" sourceEntity="{entity}" storage="data" distribution="ordered"/> '
+        "inside the <generate> of that step. "
         f'{MEMSTORE_READBACK_ONCE} For that subset route, also remove target="{store}". A lookup in a data file: '
         f'remove the <memstore> and the generate that writes target="{store}". {GUIDANCE_LOOKUP_POINTER} '
         "A copy of every row: "
@@ -621,13 +623,47 @@ def _role_pair_remediation(
     )
 
 
+def _read_entity(node: DmJsonNodeV1, name: object) -> object:
+    """The entity that a memstore source reads, as the runtime resolves it: sourceEntity, else type, else the name."""
+    return node.properties.get("source_entity", node.properties.get("type", name))
+
+
+def _writer(entries: tuple[_Product, ...], entity: object, store: str, path: tuple[str | int, ...]) -> _Product:
+    """The one product that writes ``entity`` into ``store``; an entity that no or two products write is rejected."""
+    producers = [
+        entry
+        for entry in entries
+        if _memstore_entity(entry.node, _name(entry.node, entry.path)) == entity
+        and store in {item.strip() for item in str(entry.node.properties.get("target", "")).split(",")}
+    ]
+    if not producers:
+        _reject(
+            "No product writes the memstore entity that this source reads.",
+            path,
+            "Write the entity with a generate that targets this memstore. A product writes the entity named by "
+            "targetEntity, else its own name; type and sourceEntity name only the entity that a source reads.",
+        )
+    if len(producers) > 1:
+        _reject(
+            "More than one product writes the memstore entity that this source reads.",
+            path,
+            "Give each writer its own entity. A product writes the entity named by targetEntity, else its own "
+            "name; type and sourceEntity name only the entity that a source reads.",
+        )
+    return producers[0]
+
+
 def _readbacks(
-    request: BuildRequestV5, entries: tuple[_Product, ...], documents: tuple[DmJsonDocumentV1, ...]
+    request: BuildRequestV5,
+    entries: tuple[_Product, ...],
+    document: DmJsonDocumentV1,
+    included: tuple[tuple[str, DmJsonDocumentV1], ...],
 ) -> tuple[AcceptanceReadbackV1, ...]:
+    documents = ((("document",), document), *((("include", uri), step) for uri, step in included))
     stores = {
         identifier
-        for document in documents
-        for node in document.root.children
+        for _, step in documents
+        for node in step.root.children
         if node.kind == "memstore"
         if isinstance(identifier := node.properties.get("id"), str)
     }
@@ -637,30 +673,7 @@ def _readbacks(
         source = consumer.node.properties.get("source")
         if not isinstance(source, str) or source not in stores:
             continue
-        entity = consumer.node.properties.get(
-            "source_entity", consumer.node.properties.get("type", consumer.product.name)
-        )
-        producers = [
-            entry
-            for entry in entries
-            if _memstore_entity(entry.node, _name(entry.node, entry.path)) == entity
-            and source in {item.strip() for item in str(entry.node.properties.get("target", "")).split(",")}
-        ]
-        if not producers:
-            _reject(
-                "No product writes the memstore entity that this source reads.",
-                consumer.path,
-                "Write the entity with a generate that targets this memstore. A product writes the entity named by "
-                "targetEntity, else its own name; type and sourceEntity name only the entity that a source reads.",
-            )
-        if len(producers) > 1:
-            _reject(
-                "More than one product writes the memstore entity that this source reads.",
-                consumer.path,
-                "Give each writer its own entity. A product writes the entity named by targetEntity, else its own "
-                "name; type and sourceEntity name only the entity that a source reads.",
-            )
-        producer = producers[0]
+        producer = _writer(entries, _read_entity(consumer.node, consumer.product.name), source, consumer.path)
         producers_read.add((producer.product.name, source))
         for index, field in enumerate(consumer.node.children):
             name = field.properties.get("name")
@@ -702,6 +715,14 @@ def _readbacks(
                 path=consumer.path,
             )
         )
+    # A variable copies no rows into a product, so it needs no role pair; Build checks the store contents instead.
+    for prefix, step in documents:
+        for node, path in iter_dm_json_nodes(step):
+            source = node.properties.get("source")
+            if node.kind == "variable" and isinstance(source, str) and source in stores:
+                reader_path = (*prefix, *path[1:])
+                producer = _writer(entries, _read_entity(node, node.properties.get("name")), source, reader_path)
+                producers_read.add((producer.product.name, source))
     for producer in entries:
         target = producer.node.properties.get("target")
         if not isinstance(target, str):
@@ -709,7 +730,7 @@ def _readbacks(
         for store in (item.strip() for item in target.split(",")):
             if store in stores and (producer.product.name, store) not in producers_read:
                 _reject(
-                    "A memstore target requires a declared consumer readback.",
+                    "A memstore target requires a reader: a <generate source> readback or a <variable source> read.",
                     producer.path + ("properties", "target"),
                     remediation=_unread_memstore_remediation(
                         producer, store, _identifier_fields(request, producer.product.name)
