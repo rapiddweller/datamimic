@@ -1,0 +1,42 @@
+{
+  "title": "createTable on PostgreSQL with two schemas: each client creates its own table, and a same-named table elsewhere stays untouched",
+  "proves": [
+    "two <database> clients on one server have their own schema in conf/*.env.properties; createTable creates dm_s53_lines once in each schema, without a DDL step",
+    "a table of the same name in the default schema (public) is not found, reflected or changed by either client",
+    "a second run finds both tables in their schemas and upserts the same rows again",
+    "Build creates no table: it proves the rows and each declared sink, and the sinks of the two clients stay apart by client id although the entity name is the same",
+    "this project needs the PostgreSQL service: it runs in the external-service test job"
+  ],
+  "products": {
+    "sales_lines": 3,
+    "billing_lines": 4
+  },
+  "coverage": {
+    "products_without_expectation": [],
+    "unread_data_files": [],
+    "unchecked_declared_sinks": [],
+    "seeded": true
+  },
+  "negatives": [
+    {
+      "name": "no_id_element",
+      "diagnostic": "child_execution",
+      "issue": "I929",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "<id name=\"invoice_id\"",
+        "new": "<key name=\"invoice_id\""
+      }
+    },
+    {
+      "name": "billing_count_wrong",
+      "diagnostic": "exact_count",
+      "expected": "5",
+      "patch": {
+        "file": "acceptance/build.json",
+        "old": "\"environment\": \"billing\", \"entity\": \"dm_s53_lines\"}}, \"count\": 4",
+        "new": "\"environment\": \"billing\", \"entity\": \"dm_s53_lines\"}}, \"count\": 5"
+      }
+    }
+  ]
+}

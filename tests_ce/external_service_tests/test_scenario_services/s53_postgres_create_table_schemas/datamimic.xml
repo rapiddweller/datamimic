@@ -1,0 +1,15 @@
+<setup rngSeed="53">
+    <!-- Two clients on one server: each has its own schema in conf/*.env.properties. -->
+    <database id="sales" system="sales"/>
+    <database id="billing" system="billing"/>
+    <!-- Purpose: no DDL step. createTable creates dm_s53_lines in each client's own schema; <id> is the primary key. -->
+    <generate name="sales_lines" count="3" target="sales.upsert" targetEntity="dm_s53_lines" createTable="true">
+        <id name="line_id" generator="IncrementGenerator"/>
+        <key name="account" values="('1000', '1200')"/>
+        <key name="amount_cents" type="int" min="100" max="9999"/>
+    </generate>
+    <generate name="billing_lines" count="4" target="billing.upsert" targetEntity="dm_s53_lines" createTable="true">
+        <id name="invoice_id" generator="IncrementGenerator"/>
+        <key name="memo" values="('a', 'b')"/>
+    </generate>
+</setup>

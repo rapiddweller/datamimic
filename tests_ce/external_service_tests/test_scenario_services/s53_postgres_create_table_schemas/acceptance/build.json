@@ -1,0 +1,17 @@
+{
+  "version": "5.0",
+  "environment_bindings": [
+    {"environment": "sales", "family": "database"},
+    {"environment": "billing", "family": "database"}
+  ],
+  "product_roles": [
+    {"product": "sales_lines", "field": "line_id", "role": {"kind": "identifier"}},
+    {"product": "billing_lines", "field": "invoice_id", "role": {"kind": "identifier"}}
+  ],
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "sales_lines"}, "count": 3},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "billing_lines"}, "count": 4},
+    {"kind": "exact_count", "subject": {"kind": "declared_sink", "sink": {"kind": "database", "environment": "sales", "entity": "dm_s53_lines"}}, "count": 3},
+    {"kind": "exact_count", "subject": {"kind": "declared_sink", "sink": {"kind": "database", "environment": "billing", "entity": "dm_s53_lines"}}, "count": 4}
+  ]
+}

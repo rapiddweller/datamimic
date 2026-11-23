@@ -33,7 +33,7 @@ from datamimic_ce.authoring.domain.requests import (
 )
 from datamimic_ce.engine.dsl.api import parse_properties
 from datamimic_ce.engine.runtime.lifecycle.config import get_settings
-from datamimic_ce.errors.base import TaskConfigError
+from datamimic_ce.errors.base import OperationError, TaskConfigError
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 _ROOT = Path(__file__).resolve().parent
@@ -147,6 +147,19 @@ def _assert_state(project: Path, pg: Engine, mongo: Database) -> None:
         assert [document["id"] for document in documents] == list(range(1, 13))
         assert {document["status"] for document in documents} <= {"new", "paid", "shipped"}
         assert all(100 <= document["amount_cents"] <= 9900 for document in documents)
+    elif project.name == "s53_postgres_create_table_schemas":
+        with pg.connect() as connection:
+            sales = connection.execute(text("SELECT line_id, account FROM dm_s53_sales.dm_s53_lines ORDER BY 1")).all()
+            billing = connection.execute(
+                text("SELECT invoice_id, memo FROM dm_s53_billing.dm_s53_lines ORDER BY 1")
+            ).all()
+            decoy = connection.execute(text("SELECT count(*) FROM public.dm_s53_lines")).scalar_one()
+        assert [row[0] for row in sales] == [1, 2, 3]
+        assert [row[0] for row in billing] == [1, 2, 3, 4]
+        assert decoy == 0, "the same table name in the default schema must stay untouched"
+    elif project.name == "s54_mongo_collection_without_table":
+        documents = list(mongo["dm_s54_lines"].find({}, {"_id": 0}).sort("line_id", 1))
+        assert [document["line_id"] for document in documents] == [1, 2, 3, 4, 5]
     else:
         raw = list(mongo["dm_x6_raw_orders"].find({}, {"_id": 0}).sort("order_id", 1))
         with pg.connect() as connection:
@@ -222,6 +235,22 @@ def test_scenario_builds_runs_and_replays(project: Path, pg: Engine, mongo: Data
     _assert_state(project, pg, mongo)
     assert _without_document_ids(_run(project)) == _without_document_ids(first), "a second run must give identical rows"
     _assert_state(project, pg, mongo)
+
+
+@pytest.mark.parametrize(
+    "project", [_ROOT / "s53_postgres_create_table_schemas"], ids=lambda path: path.name, indirect=True
+)
+def test_table_drift_is_judged_in_the_client_schema(project: Path, pg: Engine, mongo: Database) -> None:
+    """A table of the same name that matches in the default schema must not hide a drifted one in the client schema."""
+    _seed(project, pg, mongo)
+    with pg.begin() as connection:
+        connection.execute(text("DROP TABLE public.dm_s53_lines"))
+        connection.execute(
+            text("CREATE TABLE public.dm_s53_lines (line_id BIGINT PRIMARY KEY, account TEXT, amount_cents BIGINT)")
+        )
+        connection.execute(text("CREATE TABLE dm_s53_sales.dm_s53_lines (other INTEGER PRIMARY KEY)"))
+    with pytest.raises(OperationError, match=r"dm_s53_sales\.dm_s53_lines.*primary key"):
+        _run(project)
 
 
 _NEGATIVES = [(path, negative) for path in _PROJECTS for negative in _scenario(path)["negatives"]]

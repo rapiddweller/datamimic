@@ -644,7 +644,7 @@ class RdbmsClient(DatabaseClient):
             existing = self._find_table_name(entity)
             if existing is None:
                 table.create(engine, checkfirst=True)
-                logger.info("OPERATION | rdbms.create_table | table=%s | action=created", table.name)
+                logger.info("OPERATION | rdbms.create_table | table=%s | action=created", table.fullname)
                 return
             reflected = Table(existing, MetaData(), autoload_with=engine, schema=schema)
         except sqlalchemy.exc.SQLAlchemyError as error:
@@ -653,8 +653,10 @@ class RdbmsClient(DatabaseClient):
             raise failure
         difference = table_difference(table, reflected)
         if difference is not None:
-            raise operation_error(code=IssueCode.OPERATION_TABLE_DRIFT, target=existing, difference=difference)
-        logger.info("OPERATION | rdbms.create_table | table=%s | action=exists", existing)
+            raise operation_error(
+                code=IssueCode.OPERATION_TABLE_DRIFT, target=reflected.fullname, difference=difference
+            )
+        logger.info("OPERATION | rdbms.create_table | table=%s | action=exists", reflected.fullname)
 
     @staticmethod
     def _truncate_or_delete_all(engine, table) -> tuple[str, int | None]:
