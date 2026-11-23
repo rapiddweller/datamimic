@@ -76,9 +76,8 @@ class ExportSession:
 
     def create_tables(
         self, full_name: str, entity: str, columns: tuple[tuple[str, ColumnKind], ...], primary_key: tuple[str, ...]
-    ) -> int:
-        """Create the createTable table through each database (RDBMS) exporter of the product, before its first
-        row; the number of those exporters."""
+    ) -> None:
+        """Create the createTable table through each database (RDBMS) exporter of the product, before its first row."""
         exporters = self._products[full_name]
         database = [
             exporter
@@ -90,7 +89,6 @@ class ExportSession:
         ]
         for exporter in database:
             exporter.ensure_table(entity, columns, primary_key)
-        return len(database)
 
     def children_first(self, full_name: str) -> bool:
         exporters = self._products[full_name]

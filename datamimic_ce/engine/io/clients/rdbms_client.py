@@ -629,8 +629,8 @@ class RdbmsClient(DatabaseClient):
     ) -> None:
         """Create the table when no table of that name exists (createTable); never alter or drop one.
 
-        An existing table must have the same columns and primary key, else the run fails with I930. The name lookup
-        ignores case, as the row writes do."""
+        An existing table must have every written column and the same primary key, else the run fails with I930. The
+        table name lookup ignores case, as the row writes do; column names compare exactly."""
         self._require_write("createTable")
         engine = self._create_engine()
         schema = self._credential.db_schema
@@ -1067,22 +1067,17 @@ def create_table_ddl(table: Table, dbms: Dbms) -> str:
     return str(compiled).strip()
 
 
-def folded_names(names: list[str]) -> dict[str, str]:
-    """Each name without case, with the name as written: the table lookup ignores case, and PostgreSQL stores an
-    unquoted name in lower case."""
-    return dict(zip(map(str.lower, names), names, strict=True))
-
-
 def table_difference(wanted: Table, existing: Table) -> str | None:
-    """The missing columns and the primary-key difference of an existing table, by name without case; None when they
-    match. Extra columns are allowed (an insert leaves them to their default), and column types are not compared:
-    SQLite keeps any value in any column type, and a hand-written schema often uses another type for the same data."""
-    want = folded_names([column.name for column in wanted.columns])
-    have = folded_names([column.name for column in existing.columns])
-    want_key = set(folded_names([column.name for column in wanted.primary_key.columns]))
-    have_key = set(folded_names([column.name for column in existing.primary_key.columns]))
+    """The missing columns and the primary-key difference of an existing table, by exact name; None when they match.
+    Extra columns are allowed (an insert leaves them to their default), and column types are not compared: SQLite
+    keeps any value in any column type, and a hand-written schema often uses another type for the same data. Names
+    compare exactly: an insert drops a key whose case differs from the column without an error."""
+    want = {column.name for column in wanted.columns}
+    have = {column.name for column in existing.columns}
+    want_key = {column.name for column in wanted.primary_key.columns}
+    have_key = {column.name for column in existing.primary_key.columns}
     parts = []
-    if missing := sorted(want[name] for name in want.keys() - have.keys()):
+    if missing := sorted(want - have):
         parts.append(f"missing columns {', '.join(missing)}")
     if want_key != have_key:
         parts.append(

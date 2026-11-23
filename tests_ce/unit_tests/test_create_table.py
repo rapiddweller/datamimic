@@ -5,8 +5,6 @@
 """createTable on <generate>: the static rules, the column types, the SQLite create and drift check, the single-process
 policy and the schema side effect. The end-to-end run and the Build rejections are scenario s59_create_table."""
 
-import sqlite3
-from contextlib import closing
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -163,6 +161,24 @@ def test_a_field_in_every_page_passes_the_page_check(tmp_path, monkeypatch):
     DataMimicTest(test_dir=tmp_path, filename="datamimic.xml").test_with_timer()
 
 
+@pytest.mark.parametrize("dbms", ["mysql", "mssql", "oracle"])
+def test_a_run_refuses_a_dbms_that_cannot_make_the_types_before_it_connects(tmp_path, monkeypatch, dbms):
+    monkeypatch.chdir(tmp_path)
+    connected: list[str] = []
+    monkeypatch.setattr(RdbmsClient, "_create_engine", lambda self: connected.append(dbms))
+    (tmp_path / "datamimic.xml").write_text(
+        f'<setup><database id="db" dbms="{dbms}" host="h" port="1" user="u" password="p" database="d"/>'
+        '<generate name="lines" count="2" target="db" createTable="true">'
+        '<id name="line_id" generator="IncrementGenerator"/></generate></setup>',
+        encoding="utf-8",
+    )
+    with pytest.raises(OperationError) as caught:
+        DataMimicTest(test_dir=tmp_path, filename="datamimic.xml").test_with_timer()
+    assert caught.value.issue_code is IssueCode.OPERATION_CREATE_TABLE_INVALID
+    assert f"createTable supports sqlite, postgresql, not {dbms}" in str(caught.value)
+    assert connected == []
+
+
 def test_a_run_with_no_rows_creates_no_table(tmp_path, monkeypatch):
     """The columns come from the first rows, so a generate that writes none has nothing to create."""
     monkeypatch.chdir(tmp_path)
@@ -173,10 +189,7 @@ def test_a_run_with_no_rows_creates_no_table(tmp_path, monkeypatch):
         encoding="utf-8",
     )
     DataMimicTest(test_dir=tmp_path, filename="datamimic.xml").test_with_timer()
-    database = tmp_path / "db" / "empty.sqlite"
-    if database.exists():
-        with closing(sqlite3.connect(database)) as connection:
-            assert connection.execute("SELECT name FROM sqlite_master WHERE name = 'lines'").fetchall() == []
+    assert not (tmp_path / "db" / "empty.sqlite").exists(), "no row, no column, no table and no connection"
 
 
 def test_the_table_is_created_once_although_several_processes_and_pages_are_asked_for(tmp_path, monkeypatch):
@@ -286,12 +299,20 @@ def test_build_ddl_names_the_schema_of_the_client():
     assert ddl.startswith("CREATE TABLE sales.lines (")
 
 
-def test_an_existing_table_with_extra_columns_and_other_name_case_is_accepted(tmp_path):
-    """A hand-written table may hold more columns (an insert leaves them to their default), and an unquoted name is
-    stored in lower case."""
+def test_an_existing_table_with_extra_columns_is_accepted(tmp_path):
+    """A hand-written table may hold more columns: an insert leaves them to their default."""
     client = _client(tmp_path / "t.db")
-    client.execute_sql_script("CREATE TABLE lines (ID INTEGER PRIMARY KEY, Name TEXT, audit_user TEXT)")
+    client.execute_sql_script("CREATE TABLE lines (id INTEGER PRIMARY KEY, name TEXT, audit_user TEXT)")
     client.ensure_table("lines", _COLUMNS, ("id",))
+
+
+def test_a_column_name_that_differs_in_case_is_drift_because_an_insert_would_drop_its_value(tmp_path):
+    client = _client(tmp_path / "t.db")
+    client.execute_sql_script("CREATE TABLE lines (ID INTEGER PRIMARY KEY, Name TEXT)")
+    with pytest.raises(OperationError) as caught:
+        client.ensure_table("lines", _COLUMNS, ("id",))
+    assert caught.value.issue_code is IssueCode.OPERATION_TABLE_DRIFT
+    assert "missing columns id, name" in str(caught.value)
 
 
 def test_ensure_table_is_blocked_on_a_read_only_connection(tmp_path):

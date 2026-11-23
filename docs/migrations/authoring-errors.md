@@ -316,7 +316,7 @@ before the first row, with SQLAlchemy for the client's dbms. It never alters or 
   `Decimal`, `date`, `datetime`). Fix: write the primary-key field as `<id>`, add the database target, or set
   `type=` on the key. A `createTable` value other than `true` or `false` fails as a model error; `createTable` on `clear` or `drop` fails with `I928`.
 - `I930` (`OPERATION_TABLE_DRIFT`): the table exists without a column that the generate writes, or with another primary
-  key. The message lists the missing columns and both primary keys. Names are compared without case. Extra columns
+  key. The message lists the missing columns and both primary keys. Names are compared exactly. Extra columns
   are allowed, and column types are not compared. A later page that writes a
   field the created table lacks fails too, instead of losing the field. Change the model, or migrate
   the table outside DATAMIMIC.
