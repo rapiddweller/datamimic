@@ -286,6 +286,10 @@ class RdbmsClient(DatabaseClient):
         if self._credential.read_only:
             sql_dialect.require_read_only_query(query, self._credential.dbms)
 
+    @property
+    def dbms(self) -> Dbms:
+        return self._credential.dbms
+
     def _configure_read_only_engine(self) -> None:
         if not self._credential.read_only or self._engine is self._read_only_engine:
             return
@@ -627,14 +631,6 @@ class RdbmsClient(DatabaseClient):
 
         An existing table must have the same columns and primary key, else the run fails with I930. The name lookup
         ignores case, as the row writes do."""
-        dbms = self._credential.dbms
-        if not dbms.creates_tables:
-            raise operation_error(
-                code=IssueCode.OPERATION_CREATE_TABLE_INVALID,
-                target=entity,
-                reason=f"createTable supports {', '.join(d.value for d in Dbms if d.creates_tables)}, not {dbms.value}",
-                migration="create the table outside DATAMIMIC and remove createTable",
-            )
         self._require_write("createTable")
         engine = self._create_engine()
         schema = self._credential.db_schema
@@ -1071,18 +1067,23 @@ def create_table_ddl(table: Table, dbms: Dbms) -> str:
     return str(compiled).strip()
 
 
+def folded_names(names: list[str]) -> dict[str, str]:
+    """Each name without case, with the name as written: the table lookup ignores case, and PostgreSQL stores an
+    unquoted name in lower case."""
+    return dict(zip(map(str.lower, names), names, strict=True))
+
+
 def table_difference(wanted: Table, existing: Table) -> str | None:
-    """The column and primary-key differences of an existing table, by name; None when they match. Column types are
-    not compared: SQLite keeps any value in any column type."""
-    want = {column.name for column in wanted.columns}
-    have = {column.name for column in existing.columns}
-    want_key = {column.name for column in wanted.primary_key.columns}
-    have_key = {column.name for column in existing.primary_key.columns}
+    """The missing columns and the primary-key difference of an existing table, by name without case; None when they
+    match. Extra columns are allowed (an insert leaves them to their default), and column types are not compared:
+    SQLite keeps any value in any column type, and a hand-written schema often uses another type for the same data."""
+    want = folded_names([column.name for column in wanted.columns])
+    have = folded_names([column.name for column in existing.columns])
+    want_key = set(folded_names([column.name for column in wanted.primary_key.columns]))
+    have_key = set(folded_names([column.name for column in existing.primary_key.columns]))
     parts = []
-    if missing := sorted(want - have):
+    if missing := sorted(want[name] for name in want.keys() - have.keys()):
         parts.append(f"missing columns {', '.join(missing)}")
-    if extra := sorted(have - want):
-        parts.append(f"extra columns {', '.join(extra)}")
     if want_key != have_key:
         parts.append(
             f"primary key ({', '.join(sorted(have_key)) or 'none'}) instead of ({', '.join(sorted(want_key))})"

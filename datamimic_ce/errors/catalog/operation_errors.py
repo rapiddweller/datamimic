@@ -46,8 +46,8 @@ ISSUES: list[IssueDefinition] = [
         code=IssueCode.OPERATION_TABLE_DRIFT,
         name="OPERATION_TABLE_DRIFT",
         title="Existing Table Differs From The Model",
-        template="Table '{target}' exists with other columns or another primary key: {difference}",
-        cause="createTable never alters a table, and the existing table does not match the rows of the generate.",
+        template="Table '{target}' exists without a written column or with another primary key: {difference}",
+        cause="createTable never alters a table, and the existing table lacks a column or has another primary key.",
         resolution="Change the model to match the table, or migrate or drop the table outside DATAMIMIC.",
     ),
 ]

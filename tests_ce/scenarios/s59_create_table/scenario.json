@@ -6,7 +6,7 @@
     "type= on a key sets the column type, so a key whose values are all null still gets a column; the other columns take the type of their first value",
     "Build creates no table: it shows the planned CREATE TABLE in planned_operations and proves the rows only; it derives a unique check on the single <id> field (the acceptance declares none)",
     "each rejected class stops Build: no <id> element, no database target, createTable on a clear, createTable on a nested generate, a value that is no boolean, an all-null column without type= and a value type without a column type",
-    "a table that exists with other columns or another primary key is never altered: the run stops with I930 and names the difference (Build connects to no database, so only the run sees the table)",
+    "a table that lacks a written column or has another primary key is never altered: the run stops with I930 and names the difference (Build connects to no database, so only the run sees the table)",
     "a field that first appears after the first page is not dropped silently: the run stops with I930 (Build rejects it on its captured rows)",
     "createTable is limited to sqlite and postgresql, and to plain, upsert targets: mysql, mssql, oracle and an update target are rejected with I929",
     "createTable=\"false\" creates nothing: the run then fails on the missing table"
@@ -165,7 +165,7 @@
       "patch": {
         "file": "datamimic.xml",
         "old": "</setup>",
-        "new": "    <generate name=\"again\" count=\"1\" target=\"ledger.upsert\" targetEntity=\"journal_lines\" createTable=\"true\">\n        <id name=\"line_id\" constant=\"99\"/>\n    </generate>\n</setup>"
+        "new": "    <generate name=\"again\" count=\"1\" target=\"ledger.upsert\" targetEntity=\"journal_lines\" createTable=\"true\">\n        <id name=\"line_id\" constant=\"99\"/>\n        <key name=\"region\" constant=\"EU\"/>\n    </generate>\n</setup>"
       }
     },
     {

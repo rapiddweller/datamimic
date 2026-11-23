@@ -5,6 +5,8 @@
 """createTable on <generate>: the static rules, the column types, the SQLite create and drift check, the single-process
 policy and the schema side effect. The end-to-end run and the Build rejections are scenario s59_create_table."""
 
+import sqlite3
+from contextlib import closing
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -71,17 +73,18 @@ def _client(path: Path, read_only: bool = False) -> RdbmsClient:
 
 
 _COLUMNS = (("id", ColumnKind.INTEGER), ("name", ColumnKind.TEXT))
+_SQLITE_DB = (("db", Dbms.SQLITE),)
 
 
 # Static rules: the runtime and Build call the same checks.
 
 
 def test_valid_create_table_has_no_problem():
-    assert _generate(createTable="true").create_table_problem(nested=False) is None
+    assert _generate(createTable="true").create_table_problem(nested=False, rdbms_clients=_SQLITE_DB) is None
 
 
 def test_without_create_table_nothing_is_checked():
-    assert _generate(target="CSV").create_table_problem(nested=True) is None
+    assert _generate(target="CSV").create_table_problem(nested=True, rdbms_clients=()) is None
 
 
 @pytest.mark.parametrize(
@@ -93,7 +96,9 @@ def test_without_create_table_nothing_is_checked():
     ids=["no_id", "nested"],
 )
 def test_rejected_create_table_names_the_broken_rule(ids, nested, reason):
-    problem = _generate(("note",), ids=ids, createTable="true").create_table_problem(nested=nested)
+    problem = _generate(("note",), ids=ids, createTable="true").create_table_problem(
+        nested=nested, rdbms_clients=_SQLITE_DB
+    )
     assert problem is not None and reason in problem[0]
 
 
@@ -106,7 +111,7 @@ def test_without_create_table_an_id_is_a_plain_key(value):
     attributes = {} if value is None else {"createTable": value}
     stmt = _generate(("note",), **attributes)
     assert stmt.create_table is None
-    assert stmt.create_table_problem(nested=True) is None
+    assert stmt.create_table_problem(nested=True, rdbms_clients=_SQLITE_DB) is None
 
 
 @pytest.mark.parametrize("target", ["CSV", "CSV,mem"], ids=["csv_only", "memstore_and_csv"])
@@ -126,7 +131,9 @@ def test_a_run_without_a_database_target_fails_before_the_first_row(tmp_path, mo
 
 @pytest.mark.parametrize("operation", ["update", "delete"])
 def test_create_table_with_an_update_or_delete_target_is_rejected(operation):
-    problem = _generate(createTable="true", target=f"db.{operation}").create_table_problem(nested=False)
+    problem = _generate(createTable="true", target=f"db.{operation}").create_table_problem(
+        nested=False, rdbms_clients=_SQLITE_DB
+    )
     assert problem is not None and f"db.{operation} changes existing rows" in problem[0]
 
 
@@ -154,6 +161,39 @@ def test_a_field_in_every_page_passes_the_page_check(tmp_path, monkeypatch):
         encoding="utf-8",
     )
     DataMimicTest(test_dir=tmp_path, filename="datamimic.xml").test_with_timer()
+
+
+def test_a_run_with_no_rows_creates_no_table(tmp_path, monkeypatch):
+    """The columns come from the first rows, so a generate that writes none has nothing to create."""
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "datamimic.xml").write_text(
+        '<setup><database id="db" dbms="sqlite" database="empty"/>'
+        '<generate name="lines" count="0" target="db" createTable="true">'
+        '<id name="line_id" generator="IncrementGenerator"/></generate></setup>',
+        encoding="utf-8",
+    )
+    DataMimicTest(test_dir=tmp_path, filename="datamimic.xml").test_with_timer()
+    database = tmp_path / "db" / "empty.sqlite"
+    if database.exists():
+        with closing(sqlite3.connect(database)) as connection:
+            assert connection.execute("SELECT name FROM sqlite_master WHERE name = 'lines'").fetchall() == []
+
+
+def test_the_table_is_created_once_although_several_processes_and_pages_are_asked_for(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    created: list[str] = []
+    real = RdbmsClient.ensure_table
+    monkeypatch.setattr(
+        RdbmsClient, "ensure_table", lambda self, *args: (created.append(args[0]), real(self, *args))[1]
+    )
+    (tmp_path / "datamimic.xml").write_text(
+        '<setup><database id="db" dbms="sqlite" database="once"/>'
+        '<generate name="lines" count="6" pageSize="2" numProcess="4" target="db" createTable="true">'
+        '<id name="line_id" generator="IncrementGenerator"/></generate></setup>',
+        encoding="utf-8",
+    )
+    DataMimicTest(test_dir=tmp_path, filename="datamimic.xml").test_with_timer()
+    assert created == ["lines"]
 
 
 def test_create_table_on_a_clear_is_a_forbidden_attribute():
@@ -225,7 +265,7 @@ def test_ensure_table_creates_a_missing_table_and_accepts_it_again(tmp_path, dm_
 @pytest.mark.parametrize(
     ("existing", "difference"),
     [
-        ("CREATE TABLE lines (id INTEGER PRIMARY KEY, label TEXT)", "missing columns name; extra columns label"),
+        ("CREATE TABLE lines (id INTEGER PRIMARY KEY, label TEXT)", "missing columns name"),
         ("CREATE TABLE lines (id INTEGER, name TEXT)", "primary key (none) instead of (id)"),
         ("CREATE TABLE lines (id INTEGER, name TEXT PRIMARY KEY)", "primary key (name) instead of (id)"),
     ],
@@ -241,6 +281,19 @@ def test_an_existing_table_that_differs_fails_with_the_difference_and_is_not_alt
     assert client.get("SELECT sql FROM sqlite_master WHERE name = 'lines'") == [(existing,)]
 
 
+def test_build_ddl_names_the_schema_of_the_client():
+    ddl = planned_create_table_ddl(Dbms.POSTGRESQL, "lines", _COLUMNS, ("id",), "sales")
+    assert ddl.startswith("CREATE TABLE sales.lines (")
+
+
+def test_an_existing_table_with_extra_columns_and_other_name_case_is_accepted(tmp_path):
+    """A hand-written table may hold more columns (an insert leaves them to their default), and an unquoted name is
+    stored in lower case."""
+    client = _client(tmp_path / "t.db")
+    client.execute_sql_script("CREATE TABLE lines (ID INTEGER PRIMARY KEY, Name TEXT, audit_user TEXT)")
+    client.ensure_table("lines", _COLUMNS, ("id",))
+
+
 def test_ensure_table_is_blocked_on_a_read_only_connection(tmp_path):
     with pytest.raises(OperationError) as caught:
         _client(tmp_path / "t.db", read_only=True).ensure_table("lines", _COLUMNS, ("id",))
@@ -248,17 +301,15 @@ def test_ensure_table_is_blocked_on_a_read_only_connection(tmp_path):
 
 
 @pytest.mark.parametrize("dbms", [Dbms.MYSQL, Dbms.MSSQL, Dbms.ORACLE])
-def test_create_table_refuses_a_dbms_whose_types_it_cannot_make_exact(tmp_path, dbms):
-    client = RdbmsClient(
-        RdbmsConnectionConfig(
-            dbms=dbms, host="h", port=1, user="u", password="p", database="d", db_schema=None, read_only=False
-        )
-    )
-    with pytest.raises(OperationError) as caught:
-        client.ensure_table("lines", _COLUMNS, ("id",))
-    assert caught.value.issue_code is IssueCode.OPERATION_CREATE_TABLE_INVALID
-    assert f"createTable supports sqlite, postgresql, not {dbms.value}" in str(caught.value)
-    assert client.engine is None, "the refusal comes before any connection"
+def test_create_table_refuses_a_dbms_whose_types_it_cannot_make_exact(dbms):
+    problem = _generate(createTable="true").create_table_problem(nested=False, rdbms_clients=(("db", dbms),))
+    assert problem is not None and f"createTable supports sqlite, postgresql, not {dbms.value}" in problem[0]
+
+
+def test_a_target_that_is_no_database_client_is_named_before_a_missing_id():
+    """A MongoDB target has no table: the first message must say so, not ask for an <id> that would not help."""
+    problem = _generate(ids=(), createTable="true", target="mongo").create_table_problem(nested=False, rdbms_clients=())
+    assert problem is not None and "no database (RDBMS) client target" in problem[0]
 
 
 @pytest.mark.parametrize(
@@ -266,7 +317,7 @@ def test_create_table_refuses_a_dbms_whose_types_it_cannot_make_exact(tmp_path, 
     [(Dbms.SQLITE, "id BIGINT NOT NULL"), (Dbms.POSTGRESQL, "id BIGINT NOT NULL")],
 )
 def test_build_compiles_the_ddl_for_the_client_dbms_without_a_connection(dbms, text):
-    ddl = planned_create_table_ddl(dbms, "lines", _COLUMNS, ("id",))
+    ddl = planned_create_table_ddl(dbms, "lines", _COLUMNS, ("id",), None)
     assert ddl.startswith("CREATE TABLE lines (") and text in ddl and "PRIMARY KEY (id)" in ddl
 
 
@@ -341,7 +392,8 @@ def test_build_plans_a_composite_key_and_derives_no_per_field_unique(tmp_path, m
         '<setup rngSeed="1"><database id="ledger" dbms="sqlite" database="ledger"/>'
         '<generate name="lines" count="4" target="ledger.upsert" createTable="true">'
         '<variable name="line" generator="IncrementGenerator"/>'
-        '<id name="order_id" script="(line + 1) // 2"/><id name="line_no" script="line % 2"/><key name="qty" constant="1"/>'
+        '<id name="order_id" script="(line + 1) // 2"/><id name="line_no" script="line % 2"/>'
+        '<key name="qty" constant="1"/>'
         "</generate></setup>",
         encoding="utf-8",
     )

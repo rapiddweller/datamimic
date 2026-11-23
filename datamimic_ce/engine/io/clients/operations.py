@@ -57,11 +57,19 @@ def is_rdbms_client(client: RegisteredClient | None) -> bool:
     return isinstance(client, RdbmsClient)
 
 
+def rdbms_client_dbms(client: RegisteredClient | None) -> Dbms | None:
+    return client.dbms if isinstance(client, RdbmsClient) else None
+
+
 def planned_create_table_ddl(
-    dbms: Dbms, entity: str, columns: tuple[tuple[str, ColumnKind], ...], primary_key: tuple[str, ...]
+    dbms: Dbms,
+    entity: str,
+    columns: tuple[tuple[str, ColumnKind], ...],
+    primary_key: tuple[str, ...],
+    schema: str | None,
 ) -> str:
     """The CREATE TABLE statement that a run would execute, for Build, which creates nothing."""
-    return create_table_ddl(create_table_definition(entity, columns, primary_key), dbms)
+    return create_table_ddl(create_table_definition(entity, columns, primary_key, schema), dbms)
 
 
 def count_query_length(client: RegisteredClient, query: str) -> int | None:

@@ -59,7 +59,7 @@ class GenerateStatement(CompositeStatement):
         # Rows the bounded run resolved for this statement, summed over its invocations (one per parent row).
         self.bounded_rows = 0
         # Set only by Build, which strips the database targets: the createTable clients to plan instead of create.
-        self.planned_table_clients: tuple[tuple[str, Dbms], ...] = ()
+        self.planned_table_clients: tuple[tuple[str, Dbms, str | None], ...] = ()
         # (client, entity, DDL) of each table the bounded run planned for planned_table_clients.
         self.planned_tables: list[tuple[str, str, str]] = []
 
@@ -153,16 +153,12 @@ class GenerateStatement(CompositeStatement):
             return None
         return tuple(child.name for child in self.sub_statements if isinstance(child, KeyStatement) and child.is_id)
 
-    # The rule that a createTable generate writes to a database (RDBMS) client: Build checks it against its parsed
-    # <database> clients, the run against the exporters of the product.
-    NO_DATABASE_TARGET = (
-        "the generate has no database (RDBMS) client target to create the table in",
-        "add a <database> client target such as db or db.upsert, or remove createTable",
-    )
-
-    def create_table_problem(self, *, nested: bool) -> tuple[str, str] | None:
+    def create_table_problem(
+        self, *, nested: bool, rdbms_clients: tuple[tuple[str, Dbms], ...]
+    ) -> tuple[str, str] | None:
         """``(reason, migration)`` of the first statement rule a createTable breaks, None for a valid one or without
-        it. The runtime and bounded authoring run this same check before any database access."""
+        it. ``rdbms_clients`` holds ``(clientId, dbms)`` of each database (RDBMS) client the caller knows. Build and
+        the run run this same check before any database access."""
         primary_key = self.create_table
         if primary_key is None:
             return None
@@ -170,6 +166,18 @@ class GenerateStatement(CompositeStatement):
             return (
                 "a nested generate runs once for each parent row, so it cannot create its table once",
                 "move createTable to a root <generate> that writes the table",
+            )
+        targets = [dbms for client, dbms in rdbms_clients if client in self.target_client_ids]
+        if not targets:
+            return (
+                "the generate has no database (RDBMS) client target to create the table in",
+                "add a <database> client target such as db or db.upsert, or remove createTable",
+            )
+        if refused := sorted(dbms.value for dbms in targets if not dbms.creates_tables):
+            return (
+                f"createTable supports {', '.join(d.value for d in Dbms if d.creates_tables)}, "
+                f"not {', '.join(refused)}",
+                "create the table outside DATAMIMIC and remove createTable",
             )
         changing = [
             f"{client}.{operation.value}"

@@ -327,7 +327,7 @@
     },
     {
       "classification": "other",
-      "reason": "Retain UNKNOWN: property/decorator/alias and recursive value-shape binding remains unresolved. Existing annotations include broad maps and opaque positions; this classification neither clears source-contract debt nor establishes their full shape. Issue 268 adds the explicitly annotated SetupContext included_statement_transformer parameter (StatementTransformer | None); the analyzer still cannot establish its effective binding. Slice (c) of ADR #356 (BuildRequestV5) removes the AuthoringApplication.build request position (UNKNOWN-BOUNDARY-TYPE-POSITION-607498d48e034dc8): build() takes no argument, so that record no longer exists natively; no other record of this group changes. Issue 693 adds the return position of AuthoringApplication.version (RuntimeVersion, field ce_version, UNKNOWN-BOUNDARY-TYPE-POSITION-73e4be4fe1a4c435): a strict string alias that the analyzer cannot bind; accepted by the owner on 2026-11-22, no independent Astra assessment of this record.",
+      "reason": "Retain UNKNOWN: property/decorator/alias and recursive value-shape binding remains unresolved. Existing annotations include broad maps and opaque positions; this classification neither clears source-contract debt nor establishes their full shape. Issue 268 adds the explicitly annotated SetupContext included_statement_transformer parameter (StatementTransformer | None); the analyzer still cannot establish its effective binding. Slice (c) of ADR #356 (BuildRequestV5) removes the AuthoringApplication.build request position (UNKNOWN-BOUNDARY-TYPE-POSITION-607498d48e034dc8): build() takes no argument, so that record no longer exists natively; no other record of this group changes. Issue 693 adds the return position of AuthoringApplication.version (RuntimeVersion, field ce_version, UNKNOWN-BOUNDARY-TYPE-POSITION-73e4be4fe1a4c435): a strict string alias that the analyzer cannot bind; accepted by the owner on 2026-11-22, no independent Astra assessment of this record. The createTable hardening of PR #709 adds the client parameter of io.api.rdbms_client_dbms (RegisteredClient | None, UNKNOWN-BOUNDARY-TYPE-POSITION-8f921bacc8a15792): the same alias as is_database_client, which the analyzer cannot bind; the function returns the dbms of an RDBMS client so that the run checks createTable rules before any database access. Added by the author of the change; the owner has not accepted this record yet.",
       "ids": [
         "UNKNOWN-BOUNDARY-TYPE-POSITION-047311406b26c7e6",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-08ad9b9d956f3aff",
@@ -404,7 +404,8 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-f24ae27309d4ceef",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-f2c95ea1f9e1527c",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-f32ad09e1dbbe20d",
-        "UNKNOWN-BOUNDARY-TYPE-POSITION-f863f4c1d137803d"
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-f863f4c1d137803d",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-8f921bacc8a15792"
       ]
     }
   ],

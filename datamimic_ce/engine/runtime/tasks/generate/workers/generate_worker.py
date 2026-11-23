@@ -378,15 +378,10 @@ class GenerateWorker:
         the column names. Under Build the targets are stripped, and the planned clients get the DDL instead."""
         columns = _create_table_columns(stmt, rows)
         entity = resolve_target_entity(stmt.target_entity, stmt.type, stmt.name)
-        created = export_session.create_tables(stmt.full_name, entity, columns, primary_key)
-        if not created and not stmt.planned_table_clients:
-            reason, migration = GenerateStatement.NO_DATABASE_TARGET
-            raise operation_error(
-                code=IssueCode.OPERATION_CREATE_TABLE_INVALID, target=stmt.name, reason=reason, migration=migration
-            )
+        export_session.create_tables(stmt.full_name, entity, columns, primary_key)
         stmt.planned_tables += [
-            (client_id, entity, planned_create_table_ddl(dbms, entity, columns, primary_key))
-            for client_id, dbms in stmt.planned_table_clients
+            (client_id, entity, planned_create_table_ddl(dbms, entity, columns, primary_key, schema))
+            for client_id, dbms, schema in stmt.planned_table_clients
         ]
         return frozenset(name for name, _ in columns)
 

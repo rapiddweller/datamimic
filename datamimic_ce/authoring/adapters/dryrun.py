@@ -728,7 +728,7 @@ def neutralize_for_dry_run(
     skipped_operations: list[str] | None = None,
     executed_operations: list[str] | None = None,
     database_ids: set[str] | None = None,
-    rdbms_clients: dict[str, Dbms] | None = None,
+    rdbms_clients: dict[str, tuple[Dbms, str | None]] | None = None,
 ) -> None:
     """Statement transformer: cap counts, keep only memstore targets, force 1 process.
     A source-free clear or drop is checked for its shape (I928, as at runtime) and then skipped: bounded execution
@@ -783,7 +783,9 @@ def neutralize_for_dry_run(
     if rdbms_clients is None:
         rdbms_clients = {}
     rdbms_clients.update(
-        (stmt.model.id, stmt.model.dbms) for stmt in root_stmt.sub_statements if isinstance(stmt, DatabaseStatement)
+        (stmt.model.id, (stmt.model.dbms, stmt.model.db_schema))
+        for stmt in root_stmt.sub_statements
+        if isinstance(stmt, DatabaseStatement)
     )
 
     def _neutralize(stmt: object, nested: bool = False) -> None:
@@ -816,21 +818,15 @@ def neutralize_for_dry_run(
         if isinstance(stmt, GenerateStatement):
             if not allow_side_effects:
                 # The strip below removes the database targets: check createTable first, then let the run plan it.
-                create_problem = stmt.create_table_problem(nested=nested)
+                create_problem = stmt.create_table_problem(
+                    nested=nested,
+                    rdbms_clients=tuple((client, dbms) for client, (dbms, _) in rdbms_clients.items()),
+                )
                 if create_problem is None and stmt.create_table is not None:
-                    planned = tuple(
-                        (client, rdbms_clients[client])
+                    stmt.planned_table_clients = tuple(
+                        (client, *rdbms_clients[client])
                         for client in sorted(stmt.target_client_ids & rdbms_clients.keys())
                     )
-                    create_problem = None if planned else GenerateStatement.NO_DATABASE_TARGET
-                    refused = [dbms.value for _, dbms in planned if not dbms.creates_tables]
-                    if refused:
-                        create_problem = (
-                            f"createTable supports {', '.join(d.value for d in Dbms if d.creates_tables)}, "
-                            f"not {', '.join(refused)}",
-                            "create the table outside DATAMIMIC and remove createTable",
-                        )
-                    stmt.planned_table_clients = planned
                 if create_problem is not None:
                     raise operation_error(
                         code=IssueCode.OPERATION_CREATE_TABLE_INVALID,

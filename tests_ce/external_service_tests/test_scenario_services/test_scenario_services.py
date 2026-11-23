@@ -253,6 +253,37 @@ def test_table_drift_is_judged_in_the_client_schema(project: Path, pg: Engine, m
         _run(project)
 
 
+@pytest.mark.parametrize(
+    "project", [_ROOT / "s53_postgres_create_table_schemas"], ids=lambda path: path.name, indirect=True
+)
+def test_build_shows_the_schema_of_each_client_in_the_planned_ddl(project: Path, pg: Engine, mongo: Database) -> None:
+    _seed(project, pg, mongo)
+    built = _build(project)
+    assert isinstance(built, (ReadyBuild, ReadyWithGapsBuild))
+    ddl = {operation.client: operation.ddl for operation in built.planned_operations}
+    assert ddl["sales"].startswith("CREATE TABLE dm_s53_sales.dm_s53_lines (")
+    assert ddl["billing"].startswith("CREATE TABLE dm_s53_billing.dm_s53_lines (")
+
+
+@pytest.mark.parametrize(
+    "project", [_ROOT / "s53_postgres_create_table_schemas"], ids=lambda path: path.name, indirect=True
+)
+def test_a_hand_written_table_with_extra_columns_and_unquoted_names_is_accepted(
+    project: Path, pg: Engine, mongo: Database
+) -> None:
+    _seed(project, pg, mongo)
+    with pg.begin() as connection:
+        connection.execute(
+            text(
+                "CREATE TABLE dm_s53_sales.dm_s53_lines (LINE_ID BIGINT PRIMARY KEY, Account TEXT, "
+                "amount_cents BIGINT, audit_user TEXT)"
+            )
+        )
+    _run(project)
+    with pg.connect() as connection:
+        assert connection.execute(text("SELECT count(*) FROM dm_s53_sales.dm_s53_lines")).scalar_one() == 3
+
+
 _NEGATIVES = [(path, negative) for path in _PROJECTS for negative in _scenario(path)["negatives"]]
 
 
