@@ -205,9 +205,9 @@ class GenerateModel(BaseModel):
     )
     multiprocessing: bool | None = Field(
         None,
-        description="Enable multi-process generation for this statement to use multiple CPU cores. "
-        "Incompatible with a seeded run (rngSeed forces single-process for reproducibility) and with "
-        "finite positional numeric sequences (worker-local iterator state would duplicate values).",
+        description="Has no effect: the number of worker processes comes from numProcess (or the setup default), "
+        "never from this flag. Kept so that existing descriptors still parse. Set numProcess to use several CPU "
+        "cores; a seeded run (rngSeed) and finite positional numeric sequences force one process.",
         examples=[True, False],
     )
     export_uri: str | None = Field(
@@ -253,7 +253,8 @@ class GenerateModel(BaseModel):
     num_process: int | None = Field(
         None,
         alias=ATTR_NUM_PROCESS,
-        description="Number of worker processes to use when multiprocessing is enabled.",
+        description="Number of worker processes for this statement. A value above 1 uses several CPU cores, unless a "
+        "rule forces one process (rngSeed, createTable, finite positional numeric sequences).",
         examples=[2, 4, 8],
     )
     script: str | None = Field(
