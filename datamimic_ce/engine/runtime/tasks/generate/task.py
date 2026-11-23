@@ -289,7 +289,7 @@ class GenerateTask(CommonSubTask):
     def _assert_create_table_shape(self, context: SetupContext | GenIterContext) -> None:
         """Fail closed with I929 before any database access when createTable cannot define its table once."""
         stmt = self._statement
-        if stmt.planned_table_clients:
+        if stmt.create_table is None or stmt.planned_table_clients:
             return  # Build checked the rules before it removed the database targets
         rdbms_clients = tuple(
             (client, dbms)

@@ -301,6 +301,15 @@ capture `2026-03-01` failed `"value": "2026-03-01"` and passed `"values": ["2026
 An offset, `Z`, minute precision and a compact form never match. Every other value compares by type and value, so
 the literal `1` does not match a `True` capture. Case: `tests_ce/scenarios/s38_temporal_literal_match`.
 
+### An `.upsert` or `.update` target is a declared sink
+
+A target such as `ledger.upsert` or `ledger.update` now counts as a declared database or MongoDB sink, the same as a
+plain `ledger` target. Before, Build looked up the whole text `ledger.upsert` in the client declarations and found no
+sink. A project that already writes with `.upsert` or `.update` and has no expectation on that sink now gets the coverage
+gap `unchecked_declared_sinks` and the outcome `ready_with_gaps` (exit code 3 on the CLI). Fix: add an `exact_count`
+expectation with a `declared_sink` subject for the client and entity, as in `tests_ce/scenarios/s60_update_sink`.
+A `.delete` target is still not a sink.
+
 ### createTable creates the sink table (P10)
 
 `<generate createTable="true">` creates its database table when the table is missing. Each direct-child `<id>` is a
@@ -312,7 +321,7 @@ before the first row, with SQLAlchemy for the client's dbms. It never alters or 
 
 - `I929` (`OPERATION_CREATE_TABLE_INVALID`): no `<id>` element, no database (RDBMS) target, a dbms
   other than `sqlite` or `postgresql` (their inferred TEXT keys and NUMERIC columns are invalid or rounded
-  elsewhere), an `.update` or `.delete` target, a nested generate, or a column without a type (only null values, or a value type other than `str`, `int`, `float`, `bool`,
+  elsewhere), an `.update` or `.delete` target, a nested generate, or a column without a type (only null values, mixed value types such as `10` and `10.5`, or a value type other than `str`, `int`, `float`, `bool`,
   `Decimal`, `date`, `datetime`). Fix: write the primary-key field as `<id>`, add the database target, or set
   `type=` on the key. A `createTable` value other than `true` or `false` fails as a model error; `createTable` on `clear` or `drop` fails with `I928`.
 - `I930` (`OPERATION_TABLE_DRIFT`): the table exists without a column that the generate writes, or with another primary

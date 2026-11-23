@@ -207,12 +207,13 @@ a composite key. The table name is `targetEntity` (else `type`, else `name`).
 ```
 
 The columns are the fields of the written rows. A key's `type=` sets the column
-type. Without `type=`, the first non-null value in the first page sets it: `str`,
+type. Without `type=`, the non-null values in the first page set it: `str`,
 `int`, `float`, `bool`, `Decimal`, `date` or `datetime`. A column with only null
-values, or with another value type, fails with `I929` and asks for `type=`.
+values, with mixed value types (for example `10` and `10.5`), or with another value type, fails with `I929`
+and asks for `type=`.
 The run creates the table once, before the first row. It never alters or drops a
-table. A second run finds the table and upserts. An existing table with other
-columns or another primary key fails with `I930` and the column difference. A
+table. A second run finds the table and upserts. An existing table that
+lacks a written column or has another primary key fails with `I930` and the difference. Extra columns are allowed. A
 later page that writes a field the table lacks (for example a key with a
 `condition` that is false in the whole first page) also fails with `I930`: write
 each field in the first page.

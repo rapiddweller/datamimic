@@ -39,8 +39,10 @@ ISSUES: list[IssueDefinition] = [
         name="OPERATION_CREATE_TABLE_INVALID",
         title="Create Table Is Invalid",
         template="createTable on '{target}' is invalid: {reason}. Fix: {migration}",
-        cause="createTable names columns or a target that cannot define the table, or a column type is unknown.",
-        resolution="Name <key> elements of a root generate with a database target; set type= on a key without values.",
+        cause="createTable has no <id> primary key or no sqlite or postgresql database target, or a column type is "
+        "unknown or mixed.",
+        resolution="Write the primary key as <id> in a root generate with a database target; set type= on a key "
+        "without values or with mixed types.",
     ),
     IssueDefinition(
         code=IssueCode.OPERATION_TABLE_DRIFT,

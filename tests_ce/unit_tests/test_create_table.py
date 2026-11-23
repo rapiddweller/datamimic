@@ -222,7 +222,7 @@ def test_a_value_that_is_no_boolean_is_a_model_error(value):
         GenerateModel(name="lines", count="1", target="db", createTable=value)
 
 
-# Column types: key type= first, then the first non-null value.
+# Column types: key type= first, then the type of the non-null values; mixed types ask for type=.
 
 
 def test_columns_follow_the_rows_and_take_declared_then_inferred_types():
@@ -250,8 +250,13 @@ def test_columns_follow_the_rows_and_take_declared_then_inferred_types():
         ([{"id": 1, "note": None}], "column 'note' holds only null values"),
         ([{"id": 1, "note": timedelta(days=1)}], "column 'note' holds a timedelta value"),
         ([{"note": "x"}], "primary-key column(s) id are not in the written rows"),
+        ([{"id": 1, "note": 10}, {"id": 2, "note": 10.5}], "column 'note' holds values of more than one type"),
+        (
+            [{"id": 1, "note": date(2026, 1, 2)}, {"id": 2, "note": datetime(2026, 1, 2, 3)}],
+            "column 'note' holds values of more than one type",
+        ),
     ],
-    ids=["all_null", "unmapped_type", "key_not_written"],
+    ids=["all_null", "unmapped_type", "key_not_written", "int_and_float", "date_and_datetime"],
 )
 def test_a_column_without_type_fails_and_asks_for_type(rows, reason):
     with pytest.raises(OperationError) as caught:

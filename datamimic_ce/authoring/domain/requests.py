@@ -333,7 +333,8 @@ class PlannedOperation(AuthoringModel):
     entity: NonEmptyStrictStr
     ddl: NonEmptyStrictStr = Field(
         description="The CREATE TABLE statement for the client's dbms, from the rows Build captured. The run creates "
-        "the table when it is missing and fails when an existing table has other columns or another primary key."
+        "the table when it is missing and fails when an existing table lacks a written column or has another "
+        "primary key."
     )
 
 

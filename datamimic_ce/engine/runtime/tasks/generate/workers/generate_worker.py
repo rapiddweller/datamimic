@@ -68,7 +68,8 @@ _KEY_TYPE_KINDS = {
 
 def _create_table_columns(stmt: GenerateStatement, rows: list[dict[str, object]]) -> tuple[tuple[str, ColumnKind], ...]:
     """The createTable columns: each field of the first written rows in first-seen order, typed by its key's type=,
-    else by its first non-null value. Fails with I929 when a column has no type or a primary-key field is missing."""
+    else by its non-null values. Fails with I929 when a column has no type or mixed types, or a primary-key field is
+    missing."""
     declared = {
         child.name: _KEY_TYPE_KINDS[child.type]
         for child in stmt.sub_statements
@@ -81,10 +82,14 @@ def _create_table_columns(stmt: GenerateStatement, rows: list[dict[str, object]]
             continue
         kind = declared.get(name)
         if kind is None:
-            value = next((row[name] for row in rows if row.get(name) is not None), None)
-            kind = column_kind_of_type(type(value))
+            values = [row[name] for row in rows if row.get(name) is not None]
+            kinds = {column_kind_of_type(type(value)) for value in values}
+            if len(kinds) > 1:
+                reason = f"column '{name}' holds values of more than one type in the first written rows"
+                break
+            kind = next(iter(kinds), None)
             if kind is None:
-                held = "only null values" if value is None else f"a {type(value).__name__} value"
+                held = f"a {type(values[0]).__name__} value" if values else "only null values"
                 reason = f"column '{name}' holds {held} in the first written rows, so its type is unknown"
                 break
         columns[name] = kind

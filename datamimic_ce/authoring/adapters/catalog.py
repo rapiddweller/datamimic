@@ -414,11 +414,12 @@ class CeDslCatalog:
                             "<id> make a composite key, and createTable needs at least one. The root generate needs a "
                             "sqlite or postgresql <database> target such as ledger or "
                             "ledger.upsert (not .update or .delete). The columns "
-                            "are the fields of the written rows; a key's type= sets the column type, else the first "
-                            'non-null value does. Set type= on a key whose values are all null (script="None") or '
-                            "of another type than str, int, float, bool, Decimal, date or datetime, else I929. The "
-                            "run never alters a table: an existing table with other columns or another primary key "
-                            "fails with I930, and so does a later page with a field that the first page lacks. "
+                            "are the fields of the written rows; a key's type= sets the column type, else the type "
+                            "of the non-null values does. Set type= on a key whose values are all null "
+                            '(script="None"), of mixed types or of another type than str, int, float, bool, Decimal, '
+                            "date or datetime, else I929. The run never alters a table: an existing table that "
+                            "lacks a written column or has another primary key fails with I930 (extra columns are "
+                            "allowed), and so does a later page with a field that the first page lacks. "
                             "Use ledger.upsert so that a second run does not fail on the primary "
                             "key. Build creates nothing and shows the CREATE TABLE in planned_operations; "
                             "run-project lists a schema side effect and needs allow_side_effects."
