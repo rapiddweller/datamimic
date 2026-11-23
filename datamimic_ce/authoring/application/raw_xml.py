@@ -84,7 +84,7 @@ class RawXmlUseCase:
             diagnostics = (
                 *diagnostics,
                 Diagnostic(
-                    code=AuthoringSystemDiagnosticCode.ENGINE_WARNING,
+                    code=AuthoringSystemDiagnosticCode.ENVIRONMENT,
                     phase=DiagnosticPhase.EVIDENCE,
                     severity="warning",
                     message=(

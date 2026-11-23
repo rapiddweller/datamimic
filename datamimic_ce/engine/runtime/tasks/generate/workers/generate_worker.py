@@ -552,11 +552,14 @@ class GenerateWorker:
                     f"Data generator sub-task {task.__class__.__name__} '{task.statement.name}' has already reached "
                     f"the end"
                 )
-                if build_from_source:
+                if build_from_source or isinstance(context, GenIterContext):
                     logger.info(reached_end)
                 else:
-                    # The count asked for more rows: a run that writes fewer must not look complete.
-                    logger.warning(f"{reached_end}; '{stmt.name}' wrote {len(result)} of {processed_data_count} rows")
+                    # The count asked for more rows: a run that writes fewer must not look complete. A nested
+                    # generate ends once for each parent row, so only the outermost one warns.
+                    logger.warning(
+                        f"{reached_end}; '{stmt.name}' wrote {len(result)} of {processed_data_count} rows of this page"
+                    )
                 break
 
         # 4. Return product for later export

@@ -110,6 +110,8 @@ readback needs the producer identifier and consumer foreign-key role pair; a
 For an existing XML descriptor: `authoring lint` → `authoring dry-run`, inspect the
 bounded evidence, then use normal `datamimic run` when execution is requested.
 Dry-run and bounded `authoring run` do not read `acceptance/build.json`; their `--max-count` defaults to 10.
+A bounded `authoring run --allow-side-effects` writes files into a private copy that is deleted; it warns about this. Keep files with `run-project`.
+`run-project` lists a MongoDB write as `client -> collection`.
 `run-project` permits local `output/` writes without `--allow-side-effects`; that
 option permits effects outside the project.
 For upgrades, see [the migration guide](docs/migrations/authoring-errors.md).
