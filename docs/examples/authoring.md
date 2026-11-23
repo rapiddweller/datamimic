@@ -43,8 +43,17 @@ a randomly selected valid parent key does not establish per-parent cardinality.
 
 ## Memstore readback
 
-The producer identifier and consumer FK role pair makes readback integrity part
-of the proof. Merely declaring a memstore target does not establish readback.
+A `<generate source>` readback is a product of its own: the producer identifier and
+the consumer FK role pair make its integrity part of the proof. Merely declaring a
+memstore target does not establish a reader.
+
+Write a file for a product with the producer's own target: `target="mem,CSV"`.
+Add a `<generate source="mem">` readback only when a later step reads the rows as a
+product. A later step that only uses the rows reads them with
+`<variable name="rows" source="mem" sourceEntity="parents" storage="data" distribution="ordered"/>`
+inside its `<generate>`; without `storage="data"` each record gets one row. That
+read needs no role pair; Build checks that the store still holds the captured rows.
+Do not add an `export_*` block that only repeats a product.
 
 Declare the store as `<memstore id="mem"/>`. EE has one built-in `mem` store and
 ignores the declaration with warning `W005`, so this form runs in CE and EE.
