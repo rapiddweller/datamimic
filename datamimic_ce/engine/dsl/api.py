@@ -165,7 +165,7 @@ from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import (
     SourceDistribution,
 )
 from datamimic_ce.engine.dsl.vocabulary.enums.faker_enums import UnsupportedMethod
-from datamimic_ce.engine.dsl.vocabulary.enums.operation_enums import ExportOperation
+from datamimic_ce.engine.dsl.vocabulary.enums.operation_enums import ExportOperation, split_targets
 from datamimic_ce.engine.dsl.vocabulary.product_identity import capture_product_name
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import (
     DynamicSourceKind,
@@ -315,6 +315,7 @@ __all__ = [
     "source_dynamic_kind",
     "source_file_format",
     "source_file_format_for",
+    "split_targets",
     "supported_source_file_formats",
     "Statement",
     "parse_consumer",

@@ -57,6 +57,7 @@ from datamimic_ce.authoring.domain.script_semantics import (
 )
 from datamimic_ce.engine.dsl.api import (
     NAME_SEPARATOR,
+    ExportOperation,
     GenerateStatement,
     TimeSeriesConfig,
     TimeSeriesConfigError,
@@ -64,6 +65,7 @@ from datamimic_ce.engine.dsl.api import (
     column_names,
     parse_literal_values,
     source_file_format_for,
+    split_targets,
 )
 from datamimic_ce.errors import GUIDANCE_LOOKUP_POINTER
 
@@ -198,13 +200,16 @@ def _products(document: DmJsonDocumentV1, included: tuple[tuple[str, DmJsonDocum
             targets = node.properties.get("target", "")
             sinks: list[DeclaredSinkIdentity] = []
             if isinstance(targets, str) and isinstance(entity, str):
-                for target in targets.split(","):
-                    target = target.strip()
-                    family = declarations.get(target)
+                for part in split_targets(targets):
+                    client, operation = ExportOperation.from_target(part) or (part, None)
+                    # A delete removes rows from the client, so the client does not hold the captured rows.
+                    if operation not in (None, ExportOperation.UPDATE, ExportOperation.UPSERT):
+                        continue
+                    family = declarations.get(client)
                     if family == "database":
-                        sinks.append(DeclaredSinkIdentity(kind="database", environment=target, entity=entity))
+                        sinks.append(DeclaredSinkIdentity(kind="database", environment=client, entity=entity))
                     elif family == "mongodb":
-                        sinks.append(DeclaredSinkIdentity(kind="mongodb", environment=target, entity=entity))
+                        sinks.append(DeclaredSinkIdentity(kind="mongodb", environment=client, entity=entity))
             lists = tuple(
                 AcceptanceListV1(
                     name=_name(child, path),

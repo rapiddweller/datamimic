@@ -230,6 +230,35 @@ def test_declared_sink_union_counts_and_uniqueness_use_all_contributors():
 
 
 @pytest.mark.parametrize(
+    ("target", "is_sink"),
+    [
+        ("db", True),
+        ("CSV,db", True),
+        ("db.update", True),
+        ("db.upsert", True),
+        ("CSV, db.upsert(a=1, b=2)", True),
+        ("db.delete", False),
+        ("db.bogus", False),
+    ],
+)
+def test_declared_sink_follows_the_row_writing_operations_of_the_target(target, is_sink):
+    xml = (
+        f'<setup><database id="db"/><generate name="a" count="1" target="{target}">'
+        '<key name="id" constant="1"/></generate></setup>'
+    )
+    expectation = {
+        "kind": "exact_count",
+        "subject": {"kind": "declared_sink", "sink": {"kind": "database", "environment": "db", "entity": "a"}},
+        "count": 1,
+    }
+    if is_sink:
+        assert project(xml, expectations=[expectation]).declared_sink_contributors()
+    else:
+        with pytest.raises(AcceptanceProjectionError, match="sink without captured contributors"):
+            project(xml, expectations=[expectation])
+
+
+@pytest.mark.parametrize(
     "expectation,good,bad",
     [
         ({"kind": "fixed_value", "field": "id", "value": 1}, {"id": 1}, {"id": "1"}),

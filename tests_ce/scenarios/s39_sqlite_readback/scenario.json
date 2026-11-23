@@ -79,6 +79,26 @@
         "old": "ORDER BY id\" distribution=\"ordered\" count=\"12\"",
         "new": "ORDER BY id\" distribution=\"ordered\" count=\"13\""
       }
+    },
+    {
+      "name": "delete_target_is_no_declared_sink",
+      "diagnostic": "input",
+      "message": "sink without captured contributors",
+      "patch": {
+        "file": "delivery/91_load.xml",
+        "old": "target=\"shop\"",
+        "new": "target=\"shop.delete\""
+      }
+    }
+  ],
+  "equivalents": [
+    {
+      "name": "upsert_target_is_a_declared_sink",
+      "patch": {"file": "delivery/91_load.xml", "old": "target=\"shop\"", "new": "target=\"shop.upsert\""}
+    },
+    {
+      "name": "upsert_target_with_parameters_is_a_declared_sink",
+      "patch": {"file": "delivery/91_load.xml", "old": "target=\"shop\"", "new": "target=\"shop.upsert(x=1, y=2)\""}
     }
   ]
 }
