@@ -187,9 +187,10 @@ class GenerateModel(BaseModel):
         description="Comma-separated primary-key columns of the database table this generate writes. The run creates "
         "the table when it is missing, once, before the first row; it never alters or drops it. The columns are the "
         "fields of the written rows; a key's type= sets the column type, else the first non-null value does. An "
-        "existing table with other columns or another primary key fails the run. Each name must be a <key> of this "
-        "generate, and the generate needs a database (RDBMS) client target; not on a nested generate or with "
-        "clear/drop. Build shows the planned table in planned_operations and creates nothing.",
+        "existing table with other columns or another primary key, or a later page with a field the table lacks, fails "
+        "the run. Each name must be a <key> of this generate, and the generate needs a sqlite or postgresql "
+        "<database> target, plain or .upsert; not with .update/.delete, on a nested generate or with clear/drop. "
+        "Build shows the planned table in planned_operations and creates nothing.",
         examples=["line_id", "order_id, line_no"],
     )
     # Explicit physical entity to read/write (table/collection). Precedence: sourceEntity/targetEntity

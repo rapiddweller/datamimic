@@ -327,16 +327,14 @@ class SourceAccessEvidence(AuthoringModel):
 
 
 class PlannedOperation(AuthoringModel):
-    """A database change that a run makes and Build does not make: Build shows it and executes nothing."""
+    """A table that a run creates when it is missing (createTable); Build shows it and executes nothing."""
 
-    kind: Literal["create_table"] = "create_table"
     client: NonEmptyStrictStr
     entity: NonEmptyStrictStr
     ddl: NonEmptyStrictStr = Field(
         description="The CREATE TABLE statement for the client's dbms, from the rows Build captured. The run creates "
         "the table when it is missing and fails when an existing table has other columns or another primary key."
     )
-    executed: Literal[False] = False
 
 
 class BuildAssurance(AuthoringModel):

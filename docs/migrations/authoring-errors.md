@@ -307,16 +307,17 @@ the literal `1` does not match a `True` capture. Case: `tests_ce/scenarios/s38_t
 failed with `table_not_found` until a hand-written DDL script ran outside the proof. The run creates the table once,
 before the first row, with SQLAlchemy for the client's dbms. It never alters or drops a table.
 
-- `I929` (`OPERATION_CREATE_TABLE_INVALID`): a column that is not a `<key>`, no database (RDBMS) target, a nested
-  generate, or a column without a type (only null values, or a value type other than `str`, `int`, `float`, `bool`,
+- `I929` (`OPERATION_CREATE_TABLE_INVALID`): a column that is not a `<key>`, no database (RDBMS) target, a dbms
+  other than `sqlite` or `postgresql` (their inferred TEXT keys and NUMERIC columns are invalid or rounded
+  elsewhere), an `.update` or `.delete` target, a nested generate, or a column without a type (only null values, or a value type other than `str`, `int`, `float`, `bool`,
   `Decimal`, `date`, `datetime`). Fix: name `<key>` elements, add the database target, or set `type=` on the key.
   An empty or repeated column list fails as a model error; `createTable` on `clear` or `drop` fails with `I928`.
 - `I930` (`OPERATION_TABLE_DRIFT`): the table exists with other columns or another primary key. The message lists
-  the missing and extra columns and both primary keys. Column types are not compared. Change the model, or migrate
+  the missing and extra columns and both primary keys. Column types are not compared. A later page that writes a
+  field the created table lacks fails too, instead of losing the field. Change the model, or migrate
   the table outside DATAMIMIC.
 
-Build stays read-only and shows the planned statement in `planned_operations` (`kind: "create_table"`, `client`,
-`entity`, `ddl`, `executed: false`). `run-project` lists the new side-effect kind `schema` with the name
+Build stays read-only and shows the planned statement in `planned_operations` (`client`, `entity`, `ddl`). `run-project` lists the new side-effect kind `schema` with the name
 `<client>.<entity>`. Case: `tests_ce/scenarios/s59_create_table`.
 
 ## Public contract

@@ -108,6 +108,38 @@ def test_a_run_without_a_database_target_fails_before_the_first_row(tmp_path, mo
     assert not list(tmp_path.glob("output/*/lines.csv")), "no row may be written"
 
 
+@pytest.mark.parametrize("operation", ["update", "delete"])
+def test_create_table_with_an_update_or_delete_target_is_rejected(operation):
+    problem = _generate(createTable="id", target=f"db.{operation}").create_table_problem(nested=False)
+    assert problem is not None and f"db.{operation} changes existing rows" in problem[0]
+
+
+def test_a_later_page_with_a_new_field_fails_instead_of_dropping_it(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "datamimic.xml").write_text(
+        '<setup><database id="db" dbms="sqlite" database="sparse"/>'
+        '<generate name="lines" count="4" pageSize="2" target="db" createTable="line_id">'
+        '<key name="line_id" generator="IncrementGenerator"/>'
+        '<key name="note" constant="late" condition="this.line_id &gt; 2"/></generate></setup>',
+        encoding="utf-8",
+    )
+    with pytest.raises(OperationError) as caught:
+        DataMimicTest(test_dir=tmp_path, filename="datamimic.xml").test_with_timer()
+    assert caught.value.issue_code is IssueCode.OPERATION_TABLE_DRIFT
+    assert "a later page writes the field(s) note" in str(caught.value)
+
+
+def test_a_field_in_every_page_passes_the_page_check(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "datamimic.xml").write_text(
+        '<setup><database id="db" dbms="sqlite" database="dense"/>'
+        '<generate name="lines" count="4" pageSize="2" target="db" createTable="line_id">'
+        '<key name="line_id" generator="IncrementGenerator"/><key name="note" constant="x"/></generate></setup>',
+        encoding="utf-8",
+    )
+    DataMimicTest(test_dir=tmp_path, filename="datamimic.xml").test_with_timer()
+
+
 def test_create_table_on_a_clear_is_a_forbidden_attribute():
     stmt = GenerateStatement(GenerateModel(name="reset", target="db.clear", targetEntity="t", createTable="id"), None)
     stmt.sub_statements = []
@@ -199,6 +231,20 @@ def test_ensure_table_is_blocked_on_a_read_only_connection(tmp_path):
     assert caught.value.issue_code is IssueCode.OPERATION_READ_ONLY_WRITE_BLOCKED
 
 
+@pytest.mark.parametrize("dbms", [Dbms.MYSQL, Dbms.MSSQL, Dbms.ORACLE])
+def test_create_table_refuses_a_dbms_whose_types_it_cannot_make_exact(tmp_path, dbms):
+    client = RdbmsClient(
+        RdbmsConnectionConfig(
+            dbms=dbms, host="h", port=1, user="u", password="p", database="d", db_schema=None, read_only=False
+        )
+    )
+    with pytest.raises(OperationError) as caught:
+        client.ensure_table("lines", _COLUMNS, ("id",))
+    assert caught.value.issue_code is IssueCode.OPERATION_CREATE_TABLE_INVALID
+    assert f"createTable supports sqlite, postgresql, not {dbms.value}" in str(caught.value)
+    assert client.engine is None, "the refusal comes before any connection"
+
+
 @pytest.mark.parametrize(
     ("dbms", "text"),
     [(Dbms.SQLITE, "id BIGINT NOT NULL"), (Dbms.POSTGRESQL, "id BIGINT NOT NULL")],
@@ -223,3 +269,46 @@ def test_create_table_is_a_schema_side_effect_per_database_target():
     assert [(item.kind, item.name) for item in effects if item.kind is ExternalEffectKind.SCHEMA] == [
         (ExternalEffectKind.SCHEMA, "db.journal")
     ]
+
+
+# Build: the createTable rules that Build checks before the bounded run.
+
+
+@pytest.mark.parametrize("dbms", ["mysql", "mssql", "oracle"])
+def test_build_refuses_create_table_on_a_dbms_without_exact_types(tmp_path, dbms):
+    from datamimic_ce.authoring.adapters.dryrun import neutralize_for_dry_run
+    from datamimic_ce.engine.dsl.api import DescriptorParser
+
+    xml = (
+        f'<setup><database id="db" dbms="{dbms}" host="h" port="1" database="d" user="u" password="p"/>'
+        '<generate name="lines" count="2" target="db.upsert" createTable="id">'
+        '<key name="id" generator="IncrementGenerator"/></generate></setup>'
+    )
+    root = DescriptorParser.parse_xml(xml, tmp_path / "model.xml", None, "production", profile_loader=lambda *_: {})
+    with pytest.raises(OperationError) as caught:
+        neutralize_for_dry_run(root, max_count=2, allow_side_effects=False)
+    assert caught.value.issue_code is IssueCode.OPERATION_CREATE_TABLE_INVALID
+    assert f"createTable supports sqlite, postgresql, not {dbms}" in str(caught.value)
+
+
+def test_build_rejects_create_table_without_a_database_target_with_i929(tmp_path, monkeypatch):
+    from datamimic_ce.authoring import create_authoring_application
+    from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, RejectedBuild
+
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "acceptance").mkdir()
+    (tmp_path / "datamimic.xml").write_text(
+        '<setup rngSeed="1"><database id="ledger" dbms="sqlite" database="ledger"/>'
+        '<generate name="lines" count="2" target="CSV" createTable="id">'
+        '<key name="id" generator="IncrementGenerator"/></generate></setup>',
+        encoding="utf-8",
+    )
+    (tmp_path / "acceptance" / "build.json").write_text(
+        '{"version": "5.0", "environment_bindings": [{"environment": "ledger", "family": "database"}], '
+        '"expectations": [{"kind": "exact_count", "subject": {"kind": "product", "product": "lines"}, "count": 2}]}',
+        encoding="utf-8",
+    )
+    built = create_authoring_application(tmp_path, descriptor_path=PROJECT_ENTRY_PATH).build()
+    assert isinstance(built, RejectedBuild)
+    issues = [str(item.ce_error.issue_code) for item in built.diagnostics if item.ce_error is not None]
+    assert issues == ["I929"], [(str(item.code), item.message) for item in built.diagnostics]

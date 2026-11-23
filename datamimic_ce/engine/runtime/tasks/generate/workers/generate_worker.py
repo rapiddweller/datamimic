@@ -328,8 +328,9 @@ class GenerateWorker:
         if isinstance(context, SetupContext) and not root_context.test_mode:
             keep_keys = GenerateWorker._memstore_product_keys(root_context, stmt)
 
-        # The create-table policy keeps this generate in one process, so this flag makes the creation once per run.
-        table_pending = stmt.create_table is not None
+        # The create-table policy keeps this generate in one process, so the first page creates the table once per run.
+        primary_key = stmt.create_table
+        table_columns: frozenset[str] | None = None
 
         # Chunk-scoped source reader: loads + orders the source once per chunk and hands
         # each page its window (see ChunkSourceReader) — the worker only iterates pages.
@@ -363,9 +364,11 @@ class GenerateWorker:
                         NestedExport(stmt, result_dict[stmt.full_name], result_dict.nested_exports)
                     )
                 else:
-                    if table_pending and result_dict[stmt.full_name]:
-                        GenerateWorker._create_tables(export_session, stmt, result_dict[stmt.full_name])
-                        table_pending = False
+                    rows = result_dict[stmt.full_name]
+                    if primary_key is not None and rows and table_columns is None:
+                        table_columns = GenerateWorker._create_tables(export_session, stmt, primary_key, rows)
+                    elif table_columns is not None:
+                        GenerateWorker._assert_table_columns(stmt, table_columns, rows)
                     export_product_by_page(stmt, result_dict, export_session, root_context)
                 result.merge_exports(result_dict)
 
@@ -376,12 +379,14 @@ class GenerateWorker:
         return result
 
     @staticmethod
-    def _create_tables(export_session: ExportSession, stmt: GenerateStatement, rows: list[dict[str, object]]) -> None:
-        """Create the createTable table in each RDBMS target from the first written rows, before they are written.
-        Under Build the targets are stripped, and the planned clients get the DDL instead of a table."""
-        primary_key = stmt.create_table
-        if primary_key is None:
-            raise ValueError("the generate has no createTable")
+    def _create_tables(
+        export_session: ExportSession,
+        stmt: GenerateStatement,
+        primary_key: tuple[str, ...],
+        rows: list[dict[str, object]],
+    ) -> frozenset[str]:
+        """Create the createTable table in each RDBMS target from the first written rows, before they are written;
+        the column names. Under Build the targets are stripped, and the planned clients get the DDL instead."""
         columns = _create_table_columns(stmt, rows)
         entity = resolve_target_entity(stmt.target_entity, stmt.type, stmt.name)
         created = export_session.create_tables(stmt.full_name, entity, columns, primary_key)
@@ -394,6 +399,20 @@ class GenerateWorker:
             (client_id, entity, planned_create_table_ddl(dbms, entity, columns, primary_key))
             for client_id, dbms in stmt.planned_table_clients
         ]
+        return frozenset(name for name, _ in columns)
+
+    @staticmethod
+    def _assert_table_columns(stmt: GenerateStatement, table_columns: frozenset[str], rows: list[dict[str, object]]):
+        """Fail with I930 when a later page writes a field that the table created from the first page lacks: the
+        insert would drop it without an error."""
+        extra = sorted({field for row in rows for field in row} - table_columns)
+        if extra:
+            raise operation_error(
+                code=IssueCode.OPERATION_TABLE_DRIFT,
+                target=resolve_target_entity(stmt.target_entity, stmt.type, stmt.name),
+                difference=f"a later page writes the field(s) {', '.join(extra)}, which the table created from the "
+                "first page does not have; write each field in the first page, for example with a default value",
+            )
 
     @staticmethod
     def _memstore_product_keys(root_context: SetupContext, statement: GenerateStatement) -> set[str]:

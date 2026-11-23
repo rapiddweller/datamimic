@@ -211,13 +211,19 @@ type. Without `type=`, the first non-null value in the first page sets it: `str`
 values, or with another value type, fails with `I929` and asks for `type=`.
 The run creates the table once, before the first row. It never alters or drops a
 table. A second run finds the table and upserts. An existing table with other
-columns or another primary key fails with `I930` and the column difference.
+columns or another primary key fails with `I930` and the column difference. A
+later page that writes a field the table lacks (for example a key with a
+`condition` that is false in the whole first page) also fails with `I930`: write
+each field in the first page.
 
 Each primary-key column must be a `<key>` of the generate. The generate needs a
-`<database>` (RDBMS) target, plain or with `.upsert`, `.update` or `.delete`.
-It must be a root generate, and `createTable` is not allowed with `clear` or
+`<database>` target with `dbms="sqlite"` or `dbms="postgresql"`, plain or with
+`.upsert`; other dbms, `.update` and `.delete` fail with `I929`. It must be a root
+generate, and `createTable` is not allowed with `clear` or
 `drop`. The generate runs in one process. Build creates nothing: it shows the
-CREATE TABLE statement in `planned_operations`. `run-project` lists a `schema`
+CREATE TABLE statement in `planned_operations`, typed from the rows it captured
+(at most `max_count`); the run types from its first page, so a field that first
+appears after the captured rows is in the run's table only. `run-project` lists a `schema`
 side effect (`ledger.journal_lines`) and needs `allow_side_effects`. The complete
 project is `tests_ce/scenarios/s59_create_table`.
 

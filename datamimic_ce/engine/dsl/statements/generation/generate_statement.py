@@ -167,6 +167,16 @@ class GenerateStatement(CompositeStatement):
                 "a nested generate runs once for each parent row, so it cannot create its table once",
                 "move createTable to a root <generate> that writes the table",
             )
+        changing = [
+            f"{client}.{operation.value}"
+            for client, operation in self.client_operations
+            if operation in (ExportOperation.UPDATE, ExportOperation.DELETE)
+        ]
+        if changing:
+            return (
+                f"{', '.join(changing)} changes existing rows, so a table that createTable creates would be empty",
+                "use createTable with an insert (db) or upsert (db.upsert) target",
+            )
         keys = {child.name for child in self.sub_statements if isinstance(child, KeyStatement)}
         unknown = [name for name in self._create_table if name not in keys]
         if unknown:

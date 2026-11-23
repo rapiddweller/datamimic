@@ -408,12 +408,14 @@ class CeDslCatalog:
                             'A database target writes rows into an existing table. createTable="line_id" on the '
                             "<generate> creates the missing table, once, before the first row: write no DDL file and "
                             "no <execute>. The value lists the primary-key columns, each a <key> of this root "
-                            "generate, which needs a <database> target such as ledger or ledger.upsert. The columns "
+                            "generate, which needs a sqlite or postgresql <database> target such as ledger or "
+                            "ledger.upsert (not .update or .delete). The columns "
                             "are the fields of the written rows; a key's type= sets the column type, else the first "
                             'non-null value does. Set type= on a key whose values are all null (script="None") or '
                             "of another type than str, int, float, bool, Decimal, date or datetime, else I929. The "
                             "run never alters a table: an existing table with other columns or another primary key "
-                            "fails with I930. Use ledger.upsert so that a second run does not fail on the primary "
+                            "fails with I930, and so does a later page with a field that the first page lacks. "
+                            "Use ledger.upsert so that a second run does not fail on the primary "
                             "key. Build creates nothing and shows the CREATE TABLE in planned_operations; "
                             "run-project lists a schema side effect and needs allow_side_effects."
                         ),

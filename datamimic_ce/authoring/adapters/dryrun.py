@@ -806,7 +806,6 @@ def neutralize_for_dry_run(
         if not allow_side_effects and isinstance(stmt, (DatabaseStatement, MongoDBStatement)):
             stmt.model.read_only = True
         if isinstance(stmt, DatabaseStatement) and descriptor_dir is not None:
-            from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
             from datamimic_ce.engine.io.api import sqlite_database_path
 
             if stmt.model.dbms is Dbms.SQLITE and stmt.model.database is not None:
@@ -824,6 +823,13 @@ def neutralize_for_dry_run(
                         for client in sorted(stmt.target_client_ids & rdbms_clients.keys())
                     )
                     create_problem = None if planned else GenerateStatement.NO_DATABASE_TARGET
+                    refused = [dbms.value for _, dbms in planned if not dbms.creates_tables]
+                    if refused:
+                        create_problem = (
+                            f"createTable supports {', '.join(d.value for d in Dbms if d.creates_tables)}, "
+                            f"not {', '.join(refused)}",
+                            "create the table outside DATAMIMIC and remove createTable",
+                        )
                     stmt.planned_table_clients = planned
                 if create_problem is not None:
                     raise operation_error(

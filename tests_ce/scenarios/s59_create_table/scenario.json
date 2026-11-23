@@ -19,6 +19,7 @@
     {
       "name": "no_database_target",
       "diagnostic": "input",
+      "message": "sink without captured contributors",
       "patch": {"file": "datamimic.xml", "old": "target=\"CSV,ledger.upsert\"", "new": "target=\"CSV\""}
     },
     {

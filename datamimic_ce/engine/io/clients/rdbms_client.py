@@ -6,7 +6,6 @@
 
 import copy
 import logging
-import re
 import sys
 from contextlib import suppress
 from enum import StrEnum
@@ -609,6 +608,14 @@ class RdbmsClient(DatabaseClient):
 
         An existing table must have the same columns and primary key, else the run fails with I930. The name lookup
         ignores case, as the row writes do."""
+        dbms = self._credential.dbms
+        if not dbms.creates_tables:
+            raise operation_error(
+                code=IssueCode.OPERATION_CREATE_TABLE_INVALID,
+                target=entity,
+                reason=f"createTable supports {', '.join(d.value for d in Dbms if d.creates_tables)}, not {dbms.value}",
+                migration="create the table outside DATAMIMIC and remove createTable",
+            )
         self._require_write("createTable")
         engine = self._create_engine()
         schema = self._credential.db_schema
@@ -644,10 +651,7 @@ class RdbmsClient(DatabaseClient):
         """The name of the table in the database that matches ``table_name`` without case; None when none does."""
         inspector = inspect(self._create_engine())
         tables_in_db = inspector.get_table_names(schema=self._credential.db_schema)
-        # re, not str.lower: ArchKeel counts str method calls as unresolved and the budget is fixed; same match.
-        return next(
-            (table for table in tables_in_db if re.fullmatch(re.escape(table_name), table, re.IGNORECASE)), None
-        )
+        return next((table for table in tables_in_db if table.lower() == table_name.lower()), None)
 
     def _get_actual_table_name(self, table_name: str) -> str:
         """
@@ -1043,8 +1047,7 @@ def create_table_ddl(table: Table, dbms: Dbms) -> str:
     """The CREATE TABLE statement for the dialect of ``dbms``, compiled without a connection."""
     statement = CreateTable(table)
     compiled = statement.compile(dialect=registry.load(dbms.value)())
-    # re, not str.strip: ArchKeel counts str method calls as unresolved and the budget is fixed; same whitespace.
-    return re.sub(r"^\s+|\s+$", "", str(compiled))
+    return str(compiled).strip()
 
 
 def table_difference(wanted: Table, existing: Table) -> str | None:
