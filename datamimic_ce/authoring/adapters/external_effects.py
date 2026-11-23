@@ -23,6 +23,7 @@ from datamimic_ce.engine.dsl.api import (
     DatabaseStatement,
     DescriptorParser,
     ExecuteStatement,
+    ExportOperation,
     GenerateStatement,
     MongoDBStatement,
     SetupStatement,
@@ -37,7 +38,11 @@ _RUNTIME_ENVIRONMENT: Literal["development", "production"] = "development"
 
 
 def external_effects(
-    statement: SetupStatement, descriptor: str, memstores: frozenset[str], rdbms_clients: frozenset[str] = frozenset()
+    statement: SetupStatement,
+    descriptor: str,
+    memstores: frozenset[str],
+    rdbms_clients: frozenset[str] = frozenset(),
+    mongo_clients: frozenset[str] = frozenset(),
 ) -> tuple[ExternalEffect, ...]:
     """The effects of one statement tree. Files in the project, memstores, console and log are not external.
     The classification of targets is the bounded run's; this policy refuses what that policy neutralizes."""
@@ -55,12 +60,14 @@ def external_effects(
             effect(ExternalEffectKind.EXECUTE, node.uri or "inline")
         elif isinstance(node, GenerateStatement):
             classified = classify_targets(node.targets, memstores)
+            entity = resolve_target_entity(node.target_entity, node.type, node.name)
             for name in classified.external:
-                effect(ExternalEffectKind.TARGET, name)
+                client = (ExportOperation.from_target(name) or (name, None))[0]
+                # A MongoDB write creates its collection by name: show the collection, so that a typo is seen.
+                effect(ExternalEffectKind.TARGET, f"{name} -> {entity}" if client in mongo_clients else name)
             if classified.unreadable:
                 effect(ExternalEffectKind.UNRESOLVED, UNREADABLE_TARGET)
             if node.create_table is not None:
-                entity = resolve_target_entity(node.target_entity, node.type, node.name)
                 for client in sorted(node.target_client_ids & rdbms_clients):
                     effect(ExternalEffectKind.SCHEMA, f"{client}.{entity}")
         if isinstance(node, CompositeStatement):
@@ -104,10 +111,16 @@ class CeExternalEffectsDetector:
             for child in statement.sub_statements
             if isinstance(child, DatabaseStatement)
         )
+        mongo_clients = frozenset(
+            child.model.id
+            for statement in statements.values()
+            for child in statement.sub_statements
+            if isinstance(child, MongoDBStatement)
+        )
         return tuple(
             found
             for descriptor, statement in statements.items()
-            for found in external_effects(statement, descriptor, memstores, rdbms_clients)
+            for found in external_effects(statement, descriptor, memstores, rdbms_clients, mongo_clients)
         )
 
     def _parse(self, path: Path, properties: dict[str, str]) -> SetupStatement:
