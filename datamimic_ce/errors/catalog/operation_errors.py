@@ -34,4 +34,20 @@ ISSUES: list[IssueDefinition] = [
         ),
         resolution="Use the explicit delete, clear, or drop target described in the migration guidance.",
     ),
+    IssueDefinition(
+        code=IssueCode.OPERATION_CREATE_TABLE_INVALID,
+        name="OPERATION_CREATE_TABLE_INVALID",
+        title="Create Table Is Invalid",
+        template="createTable on '{target}' is invalid: {reason}. Fix: {migration}",
+        cause="createTable names columns or a target that cannot define the table, or a column type is unknown.",
+        resolution="Name <key> elements of a root generate with a database target; set type= on a key without values.",
+    ),
+    IssueDefinition(
+        code=IssueCode.OPERATION_TABLE_DRIFT,
+        name="OPERATION_TABLE_DRIFT",
+        title="Existing Table Differs From The Model",
+        template="Table '{target}' exists with other columns or another primary key: {difference}",
+        cause="createTable never alters a table, and the existing table does not match the rows of the generate.",
+        resolution="Change the model to match the table, or migrate or drop the table outside DATAMIMIC.",
+    ),
 ]

@@ -4,7 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
+from datamimic_ce.engine.io.clients.rdbms_client import ColumnKind, RdbmsClient
 from datamimic_ce.engine.io.contracts import Exporter
 from datamimic_ce.engine.io.exporters.core.routing import resolve_target_entity_from_metadata
 
@@ -26,6 +26,12 @@ class DatabaseExporter(Exporter):
             return
 
         self._client.insert(self._table_name(name, rest), data)
+
+    def ensure_table(
+        self, entity: str, columns: tuple[tuple[str, ColumnKind], ...], primary_key: tuple[str, ...]
+    ) -> None:
+        """Create the createTable table when it is missing, or check that the existing one matches."""
+        self._client.ensure_table(entity, columns, primary_key)
 
     def update(self, product: tuple) -> int:
         """UPDATE rows by primary key (target="db.update"). Returns the matched-row count."""

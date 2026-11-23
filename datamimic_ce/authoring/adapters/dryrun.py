@@ -46,6 +46,7 @@ from datamimic_ce.engine.dsl.api import (
     ATTR_WHERE,
     NAME_SEPARATOR,
     CompositeStatement,
+    Dbms,
     GenerateStatement,
     NestedKeyStatement,
     capture_product_name,
@@ -160,6 +161,8 @@ class _WorkerSuccess:
     # Names of the clear and drop statements a side-effect run executed: they establish success without a product.
     executed_operations: tuple[NonEmptyStrictStr, ...] = ()
     warnings: tuple[_EngineWarning, ...] = ()
+    # (client, entity, DDL) of each createTable table the run would create; bounded execution creates none.
+    planned_tables: tuple[tuple[NonEmptyStrictStr, NonEmptyStrictStr, NonEmptyStrictStr], ...] = ()
 
 
 @dataclass(frozen=True, config=ConfigDict(extra="forbid", strict=True, revalidate_instances="always"))
@@ -725,6 +728,7 @@ def neutralize_for_dry_run(
     skipped_operations: list[str] | None = None,
     executed_operations: list[str] | None = None,
     database_ids: set[str] | None = None,
+    rdbms_clients: dict[str, Dbms] | None = None,
 ) -> None:
     """Statement transformer: cap counts, keep only memstore targets, force 1 process.
     A source-free clear or drop is checked for its shape (I928, as at runtime) and then skipped: bounded execution
@@ -776,6 +780,11 @@ def neutralize_for_dry_run(
     database_ids.update(
         stmt.model.id for stmt in root_stmt.sub_statements if isinstance(stmt, (DatabaseStatement, MongoDBStatement))
     )
+    if rdbms_clients is None:
+        rdbms_clients = {}
+    rdbms_clients.update(
+        (stmt.model.id, stmt.model.dbms) for stmt in root_stmt.sub_statements if isinstance(stmt, DatabaseStatement)
+    )
 
     def _neutralize(stmt: object, nested: bool = False) -> None:
         if isinstance(stmt, GenerateStatement) and stmt.is_statement_operation:
@@ -807,6 +816,22 @@ def neutralize_for_dry_run(
                     raise _BoundedPolicyRefusal("SQLite source resolves outside the private bounded workspace")
         if isinstance(stmt, GenerateStatement):
             if not allow_side_effects:
+                # The strip below removes the database targets: check createTable first, then let the run plan it.
+                create_problem = stmt.create_table_problem(nested=nested)
+                if create_problem is None and stmt.create_table is not None:
+                    planned = tuple(
+                        (client, rdbms_clients[client])
+                        for client in sorted(stmt.target_client_ids & rdbms_clients.keys())
+                    )
+                    create_problem = None if planned else GenerateStatement.NO_DATABASE_TARGET
+                    stmt.planned_table_clients = planned
+                if create_problem is not None:
+                    raise operation_error(
+                        code=IssueCode.OPERATION_CREATE_TABLE_INVALID,
+                        target=stmt.name,
+                        reason=create_problem[0],
+                        migration=create_problem[1],
+                    )
                 # The strip below removes the delete target, so the engine would never see it.
                 delete_problem = stmt.delete_intent_problem(source_is_database=stmt.source in database_ids)
                 if delete_problem is not None:
@@ -1195,6 +1220,7 @@ def _validated_worker_success(message: _WorkerSuccess, max_count: int | None = N
         message.skipped_operations,
         message.executed_operations,
         message.warnings,
+        message.planned_tables,
     )
     names = [budget.name for budget in message.budgets]
     if len(names) != len(set(names)):
@@ -1485,6 +1511,7 @@ def _run_engine_capture(
                 skipped_operations=skipped,
                 executed_operations=executed,
                 database_ids=set(),
+                rdbms_clients={},
             )
             session = create_run_session(
                 RunRequest(
@@ -1526,6 +1553,7 @@ def _run_engine_capture(
                 source_accesses=source_accesses.snapshot(),
                 skipped_operations=tuple(skipped),
                 executed_operations=tuple(executed),
+                planned_tables=tuple(table for stmt in statements.values() for table in stmt.planned_tables),
             )
         except Exception as err:
             if is_user_error(err):

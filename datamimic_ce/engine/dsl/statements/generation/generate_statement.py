@@ -11,7 +11,9 @@ from datamimic_ce.engine.dsl.model.generation.timeseries import TimeSeriesConfig
 from datamimic_ce.engine.dsl.statements.base.composite_statement import CompositeStatement
 from datamimic_ce.engine.dsl.statements.base.statement import Statement
 from datamimic_ce.engine.dsl.statements.generation.targets import parse_consumer
+from datamimic_ce.engine.dsl.statements.values.scalar.key_statement import KeyStatement
 from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import ATTR_SELECTOR
+from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
 from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import SourceDistribution
 from datamimic_ce.engine.dsl.vocabulary.enums.operation_enums import ExportOperation
 
@@ -36,6 +38,7 @@ class GenerateStatement(CompositeStatement):
         self._selector = model.selector
         self._separator = model.separator
         self._targets: set[str] = parse_consumer(model.target)
+        self._create_table = None if model.create_table is None else GenerateModel.column_names(model.create_table)
         self._page_size = model.page_size
         self._mp = model.multiprocessing
         self._export_uri = model.export_uri
@@ -55,6 +58,10 @@ class GenerateStatement(CompositeStatement):
         self._bounded_count_limit: int | None = None
         # Rows the bounded run resolved for this statement, summed over its invocations (one per parent row).
         self.bounded_rows = 0
+        # Set only by Build, which strips the database targets: the createTable clients to plan instead of create.
+        self.planned_table_clients: tuple[tuple[str, Dbms], ...] = ()
+        # (client, entity, DDL) of each table the bounded run planned for planned_table_clients.
+        self.planned_tables: list[tuple[str, str, str]] = []
 
     @property
     def name(self) -> str:
@@ -130,6 +137,46 @@ class GenerateStatement(CompositeStatement):
         return tuple(item for item in parsed if item is not None)
 
     @property
+    def target_client_ids(self) -> frozenset[str]:
+        """The client id of each target: ``db`` for ``db`` and for ``db.upsert``. A file or memstore target names
+        itself, so a caller intersects the result with the client ids it knows."""
+        return frozenset(
+            parsed[0] if (parsed := ExportOperation.from_target(target)) is not None else target
+            for target in self._targets
+        )
+
+    @property
+    def create_table(self) -> tuple[str, ...] | None:
+        """The primary-key columns of the table this generate creates when it is missing; None without createTable."""
+        return self._create_table
+
+    # The rule that a createTable generate writes to a database (RDBMS) client: Build checks it against its parsed
+    # <database> clients, the run against the exporters of the product.
+    NO_DATABASE_TARGET = (
+        "the generate has no database (RDBMS) client target to create the table in",
+        "add a <database> client target such as db or db.upsert, or remove createTable",
+    )
+
+    def create_table_problem(self, *, nested: bool) -> tuple[str, str] | None:
+        """``(reason, migration)`` of the first statement rule a createTable breaks, None for a valid one or without
+        it. The runtime and bounded authoring run this same check before any database access."""
+        if self._create_table is None:
+            return None
+        if nested:
+            return (
+                "a nested generate runs once for each parent row, so it cannot create its table once",
+                "move createTable to a root <generate> that writes the table",
+            )
+        keys = {child.name for child in self.sub_statements if isinstance(child, KeyStatement)}
+        unknown = [name for name in self._create_table if name not in keys]
+        if unknown:
+            return (
+                f"the primary-key column(s) {', '.join(unknown)} are not a <key> of this generate",
+                "name only <key> elements of this generate in createTable, or add a <key> for each column",
+            )
+        return None
+
+    @property
     def is_statement_operation(self) -> bool:
         """Whether a target is a source-free ``clear`` or ``drop``, which runs once instead of generating rows."""
         return any(operation.is_statement_operation for _, operation in self.client_operations)
@@ -183,6 +230,7 @@ class GenerateStatement(CompositeStatement):
         present = {
             "children": bool(self.sub_statements),
             "count": any(value is not None for value in (self._count, self._min_count, self._max_count)),
+            "createTable": self._create_table is not None,
             "interval": any(value is not None for value in (self._start, self._end, self._interval)),
             "otherTargets": len(self._targets) > 1,
             "script": self._script is not None,

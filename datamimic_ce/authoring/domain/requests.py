@@ -326,6 +326,19 @@ class SourceAccessEvidence(AuthoringModel):
     requests: StrictInt = Field(ge=1)
 
 
+class PlannedOperation(AuthoringModel):
+    """A database change that a run makes and Build does not make: Build shows it and executes nothing."""
+
+    kind: Literal["create_table"] = "create_table"
+    client: NonEmptyStrictStr
+    entity: NonEmptyStrictStr
+    ddl: NonEmptyStrictStr = Field(
+        description="The CREATE TABLE statement for the client's dbms, from the rows Build captured. The run creates "
+        "the table when it is missing and fails when an existing table has other columns or another primary key."
+    )
+    executed: Literal[False] = False
+
+
 class BuildAssurance(AuthoringModel):
     """Closed proof scope carried only by an honest ReadyBuild."""
 
@@ -401,6 +414,9 @@ class _ProvenBuild(AuthoringModel):
     )
     verification: BuildVerificationEvidence = Field(default_factory=BuildVerificationEvidence)
     diagnostics: tuple[Diagnostic, ...] = ()
+    planned_operations: tuple[PlannedOperation, ...] = Field(
+        default=(), description="The createTable tables a run creates when they are missing; Build creates none."
+    )
 
     @model_validator(mode="after")
     def expectations_match_coverage(self) -> Self:
@@ -465,6 +481,7 @@ def proven_build(
     expectations: ListedExpectations,
     verification: BuildVerificationEvidence,
     diagnostics: tuple[Diagnostic, ...],
+    planned_operations: tuple[PlannedOperation, ...] = (),
 ) -> ReadyBuild | ReadyWithGapsBuild:
     """The outcome of a passed proof: `ready` for a clean coverage, `ready_with_gaps` for an open gap."""
     action_required = coverage.action_required()
@@ -477,6 +494,7 @@ def proven_build(
             expectations=expectations,
             verification=verification,
             diagnostics=diagnostics,
+            planned_operations=planned_operations,
         )
     return ReadyWithGapsBuild(
         artifact=artifact,
@@ -486,6 +504,7 @@ def proven_build(
         expectations=expectations,
         verification=verification,
         diagnostics=diagnostics,
+        planned_operations=planned_operations,
         action_required=action_required,
     )
 
@@ -523,6 +542,7 @@ class BoundedExecutionEvidence:
     source_accesses: tuple[SourceAccessEvidence, ...] = ()
     # Workspace files the run opened for reading, hashed from the private copy it read them from.
     files: tuple[ProjectFileDigest, ...] = ()
+    planned_operations: tuple[PlannedOperation, ...] = ()
 
     @property
     def ok(self) -> bool:
