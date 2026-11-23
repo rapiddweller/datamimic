@@ -548,10 +548,15 @@ class GenerateWorker:
                 if isinstance(budget, TotalRowBudget):
                     budget.release(1 + sum(len(rows) for rows in row_products.values()))
                 # Stop generating data if one of datasource reach the end
-                logger.info(
+                reached_end = (
                     f"Data generator sub-task {task.__class__.__name__} '{task.statement.name}' has already reached "
                     f"the end"
                 )
+                if build_from_source:
+                    logger.info(reached_end)
+                else:
+                    # The count asked for more rows: a run that writes fewer must not look complete.
+                    logger.warning(f"{reached_end}; '{stmt.name}' wrote {len(result)} of {processed_data_count} rows")
                 break
 
         # 4. Return product for later export
