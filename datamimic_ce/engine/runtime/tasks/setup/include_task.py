@@ -97,10 +97,20 @@ class IncludeTask(CommonSubTask):
                 # Update root_context with attributes defined in sub-setup statement
                 copied_root_context.update_with_stmt(sub_setup_stmt)
                 # Update root_context with parent_context variables and current_product
-                copied_root_context.global_variables.update(ctx.current_variables)
-                copied_root_context.global_variables.update(ctx.current_product)
-
-                SetupTask.execute_statements(sub_setup_stmt, copied_root_context)
+                # The copy shares the run's global variables. The row values go in for the step only: a later
+                # sibling must not read a variable of the last row.
+                shared = copied_root_context.global_variables
+                row_values = {**ctx.current_variables, **ctx.current_product}
+                before = {name: shared[name] for name in row_values if name in shared}
+                shared.update(row_values)
+                try:
+                    SetupTask.execute_statements(sub_setup_stmt, copied_root_context)
+                finally:
+                    for name in row_values:
+                        if name in before:
+                            shared[name] = before[name]
+                        elif name in shared:
+                            del shared[name]
         else:
             raise include_error(code=IssueCode.INCLUDE_UNSUPPORTED_FILE_TYPE_GENERATE, uri=uri)
 
