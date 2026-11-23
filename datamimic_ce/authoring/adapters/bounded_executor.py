@@ -45,6 +45,7 @@ from datamimic_ce.authoring.domain.requests import (
     BoundedExecutionEvidence,
     BoundedExecutionRequest,
     BoundedExecutionStatus,
+    PlannedOperation,
     ProjectFileDigest,
     SourceAccessEvidence,
 )
@@ -465,6 +466,10 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
                 for source_type, count in message.source_accesses
             ),
             files=_read_file_digests(message.read_files, request, workspace),
+            planned_operations=tuple(
+                PlannedOperation(client=client, entity=entity, ddl=ddl)
+                for client, entity, ddl in message.planned_tables
+            ),
         )
     except (
         AttributeError,

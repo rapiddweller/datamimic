@@ -30,13 +30,14 @@ from datamimic_ce.engine.dsl.api import (
     parse_properties,
     parse_xml_file,
 )
+from datamimic_ce.engine.io.api import resolve_target_entity
 
 UNREADABLE_PROJECT = "The project entry or an included step could not be read."
 _RUNTIME_ENVIRONMENT: Literal["development", "production"] = "development"
 
 
 def external_effects(
-    statement: SetupStatement, descriptor: str, memstores: frozenset[str]
+    statement: SetupStatement, descriptor: str, memstores: frozenset[str], rdbms_clients: frozenset[str] = frozenset()
 ) -> tuple[ExternalEffect, ...]:
     """The effects of one statement tree. Files in the project, memstores, console and log are not external.
     The classification of targets is the bounded run's; this policy refuses what that policy neutralizes."""
@@ -58,6 +59,10 @@ def external_effects(
                 effect(ExternalEffectKind.TARGET, name)
             if classified.unreadable:
                 effect(ExternalEffectKind.UNRESOLVED, UNREADABLE_TARGET)
+            if node.create_table is not None:
+                entity = resolve_target_entity(node.target_entity, node.type, node.name)
+                for client in sorted(node.target_client_ids & rdbms_clients):
+                    effect(ExternalEffectKind.SCHEMA, f"{client}.{entity}")
         if isinstance(node, CompositeStatement):
             for child in node.sub_statements:
                 walk(child)
@@ -93,10 +98,16 @@ class CeExternalEffectsDetector:
             # A project that cannot be read as a whole cannot be shown safe.
             return (ExternalEffect(kind=ExternalEffectKind.UNRESOLVED, name=UNREADABLE_PROJECT, descriptor=entry_name),)
         memstores = frozenset(id_ for statement in statements.values() for id_ in memstore_ids(statement))
+        rdbms_clients = frozenset(
+            child.model.id
+            for statement in statements.values()
+            for child in statement.sub_statements
+            if isinstance(child, DatabaseStatement)
+        )
         return tuple(
             found
             for descriptor, statement in statements.items()
-            for found in external_effects(statement, descriptor, memstores)
+            for found in external_effects(statement, descriptor, memstores, rdbms_clients)
         )
 
     def _parse(self, path: Path, properties: dict[str, str]) -> SetupStatement:

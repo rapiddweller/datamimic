@@ -27,6 +27,7 @@ from datamimic_ce.engine.runtime.tasks.generate.policies.single_process_policy i
 def _gen(children=(), unique=False, targets=()) -> MagicMock:
     g = MagicMock(spec=GenerateStatement)
     g.name, g.unique, g.sub_statements, g.targets = "g", unique, list(children), list(targets)
+    g.create_table = None
     g.client_operations = tuple(parsed for parsed in map(ExportOperation.from_target, targets) if parsed is not None)
     return g
 

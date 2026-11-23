@@ -1,0 +1,70 @@
+{
+  "title": "createTable creates the SQLite sink table from the model, and a re-run upserts into it",
+  "proves": [
+    "the project has no DDL file and no sqlite3 step: the first run creates journal_lines from the keys of the generate, with line_id as primary key",
+    "a second run finds the table, its columns and primary key match, and the upsert writes the same 6 rows again without an error",
+    "type= on a key sets the column type, so a key whose values are all null still gets a column; the other columns take the type of their first value",
+    "Build creates no table: it shows the planned CREATE TABLE in planned_operations and proves the rows only",
+    "each rejected class stops Build: an unknown key column, no database target, createTable on a clear, createTable on a nested generate, an empty or repeated column list, an all-null column without type= and a value type without a column type"
+  ],
+  "products": {"lines": 6},
+  "exports": ["output/*/journal_lines.csv"],
+  "negatives": [
+    {
+      "name": "key_column_unknown",
+      "diagnostic": "child_execution",
+      "issue": "I929",
+      "patch": {"file": "datamimic.xml", "old": "createTable=\"line_id\"", "new": "createTable=\"line_no\""}
+    },
+    {
+      "name": "no_database_target",
+      "diagnostic": "child_execution",
+      "issue": "I929",
+      "patch": {"file": "datamimic.xml", "old": "target=\"CSV,ledger.upsert\"", "new": "target=\"CSV\""}
+    },
+    {
+      "name": "on_clear_statement",
+      "diagnostic": "child_execution",
+      "issue": "I928",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "</setup>",
+        "new": "    <generate name=\"reset\" target=\"ledger.clear\" targetEntity=\"journal_lines\" createTable=\"line_id\"/>\n</setup>"
+      }
+    },
+    {
+      "name": "on_nested_generate",
+      "diagnostic": "child_execution",
+      "issue": "I929",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "    </generate>",
+        "new": "        <generate name=\"splits\" count=\"1\" target=\"ledger.upsert\" createTable=\"split_id\"><key name=\"split_id\" constant=\"1\"/></generate>\n    </generate>"
+      }
+    },
+    {
+      "name": "empty_column_list",
+      "diagnostic": "descriptor",
+      "issue": "I605",
+      "patch": {"file": "datamimic.xml", "old": "createTable=\"line_id\"", "new": "createTable=\"\""}
+    },
+    {
+      "name": "repeated_column",
+      "diagnostic": "descriptor",
+      "issue": "I605",
+      "patch": {"file": "datamimic.xml", "old": "createTable=\"line_id\"", "new": "createTable=\"line_id, line_id\""}
+    },
+    {
+      "name": "all_null_column_without_type",
+      "diagnostic": "child_execution",
+      "issue": "I929",
+      "patch": {"file": "datamimic.xml", "old": "script=\"None\" type=\"string\"", "new": "script=\"None\""}
+    },
+    {
+      "name": "value_type_without_column_type",
+      "diagnostic": "child_execution",
+      "issue": "I929",
+      "patch": {"file": "datamimic.xml", "old": "script=\"datetime.date(2026, 3, 1)\"", "new": "script=\"datetime.timedelta(days=1)\""}
+    }
+  ]
+}

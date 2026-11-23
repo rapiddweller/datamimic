@@ -11,10 +11,12 @@ from datamimic_ce.engine.io.clients.operations import (
     dispose_client_engine,
     execute_sql_script,
     is_database_client,
+    planned_create_table_ddl,
     rdbms_get_current_sequence_number,
     rdbms_increase_sequence_number,
     uses_mysql_sequence_storage,
 )
+from datamimic_ce.engine.io.clients.rdbms_client import ColumnKind
 from datamimic_ce.engine.io.connection_config.mongodb_connection_config import (
     MongoDBConnectionConfig,
     MongoDBConnectionValues,
@@ -83,6 +85,7 @@ __all__ = [
     "normalize_error_cause_for_transport",
     "normalize_exporter_error_cause_for_transport",
     "Client",
+    "ColumnKind",
     "clone_client_for_include",
     "RegisteredClient",
     "ChunkSourceWindow",
@@ -123,6 +126,7 @@ __all__ = [
     "dispose_client_engine",
     "execute_sql_script",
     "is_database_client",
+    "planned_create_table_ddl",
     "resolve_source_entity",
     "read_nested_key_source",
     "read_generate_database_source",

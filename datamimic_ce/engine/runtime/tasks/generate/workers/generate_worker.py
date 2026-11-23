@@ -7,12 +7,27 @@ import copy
 import os
 import pickle
 from contextlib import suppress
+from datetime import date, datetime
+from decimal import Decimal
 from io import BytesIO
 
 import dill
 
-from datamimic_ce.engine.dsl.api import CompositeStatement, ConditionStatement, GenerateStatement, Statement
+from datamimic_ce.engine.dsl.api import (
+    DATA_TYPE_BINARY,
+    DATA_TYPE_BOOL,
+    DATA_TYPE_DECIMAL,
+    DATA_TYPE_FLOAT,
+    DATA_TYPE_INT,
+    DATA_TYPE_STRING,
+    CompositeStatement,
+    ConditionStatement,
+    GenerateStatement,
+    KeyStatement,
+    Statement,
+)
 from datamimic_ce.engine.io.api import (
+    ColumnKind,
     DataSourcePagination,
     ExportSession,
     MongoDBConnectionConfig,
@@ -21,6 +36,7 @@ from datamimic_ce.engine.io.api import (
     create_mongodb_client,
     create_rdbms_client,
     dispose_client_engine,
+    planned_create_table_ddl,
     resolve_target_entity,
 )
 from datamimic_ce.engine.runtime.contexts.context import (
@@ -38,6 +54,63 @@ from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask, GenSubTas
 from datamimic_ce.engine.runtime.tasks.generate.export_order import export_product_by_page
 from datamimic_ce.engine.runtime.tasks.sources.chunk_source_reader import ChunkSourceReader
 from datamimic_ce.engine.runtime.tasks.values.construction.converters import create_converter_list
+from datamimic_ce.errors import IssueCode, operation_error
+
+# The column kind of each key type= value (KEY_TYPE_VALUES).
+_DECLARED_COLUMN_KINDS = {
+    DATA_TYPE_STRING: ColumnKind.TEXT,
+    DATA_TYPE_INT: ColumnKind.INTEGER,
+    DATA_TYPE_FLOAT: ColumnKind.FLOAT,
+    DATA_TYPE_DECIMAL: ColumnKind.DECIMAL,
+    DATA_TYPE_BOOL: ColumnKind.BOOLEAN,
+    DATA_TYPE_BINARY: ColumnKind.BINARY,
+}
+# bool before int and datetime before date: each is a subclass of the type after it.
+_VALUE_COLUMN_KINDS: tuple[tuple[type, ColumnKind], ...] = (
+    (bool, ColumnKind.BOOLEAN),
+    (int, ColumnKind.INTEGER),
+    (float, ColumnKind.FLOAT),
+    (Decimal, ColumnKind.DECIMAL),
+    (datetime, ColumnKind.DATETIME),
+    (date, ColumnKind.DATE),
+    (str, ColumnKind.TEXT),
+)
+
+
+def _create_table_columns(stmt: GenerateStatement, rows: list[dict[str, object]]) -> tuple[tuple[str, ColumnKind], ...]:
+    """The createTable columns: each field of the first written rows in first-seen order, typed by its key's type=,
+    else by its first non-null value. Fails with I929 when a column has no type or a primary-key field is missing."""
+    declared = {
+        child.name: _DECLARED_COLUMN_KINDS[child.type]
+        for child in stmt.sub_statements
+        if isinstance(child, KeyStatement) and child.type is not None
+    }
+    columns: dict[str, ColumnKind] = {}
+    reason = None
+    for name in (field for row in rows for field in row):
+        if name in columns:
+            continue
+        kind = declared.get(name)
+        if kind is None:
+            value = next((row[name] for row in rows if row.get(name) is not None), None)
+            kind = next((found for python_type, found in _VALUE_COLUMN_KINDS if isinstance(value, python_type)), None)
+            if kind is None:
+                held = "only null values" if value is None else f"a {type(value).__name__} value"
+                reason = f"column '{name}' holds {held} in the first written rows, so its type is unknown"
+                break
+        columns[name] = kind
+    missing = [name for name in stmt.create_table or () if name not in columns]
+    if reason is None and missing:
+        reason = f"the primary-key column(s) {', '.join(missing)} are not in the written rows"
+    if reason is not None:
+        raise operation_error(
+            code=IssueCode.OPERATION_CREATE_TABLE_INVALID,
+            target=stmt.name,
+            reason=reason,
+            migration="set type= (string, int, float, decimal, bool or binary) on the <key> of that column, and "
+            "write each primary-key column in every row",
+        )
+    return tuple(columns.items())
 
 
 class GenerateWorker:
@@ -255,6 +328,9 @@ class GenerateWorker:
         if isinstance(context, SetupContext) and not root_context.test_mode:
             keep_keys = GenerateWorker._memstore_product_keys(root_context, stmt)
 
+        # The create-table policy keeps this generate in one process, so this flag makes the creation once per run.
+        table_pending = stmt.create_table is not None
+
         # Chunk-scoped source reader: loads + orders the source once per chunk and hands
         # each page its window (see ChunkSourceReader) — the worker only iterates pages.
         source_reader = ChunkSourceReader(context, stmt, chunk_start, chunk_end)
@@ -287,6 +363,9 @@ class GenerateWorker:
                         NestedExport(stmt, result_dict[stmt.full_name], result_dict.nested_exports)
                     )
                 else:
+                    if table_pending and result_dict[stmt.full_name]:
+                        GenerateWorker._create_tables(export_session, stmt, result_dict[stmt.full_name])
+                        table_pending = False
                     export_product_by_page(stmt, result_dict, export_session, root_context)
                 result.merge_exports(result_dict)
 
@@ -295,6 +374,26 @@ class GenerateWorker:
                 result[key] = result.get(key, []) + result_dict[key]
 
         return result
+
+    @staticmethod
+    def _create_tables(export_session: ExportSession, stmt: GenerateStatement, rows: list[dict[str, object]]) -> None:
+        """Create the createTable table in each RDBMS target from the first written rows, before they are written.
+        Under Build the targets are stripped, and the planned clients get the DDL instead of a table."""
+        primary_key = stmt.create_table
+        if primary_key is None:
+            raise ValueError("the generate has no createTable")
+        columns = _create_table_columns(stmt, rows)
+        entity = resolve_target_entity(stmt.target_entity, stmt.type, stmt.name)
+        created = export_session.create_tables(stmt.full_name, entity, columns, primary_key)
+        if not created and not stmt.planned_table_clients:
+            reason, migration = GenerateStatement.NO_DATABASE_TARGET
+            raise operation_error(
+                code=IssueCode.OPERATION_CREATE_TABLE_INVALID, target=stmt.name, reason=reason, migration=migration
+            )
+        stmt.planned_tables += [
+            (client_id, entity, planned_create_table_ddl(dbms, entity, columns, primary_key))
+            for client_id, dbms in stmt.planned_table_clients
+        ]
 
     @staticmethod
     def _memstore_product_keys(root_context: SetupContext, statement: GenerateStatement) -> set[str]:

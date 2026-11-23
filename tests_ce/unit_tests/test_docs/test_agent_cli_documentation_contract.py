@@ -82,10 +82,12 @@ def test_agents_md_embedded_project_builds_ready(tmp_path: Path) -> None:
     assert result["evidence"][0]["count"] == 3
 
 
-@pytest.mark.parametrize("index", range(4), ids=["nested_fk", "memstore_readback", "time_series", "file_sources"])
+@pytest.mark.parametrize(
+    "index", range(5), ids=["nested_fk", "memstore_readback", "time_series", "file_sources", "create_table"]
+)
 def test_documented_structural_projects_build_ready(index: int, tmp_path: Path) -> None:
     projects = _projects(ROOT / "docs/examples/authoring.md")
-    assert len(projects) == 4
+    assert len(projects) == 5
     # The file-source example reads the fixture of the scenario that holds the complete project.
     if index == 3:
         shutil.copytree(ROOT / "tests_ce/scenarios/s22_file_filter/data", tmp_path / "data")

@@ -285,6 +285,16 @@ class GenerateTask(CommonSubTask):
                 migration=migration,
             )
 
+    def _assert_create_table_shape(self, context: SetupContext | GenIterContext) -> None:
+        """Fail closed with I929 before any database access when createTable cannot define its table once."""
+        stmt = self._statement
+        problem = stmt.create_table_problem(nested=not self.is_outermost(context))
+        if problem is not None:
+            reason, migration = problem
+            raise operation_error(
+                code=IssueCode.OPERATION_CREATE_TABLE_INVALID, target=stmt.name, reason=reason, migration=migration
+            )
+
     def execute(
         self,
         context: SetupContext | GenIterContext,
@@ -302,6 +312,7 @@ class GenerateTask(CommonSubTask):
         if self.statement.is_statement_operation:
             return self._execute_statement_operation(context)
         self._assert_delete_selects_rows(context)
+        self._assert_create_table_shape(context)
         outermost = self.is_outermost(context)
         with gen_timer("process", context.root.report_logging, self.statement.full_name, not outermost) as timer_result:
             try:

@@ -166,6 +166,51 @@ the directory is a new task id for each run. The example above writes
 `output/order_report/order_report.json`. The complete project is
 `tests_ce/scenarios/s22_file_filter`.
 
+## Database sink table
+
+`createTable="<primary-key columns>"` on a `<generate>` with a database target
+creates the table when it is missing. The project needs no DDL file and no
+`sqlite3` step. The value lists the primary-key columns, separated by commas.
+
+```xml
+<setup rngSeed="59">
+    <database id="ledger" dbms="sqlite" database="s59_ledger"/>
+    <generate name="lines" count="6" target="CSV,ledger.upsert" targetEntity="journal_lines" createTable="line_id">
+        <key name="line_id" generator="IncrementGenerator"/>
+        <key name="account" values="('1000', '1200', '8400')"/>
+        <key name="amount_cents" type="int" min="100" max="9999"/>
+        <key name="posted_on" script="datetime.date(2026, 3, 1)"/>
+        <key name="memo" script="None" type="string"/>
+    </generate>
+</setup>
+```
+
+```json
+{
+  "version": "5.0",
+  "environment_bindings": [{"environment": "ledger", "family": "database"}],
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "lines"}, "count": 6}
+  ]
+}
+```
+
+The columns are the fields of the written rows. A key's `type=` sets the column
+type. Without `type=`, the first non-null value in the first page sets it: `str`,
+`int`, `float`, `bool`, `Decimal`, `date` or `datetime`. A column with only null
+values, or with another value type, fails with `I929` and asks for `type=`.
+The run creates the table once, before the first row. It never alters or drops a
+table. A second run finds the table and upserts. An existing table with other
+columns or another primary key fails with `I930` and the column difference.
+
+Each primary-key column must be a `<key>` of the generate. The generate needs a
+`<database>` (RDBMS) target, plain or with `.upsert`, `.update` or `.delete`.
+It must be a root generate, and `createTable` is not allowed with `clear` or
+`drop`. The generate runs in one process. Build creates nothing: it shows the
+CREATE TABLE statement in `planned_operations`. `run-project` lists a `schema`
+side effect (`ledger.journal_lines`) and needs `allow_side_effects`. The complete
+project is `tests_ce/scenarios/s59_create_table`.
+
 For exporter/replay verification add `"verification": {"smoke_export": true,
 "deterministic_replay": true}` to `acceptance/build.json`. Build replays every
 seeded model also without the request, under three other hash seeds. A target-isolated bounded
