@@ -1,0 +1,18 @@
+{
+  "title": "An update target is a declared sink: upsert 3 orders, then update the same 3 by primary key",
+  "proves": [
+    "a target with the update operation (shop.update) is a declared sink, like a plain or an upsert target: Build counts its routed rows on the sink and does not report 'sink without captured contributors'",
+    "the table comes from createTable on the first generate, so the project needs no DDL file; the second generate updates the rows by the primary key",
+    "the sink counts the routed rows of both generates (3 inserted + 3 updated = 6); it does not count the rows that the table holds at the end",
+    "what the update writes into the table is the engine behaviour that already existed; this scenario proves the Build side only"
+  ],
+  "products": {"seed": 3, "paid": 3},
+  "negatives": [
+    {
+      "name": "delete_target_does_not_count_on_the_sink",
+      "diagnostic": "exact_count",
+      "expected": "6",
+      "patch": {"file": "datamimic.xml", "old": "shop.update", "new": "shop.delete"}
+    }
+  ]
+}

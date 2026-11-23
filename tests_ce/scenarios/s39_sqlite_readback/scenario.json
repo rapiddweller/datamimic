@@ -7,7 +7,7 @@
     "Build needs an environment binding for the client and reads the table in the project (db/s39_shop.sqlite, the 12 rows that the seed writes): it proves the readback product against the table as it is on disk",
     "Build does not prove that the load wrote the rows: Build isolates the write target and skips the clear, so the readback in Build shows the fixture rows, not the generated rows",
     "a readback needs a literal count: without count Build cannot prove the cardinality and reports the capture as unknown, not DM211, because the lint of a step sees the client that the entry declares (#493); a count above the rows of the table stops the source early (DM316)",
-    "the table comes from a checked-in SQLite file, because Build refuses an <execute> step (unsupported_bounded_operation): a project cannot create its own table and stay provable"
+    "the table comes from a checked-in SQLite file, because Build refuses an <execute> step (unsupported_bounded_operation): a project that needs no readback of a checked-in table can create its own with createTable (s59_create_table)"
   ],
   "products": {
     "orders": 12,
