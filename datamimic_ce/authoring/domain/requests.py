@@ -194,7 +194,10 @@ class ProductEvidence(AuthoringModel):
 
 class RunResult(AuthoringModel):
     ok: StrictBool
-    phase: RunPhase
+    phase: RunPhase = Field(
+        description="The operation that was asked for: lint when the XML failed lint, else dry_run or run. It does "
+        "not name the step that failed: read the phase of each diagnostic."
+    )
     products: tuple[ProductEvidence, ...] = ()
     diagnostics: tuple[Diagnostic, ...] = ()
 
