@@ -46,6 +46,7 @@ from datamimic_ce.engine.dsl.api import (
     ATTR_WHERE,
     NAME_SEPARATOR,
     CompositeStatement,
+    Dbms,
     GenerateStatement,
     NestedKeyStatement,
     capture_product_name,
@@ -160,6 +161,8 @@ class _WorkerSuccess:
     # Names of the clear and drop statements a side-effect run executed: they establish success without a product.
     executed_operations: tuple[NonEmptyStrictStr, ...] = ()
     warnings: tuple[_EngineWarning, ...] = ()
+    # (client, entity, DDL) of each createTable table the run would create; bounded execution creates none.
+    planned_tables: tuple[tuple[NonEmptyStrictStr, NonEmptyStrictStr, NonEmptyStrictStr], ...] = ()
 
 
 @dataclass(frozen=True, config=ConfigDict(extra="forbid", strict=True, revalidate_instances="always"))
@@ -725,6 +728,7 @@ def neutralize_for_dry_run(
     skipped_operations: list[str] | None = None,
     executed_operations: list[str] | None = None,
     database_ids: set[str] | None = None,
+    rdbms_clients: dict[str, tuple[Dbms, str | None]] | None = None,
 ) -> None:
     """Statement transformer: cap counts, keep only memstore targets, force 1 process.
     A source-free clear or drop is checked for its shape (I928, as at runtime) and then skipped: bounded execution
@@ -776,6 +780,13 @@ def neutralize_for_dry_run(
     database_ids.update(
         stmt.model.id for stmt in root_stmt.sub_statements if isinstance(stmt, (DatabaseStatement, MongoDBStatement))
     )
+    if rdbms_clients is None:
+        rdbms_clients = {}
+    rdbms_clients.update(
+        (stmt.model.id, (stmt.model.dbms, stmt.model.db_schema))
+        for stmt in root_stmt.sub_statements
+        if isinstance(stmt, DatabaseStatement)
+    )
 
     def _neutralize(stmt: object, nested: bool = False) -> None:
         if isinstance(stmt, GenerateStatement) and stmt.is_statement_operation:
@@ -797,7 +808,6 @@ def neutralize_for_dry_run(
         if not allow_side_effects and isinstance(stmt, (DatabaseStatement, MongoDBStatement)):
             stmt.model.read_only = True
         if isinstance(stmt, DatabaseStatement) and descriptor_dir is not None:
-            from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
             from datamimic_ce.engine.io.api import sqlite_database_path
 
             if stmt.model.dbms is Dbms.SQLITE and stmt.model.database is not None:
@@ -807,6 +817,23 @@ def neutralize_for_dry_run(
                     raise _BoundedPolicyRefusal("SQLite source resolves outside the private bounded workspace")
         if isinstance(stmt, GenerateStatement):
             if not allow_side_effects:
+                # The strip below removes the database targets: check createTable first, then let the run plan it.
+                create_problem = stmt.create_table_problem(
+                    nested=nested,
+                    rdbms_clients=tuple((client, dbms) for client, (dbms, _) in rdbms_clients.items()),
+                )
+                if create_problem is None and stmt.create_table is not None:
+                    stmt.planned_table_clients = tuple(
+                        (client, *rdbms_clients[client])
+                        for client in sorted(stmt.target_client_ids & rdbms_clients.keys())
+                    )
+                if create_problem is not None:
+                    raise operation_error(
+                        code=IssueCode.OPERATION_CREATE_TABLE_INVALID,
+                        target=stmt.name,
+                        reason=create_problem[0],
+                        migration=create_problem[1],
+                    )
                 # The strip below removes the delete target, so the engine would never see it.
                 delete_problem = stmt.delete_intent_problem(source_is_database=stmt.source in database_ids)
                 if delete_problem is not None:
@@ -1195,6 +1222,7 @@ def _validated_worker_success(message: _WorkerSuccess, max_count: int | None = N
         message.skipped_operations,
         message.executed_operations,
         message.warnings,
+        message.planned_tables,
     )
     names = [budget.name for budget in message.budgets]
     if len(names) != len(set(names)):
@@ -1377,6 +1405,29 @@ def _check_runtime_counts(
             budgets[name] = replace(budget, bounded_without_cap=False, reason=_UNDERRUN_REASON)
 
 
+def _check_memstore_rows(
+    budgets: _ProductBudgets,
+    statements: dict[str, GenerateStatement],
+    captured: dict[str, list[object]],
+    memstore_rows: Callable[[str, str], list[object] | None],
+) -> None:
+    """A script can change a memstore after the product wrote its rows (consume, removeNotExistingIds). A reader then
+    sees rows that Build did not capture, so the capture of the product proves nothing about them. Both mutators only
+    add or remove rows, so the final store shows every lasting change."""
+    for name, stmt in statements.items():
+        entity = GenerateStatement.memstore_entity(stmt.target_entity, stmt.name)
+        # Only the first memstore target of a product receives its rows; a store that never got them is not a change.
+        held = {store: rows for store in sorted(stmt.targets) if (rows := memstore_rows(store, entity)) is not None}
+        if held and captured.get(name, []) not in held.values():
+            store = next(iter(held))
+            budgets[name] = replace(
+                budgets[name],
+                bounded_without_cap=False,
+                source_exhaustible=False,
+                reason=f"a script changed memstore '{store}': it does not hold the captured rows of entity '{entity}'",
+            )
+
+
 def _nested_list_ended_early(stmt: CompositeStatement) -> bool:
     """Whether a <nestedKey> list of this product ended before its count (#450). A nested <generate> is a product of
     its own and has its own budget."""
@@ -1462,6 +1513,7 @@ def _run_engine_capture(
                 skipped_operations=skipped,
                 executed_operations=executed,
                 database_ids=set(),
+                rdbms_clients={},
             )
             session = create_run_session(
                 RunRequest(
@@ -1484,6 +1536,7 @@ def _run_engine_capture(
             # The engine omits zero-row products; keep their explicit empty capture.
             raw_capture = {name: raw_capture.get(name, ()) for name in budgets}
             _check_runtime_counts(budgets, statements, raw_capture)
+            _check_memstore_rows(budgets, statements, capture if capture is not None else {}, session.memstore_rows)
             _validated_worker_success(
                 _WorkerSuccess(raw_capture, tuple(budgets.values()), (), SmokeExportCapture.not_requested()),
                 max_count=max_count,
@@ -1502,6 +1555,7 @@ def _run_engine_capture(
                 source_accesses=source_accesses.snapshot(),
                 skipped_operations=tuple(skipped),
                 executed_operations=tuple(executed),
+                planned_tables=tuple(table for stmt in statements.values() for table in stmt.planned_tables),
             )
         except Exception as err:
             if is_user_error(err):

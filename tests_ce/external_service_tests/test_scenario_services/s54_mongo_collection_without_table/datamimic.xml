@@ -1,0 +1,10 @@
+<setup rngSeed="54">
+    <mongodb id="mongodb"/>
+    <!-- MongoDB has no DDL: the first write creates the collection, so the project has no createTable. -->
+    <generate name="clear_lines" targetEntity="dm_s54_lines" target="mongodb.clear"/>
+    <generate name="dm_s54_lines" count="5" target="mongodb">
+        <id name="line_id" generator="IncrementGenerator"/>
+        <key name="account" values="('1000', '1200')"/>
+        <key name="amount_cents" type="int" min="100" max="9999"/>
+    </generate>
+</setup>

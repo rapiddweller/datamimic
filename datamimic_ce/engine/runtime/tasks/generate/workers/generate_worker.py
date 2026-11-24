@@ -11,16 +11,31 @@ from io import BytesIO
 
 import dill
 
-from datamimic_ce.engine.dsl.api import CompositeStatement, ConditionStatement, GenerateStatement, Statement
+from datamimic_ce.engine.dsl.api import (
+    DATA_TYPE_BINARY,
+    DATA_TYPE_BOOL,
+    DATA_TYPE_DECIMAL,
+    DATA_TYPE_FLOAT,
+    DATA_TYPE_INT,
+    DATA_TYPE_STRING,
+    CompositeStatement,
+    ConditionStatement,
+    GenerateStatement,
+    KeyStatement,
+    Statement,
+)
 from datamimic_ce.engine.io.api import (
+    ColumnKind,
     DataSourcePagination,
     ExportSession,
     MongoDBConnectionConfig,
     RdbmsConnectionConfig,
     RegisteredClient,
+    column_kind_of_type,
     create_mongodb_client,
     create_rdbms_client,
     dispose_client_engine,
+    planned_create_table_ddl,
     resolve_target_entity,
 )
 from datamimic_ce.engine.runtime.contexts.context import (
@@ -38,6 +53,58 @@ from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask, GenSubTas
 from datamimic_ce.engine.runtime.tasks.generate.export_order import export_product_by_page
 from datamimic_ce.engine.runtime.tasks.sources.chunk_source_reader import ChunkSourceReader
 from datamimic_ce.engine.runtime.tasks.values.construction.converters import create_converter_list
+from datamimic_ce.errors import IssueCode, operation_error
+
+# The DSL key type= values are runtime-side: IO may not import DSL vocabulary (REQUIRES-COMPLETE), so the seam is here.
+_KEY_TYPE_KINDS = {
+    DATA_TYPE_STRING: ColumnKind.TEXT,
+    DATA_TYPE_INT: ColumnKind.INTEGER,
+    DATA_TYPE_FLOAT: ColumnKind.FLOAT,
+    DATA_TYPE_DECIMAL: ColumnKind.DECIMAL,
+    DATA_TYPE_BOOL: ColumnKind.BOOLEAN,
+    DATA_TYPE_BINARY: ColumnKind.BINARY,
+}
+
+
+def _create_table_columns(stmt: GenerateStatement, rows: list[dict[str, object]]) -> tuple[tuple[str, ColumnKind], ...]:
+    """The createTable columns: each field of the first written rows in first-seen order, typed by its key's type=,
+    else by its non-null values. Fails with I929 when a column has no type or mixed types, or a primary-key field is
+    missing."""
+    declared = {
+        child.name: _KEY_TYPE_KINDS[child.type]
+        for child in stmt.sub_statements
+        if isinstance(child, KeyStatement) and child.type is not None
+    }
+    columns: dict[str, ColumnKind] = {}
+    reason = None
+    for name in (field for row in rows for field in row):
+        if name in columns:
+            continue
+        kind = declared.get(name)
+        if kind is None:
+            values = [row[name] for row in rows if row.get(name) is not None]
+            kinds = {column_kind_of_type(type(value)) for value in values}
+            if len(kinds) > 1:
+                reason = f"column '{name}' holds values of more than one type in the first written rows"
+                break
+            kind = next(iter(kinds), None)
+            if kind is None:
+                held = f"a {type(values[0]).__name__} value" if values else "only null values"
+                reason = f"column '{name}' holds {held} in the first written rows, so its type is unknown"
+                break
+        columns[name] = kind
+    missing = [name for name in stmt.create_table or () if name not in columns]
+    if reason is None and missing:
+        reason = f"the primary-key column(s) {', '.join(missing)} are not in the written rows"
+    if reason is not None:
+        raise operation_error(
+            code=IssueCode.OPERATION_CREATE_TABLE_INVALID,
+            target=stmt.name,
+            reason=reason,
+            migration="set type= (string, int, float, decimal, bool or binary) on the <key> of that column, and "
+            "write each primary-key column in every row",
+        )
+    return tuple(columns.items())
 
 
 class GenerateWorker:
@@ -255,6 +322,10 @@ class GenerateWorker:
         if isinstance(context, SetupContext) and not root_context.test_mode:
             keep_keys = GenerateWorker._memstore_product_keys(root_context, stmt)
 
+        # The create-table policy keeps this generate in one process, so the first page creates the table once per run.
+        primary_key = stmt.create_table
+        table_columns: frozenset[str] | None = None
+
         # Chunk-scoped source reader: loads + orders the source once per chunk and hands
         # each page its window (see ChunkSourceReader) — the worker only iterates pages.
         source_reader = ChunkSourceReader(context, stmt, chunk_start, chunk_end)
@@ -287,6 +358,11 @@ class GenerateWorker:
                         NestedExport(stmt, result_dict[stmt.full_name], result_dict.nested_exports)
                     )
                 else:
+                    rows = result_dict[stmt.full_name]
+                    if primary_key is not None and rows and table_columns is None:
+                        table_columns = GenerateWorker._create_tables(export_session, stmt, primary_key, rows)
+                    elif table_columns is not None:
+                        GenerateWorker._assert_table_columns(stmt, table_columns, rows)
                     export_product_by_page(stmt, result_dict, export_session, root_context)
                 result.merge_exports(result_dict)
 
@@ -295,6 +371,37 @@ class GenerateWorker:
                 result[key] = result.get(key, []) + result_dict[key]
 
         return result
+
+    @staticmethod
+    def _create_tables(
+        export_session: ExportSession,
+        stmt: GenerateStatement,
+        primary_key: tuple[str, ...],
+        rows: list[dict[str, object]],
+    ) -> frozenset[str]:
+        """Create the createTable table in each RDBMS target from the first written rows, before they are written;
+        the column names. Under Build the targets are stripped, and the planned clients get the DDL instead."""
+        columns = _create_table_columns(stmt, rows)
+        entity = resolve_target_entity(stmt.target_entity, stmt.type, stmt.name)
+        export_session.create_tables(stmt.full_name, entity, columns, primary_key)
+        stmt.planned_tables += [
+            (client_id, entity, planned_create_table_ddl(dbms, entity, columns, primary_key, schema))
+            for client_id, dbms, schema in stmt.planned_table_clients
+        ]
+        return frozenset(name for name, _ in columns)
+
+    @staticmethod
+    def _assert_table_columns(stmt: GenerateStatement, table_columns: frozenset[str], rows: list[dict[str, object]]):
+        """Fail with I930 when a later page writes a field that the table created from the first page lacks: the
+        insert would drop it without an error."""
+        extra = sorted({field for row in rows for field in row} - table_columns)
+        if extra:
+            raise operation_error(
+                code=IssueCode.OPERATION_TABLE_DRIFT,
+                target=resolve_target_entity(stmt.target_entity, stmt.type, stmt.name),
+                difference=f"a later page writes the field(s) {', '.join(extra)}, which the table created from the "
+                "first page does not have; write each field in the first page, for example with a default value",
+            )
 
     @staticmethod
     def _memstore_product_keys(root_context: SetupContext, statement: GenerateStatement) -> set[str]:
@@ -441,10 +548,18 @@ class GenerateWorker:
                 if isinstance(budget, TotalRowBudget):
                     budget.release(1 + sum(len(rows) for rows in row_products.values()))
                 # Stop generating data if one of datasource reach the end
-                logger.info(
+                reached_end = (
                     f"Data generator sub-task {task.__class__.__name__} '{task.statement.name}' has already reached "
                     f"the end"
                 )
+                if build_from_source or isinstance(context, GenIterContext):
+                    logger.info(reached_end)
+                else:
+                    # The count asked for more rows: a run that writes fewer must not look complete. A nested
+                    # generate ends once for each parent row, so only the outermost one warns.
+                    logger.warning(
+                        f"{reached_end}; '{stmt.name}' wrote {len(result)} of {processed_data_count} rows of this page"
+                    )
                 break
 
         # 4. Return product for later export

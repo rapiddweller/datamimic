@@ -19,6 +19,7 @@ from datamimic_ce.engine.io.api import (
     has_mongodb_upsert_target,
     is_database_client,
     publish_exported_artifacts,
+    rdbms_client_dbms,
 )
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext, WorkerContextPayload
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
@@ -285,6 +286,23 @@ class GenerateTask(CommonSubTask):
                 migration=migration,
             )
 
+    def _assert_create_table_shape(self, context: SetupContext | GenIterContext) -> None:
+        """Fail closed with I929 before any database access when createTable cannot define its table once."""
+        stmt = self._statement
+        if stmt.create_table is None or stmt.planned_table_clients:
+            return  # Build checked the rules before it removed the database targets
+        rdbms_clients = tuple(
+            (client, dbms)
+            for client in sorted(stmt.target_client_ids)
+            if (dbms := rdbms_client_dbms(context.root.get_client_by_id(client))) is not None
+        )
+        problem = stmt.create_table_problem(nested=not self.is_outermost(context), rdbms_clients=rdbms_clients)
+        if problem is not None:
+            reason, migration = problem
+            raise operation_error(
+                code=IssueCode.OPERATION_CREATE_TABLE_INVALID, target=stmt.name, reason=reason, migration=migration
+            )
+
     def execute(
         self,
         context: SetupContext | GenIterContext,
@@ -302,6 +320,7 @@ class GenerateTask(CommonSubTask):
         if self.statement.is_statement_operation:
             return self._execute_statement_operation(context)
         self._assert_delete_selects_rows(context)
+        self._assert_create_table_shape(context)
         outermost = self.is_outermost(context)
         with gen_timer("process", context.root.report_logging, self.statement.full_name, not outermost) as timer_result:
             try:

@@ -103,8 +103,14 @@ def parse_sub_elements(
         child_tag = xml_tag(child_ele)
         if child_tag == EL_COMMENT:
             continue
-        parser = get_parser_by_element(child_ele, copied_props, runtime_environment)
         canonical = canonical_tag(child_tag)
+        # A client parser writes the connection profile into the properties it gets. A copy keeps the profile of one
+        # client from reaching the next one (an environment name with a typo must not read the profile before it).
+        parser = get_parser_by_element(
+            child_ele,
+            dict(copied_props) if canonical in {EL_DATABASE, EL_MONGODB} else copied_props,
+            runtime_environment,
+        )
         profile_kwargs: dict[str, object] = (
             {"profile_loader": profile_loader}
             if canonical
@@ -194,12 +200,13 @@ def retrieve_element_attributes(
             if "." not in prop_key:
                 attributes[key] = properties.get(prop_key, value)
             else:
-                temp_value: dict | None = copy.deepcopy(properties)
+                temp_value: dict | None = properties
                 for key_part in prop_key.split("."):
-                    if temp_value:
-                        temp_value = temp_value.get(key_part)
-                    if temp_value is None:
+                    if not isinstance(temp_value, dict) or key_part not in temp_value:
+                        temp_value = None
                         break
-                attributes[key] = temp_value or value
+                    temp_value = temp_value[key_part]
+                # A found value stays, also a falsy one (0, "", False); only a missing path keeps the text.
+                attributes[key] = value if temp_value is None else temp_value
 
     return attributes

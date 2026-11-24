@@ -43,8 +43,17 @@ a randomly selected valid parent key does not establish per-parent cardinality.
 
 ## Memstore readback
 
-The producer identifier and consumer FK role pair makes readback integrity part
-of the proof. Merely declaring a memstore target does not establish readback.
+A `<generate source>` readback is a product of its own: the producer identifier and
+the consumer FK role pair make its integrity part of the proof. Merely declaring a
+memstore target does not establish a reader.
+
+Write a file for a product with the producer's own target: `target="mem,CSV"`.
+Add a `<generate source="mem">` readback only when a later step reads the rows as a
+product. A later step that only uses the rows reads them with
+`<variable name="rows" source="mem" sourceEntity="parents" storage="data" distribution="ordered"/>`
+inside its `<generate>`; without `storage="data"` each record gets one row. That
+read needs no role pair; Build checks that the store still holds the captured rows.
+Do not add an `export_*` block that only repeats a product.
 
 Declare the store as `<memstore id="mem"/>`. EE has one built-in `mem` store and
 ignores the declaration with warning `W005`, so this form runs in CE and EE.
@@ -165,6 +174,63 @@ Build, `authoring run` and smoke export write no file into the project. Only
 the directory is a new task id for each run. The example above writes
 `output/order_report/order_report.json`. The complete project is
 `tests_ce/scenarios/s22_file_filter`.
+
+## Database sink table
+
+`createTable="true"` on a `<generate>` with a database target creates the table
+when it is missing. The project needs no DDL file and no `sqlite3` step. Write a
+primary-key field as `<id>` and every other field as `<key>`; several `<id>` make
+a composite key. The table name is `targetEntity` (else `type`, else `name`).
+
+```xml
+<setup rngSeed="59">
+    <database id="ledger" dbms="sqlite" database="s59_ledger"/>
+    <generate name="lines" count="6" target="CSV,ledger.upsert" targetEntity="journal_lines" createTable="true">
+        <id name="line_id" generator="IncrementGenerator"/>
+        <key name="account" values="('1000', '1200', '8400')"/>
+        <key name="amount_cents" type="int" min="100" max="9999"/>
+        <key name="posted_on" script="datetime.date(2026, 3, 1)"/>
+        <key name="memo" script="None" type="string"/>
+    </generate>
+</setup>
+```
+
+```json
+{
+  "version": "5.0",
+  "environment_bindings": [{"environment": "ledger", "family": "database"}],
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "lines"}, "count": 6},
+    {"kind": "exact_count", "subject": {"kind": "declared_sink", "sink": {"kind": "database", "environment": "ledger", "entity": "journal_lines"}}, "count": 6}
+  ]
+}
+```
+
+The columns are the fields of the written rows. A key's `type=` sets the column
+type. Without `type=`, the non-null values in the first page set it: `str`,
+`int`, `float`, `bool`, `Decimal`, `date` or `datetime`. A column with only null
+values, with mixed value types (for example `10` and `10.5`), or with another value type, fails with `I929`
+and asks for `type=`.
+The run creates the table once, before the first row. It never alters or drops a
+table. A second run finds the table and upserts. An existing table that
+lacks a written column or has another primary key fails with `I930` and the difference. Extra columns are allowed. A
+later page that writes a field the table lacks (for example a key with a
+`condition` that is false in the whole first page) also fails with `I930`: write
+each field in the first page.
+
+`createTable="true"` needs at least one direct-child `<id>` (`I929`). Without
+`createTable`, or with `createTable="false"`, an `<id>` is a plain `<key>`. Build
+derives a `unique` check on a single `<id>`; a composite key derives none, because
+a `unique` expectation names one field. The generate needs a
+`<database>` target with `dbms="sqlite"` or `dbms="postgresql"`, plain or with
+`.upsert`; other dbms, `.update` and `.delete` fail with `I929`. It must be a root
+generate, and `createTable` is not allowed with `clear` or
+`drop`. The generate runs in one process. Build creates nothing: it shows the
+CREATE TABLE statement in `planned_operations`, typed from the rows it captured
+(at most `max_count`); the run types from its first page, so a field that first
+appears after the captured rows is in the run's table only. `run-project` lists a `schema`
+side effect (`ledger.journal_lines`) and needs `allow_side_effects`. The complete
+project is `tests_ce/scenarios/s59_create_table`.
 
 For exporter/replay verification add `"verification": {"smoke_export": true,
 "deterministic_replay": true}` to `acceptance/build.json`. Build replays every

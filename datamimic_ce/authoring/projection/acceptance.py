@@ -32,7 +32,7 @@ from datamimic_ce.authoring.domain.acceptance_contract import (
 )
 from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
 from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId, DiagnosticPhase
-from datamimic_ce.authoring.domain.dm_json import DmJsonDocumentV1, DmJsonNodeV1
+from datamimic_ce.authoring.domain.dm_json import DmJsonDocumentV1, DmJsonNodeV1, iter_dm_json_nodes
 from datamimic_ce.authoring.domain.expectations import (
     AllowedValuesExpectation,
     DeclaredSinkIdentity,
@@ -56,7 +56,24 @@ from datamimic_ce.authoring.domain.script_semantics import (
     references_current_scope_field,
 )
 from datamimic_ce.engine.dsl.api import (
+    DATA_TYPE_LIST,
+    EL_ARRAY,
+    EL_CONDITION,
+    EL_DATABASE,
+    EL_ELEMENT,
+    EL_FIELD,
+    EL_GENERATE,
+    EL_ID,
+    EL_KEY,
+    EL_MEMSTORE,
+    EL_MONGODB,
+    EL_NESTED_KEY,
+    EL_REFERENCE,
+    EL_VARIABLE,
+    META_TARGET_ENTITY,
+    META_TYPE,
     NAME_SEPARATOR,
+    ExportOperation,
     GenerateStatement,
     TimeSeriesConfig,
     TimeSeriesConfigError,
@@ -64,8 +81,12 @@ from datamimic_ce.engine.dsl.api import (
     column_names,
     parse_literal_values,
     source_file_format_for,
+    split_targets,
 )
 from datamimic_ce.errors import GUIDANCE_LOOKUP_POINTER
+
+# The DM JSON kinds of a scalar field: <id> keeps its kind in DM JSON because it marks a createTable primary key.
+_KEY_KINDS = frozenset({EL_KEY, EL_ID})
 
 
 @dataclass(frozen=True)
@@ -100,7 +121,7 @@ def _name(node: DmJsonNodeV1, path: tuple[str | int, ...]) -> str:
 
 
 def _fields(node: DmJsonNodeV1) -> tuple[str, ...]:
-    if node.kind == "condition":
+    if node.kind == EL_CONDITION:
         # Branches are exclusive; retain duplicates within each branch.
         alternatives: Counter[str] = Counter()
         for branch in node.children:
@@ -108,17 +129,17 @@ def _fields(node: DmJsonNodeV1) -> tuple[str, ...]:
         return tuple(alternatives.elements())
     fields: list[str] = []
     for child in node.children:
-        if child.kind == "generate":
+        if child.kind == EL_GENERATE:
             continue
         name = child.properties.get("name")
-        if child.kind in {"key", "nestedKey", "array"} and isinstance(name, str):
+        if child.kind in {*_KEY_KINDS, EL_NESTED_KEY, EL_ARRAY} and isinstance(name, str):
             fields.append(name)
-        elif child.kind == "reference":
-            mapped = tuple(item.properties.get("target") for item in child.children if item.kind == "field")
+        elif child.kind == EL_REFERENCE:
+            mapped = tuple(item.properties.get("target") for item in child.children if item.kind == EL_FIELD)
             fields.extend(item for item in mapped if isinstance(item, str))
             if not mapped and isinstance(name, str):
                 fields.append(name)
-        elif child.kind not in {"variable", "element"}:
+        elif child.kind not in {EL_VARIABLE, EL_ELEMENT}:
             fields.extend(_fields(child))
     return tuple(fields)
 
@@ -169,13 +190,13 @@ def _parent_reference(script: object) -> str | None:
 
 
 def _memstore_entity(node: DmJsonNodeV1, name: str) -> str:
-    target_entity = node.properties.get("target_entity")
+    target_entity = node.properties.get(META_TARGET_ENTITY)
     return GenerateStatement.memstore_entity(target_entity if isinstance(target_entity, str) else None, name)
 
 
 def _target_entity(node: DmJsonNodeV1, name: str) -> str:
     """A database or MongoDB sink's entity; type takes part here, unlike a memstore write."""
-    for attribute in ("target_entity", "type"):
+    for attribute in (META_TARGET_ENTITY, META_TYPE):
         value = node.properties.get(attribute)
         if isinstance(value, str) and value:
             return value
@@ -184,27 +205,32 @@ def _target_entity(node: DmJsonNodeV1, name: str) -> str:
 
 def _products(document: DmJsonDocumentV1, included: tuple[tuple[str, DmJsonDocumentV1], ...]) -> tuple[_Product, ...]:
     declarations = {
-        node.properties.get("id"): node.kind for node in document.root.children if node.kind in {"database", "mongodb"}
+        node.properties.get("id"): node.kind
+        for node in document.root.children
+        if node.kind in {EL_DATABASE, EL_MONGODB}
     }
     entries: list[_Product] = []
 
     def visit(node: DmJsonNodeV1, path: tuple[str | int, ...], parent: _Product | None) -> None:
         # A source-free clear or drop produces no rows: it is an operation, not a product to prove.
         target = node.properties.get("target")
-        if node.kind == "generate" and not (isinstance(target, str) and names_statement_operation(target)):
+        if node.kind == EL_GENERATE and not (isinstance(target, str) and names_statement_operation(target)):
             name = _name(node, path)
             runtime_name = NAME_SEPARATOR.join((parent.product.runtime_name, name)) if parent else name
             entity = _target_entity(node, name)
             targets = node.properties.get("target", "")
             sinks: list[DeclaredSinkIdentity] = []
             if isinstance(targets, str) and isinstance(entity, str):
-                for target in targets.split(","):
-                    target = target.strip()
-                    family = declarations.get(target)
-                    if family == "database":
-                        sinks.append(DeclaredSinkIdentity(kind="database", environment=target, entity=entity))
-                    elif family == "mongodb":
-                        sinks.append(DeclaredSinkIdentity(kind="mongodb", environment=target, entity=entity))
+                for part in split_targets(targets):
+                    client, operation = ExportOperation.from_target(part) or (part, None)
+                    # A delete removes rows from the client, so the client does not hold the captured rows.
+                    if operation not in (None, ExportOperation.UPDATE, ExportOperation.UPSERT):
+                        continue
+                    family = declarations.get(client)
+                    if family == EL_DATABASE:
+                        sinks.append(DeclaredSinkIdentity(kind="database", environment=client, entity=entity))
+                    elif family == EL_MONGODB:
+                        sinks.append(DeclaredSinkIdentity(kind="mongodb", environment=client, entity=entity))
             lists = tuple(
                 AcceptanceListV1(
                     name=_name(child, path),
@@ -212,7 +238,7 @@ def _products(document: DmJsonDocumentV1, included: tuple[tuple[str, DmJsonDocum
                     count_per_row=_count(child, path + ("children", index)),
                 )
                 for index, child in enumerate(node.children)
-                if child.kind == "nestedKey" and child.properties.get("type") == "list"
+                if child.kind == EL_NESTED_KEY and child.properties.get(META_TYPE) == DATA_TYPE_LIST
             )
             source = node.properties.get("source")
             fields = _fields(node)
@@ -282,12 +308,12 @@ def project_acceptance(
         if entry.parent:
             parent_node = by_name[entry.parent].node
             parent_variables = {
-                child.properties.get("name") for child in parent_node.children if child.kind == "variable"
+                child.properties.get("name") for child in parent_node.children if child.kind == EL_VARIABLE
             }
             joins = tuple(
                 AcceptanceJoinV1(child_field=_name(child, entry.path), parent_field=parent_field)
                 for child in entry.node.children
-                if child.kind == "key"
+                if child.kind in _KEY_KINDS
                 if (parent_field := _parent_reference(child.properties.get("script"))) is not None
                 # A <variable> of the parent is no output field, so it joins nothing; the run resolves it (#442 T1).
                 if parent_field in by_name[entry.parent].product.fields or parent_field not in parent_variables
@@ -306,14 +332,19 @@ def project_acceptance(
             counts[name] = entry.count
         if name in counts:
             derive(ExactCountExpectation(subject=subject, count=counts[name]), entry.path)
+        primary_key = [child for child in entry.node.children if child.kind == EL_ID]
+        # A createTable primary key must be unique. A unique expectation names one field, so a composite key (several
+        # <id>) derives nothing: each of its fields alone may repeat.
+        if entry.node.properties.get("create_table") is True and len(primary_key) == 1:
+            derive(UniqueExpectation(subject=subject, field=_name(primary_key[0], entry.path)), entry.path)
         for index, field in enumerate(entry.node.children):
-            if field.kind == "key":
+            if field.kind in _KEY_KINDS:
                 _derive_field(field, subject, entry.path + ("children", index), derive)
-            elif field.kind == "nestedKey" and field.properties.get("type") == "list":
+            elif field.kind == EL_NESTED_KEY and field.properties.get(META_TYPE) == DATA_TYPE_LIST:
                 list_name = _name(field, entry.path)
                 list_subject = ProductRowsSubject(product=name, list_field=list_name)
                 for inner_index, inner in enumerate(field.children):
-                    if inner.kind == "key":
+                    if inner.kind in _KEY_KINDS:
                         _derive_field(
                             inner, list_subject, entry.path + ("children", index, "children", inner_index), derive
                         )
@@ -392,7 +423,7 @@ def project_acceptance(
         )
         for index, item in enumerate(request.acceptance_requirements)
     )
-    readbacks = _readbacks(request, entries, (canonical_document, *(step for _, step in included)))
+    readbacks = _readbacks(request, entries, canonical_document, included)
     spec = AcceptanceSpecV1(products=spec.products, relationships=tuple(relationships), readbacks=readbacks)
     for check in checks:
         validate_acceptance_check(spec, check)
@@ -525,7 +556,7 @@ def _copied_fields(consumer: DmJsonNodeV1, producer_fields: tuple[str, ...]) -> 
     copies: dict[str, str] = {}
     for child in consumer.children:
         name, script = child.properties.get("name"), child.properties.get("script")
-        if child.kind == "key" and isinstance(name, str) and isinstance(script, str):
+        if child.kind in _KEY_KINDS and isinstance(name, str) and isinstance(script, str):
             for field in producer_fields:
                 if field not in copies and is_exact_scope_field_reference(script, ScriptScope.CURRENT, field):
                     copies[field] = name
@@ -543,7 +574,9 @@ def _unread_memstore_remediation(producer: _Product, store: str, identifiers: se
     producer_role, consumer_role = _readback_roles(name, copy, key, holder)
     entity = _memstore_entity(producer.node, name)
     return (
-        f'Nothing reads "{name}" back as a product: a <variable source="{store}"> read is not a readback. '
+        f'Nothing reads "{name}" from the memstore. To use its rows in a step, read them with '
+        f'<variable name="rows" source="{store}" sourceEntity="{entity}" storage="data" distribution="ordered"/> '
+        "inside the <generate> of that step. "
         f'{MEMSTORE_READBACK_ONCE} For that subset route, also remove target="{store}". A lookup in a data file: '
         f'remove the <memstore> and the generate that writes target="{store}". {GUIDANCE_LOOKUP_POINTER} '
         "A copy of every row: "
@@ -616,14 +649,48 @@ def _role_pair_remediation(
     )
 
 
+def _read_entity(node: DmJsonNodeV1, name: object) -> object:
+    """The entity that a memstore source reads, as the runtime resolves it: sourceEntity, else type, else the name."""
+    return node.properties.get("source_entity", node.properties.get("type", name))
+
+
+def _writer(entries: tuple[_Product, ...], entity: object, store: str, path: tuple[str | int, ...]) -> _Product:
+    """The one product that writes ``entity`` into ``store``; an entity that no or two products write is rejected."""
+    producers = [
+        entry
+        for entry in entries
+        if _memstore_entity(entry.node, _name(entry.node, entry.path)) == entity
+        and store in {item.strip() for item in str(entry.node.properties.get("target", "")).split(",")}
+    ]
+    if not producers:
+        _reject(
+            "No product writes the memstore entity that this source reads.",
+            path,
+            "Write the entity with a generate that targets this memstore. A product writes the entity named by "
+            "targetEntity, else its own name; type and sourceEntity name only the entity that a source reads.",
+        )
+    if len(producers) > 1:
+        _reject(
+            "More than one product writes the memstore entity that this source reads.",
+            path,
+            "Give each writer its own entity. A product writes the entity named by targetEntity, else its own "
+            "name; type and sourceEntity name only the entity that a source reads.",
+        )
+    return producers[0]
+
+
 def _readbacks(
-    request: BuildRequestV5, entries: tuple[_Product, ...], documents: tuple[DmJsonDocumentV1, ...]
+    request: BuildRequestV5,
+    entries: tuple[_Product, ...],
+    document: DmJsonDocumentV1,
+    included: tuple[tuple[str, DmJsonDocumentV1], ...],
 ) -> tuple[AcceptanceReadbackV1, ...]:
+    documents = ((("document",), document), *((("include", uri), step) for uri, step in included))
     stores = {
         identifier
-        for document in documents
-        for node in document.root.children
-        if node.kind == "memstore"
+        for _, step in documents
+        for node in step.root.children
+        if node.kind == EL_MEMSTORE
         if isinstance(identifier := node.properties.get("id"), str)
     }
     result = []
@@ -632,30 +699,7 @@ def _readbacks(
         source = consumer.node.properties.get("source")
         if not isinstance(source, str) or source not in stores:
             continue
-        entity = consumer.node.properties.get(
-            "source_entity", consumer.node.properties.get("type", consumer.product.name)
-        )
-        producers = [
-            entry
-            for entry in entries
-            if _memstore_entity(entry.node, _name(entry.node, entry.path)) == entity
-            and source in {item.strip() for item in str(entry.node.properties.get("target", "")).split(",")}
-        ]
-        if not producers:
-            _reject(
-                "No product writes the memstore entity that this source reads.",
-                consumer.path,
-                "Write the entity with a generate that targets this memstore. A product writes the entity named by "
-                "targetEntity, else its own name; type and sourceEntity name only the entity that a source reads.",
-            )
-        if len(producers) > 1:
-            _reject(
-                "More than one product writes the memstore entity that this source reads.",
-                consumer.path,
-                "Give each writer its own entity. A product writes the entity named by targetEntity, else its own "
-                "name; type and sourceEntity name only the entity that a source reads.",
-            )
-        producer = producers[0]
+        producer = _writer(entries, _read_entity(consumer.node, consumer.product.name), source, consumer.path)
         producers_read.add((producer.product.name, source))
         for index, field in enumerate(consumer.node.children):
             name = field.properties.get("name")
@@ -697,6 +741,14 @@ def _readbacks(
                 path=consumer.path,
             )
         )
+    # A variable copies no rows into a product, so it needs no role pair; Build checks the store contents instead.
+    for prefix, step in documents:
+        for node, path in iter_dm_json_nodes(step):
+            source = node.properties.get("source")
+            if node.kind == EL_VARIABLE and isinstance(source, str) and source in stores:
+                reader_path = (*prefix, *path[1:])
+                producer = _writer(entries, _read_entity(node, node.properties.get("name")), source, reader_path)
+                producers_read.add((producer.product.name, source))
     for producer in entries:
         target = producer.node.properties.get("target")
         if not isinstance(target, str):
@@ -704,7 +756,7 @@ def _readbacks(
         for store in (item.strip() for item in target.split(",")):
             if store in stores and (producer.product.name, store) not in producers_read:
                 _reject(
-                    "A memstore target requires a declared consumer readback.",
+                    "A memstore target requires a reader: a <generate source> readback or a <variable source> read.",
                     producer.path + ("properties", "target"),
                     remediation=_unread_memstore_remediation(
                         producer, store, _identifier_fields(request, producer.product.name)

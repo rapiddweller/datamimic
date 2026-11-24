@@ -47,8 +47,8 @@ class JsonExporter(UnifiedBufferedExporter):
                 if self.chunk_size == 1:
                     # Write in JSON format
                     if data:
-                        # Write single record directly
-                        json.dump(data[0], file, cls=DateTimeEncoder, indent=4)
+                        # Write single record directly; an .ndjson file holds one record on one line
+                        json.dump(data[0], file, cls=DateTimeEncoder, indent=None if self.use_ndjson else 4)
                         file.write("\n")
                 # Write in NDJSON format
                 elif self.use_ndjson:

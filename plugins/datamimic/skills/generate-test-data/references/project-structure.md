@@ -8,7 +8,7 @@ review the files; Build proves them.
 ├── datamimic.xml                entry: process comment, seed, clients, memstore, lib loading, ordered includes
 ├── conf/base.properties         parameters; <env>.env.properties for connection settings
 ├── model/<nn>_<activity>.xml    generation, one activity per file: 10, 20, 30 …
-├── delivery/<nn>_<activity>.xml export, insert or upsert into targets: 90+; the only writers (rule 3)
+├── delivery/<nn>_<activity>.xml database and broker writes, checks, exports of stored rows: 90+ (rule 3)
 ├── data/
 │   ├── entity/*.ent.csv         business data and code lists
 │   ├── weighting/*.wgt.csv      distributions
@@ -36,11 +36,18 @@ Leave out folders the task does not need. Keep the entry at `datamimic.xml`.
    clients; Build refuses them there. Declare the memstore as `<memstore id="mem"/>`:
    EE ignores the declaration (warning W005) and always provides `mem`, so only
    this id runs in both editions.
-3. `model/` steps write only to the memstore. `delivery/` steps read it and are the
-   only ones that write to files, databases or brokers. Name a delivery step after
-   its activity, for example `delivery/91_export.xml`. One exception: a check step
-   that writes its check products is a delivery step. Number it before the other
-   delivery steps.
+3. A `model/` step writes each product to the memstore, and to its file when the
+   product is delivered as it is: `target="mem,CSV"`. `delivery/` steps are the only
+   ones that write to databases or brokers. A delivery step reads stored rows with
+   `<variable source="mem" sourceEntity="<product>" storage="data" distribution="ordered"/>`
+   inside the `<generate>` that needs them; without `storage="data"` each record
+   gets one row. Add a `<generate source="mem">` product only when a later step
+   reads those rows as a product. It needs an identifier role on the producer and a
+   foreign-key role on the copy. Do not add an `export_*` block that only repeats a
+   product: it proves nothing that the producer's expectations do not.
+   Name a delivery step after its activity, for example `delivery/91_export.xml`.
+   One exception: a check step that writes its check products is a delivery step.
+   Number it before the other delivery steps.
 4. Logic that spans tables is a named function in `lib/`. The model passes every
    input in; the function returns its decisions and fails loudly when a rule cannot
    be met.

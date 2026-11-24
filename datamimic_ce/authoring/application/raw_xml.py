@@ -6,7 +6,12 @@
 
 from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
 from datamimic_ce.authoring.domain.common import MAX_AUTHORING_XML_LENGTH
-from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId, DiagnosticPhase
+from datamimic_ce.authoring.domain.diagnostics import (
+    AuthoringRuleId,
+    AuthoringSystemDiagnosticCode,
+    Diagnostic,
+    DiagnosticPhase,
+)
 from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest, RunPhase, RunRequest, RunResult
 from datamimic_ce.authoring.ports import BoundedExecutor, DescriptorValidator
 from datamimic_ce.authoring.projection.evidence import sample_evidence
@@ -72,6 +77,23 @@ class RawXmlUseCase:
                     ),
                 ),
             )
+        diagnostics = evidence.diagnostics
+        if phase is RunPhase.RUN and request.allow_side_effects:
+            # The run writes into a private copy of the project that is deleted afterwards: ok must not read as "the
+            # files exist".
+            diagnostics = (
+                *diagnostics,
+                Diagnostic(
+                    code=AuthoringSystemDiagnosticCode.ENVIRONMENT,
+                    phase=DiagnosticPhase.EVIDENCE,
+                    severity="warning",
+                    message=(
+                        "Files that this run writes stay in a private copy that is deleted afterwards; database and "
+                        "MongoDB targets are written."
+                    ),
+                    remediation="Use run-project to keep the files of a project.",
+                ),
+            )
         return RunResult(
-            ok=evidence.ok and evidence.base_run_ok, phase=phase, products=products, diagnostics=evidence.diagnostics
+            ok=evidence.ok and evidence.base_run_ok, phase=phase, products=products, diagnostics=diagnostics
         )

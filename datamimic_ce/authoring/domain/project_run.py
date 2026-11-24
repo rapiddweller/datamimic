@@ -28,6 +28,8 @@ class ExternalEffectKind(StrEnum):
     DATABASE = "database"
     MONGODB = "mongodb"
     EXECUTE = "execute"
+    # A createTable generate: the run creates the table client.entity when it is missing.
+    SCHEMA = "schema"
     TARGET = "target"
     UNRESOLVED = "unresolved"
 

@@ -69,3 +69,6 @@ class RunSession(Protocol):
     def execute(self) -> RunResult: ...
 
     def capture_test_result(self) -> dict[str, list[object]] | None: ...
+
+    def memstore_rows(self, memstore_id: str, entity: str) -> list[object] | None:
+        """The rows one memstore holds for one entity now; None when the run declares no such memstore."""

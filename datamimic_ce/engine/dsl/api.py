@@ -125,6 +125,7 @@ from datamimic_ce.engine.dsl.vocabulary.constants.data_type_constants import (
     DATA_TYPE_STRING,
 )
 from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import (
+    EL_ARRAY,
     EL_COMMENT,
     EL_CONDITION,
     EL_DATABASE,
@@ -132,6 +133,7 @@ from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import (
     EL_ELSE,
     EL_ELSE_IF,
     EL_EXECUTE,
+    EL_FIELD,
     EL_GENERATE,
     EL_ID,
     EL_IF,
@@ -165,7 +167,7 @@ from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import (
     SourceDistribution,
 )
 from datamimic_ce.engine.dsl.vocabulary.enums.faker_enums import UnsupportedMethod
-from datamimic_ce.engine.dsl.vocabulary.enums.operation_enums import ExportOperation
+from datamimic_ce.engine.dsl.vocabulary.enums.operation_enums import ExportOperation, split_targets
 from datamimic_ce.engine.dsl.vocabulary.product_identity import capture_product_name
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import (
     DynamicSourceKind,
@@ -236,6 +238,7 @@ __all__ = [
     "DynamicSourceKind",
     "EXIST_COUNT",
     "EchoStatement",
+    "EL_ARRAY",
     "EL_COMMENT",
     "EL_CONDITION",
     "EL_DATABASE",
@@ -243,6 +246,7 @@ __all__ = [
     "EL_ELSE",
     "EL_ELSE_IF",
     "EL_EXECUTE",
+    "EL_FIELD",
     "EL_GENERATE",
     "EL_ID",
     "EL_IF",
@@ -315,6 +319,7 @@ __all__ = [
     "source_dynamic_kind",
     "source_file_format",
     "source_file_format_for",
+    "split_targets",
     "supported_source_file_formats",
     "Statement",
     "parse_consumer",

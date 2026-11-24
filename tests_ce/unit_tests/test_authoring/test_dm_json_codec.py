@@ -22,12 +22,13 @@ def test_canonical_alias_scalar_order_and_comments(codec):
     document = codec.decompile(xml)
     node = document.root.children[0]
     assert node.kind == "generate"
+    assert node.children[0].kind == "id", "<id> marks a createTable primary key, so its spelling survives"
     assert node.properties["traversal_count"] == 0
     assert node.comment == "rows"
     compiled = codec.compile(document)
     assert compiled.xml == (
         '<!--root-->\n<setup rngSeed="7">\n    <!--rows-->\n    <generate name="ro'
-        'ws" source="in.csv" count="0">\n        <key name="id" constant="1"/>\n '
+        'ws" source="in.csv" count="0">\n        <id name="id" constant="1"/>\n '
         "   </generate>\n</setup>"
     )
     assert codec.compile(codec.decompile(compiled.xml)) == compiled

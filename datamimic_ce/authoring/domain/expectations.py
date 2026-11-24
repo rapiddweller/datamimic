@@ -95,7 +95,8 @@ class DeclaredSinkRowsSubject(AuthoringModel):
         description="Expectation subject identity; must be 'declared_sink'.",
     )
     sink: DeclaredSinkIdentity = Field(
-        description="Declared database or MongoDB insert destination; this does not prove external target state."
+        description="Declared database or MongoDB destination of inserted, updated or upserted rows; "
+        "this does not prove external target state."
     )
 
 

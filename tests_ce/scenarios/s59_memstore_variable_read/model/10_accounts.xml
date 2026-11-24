@@ -1,0 +1,5 @@
+<setup>
+    <generate name="accounts" count="3" target="mem,CSV">
+        <key name="account_id" generator="IncrementGenerator"/>
+    </generate>
+</setup>

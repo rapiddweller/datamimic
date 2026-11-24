@@ -22,7 +22,8 @@ class KeyParser(StatementParser):
     """
 
     # <id> is a human-readable alias of <key>: same parser, model, statement and
-    # valid sub-elements. The dispatch table routes both tags here.
+    # valid sub-elements. The dispatch table routes both tags here. The statement keeps
+    # the tag, because under createTable an <id> is a primary-key column.
     _VALID_TAGS = frozenset({EL_KEY, EL_ID})
 
     def __init__(
@@ -56,7 +57,7 @@ class KeyParser(StatementParser):
 
         if not isinstance(parent_stmt, CompositeStatement):
             raise TypeError("<key> requires a composite parent statement")
-        key_stmt = KeyStatement(self.validate_attributes(KeyModel), parent_stmt)
+        key_stmt = KeyStatement(self.validate_attributes(KeyModel), parent_stmt, is_id=self._element.tag == EL_ID)
         sub_stmt_list = parse_sub_elements(
             descriptor_dir,
             self._element,
