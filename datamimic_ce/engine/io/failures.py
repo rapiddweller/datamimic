@@ -15,9 +15,10 @@ from datamimic_ce.errors import ExternalFailureCause
 
 
 def _is_picklable(error: BaseException) -> bool:
-    """A class that a project script defines exists only in this process, so the parent could not restore it."""
+    """A class that a project script defines exists only in this process, and a class whose constructor does not take
+    its own args cannot be loaded: the parent could not restore either."""
     try:
-        pickle.dumps(error)
+        pickle.loads(pickle.dumps(error))  # noqa: S301 - the bytes come from this process
     except Exception:  # noqa: BLE001 - whatever stops the pickle stops the transport
         return False
     return True

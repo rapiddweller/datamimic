@@ -230,8 +230,8 @@ _VALUE_HINT = (
 
 
 _OWN_CODE_HINT = (
-    "A function that the project defines raised this error. Read its message above, then check the function and the "
-    "values that the script passes to it."
+    "A function that the project or a library provides raised this error. Check the function and the values that the "
+    "script passes to it; the message above is the function's own, if it gave one."
 )
 
 

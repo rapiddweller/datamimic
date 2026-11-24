@@ -970,8 +970,8 @@ _ORACLE_CATEGORIES = {
 # SQLite answers a missing table, a missing column and invalid SQL with the same code 1, so none of them is named.
 _SQLITE_GENERIC_ERROR = "sqlite_error"
 _SQLITE_GENERIC_GUIDANCE = (
-    "SQLite reports a missing table, a missing column and invalid SQL alike. Check the table and column names, and "
-    'the database name: database="bank" opens db/bank.sqlite, so leave the .sqlite suffix out.'
+    "SQLite reports a missing table, a missing column and invalid SQL, among other errors, alike. Check the table "
+    'and column names, and the database name: database="bank" opens db/bank.sqlite, so leave the .sqlite suffix out.'
 )
 _SQLITE_CATEGORIES = {
     1: _SQLITE_GENERIC_ERROR,

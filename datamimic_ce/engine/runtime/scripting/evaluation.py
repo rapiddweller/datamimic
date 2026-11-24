@@ -202,11 +202,18 @@ def _called(nodes: tuple[ast.AST, ...], name: str) -> bool:
     )
 
 
+_SCRIPT_MESSAGE_LIMIT = 300
+
+
 def _failure_text(error: Exception, *, text_from_data: bool) -> str:
     """The type of a failure. A class that a project script defines also shows its message: the author wrote it for
     the reviewer. Any other message can quote a row value, and a diagnostic never shows a value (#707)."""
-    if type(error).__module__ == SCRIPT_MODULE and not text_from_data and str(error):
-        return f"{type(error).__name__}: {error}"
+    if type(error).__module__ == SCRIPT_MODULE and not text_from_data:
+        # One line and a bound: the message is author text, and a diagnostic is not a log.
+        text: str = str(error)
+        message = " ".join(text.split())[:_SCRIPT_MESSAGE_LIMIT]
+        if message:
+            return f"{type(error).__name__}: {message}"
     return type(error).__name__
 
 
