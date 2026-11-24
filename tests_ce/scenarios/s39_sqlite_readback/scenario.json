@@ -7,7 +7,8 @@
     "Build needs an environment binding for the client and reads the table in the project (db/s39_shop.sqlite, the 12 rows that the seed writes): it proves the readback product against the table as it is on disk",
     "Build does not prove that the load wrote the rows: Build isolates the write target and skips the clear, so the readback in Build shows the fixture rows, not the generated rows",
     "a readback needs a literal count: without count Build cannot prove the cardinality and reports the capture as unknown, not DM211, because the lint of a step sees the client that the entry declares (#493); a count above the rows of the table stops the source early (DM316)",
-    "the table comes from a checked-in SQLite file, because Build refuses an <execute> step (unsupported_bounded_operation): a project that needs no readback of a checked-in table can create its own with createTable (s59_create_table)"
+    "the table comes from a checked-in SQLite file, because Build refuses an <execute> step (unsupported_bounded_operation): a project that needs no readback of a checked-in table can create its own with createTable (s59_create_table)",
+    "a SQL script on a missing table, a selector on a missing table and a selector with invalid SQL all fail the run with the category sqlite_error, never with a guessed table_not_found, and without the SQL text; the message says to check the database name and to leave the .sqlite suffix out (#684)"
   ],
   "products": {
     "orders": 12,
@@ -94,11 +95,48 @@
   "equivalents": [
     {
       "name": "upsert_target_is_a_declared_sink",
-      "patch": {"file": "delivery/91_load.xml", "old": "target=\"shop\"", "new": "target=\"shop.upsert\""}
+      "patch": {
+        "file": "delivery/91_load.xml",
+        "old": "target=\"shop\"",
+        "new": "target=\"shop.upsert\""
+      }
     },
     {
       "name": "upsert_target_with_parameters_is_a_declared_sink",
-      "patch": {"file": "delivery/91_load.xml", "old": "target=\"shop\"", "new": "target=\"shop.upsert(x=1, y=2)\""}
+      "patch": {
+        "file": "delivery/91_load.xml",
+        "old": "target=\"shop\"",
+        "new": "target=\"shop.upsert(x=1, y=2)\""
+      }
+    }
+  ],
+  "run_failures": [
+    {
+      "name": "sql_script_on_a_missing_table",
+      "run_error": "Operation 'SQL script' failed: OperationalError (sqlite_error) [1]",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "<include uri=\"delivery/90_clear.xml\"/>",
+        "new": "<execute target=\"shop\" type=\"sql\">SELECT * FROM nothing_here</execute>\n    <include uri=\"delivery/90_clear.xml\"/>"
+      }
+    },
+    {
+      "name": "selector_on_a_missing_table",
+      "run_error": "(sqlite_error) [1]",
+      "patch": {
+        "file": "delivery/92_readback.xml",
+        "old": "FROM orders ORDER BY id",
+        "new": "FROM orders_missing ORDER BY id"
+      }
+    },
+    {
+      "name": "selector_with_invalid_sql",
+      "run_error": "leave the .sqlite suffix out",
+      "patch": {
+        "file": "delivery/92_readback.xml",
+        "old": "SELECT id, status, amount_cents FROM orders ORDER BY id",
+        "new": "SELEC id, status, amount_cents FROM orders ORDER BY id"
+      }
     }
   ]
 }

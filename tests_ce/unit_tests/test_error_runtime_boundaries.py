@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 import sqlalchemy
 
+from datamimic_ce.engine.io.contracts import DataSourcePagination
 from datamimic_ce.engine.runtime.api import run
 from datamimic_ce.engine.runtime.contracts import RunRequest
 from datamimic_ce.errors import DomainError, InvalidLocaleError, OperationError, UserErrorBase
@@ -145,6 +146,21 @@ def test_sqlite_error_code_one_gets_a_generic_category_and_the_database_name_hin
         assert "database name" in text
         assert "missing_" not in text
         assert str(tmp_path) not in text
+    finally:
+        if client.engine is not None:
+            client.engine.dispose()
+
+
+def test_a_selector_that_fails_reports_the_category_without_its_sql_text(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    client = _sqlite_client()
+    try:
+        with pytest.raises(OperationError) as caught:
+            client.get_by_page_with_query("SELECT secret_column FROM secret_table", DataSourcePagination(0, 10))
+        text = str(caught.value)
+        assert "sqlite_error" in text
+        assert "secret" not in text
+        assert "secret" not in str(caught.value.__cause__)
     finally:
         if client.engine is not None:
             client.engine.dispose()

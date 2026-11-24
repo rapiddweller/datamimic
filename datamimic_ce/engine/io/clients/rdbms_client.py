@@ -481,9 +481,15 @@ class RdbmsClient(DatabaseClient):
         """Output column names of a selector, probed once per selector rather than once per page."""
         self._require_read_query(query)
         if query not in self._columns_by_selector:
-            probe = text(sql_dialect.column_probe_query(query, self._credential.dbms))
-            with self._create_engine().connect() as connection:
-                self._columns_by_selector[query] = list(connection.execute(probe).keys())
+            failure: OperationError | None = None
+            try:
+                probe = text(sql_dialect.column_probe_query(query, self._credential.dbms))
+                with self._create_engine().connect() as connection:
+                    self._columns_by_selector[query] = list(connection.execute(probe).keys())
+            except sqlalchemy.exc.SQLAlchemyError as error:
+                failure = _operation_failure("database selector", error)
+            if failure is not None:
+                raise failure
         return self._columns_by_selector[query]
 
     def get_random_rows_by_columns(self, table_name: str, column_names: list[str]) -> list[tuple]:

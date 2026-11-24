@@ -5,7 +5,8 @@
     "a library that imports a member under an alias (from datetime import datetime as Datetime) leaves the engine's datetime module to the expressions",
     "a record field wins over a library name of the same spelling",
     "under rngSeed, import random and from random import randint in a library replay identically (#391)",
-    "when a library import replaces an engine name and a call or an attribute read on that name then fails, the run error names that name (#423)"
+    "when a library import replaces an engine name and a call or an attribute read on that name then fails, the run error names that name (#423)",
+    "a project function that raises its own exception class shows the class and the message of the author in Build and in the run, with a hint that names the function; before, the class crashed the Build child (#707)"
   ],
   "products": {
     "days": 3
@@ -39,6 +40,19 @@
         "file": "datamimic.xml",
         "old": "<key name=\"Datetime\" constant=\"a field\"/>",
         "new": "<key name=\"label\" constant=\"a field\"/>"
+      }
+    },
+    {
+      "name": "lib_function_raises_its_own_class",
+      "diagnostic": "child_execution",
+      "issue": "I832",
+      "message": "Infeasible: no feasible assignment",
+      "remediation": "provides raised this error",
+      "run_error": "Infeasible: no feasible assignment",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "<key name=\"coin\" script=\"coin()\"/>",
+        "new": "<key name=\"coin\" script=\"infeasible(day)\"/>"
       }
     }
   ]
