@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 import sqlalchemy
 
+from datamimic_ce.engine.io.contracts import DataSourcePagination
 from datamimic_ce.engine.runtime.api import run
 from datamimic_ce.engine.runtime.contracts import RunRequest
 from datamimic_ce.errors import DomainError, InvalidLocaleError, OperationError, UserErrorBase
@@ -129,6 +130,57 @@ def test_sql_acquisition_failure_is_normalized(tmp_path, monkeypatch, method):
     finally:
         if client.engine is not None:
             client.engine.dispose()
+
+
+@pytest.mark.parametrize("script", ["SELECT * FROM missing_table", "SELECT missing_column FROM entries", "SELEC 1"])
+def test_sqlite_error_code_one_gets_a_generic_category_and_the_database_name_hint(tmp_path, monkeypatch, script):
+    monkeypatch.chdir(tmp_path)
+    client = _sqlite_client()
+    try:
+        client.execute_sql_script("CREATE TABLE entries (id INTEGER)")
+        with pytest.raises(OperationError) as caught:
+            client.execute_sql_script(script)
+        text = str(caught.value)
+        assert "sqlite_error" in text
+        assert "table_not_found" not in text
+        assert "database name" in text
+        assert "missing_" not in text
+        assert str(tmp_path) not in text
+    finally:
+        if client.engine is not None:
+            client.engine.dispose()
+
+
+def test_a_selector_that_fails_reports_the_category_without_its_sql_text(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    client = _sqlite_client()
+    try:
+        with pytest.raises(OperationError) as caught:
+            client.get_by_page_with_query("SELECT secret_column FROM secret_table", DataSourcePagination(0, 10))
+        text = str(caught.value)
+        assert "sqlite_error" in text
+        assert "secret" not in text
+        assert "secret" not in str(caught.value.__cause__)
+    finally:
+        if client.engine is not None:
+            client.engine.dispose()
+
+
+def test_postgres_missing_table_keeps_its_category_without_the_sqlite_hint(monkeypatch):
+    class NativePgError(Exception):
+        pgcode = "42P01"
+
+    failure = sqlalchemy.exc.ProgrammingError("SELECT private_value", {}, NativePgError("private detail"))
+    client = _sqlite_client()
+
+    def fail():
+        raise failure
+
+    monkeypatch.setattr(client, "_create_engine", fail)
+    with pytest.raises(OperationError) as caught:
+        client.get("SELECT private_value")
+    assert "table_not_found" in str(caught.value)
+    assert "SQLite" not in str(caught.value)
 
 
 def test_sql_engine_configuration_is_normalized(tmp_path, monkeypatch):

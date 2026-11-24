@@ -229,6 +229,12 @@ _VALUE_HINT = (
 )
 
 
+_OWN_CODE_HINT = (
+    "A function that the project or a library provides raised this error. Check the function and the values that the "
+    "script passes to it; the message above is the function's own, if it gave one."
+)
+
+
 _CONTAINMENT_HINT = (
     "Bounded execution writes only new files inside its private workspace, never the workspace files it was "
     "checked against, and starts no process (#361). Deliver data "
@@ -267,6 +273,8 @@ def _runtime_hint(err: Exception) -> str:
                     return GUIDANCE_COUNT_SCOPE if named else issue.resolution
                 if attribute == ATTR_WHERE:
                     return GUIDANCE_WHERE_SCOPE if named else issue.resolution
+                if isinstance(current.__cause__, ExternalFailureCause):
+                    return _OWN_CODE_HINT
                 # A value the function rejects (int('B01')) is no scope problem, and a cast does not repair text.
                 return _VALUE_HINT if isinstance(current.__cause__, ValueError) else _SCOPE_HINT
             if isinstance(current, TaskConfigError) and current.kept_rows is not None:

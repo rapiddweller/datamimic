@@ -18,3 +18,12 @@ def dice():
 
 def coin():
     return random.choice(["heads", "tails"])
+
+
+# A class the project defines: Build shows its message, as it never shows the message of a builtin (#707).
+class Infeasible(Exception):
+    pass
+
+
+def infeasible(day):
+    raise Infeasible("no feasible assignment")

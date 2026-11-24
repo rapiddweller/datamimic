@@ -16,9 +16,26 @@ from datamimic_ce.authoring.domain.diagnostics import (
     Diagnostic,
     DiagnosticPhase,
 )
-from datamimic_ce.authoring.domain.project_run import ProjectRunRequest, ProjectRunResult, UnverifiedProjectRunResult
+from datamimic_ce.authoring.domain.project_run import (
+    ExternalEffect,
+    ExternalEffectKind,
+    ProjectRunRequest,
+    ProjectRunResult,
+    UnverifiedProjectRunResult,
+)
 from datamimic_ce.authoring.domain.requests import BuildResult, ReadyBuild, ReadyWithGapsBuild
 from datamimic_ce.authoring.ports import ExternalEffectsDetector, ProjectRunner
+
+
+def _refusal_message(effects: tuple[ExternalEffect, ...]) -> str:
+    """Name the files that run Python code: a hybrid project with one lib file is refused for that file alone."""
+    scripts = sorted({effect.name for effect in effects if effect.kind is ExternalEffectKind.EXECUTE})
+    parts: list[str] = []
+    if scripts:
+        parts.append(f"runs Python code from {', '.join(scripts)}")
+    if any(effect.kind is not ExternalEffectKind.EXECUTE for effect in effects):
+        parts.append("reaches outside its directory")
+    return f"The project {' and '.join(parts)}; nothing was run."
 
 
 class ProjectRunWorkflow:
@@ -68,7 +85,7 @@ class ProjectRunWorkflow:
                 diagnostics=(
                     catalog_diagnostic(
                         AuthoringRuleId.SIDE_EFFECT,
-                        "The project reaches outside its directory; nothing was run.",
+                        _refusal_message(effects),
                         phase=DiagnosticPhase.POLICY,
                         remediation="Ask the user to confirm the listed targets, then call again with "
                         "allow_side_effects true.",

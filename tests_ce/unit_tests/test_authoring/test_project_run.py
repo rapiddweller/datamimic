@@ -156,6 +156,41 @@ def test_effects_without_the_flag_are_listed_and_nothing_runs(tmp_path: Path) ->
     assert runner.calls == []
 
 
+@pytest.mark.parametrize(
+    "effects,message",
+    [
+        (
+            (ExternalEffect(kind=ExternalEffectKind.EXECUTE, name="lib/solver.scr.py", descriptor="datamimic.xml"),),
+            "The project runs Python code from lib/solver.scr.py; nothing was run.",
+        ),
+        (
+            (
+                ExternalEffect(kind=ExternalEffectKind.EXECUTE, name="lib/b.scr.py", descriptor="datamimic.xml"),
+                ExternalEffect(kind=ExternalEffectKind.EXECUTE, name="lib/a.scr.py", descriptor="datamimic.xml"),
+                EFFECT,
+            ),
+            "The project runs Python code from lib/a.scr.py, lib/b.scr.py and reaches outside its directory; "
+            "nothing was run.",
+        ),
+        ((EFFECT,), "The project reaches outside its directory; nothing was run."),
+    ],
+)
+def test_the_refusal_names_the_python_files_it_would_run(
+    tmp_path: Path, effects: tuple[ExternalEffect, ...], message: str
+) -> None:
+    result = workflow(ready_build(tmp_path), effects, FakeRunner(execution())).execute(ProjectRunRequest())
+    assert result.diagnostics[0].message == message
+
+
+def test_a_hybrid_project_is_refused_with_its_lib_file_named(tmp_path: Path) -> None:
+    root = tmp_path / "hybrid"
+    shutil.copytree(Path(__file__).parents[2] / "scenarios" / "s20_library_names", root)
+    result = create_authoring_application(root, descriptor_path=PROJECT_ENTRY_PATH).run_project(ProjectRunRequest())
+    assert result.not_run_reason == "side_effects_not_allowed"
+    assert result.diagnostics[0].message == "The project runs Python code from lib/helpers.scr.py; nothing was run."
+    assert [effect.name for effect in result.required_side_effects] == ["lib/helpers.scr.py"]
+
+
 def test_allowed_effects_run_and_params_reach_the_runner(tmp_path: Path) -> None:
     runner = FakeRunner(execution())
     request = ProjectRunRequest(allow_side_effects=True, params=(ProjectParam(name="STAGE", value="test"),))

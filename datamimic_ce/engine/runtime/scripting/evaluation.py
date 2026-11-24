@@ -15,6 +15,7 @@ from datamimic_ce.engine.runtime.scripting.expression_globals import (
     UNOFFERED_BUILTINS,
     row_expression_globals,
 )
+from datamimic_ce.engine.runtime.scripting.plugins import SCRIPT_MODULE
 from datamimic_ce.errors import (
     GUIDANCE_WHERE_SCOPE,
     DescriptorLocation,
@@ -201,6 +202,21 @@ def _called(nodes: tuple[ast.AST, ...], name: str) -> bool:
     )
 
 
+_SCRIPT_MESSAGE_LIMIT = 300
+
+
+def _failure_text(error: Exception, *, text_from_data: bool) -> str:
+    """The type of a failure. A class that a project script defines also shows its message: the author wrote it for
+    the reviewer. Any other message can quote a row value, and a diagnostic never shows a value (#707)."""
+    if type(error).__module__ == SCRIPT_MODULE and not text_from_data:
+        # One line and a bound: the message is author text, and a diagnostic is not a log.
+        text: str = str(error)
+        message = " ".join(text.split())[:_SCRIPT_MESSAGE_LIMIT]
+        if message:
+            return f"{type(error).__name__}: {message}"
+    return type(error).__name__
+
+
 def _lookup_failure(error: NameError | AttributeError, nodes: tuple[ast.AST, ...]) -> str:
     """Name the missing name only when the expression text holds it: a called function can raise a name built
     from data, and a diagnostic never shows a value."""
@@ -382,7 +398,7 @@ def evaluate_python(
         raise task_config_error(
             code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
             expr=diagnostic,
-            error=type(error).__name__,
+            error=_failure_text(error, text_from_data=text_from_data),
             shown_in_build=True,
         ) from error
 
