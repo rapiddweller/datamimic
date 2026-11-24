@@ -682,7 +682,7 @@ class RdbmsClient(DatabaseClient):
             raise operation_error(
                 code=IssueCode.OPERATION_EXECUTION_FAILED,
                 target="database table lookup",
-                error=NormalizedDbError(None, "table_not_found", "Requested table is unavailable"),
+                error=NormalizedDbError(None, DbErrorCategory.TABLE_NOT_FOUND, "Requested table is unavailable"),
             ) from native_error
 
         return f"{self._credential.db_schema}.{actual_table_name}" if self._credential.db_schema else actual_table_name
@@ -909,78 +909,104 @@ class _HasOracleCode(Protocol):
     code: int
 
 
+class DbErrorCategory(StrEnum):
+    """The category names that an error shows. A message or a code that covers several causes never picks one."""
+
+    CHECK_CONSTRAINT = "check_constraint"
+    COLUMN_NOT_FOUND = "column_not_found"
+    CONNECTION_FAILED = "connection_failed"
+    CONSTRAINT = "constraint"
+    DEADLOCK = "deadlock"
+    DUPLICATE_KEY = "duplicate_key"
+    FOREIGN_KEY = "foreign_key"
+    FUNCTION_NOT_FOUND = "function_not_found"
+    NOT_NULL = "not_null"
+    PERMISSION_DENIED = "permission_denied"
+    SCHEMA_NOT_FOUND = "schema_not_found"
+    SQLITE_ERROR = "sqlite_error"
+    SYNTAX_ERROR = "syntax_error"
+    TABLE_NOT_FOUND = "table_not_found"
+    TIMEOUT = "timeout"
+    TYPE_MISMATCH = "type_mismatch"
+
+
 _PG_CATEGORIES = {
-    "42P01": "table_not_found",
-    "42703": "column_not_found",
-    "3F000": "schema_not_found",
-    "42883": "function_not_found",
-    "42601": "syntax_error",
-    "42501": "permission_denied",
-    "22P02": "type_mismatch",
-    "22001": "type_mismatch",
-    "23505": "duplicate_key",
-    "23502": "not_null",
-    "23503": "foreign_key",
-    "23514": "check_constraint",
-    "40P01": "deadlock",
-    "57014": "timeout",
-    "08001": "connection_failed",
-    "08006": "connection_failed",
+    "42P01": DbErrorCategory.TABLE_NOT_FOUND,
+    "42703": DbErrorCategory.COLUMN_NOT_FOUND,
+    "3F000": DbErrorCategory.SCHEMA_NOT_FOUND,
+    "42883": DbErrorCategory.FUNCTION_NOT_FOUND,
+    "42601": DbErrorCategory.SYNTAX_ERROR,
+    "42501": DbErrorCategory.PERMISSION_DENIED,
+    "22P02": DbErrorCategory.TYPE_MISMATCH,
+    "22001": DbErrorCategory.TYPE_MISMATCH,
+    "23505": DbErrorCategory.DUPLICATE_KEY,
+    "23502": DbErrorCategory.NOT_NULL,
+    "23503": DbErrorCategory.FOREIGN_KEY,
+    "23514": DbErrorCategory.CHECK_CONSTRAINT,
+    "40P01": DbErrorCategory.DEADLOCK,
+    "57014": DbErrorCategory.TIMEOUT,
+    "08001": DbErrorCategory.CONNECTION_FAILED,
+    "08006": DbErrorCategory.CONNECTION_FAILED,
 }
 _MYSQL_CATEGORIES = {
-    1146: "table_not_found",
-    1054: "column_not_found",
-    1049: "schema_not_found",
-    1305: "function_not_found",
-    1064: "syntax_error",
-    1044: "permission_denied",
-    1045: "permission_denied",
-    1062: "duplicate_key",
-    1048: "not_null",
-    1452: "foreign_key",
-    1213: "deadlock",
-    1205: "timeout",
-    2002: "connection_failed",
-    2003: "connection_failed",
-    2006: "connection_failed",
-    2013: "connection_failed",
+    1146: DbErrorCategory.TABLE_NOT_FOUND,
+    1054: DbErrorCategory.COLUMN_NOT_FOUND,
+    1049: DbErrorCategory.SCHEMA_NOT_FOUND,
+    1305: DbErrorCategory.FUNCTION_NOT_FOUND,
+    1064: DbErrorCategory.SYNTAX_ERROR,
+    1044: DbErrorCategory.PERMISSION_DENIED,
+    1045: DbErrorCategory.PERMISSION_DENIED,
+    1062: DbErrorCategory.DUPLICATE_KEY,
+    1048: DbErrorCategory.NOT_NULL,
+    1452: DbErrorCategory.FOREIGN_KEY,
+    1213: DbErrorCategory.DEADLOCK,
+    1205: DbErrorCategory.TIMEOUT,
+    2002: DbErrorCategory.CONNECTION_FAILED,
+    2003: DbErrorCategory.CONNECTION_FAILED,
+    2006: DbErrorCategory.CONNECTION_FAILED,
+    2013: DbErrorCategory.CONNECTION_FAILED,
 }
 _ORACLE_CATEGORIES = {
-    1: "duplicate_key",
-    60: "deadlock",
-    904: "column_not_found",
-    942: "table_not_found",
-    933: "syntax_error",
-    936: "syntax_error",
-    907: "syntax_error",
-    911: "syntax_error",
-    1013: "timeout",
-    1017: "connection_failed",
-    1031: "permission_denied",
-    1400: "not_null",
-    1722: "type_mismatch",
-    1861: "type_mismatch",
-    2290: "check_constraint",
-    2291: "foreign_key",
-    2292: "foreign_key",
-    3113: "connection_failed",
-    3114: "connection_failed",
-    12541: "connection_failed",
+    1: DbErrorCategory.DUPLICATE_KEY,
+    60: DbErrorCategory.DEADLOCK,
+    904: DbErrorCategory.COLUMN_NOT_FOUND,
+    942: DbErrorCategory.TABLE_NOT_FOUND,
+    933: DbErrorCategory.SYNTAX_ERROR,
+    936: DbErrorCategory.SYNTAX_ERROR,
+    907: DbErrorCategory.SYNTAX_ERROR,
+    911: DbErrorCategory.SYNTAX_ERROR,
+    1013: DbErrorCategory.TIMEOUT,
+    1017: DbErrorCategory.CONNECTION_FAILED,
+    1031: DbErrorCategory.PERMISSION_DENIED,
+    1400: DbErrorCategory.NOT_NULL,
+    1722: DbErrorCategory.TYPE_MISMATCH,
+    1861: DbErrorCategory.TYPE_MISMATCH,
+    2290: DbErrorCategory.CHECK_CONSTRAINT,
+    2291: DbErrorCategory.FOREIGN_KEY,
+    2292: DbErrorCategory.FOREIGN_KEY,
+    3113: DbErrorCategory.CONNECTION_FAILED,
+    3114: DbErrorCategory.CONNECTION_FAILED,
+    12541: DbErrorCategory.CONNECTION_FAILED,
 }
-# SQLite answers a missing table, a missing column and invalid SQL with the same code 1, so none of them is named.
-_SQLITE_GENERIC_ERROR = "sqlite_error"
-_SQLITE_GENERIC_GUIDANCE = (
-    "SQLite reports a missing table, a missing column and invalid SQL, among other errors, alike. Check the table "
-    'and column names, and the database name: database="bank" opens db/bank.sqlite, so leave the .sqlite suffix out.'
-)
 _SQLITE_CATEGORIES = {
-    1: _SQLITE_GENERIC_ERROR,
-    3: "permission_denied",
-    5: "timeout",
-    6: "timeout",
-    8: "permission_denied",
-    14: "connection_failed",
-    19: "constraint",
+    # One code for a missing table, a missing column and invalid SQL: none of them is named.
+    1: DbErrorCategory.SQLITE_ERROR,
+    3: DbErrorCategory.PERMISSION_DENIED,
+    5: DbErrorCategory.TIMEOUT,
+    6: DbErrorCategory.TIMEOUT,
+    8: DbErrorCategory.PERMISSION_DENIED,
+    14: DbErrorCategory.CONNECTION_FAILED,
+    19: DbErrorCategory.CONSTRAINT,
+}
+
+
+# Static text, no SQL and no value: a category whose code covers several causes says what to check.
+_CATEGORY_GUIDANCE: dict[str, str] = {
+    DbErrorCategory.SQLITE_ERROR: (
+        "SQLite reports a missing table, a missing column and invalid SQL, among other errors, alike. Check the "
+        'table and column names, and the database name: database="bank" opens db/bank.sqlite, so leave the '
+        ".sqlite suffix out."
+    ),
 }
 
 
@@ -1016,7 +1042,7 @@ def _operation_failure(target: str, error: sqlalchemy.exc.SQLAlchemyError) -> Op
         code=IssueCode.OPERATION_EXECUTION_FAILED,
         target=target,
         error=facts,
-        guidance=_SQLITE_GENERIC_GUIDANCE if facts.category == _SQLITE_GENERIC_ERROR else None,
+        guidance=_CATEGORY_GUIDANCE.get(facts.category) if facts.category else None,
     )
     failure.__cause__ = _statement_free_cause(error, facts)
     return failure
@@ -1041,7 +1067,7 @@ def _database_error_facts(error: sqlalchemy.exc.SQLAlchemyError) -> NormalizedDb
         if isinstance(value, str) and 0 < len(value) <= 5 and value.isalnum():
             code_text = value.upper()
             return NormalizedDbError(code_text, _PG_CATEGORIES.get(code_text), type(error).__name__)
-    category = "table_not_found" if isinstance(error, sqlalchemy.exc.NoSuchTableError) else None
+    category = DbErrorCategory.TABLE_NOT_FOUND if isinstance(error, sqlalchemy.exc.NoSuchTableError) else None
     return NormalizedDbError(None, category, type(error).__name__)
 
 
