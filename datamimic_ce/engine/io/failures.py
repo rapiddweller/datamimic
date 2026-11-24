@@ -4,6 +4,7 @@
 
 """Reduce driver and parser causes to passive facts only at the bounded IPC boundary."""
 
+import pickle
 from zipfile import BadZipFile
 
 from lxml.etree import Error as LxmlError
@@ -11,6 +12,15 @@ from pymongo.errors import PyMongoError
 from sqlalchemy.exc import SQLAlchemyError
 
 from datamimic_ce.errors import ExternalFailureCause
+
+
+def _is_picklable(error: BaseException) -> bool:
+    """A class that a project script defines exists only in this process, so the parent could not restore it."""
+    try:
+        pickle.dumps(error)
+    except Exception:  # noqa: BLE001 - whatever stops the pickle stops the transport
+        return False
+    return True
 
 
 def normalize_error_cause_for_transport(error: BaseException) -> None:
@@ -23,7 +33,7 @@ def normalize_error_cause_for_transport(error: BaseException) -> None:
             return
         seen.add(id(cause))
         # lxml errors do not pickle; a BadZipFile from an invalid .xlsx is no passive value either.
-        if isinstance(cause, (SQLAlchemyError, PyMongoError, LxmlError, BadZipFile)):
+        if isinstance(cause, (SQLAlchemyError, PyMongoError, LxmlError, BadZipFile)) or not _is_picklable(cause):
             cause_types: list[str] = []
             nested: BaseException | None = cause
             vendor_seen: set[int] = set()

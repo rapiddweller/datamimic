@@ -967,7 +967,14 @@ _ORACLE_CATEGORIES = {
     3114: "connection_failed",
     12541: "connection_failed",
 }
+# SQLite answers a missing table, a missing column and invalid SQL with the same code 1, so none of them is named.
+_SQLITE_GENERIC_ERROR = "sqlite_error"
+_SQLITE_GENERIC_GUIDANCE = (
+    "SQLite reports a missing table, a missing column and invalid SQL alike. Check the table and column names, and "
+    'the database name: database="bank" opens db/bank.sqlite, so leave the .sqlite suffix out.'
+)
 _SQLITE_CATEGORIES = {
+    1: _SQLITE_GENERIC_ERROR,
     3: "permission_denied",
     5: "timeout",
     6: "timeout",
@@ -1005,7 +1012,12 @@ def _operation_failure(target: str, error: sqlalchemy.exc.SQLAlchemyError) -> Op
     """The typed failure with its statement-free cause. The caller raises it outside the except block, so the
     original error, which holds the SQL text, is neither the cause nor the context."""
     facts = _database_error_facts(error)
-    failure = operation_error(code=IssueCode.OPERATION_EXECUTION_FAILED, target=target, error=facts)
+    failure = operation_error(
+        code=IssueCode.OPERATION_EXECUTION_FAILED,
+        target=target,
+        error=facts,
+        guidance=_SQLITE_GENERIC_GUIDANCE if facts.category == _SQLITE_GENERIC_ERROR else None,
+    )
     failure.__cause__ = _statement_free_cause(error, facts)
     return failure
 

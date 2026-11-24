@@ -156,6 +156,32 @@ def test_effects_without_the_flag_are_listed_and_nothing_runs(tmp_path: Path) ->
     assert runner.calls == []
 
 
+@pytest.mark.parametrize(
+    "effects,message",
+    [
+        (
+            (ExternalEffect(kind=ExternalEffectKind.EXECUTE, name="lib/solver.scr.py", descriptor="datamimic.xml"),),
+            "The project runs Python code from lib/solver.scr.py; nothing was run.",
+        ),
+        (
+            (
+                ExternalEffect(kind=ExternalEffectKind.EXECUTE, name="lib/b.scr.py", descriptor="datamimic.xml"),
+                ExternalEffect(kind=ExternalEffectKind.EXECUTE, name="lib/a.scr.py", descriptor="datamimic.xml"),
+                EFFECT,
+            ),
+            "The project runs Python code from lib/a.scr.py, lib/b.scr.py and reaches outside its directory; "
+            "nothing was run.",
+        ),
+        ((EFFECT,), "The project reaches outside its directory; nothing was run."),
+    ],
+)
+def test_the_refusal_names_the_python_files_it_would_run(
+    tmp_path: Path, effects: tuple[ExternalEffect, ...], message: str
+) -> None:
+    result = workflow(ready_build(tmp_path), effects, FakeRunner(execution())).execute(ProjectRunRequest())
+    assert result.diagnostics[0].message == message
+
+
 def test_allowed_effects_run_and_params_reach_the_runner(tmp_path: Path) -> None:
     runner = FakeRunner(execution())
     request = ProjectRunRequest(allow_side_effects=True, params=(ProjectParam(name="STAGE", value="test"),))
