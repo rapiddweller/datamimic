@@ -1,6 +1,6 @@
 # Scenario projects that need PostgreSQL or MongoDB
 
-Three projects of the scenario corpus (issue #411) that need a service. The corpus in `tests_ce/scenarios` holds only
+Five projects that need a service: three of the scenario corpus (issue #411) and two for createTable. The corpus in `tests_ce/scenarios` holds only
 file, SQLite and targetless projects, so these live here, with the other external-service tests.
 
 | Project | What it shows |
@@ -8,6 +8,8 @@ file, SQLite and targetless projects, so these live here, with the other externa
 | `s50_postgres_readback` | S7 on PostgreSQL: clear a table, write 12 rows, read them back, check the values in the run. |
 | `s51_mongo_readback` | S7 on MongoDB: clear a collection, write 12 documents, read them back, check the values in the run. |
 | `s52_mongo_to_postgres` | X6: clean both targets, write 12 raw documents to Mongo, transform them into a Postgres table, read the table back and check each row against its source. |
+| `s53_postgres_create_table_schemas` | `createTable` on two PostgreSQL clients with one schema each: the table is created in each schema, and a table of the same name in `public` stays untouched. |
+| `s54_mongo_collection_without_table` | MongoDB needs no table: the first write creates the collection, and `createTable` on a MongoDB target is refused with I929. |
 
 `test_scenario_services.py` has the contract of `tests_ce/scenarios/test_scenarios.py`: each Build outcome and its exact
 coverage facts (uncovered products, unread files, unchecked sinks, and seed state) are declared in `scenario.json`;

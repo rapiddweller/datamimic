@@ -32,6 +32,7 @@ class RuntimeRunSession:
 
         self._request = request
         self._test_result_storage = TestResultExporter()
+        self._setup_task: SetupTask | None = None
 
         log_system_info()
         log_memory_info(request.platform_configs.root if request.platform_configs is not None else None)
@@ -82,7 +83,7 @@ class RuntimeRunSession:
                 if request.statement_transformer is not None:
                     request.statement_transformer(root_stmt)
 
-                SetupTask(
+                self._setup_task = SetupTask(
                     setup_stmt=root_stmt,
                     memstore_manager=None,
                     task_id=self._task_id,
@@ -95,7 +96,8 @@ class RuntimeRunSession:
                     included_statement_transformer=request.included_statement_transformer,
                     profile_loader=request.profile_loader,
                     total_row_limit=request.total_row_limit,
-                ).execute()
+                )
+                self._setup_task.execute()
                 logger.info("CONTROL | kind=end | status=ok")
             except (UserErrorBase, DomainError) as error:
                 message = error.message if isinstance(error, DomainError) else str(error)
@@ -113,6 +115,9 @@ class RuntimeRunSession:
         if self._request.test_mode:
             return self._test_result_storage.get_result()
         raise ValueError("Cannot capture test result in non-test mode") from None
+
+    def memstore_rows(self, memstore_id: str, entity: str) -> list[object] | None:
+        return None if self._setup_task is None else self._setup_task.memstore_rows(memstore_id, entity)
 
 
 def create_run_session(request: RunRequest) -> RuntimeRunSession:

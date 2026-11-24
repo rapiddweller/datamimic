@@ -585,3 +585,16 @@ def test_an_unverified_run_says_when_no_record_was_written(record_path: str | No
     ).execute_unverified(ProjectRunRequest(allow_side_effects=True), True)
 
     assert ("No run record was written" in result.message) is says_so
+
+
+@pytest.mark.parametrize(
+    ("target", "shown"), [("mongo", "mongo -> accounts"), ("mongo.upsert", "mongo.upsert -> accounts")]
+)
+def test_a_mongodb_target_effect_names_the_collection(tmp_path: Path, target: str, shown: str) -> None:
+    """A MongoDB write creates its collection by name. A typo in targetEntity must be visible before the run."""
+    xml = (
+        '<setup><mongodb id="mongo" host="localhost" port="27017" database="t"/>'
+        f'<generate name="a" count="1" target="{target}" targetEntity="accounts">'
+        '<key name="id" constant="1"/></generate></setup>'
+    )
+    assert (ExternalEffectKind.TARGET, shown) in effects_of(tmp_path, xml)

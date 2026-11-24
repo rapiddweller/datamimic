@@ -19,3 +19,9 @@ class Dbms(StrEnum):
     MYSQL = "mysql"
     MSSQL = "mssql"
     ORACLE = "oracle"
+
+    @property
+    def creates_tables(self) -> bool:
+        """Whether createTable may create a table here: its inferred types (TEXT keys, NUMERIC without precision) are
+        valid and exact only on SQLite and PostgreSQL."""
+        return self in (Dbms.SQLITE, Dbms.POSTGRESQL)

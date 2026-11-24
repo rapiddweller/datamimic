@@ -102,13 +102,16 @@ Target-isolated bounded evidence does not prove external database delivery.
 
 See [worked projects](docs/examples/authoring.md) for nested FK, memstore and
 time-series cases. Child rows must hold actual `parent.id` values; random FKs can
-pass membership while failing per-parent acceptance. Memstore readback needs the
-producer identifier and consumer foreign-key role pair. For time series, literal
+pass membership while failing per-parent acceptance. A `<generate source>` memstore
+readback needs the producer identifier and consumer foreign-key role pair; a
+`<variable source>` read needs only a written entity. For time series, literal
 `count` is the parallel series count; expected rows are window points × series.
 
 For an existing XML descriptor: `authoring lint` → `authoring dry-run`, inspect the
 bounded evidence, then use normal `datamimic run` when execution is requested.
 Dry-run and bounded `authoring run` do not read `acceptance/build.json`; their `--max-count` defaults to 10.
+A bounded `authoring run --allow-side-effects` writes files into a private copy that is deleted; it warns about this. Keep files with `run-project`.
+`run-project` lists a MongoDB write as `client -> collection`.
 `run-project` permits local `output/` writes without `--allow-side-effects`; that
 option permits effects outside the project.
 For upgrades, see [the migration guide](docs/migrations/authoring-errors.md).

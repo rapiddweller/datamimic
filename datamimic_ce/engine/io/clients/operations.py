@@ -10,7 +10,12 @@ from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
 from datamimic_ce.engine.io.clients.client import Client, RegisteredClient
 from datamimic_ce.engine.io.clients.database_client import DatabaseClient
 from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
-from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
+from datamimic_ce.engine.io.clients.rdbms_client import (
+    ColumnKind,
+    RdbmsClient,
+    create_table_ddl,
+    create_table_definition,
+)
 from datamimic_ce.engine.io.connection_config.mongodb_connection_config import MongoDBConnectionConfig
 from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig
 from datamimic_ce.engine.io.contracts import DataSourcePagination, SqlScriptClient
@@ -50,6 +55,21 @@ def is_mongodb_client(client: RegisteredClient | None) -> bool:
 
 def is_rdbms_client(client: RegisteredClient | None) -> bool:
     return isinstance(client, RdbmsClient)
+
+
+def rdbms_client_dbms(client: RegisteredClient | None) -> Dbms | None:
+    return client.dbms if isinstance(client, RdbmsClient) else None
+
+
+def planned_create_table_ddl(
+    dbms: Dbms,
+    entity: str,
+    columns: tuple[tuple[str, ColumnKind], ...],
+    primary_key: tuple[str, ...],
+    schema: str | None,
+) -> str:
+    """The CREATE TABLE statement that a run would execute, for Build, which creates nothing."""
+    return create_table_ddl(create_table_definition(entity, columns, primary_key, schema), dbms)
 
 
 def count_query_length(client: RegisteredClient, query: str) -> int | None:

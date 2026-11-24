@@ -1,0 +1,7 @@
+<setup>
+    <generate name="report" count="1" target="CSV">
+        <variable name="all_accounts" source="mem" sourceEntity="accounts" storage="data" distribution="ordered"/>
+        <key name="account_count" script="len(all_accounts)"/>
+        <key name="id_sum" script="sum(row.account_id for row in all_accounts)"/>
+    </generate>
+</setup>

@@ -1,0 +1,35 @@
+{
+  "title": "A variable read of a memstore entity is a reader: no copy product and no role pair",
+  "proves": [
+    "a producer writes target=\"mem,CSV\" and a later step reads every stored row with a <variable source=\"mem\" storage=\"data\">: Build is ready without a copy generate",
+    "the variable read works in an included step and inside a <condition>",
+    "a memstore that nothing reads, by <generate source> or by <variable source>, is rejected and the remediation names the variable read",
+    "a variable that reads an entity no product writes (a misspelled sourceEntity) is rejected before execution",
+    "a script that changes the memstore after the producer wrote it (mem.consume) is rejected at the producer: the store no longer holds the captured rows"
+  ],
+  "products": {"accounts": 3, "report": 1},
+  "negatives": [
+    {"name": "memstore_nothing_reads",
+     "diagnostic": "input",
+     "remediation": "read them with <variable name=\"rows\" source=\"mem\" sourceEntity=\"accounts\" storage=\"data\" distribution=\"ordered\"/>",
+     "patch": {"file": "datamimic.xml",
+       "old": "    <!-- 90 report: one row that reads every stored account -->\n    <include uri=\"delivery/90_report.xml\"/>\n",
+       "new": ""}},
+    {"name": "variable_reads_a_misspelled_entity",
+     "diagnostic": "input",
+     "message": "No product writes the memstore entity",
+     "patch": {"file": "delivery/90_report.xml", "old": "sourceEntity=\"accounts\"", "new": "sourceEntity=\"acounts\""}},
+    {"name": "script_adds_a_row_to_the_store",
+     "diagnostic": "validation",
+     "message": "a script changed memstore 'mem'",
+     "patch": {"file": "datamimic.xml",
+       "old": "    <include uri=\"delivery/90_report.xml\"/>\n",
+       "new": "    <generate name=\"tamper\" count=\"1\" target=\"ConsoleExporter\">\n        <key name=\"done\" script=\"mem.consume(('accounts', [{'account_id': 99}])) is None\"/>\n    </generate>\n    <include uri=\"delivery/90_report.xml\"/>\n"}}
+  ],
+  "equivalents": [
+    {"name": "variable_inside_a_condition",
+     "patch": {"file": "delivery/90_report.xml",
+       "old": "        <variable name=\"all_accounts\" source=\"mem\" sourceEntity=\"accounts\" storage=\"data\" distribution=\"ordered\"/>\n",
+       "new": "        <condition><if condition=\"True\">\n            <variable name=\"all_accounts\" source=\"mem\" sourceEntity=\"accounts\" storage=\"data\" distribution=\"ordered\"/>\n        </if></condition>\n"}}
+  ]
+}

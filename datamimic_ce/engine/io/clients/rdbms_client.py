@@ -8,6 +8,9 @@ import copy
 import logging
 import sys
 from contextlib import suppress
+from datetime import date, datetime
+from decimal import Decimal
+from enum import StrEnum
 from pathlib import Path
 from typing import Protocol, runtime_checkable
 from urllib.parse import quote
@@ -15,11 +18,30 @@ from urllib.parse import quote
 import oracledb
 import sqlalchemy
 from mysql.connector.errors import Error as MySqlError
-from sqlalchemy import MetaData, func, inspect, select, text
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    Column,
+    Date,
+    DateTime,
+    Float,
+    LargeBinary,
+    MetaData,
+    Numeric,
+    Table,
+    Text,
+    func,
+    inspect,
+    select,
+    text,
+)
+from sqlalchemy.dialects import registry
 from sqlalchemy.engine import Dialect, Engine
 from sqlalchemy.engine.default import DefaultDialect
 from sqlalchemy.engine.row import Row
 from sqlalchemy.pool import QueuePool
+from sqlalchemy.schema import CreateTable
+from sqlalchemy.types import TypeEngine
 
 from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
 from datamimic_ce.engine.io.clients import sql_dialect
@@ -32,6 +54,37 @@ from datamimic_ce.errors import IssueCode, NormalizedDbError, OperationError, cl
 logger = logging.getLogger("DATAMIMIC")
 
 _TRUNCATE_DIALECTS = frozenset({"postgresql", "mssql"})  # SQLAlchemy dialect names
+
+
+class ColumnKind(StrEnum):
+    """Column type of a table that ``createTable`` creates; the RDBMS client maps each kind to a SQLAlchemy type."""
+
+    TEXT = "text"
+    INTEGER = "integer"
+    FLOAT = "float"
+    DECIMAL = "decimal"
+    BOOLEAN = "boolean"
+    BINARY = "binary"
+    DATE = "date"
+    DATETIME = "datetime"
+
+
+# bool before int and datetime before date: each is a subclass of the type after it.
+_VALUE_KINDS: tuple[tuple[type, ColumnKind], ...] = (
+    (bool, ColumnKind.BOOLEAN),
+    (int, ColumnKind.INTEGER),
+    (float, ColumnKind.FLOAT),
+    (Decimal, ColumnKind.DECIMAL),
+    (datetime, ColumnKind.DATETIME),
+    (date, ColumnKind.DATE),
+    (str, ColumnKind.TEXT),
+)
+
+
+def column_kind_of_type(python_type: type) -> ColumnKind | None:
+    """The column kind of a Python value type; None for a type no kind covers (NoneType included)."""
+    return next((kind for covered, kind in _VALUE_KINDS if issubclass(python_type, covered)), None)
+
 
 # SQLAlchemy create_engine kwargs DATAMIMIC forwards (pooling/behavior). Anything else in the
 # connection config is either connection identity (see _CONNECTION_IDENTITY, used to build the URL)
@@ -232,6 +285,10 @@ class RdbmsClient(DatabaseClient):
     def _require_read_query(self, query: str) -> None:
         if self._credential.read_only:
             sql_dialect.require_read_only_query(query, self._credential.dbms)
+
+    @property
+    def dbms(self) -> Dbms:
+        return self._credential.dbms
 
     def _configure_read_only_engine(self) -> None:
         if not self._credential.read_only or self._engine is self._read_only_engine:
@@ -567,6 +624,36 @@ class RdbmsClient(DatabaseClient):
             "unavailable" if deleted is None else deleted,
         )
 
+    def ensure_table(
+        self, entity: str, columns: tuple[tuple[str, ColumnKind], ...], primary_key: tuple[str, ...]
+    ) -> None:
+        """Create the table when no table of that name exists (createTable); never alter or drop one.
+
+        An existing table must have every written column and the same primary key, else the run fails with I930. The
+        table name lookup ignores case, as the row writes do; column names compare exactly."""
+        self._require_write("createTable")
+        engine = self._create_engine()
+        schema = self._credential.db_schema
+        table = create_table_definition(entity, columns, primary_key, schema)
+        failure: OperationError | None = None
+        try:
+            existing = self._find_table_name(entity)
+            if existing is None:
+                table.create(engine, checkfirst=True)
+                logger.info("OPERATION | rdbms.create_table | table=%s | action=created", table.fullname)
+                return
+            reflected = Table(existing, MetaData(), autoload_with=engine, schema=schema)
+        except sqlalchemy.exc.SQLAlchemyError as error:
+            failure = _operation_failure("rdbms.create_table", error)
+        if failure is not None:
+            raise failure
+        difference = table_difference(table, reflected)
+        if difference is not None:
+            raise operation_error(
+                code=IssueCode.OPERATION_TABLE_DRIFT, target=reflected.fullname, difference=difference
+            )
+        logger.info("OPERATION | rdbms.create_table | table=%s | action=exists", reflected.fullname)
+
     @staticmethod
     def _truncate_or_delete_all(engine, table) -> tuple[str, int | None]:
         if engine.dialect.name in _TRUNCATE_DIALECTS:
@@ -577,19 +664,19 @@ class RdbmsClient(DatabaseClient):
         with engine.begin() as connection:
             return "delete_all", connection.execute(table.delete()).rowcount
 
+    def _find_table_name(self, table_name: str) -> str | None:
+        """The name of the table in the database that matches ``table_name`` without case; None when none does."""
+        inspector = inspect(self._create_engine())
+        tables_in_db = inspector.get_table_names(schema=self._credential.db_schema)
+        return next((table for table in tables_in_db if table.lower() == table_name.lower()), None)
+
     def _get_actual_table_name(self, table_name: str) -> str:
         """
         Get actual table name (for match-case)
         :param table_name:
         :return:
         """
-        inspector = inspect(self._create_engine())
-        tables_in_db = inspector.get_table_names(schema=self._credential.db_schema)
-        actual_table_name = next(
-            (table for table in tables_in_db if table.lower() == table_name.lower()),
-            None,
-        )
-
+        actual_table_name = self._find_table_name(table_name)
         if actual_table_name is None:
             native_error = ValueError(f"Table '{table_name}' not found in the database.")
             raise operation_error(
@@ -944,3 +1031,56 @@ def _database_error_facts(error: sqlalchemy.exc.SQLAlchemyError) -> NormalizedDb
             return NormalizedDbError(code_text, _PG_CATEGORIES.get(code_text), type(error).__name__)
     category = "table_not_found" if isinstance(error, sqlalchemy.exc.NoSuchTableError) else None
     return NormalizedDbError(None, category, type(error).__name__)
+
+
+_COLUMN_TYPES: dict[ColumnKind, type[TypeEngine]] = {
+    ColumnKind.TEXT: Text,
+    ColumnKind.INTEGER: BigInteger,
+    ColumnKind.FLOAT: Float,
+    ColumnKind.DECIMAL: Numeric,
+    ColumnKind.BOOLEAN: Boolean,
+    ColumnKind.BINARY: LargeBinary,
+    ColumnKind.DATE: Date,
+    ColumnKind.DATETIME: DateTime,
+}
+
+
+def create_table_definition(
+    entity: str, columns: tuple[tuple[str, ColumnKind], ...], primary_key: tuple[str, ...], schema: str | None = None
+) -> Table:
+    """The createTable table. The run creates it and Build compiles it, so both show the same columns."""
+    return Table(
+        entity,
+        MetaData(),
+        *(
+            Column(name, _COLUMN_TYPES[kind], primary_key=name in primary_key, autoincrement=False)
+            for name, kind in columns
+        ),
+        schema=schema,
+    )
+
+
+def create_table_ddl(table: Table, dbms: Dbms) -> str:
+    """The CREATE TABLE statement for the dialect of ``dbms``, compiled without a connection."""
+    statement = CreateTable(table)
+    compiled = statement.compile(dialect=registry.load(dbms.value)())
+    return str(compiled).strip()
+
+
+def table_difference(wanted: Table, existing: Table) -> str | None:
+    """The missing columns and the primary-key difference of an existing table, by exact name; None when they match.
+    Extra columns are allowed (an insert leaves them to their default), and column types are not compared: SQLite
+    keeps any value in any column type, and a hand-written schema often uses another type for the same data. Names
+    compare exactly: an insert drops a key whose case differs from the column without an error."""
+    want = {column.name for column in wanted.columns}
+    have = {column.name for column in existing.columns}
+    want_key = {column.name for column in wanted.primary_key.columns}
+    have_key = {column.name for column in existing.primary_key.columns}
+    parts = []
+    if missing := sorted(want - have):
+        parts.append(f"missing columns {', '.join(missing)}")
+    if want_key != have_key:
+        parts.append(
+            f"primary key ({', '.join(sorted(have_key)) or 'none'}) instead of ({', '.join(sorted(want_key))})"
+        )
+    return "; ".join(parts) or None

@@ -60,7 +60,8 @@ _EXAMPLE_ROUTES = (
     "nested: rows made from the rows of another product (rows for each parent row, some of the rows, or a "
     "match on its values) are a <generate> inside that product's <generate>; the keys copy parent.<field> "
     f"and no memstore is needed. {nested_count_scope('id')} {BRACES_COUNT_MAX_COUNT} "
-    "memstore: a later product that copies every row of a product exactly once."
+    "memstore: a later product that copies every row of a product exactly once, or a <variable source> in a later "
+    "step that reads every stored row."
 )
 
 
@@ -255,6 +256,9 @@ class CeDslCatalog:
                         "datamimic authoring reference --topic learning --name data_files. "
                         "A row of a second file by a key (a join): "
                         "datamimic authoring reference --topic learning --name lookup. "
+                        "Write a primary-key field as <id> and every other field as <key>; a database sink table "
+                        'comes from createTable="true", with the <id> fields as its primary key: '
+                        "datamimic authoring reference --topic learning --name database_sink. "
                         f"{SCRIPT_IMPORT_FIX} In an XML file: {ATTRIBUTE_ESCAPE}; DM JSON takes a raw <."
                     ),
                     next_topics=tuple(topic for topic in ReferenceTopic if topic != ReferenceTopic.OVERVIEW),
@@ -401,6 +405,27 @@ class CeDslCatalog:
                         ),
                     ),
                     AuthoringLearningReference(
+                        name="database_sink",
+                        path="tests_ce/scenarios/s59_create_table",
+                        description=(
+                            'A database target writes rows into an existing table. createTable="true" on the '
+                            "<generate> creates the missing table, once, before the first row: write no DDL file and "
+                            "no <execute>. Write a primary-key field as <id> and every other field as <key>; several "
+                            "<id> make a composite key, and createTable needs at least one. The root generate needs a "
+                            "sqlite or postgresql <database> target such as ledger or "
+                            "ledger.upsert (not .update or .delete). The columns "
+                            "are the fields of the written rows; a key's type= sets the column type, else the type "
+                            "of the non-null values does. Set type= on a key whose values are all null "
+                            '(script="None"), of mixed types or of another type than str, int, float, bool, Decimal, '
+                            "date or datetime, else I929. The run never alters a table: an existing table that "
+                            "lacks a written column or has another primary key fails with I930 (extra columns are "
+                            "allowed), and so does a later page with a field that the first page lacks. "
+                            "Use ledger.upsert so that a second run does not fail on the primary "
+                            "key. Build creates nothing and shows the CREATE TABLE in planned_operations; "
+                            "run-project lists a schema side effect and needs allow_side_effects."
+                        ),
+                    ),
+                    AuthoringLearningReference(
                         name="data_files",
                         path="tests_ce/scenarios/s24_project_data_files",
                         description=(
@@ -486,7 +511,8 @@ class CeDslCatalog:
                 return ReferenceResult(
                     topic=request.topic,
                     name=request.name,
-                    content="CE migration, script scope, file sources, file lookup, data files, assert or expectation, "
+                    content="CE migration, script scope, file sources, file lookup, data files, database sink table, "
+                    "assert or expectation, "
                     "time-series and clock guidance."
                     if learning_entries
                     else "No matching learning resource.",

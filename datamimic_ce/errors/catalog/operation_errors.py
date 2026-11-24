@@ -34,4 +34,22 @@ ISSUES: list[IssueDefinition] = [
         ),
         resolution="Use the explicit delete, clear, or drop target described in the migration guidance.",
     ),
+    IssueDefinition(
+        code=IssueCode.OPERATION_CREATE_TABLE_INVALID,
+        name="OPERATION_CREATE_TABLE_INVALID",
+        title="Create Table Is Invalid",
+        template="createTable on '{target}' is invalid: {reason}. Fix: {migration}",
+        cause="createTable has no <id> primary key or no sqlite or postgresql database target, or a column type is "
+        "unknown or mixed.",
+        resolution="Write the primary key as <id> in a root generate with a database target; set type= on a key "
+        "without values or with mixed types.",
+    ),
+    IssueDefinition(
+        code=IssueCode.OPERATION_TABLE_DRIFT,
+        name="OPERATION_TABLE_DRIFT",
+        title="Existing Table Differs From The Model",
+        template="Table '{target}' exists without a written column or with another primary key: {difference}",
+        cause="createTable never alters a table, and the existing table lacks a column or has another primary key.",
+        resolution="Change the model to match the table, or migrate or drop the table outside DATAMIMIC.",
+    ),
 ]

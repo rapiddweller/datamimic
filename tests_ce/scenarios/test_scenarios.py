@@ -22,7 +22,7 @@ from datamimic_ce.authoring.domain.requests import (
     ReadyWithGapsBuild,
     RejectedBuild,
 )
-from datamimic_ce.errors.base import TaskConfigError
+from datamimic_ce.errors.base import OperationError, TaskConfigError
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 _ROOT = Path(__file__).resolve().parent
@@ -55,6 +55,16 @@ class Negative(BaseModel):
     run_error: StrictStr | None = None
 
 
+class RunFailure(BaseModel):
+    """A variant that only a normal run refuses: Build connects to no external system, so it cannot see the table."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: StrictStr
+    patch: Patch
+    run_error: StrictStr
+
+
 class Equivalent(BaseModel):
     """A second spelling of the project: Build is ready and a run gives the same rows as the project."""
 
@@ -76,6 +86,7 @@ class Scenario(BaseModel):
     # Glob patterns, relative to the project, that a normal run must have exported. Absent: no export is checked.
     exports: list[StrictStr] = []
     negatives: list[Negative] = []
+    run_failures: list[RunFailure] = []
     equivalents: list[Equivalent] = []
 
 
@@ -85,6 +96,7 @@ def _load(directory: Path) -> Scenario:
 
 _DIRECTORIES = sorted(path.parent for path in _ROOT.glob("*/scenario.json"))
 _NEGATIVES = [(path, negative) for path in _DIRECTORIES for negative in _load(path).negatives]
+_RUN_FAILURES = [(path, failure) for path in _DIRECTORIES for failure in _load(path).run_failures]
 _EQUIVALENTS = [(path, equivalent) for path in _DIRECTORIES for equivalent in _load(path).equivalents]
 
 
@@ -229,6 +241,21 @@ def test_negative_is_rejected_with_named_diagnostic(
         monkeypatch.chdir(project)
         with pytest.raises(TaskConfigError, match=re.escape(negative.run_error)):
             _run(project)
+
+
+@pytest.mark.parametrize(
+    ("directory", "failure"),
+    _RUN_FAILURES,
+    ids=[f"{path.name}/{failure.name}" for path, failure in _RUN_FAILURES],
+)
+def test_run_failure_is_refused_by_the_run(
+    directory: Path, failure: RunFailure, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    project = _copy(directory, tmp_path / "variant")
+    _apply(failure.patch, project)
+    monkeypatch.chdir(project)
+    with pytest.raises(OperationError, match=re.escape(failure.run_error)):
+        _run(project)
 
 
 # Both quote styles; a separator other than the comma is not this guard's concern.

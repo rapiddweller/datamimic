@@ -8,6 +8,7 @@ import logging
 from typing import TypedDict
 
 from datamimic_ce.engine.dsl.vocabulary.enums.operation_enums import ExportOperation
+from datamimic_ce.engine.io.clients.rdbms_client import ColumnKind
 from datamimic_ce.engine.io.contracts import Exporter, ExportMetadata
 from datamimic_ce.engine.io.exporters.core.exporter_context import ExporterContext
 from datamimic_ce.engine.io.exporters.core.exporter_state_manager import ExporterStateManager
@@ -72,6 +73,22 @@ class ExportSession:
             "with_operation": with_operation,
             "without_operation": without_operation,
         }
+
+    def create_tables(
+        self, full_name: str, entity: str, columns: tuple[tuple[str, ColumnKind], ...], primary_key: tuple[str, ...]
+    ) -> None:
+        """Create the createTable table through each database (RDBMS) exporter of the product, before its first row."""
+        exporters = self._products[full_name]
+        database = [
+            exporter
+            for exporter in (
+                *(exporter for exporter, _ in exporters["with_operation"]),
+                *exporters["without_operation"],
+            )
+            if isinstance(exporter, DatabaseExporter)
+        ]
+        for exporter in database:
+            exporter.ensure_table(entity, columns, primary_key)
 
     def children_first(self, full_name: str) -> bool:
         exporters = self._products[full_name]

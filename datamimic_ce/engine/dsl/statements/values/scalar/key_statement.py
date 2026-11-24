@@ -57,10 +57,11 @@ class GeneratorArguments:
 
 
 class KeyStatement(CompositeStatement):
-    def __init__(self, model: KeyModel, parent_stmt: CompositeStatement):
+    def __init__(self, model: KeyModel, parent_stmt: CompositeStatement, *, is_id: bool = False):
         name = model.name
         super().__init__(name, parent_stmt)
         self._name: str = name
+        self._is_id = is_id
         self._condition = model.condition
         self._constant = model.constant
         self._converter = model.converter
@@ -88,6 +89,11 @@ class KeyStatement(CompositeStatement):
     @property
     def name(self) -> str:
         return self._name
+
+    @property
+    def is_id(self) -> bool:
+        """Whether the element is written <id>: a primary-key column of a createTable generate, else a plain key."""
+        return self._is_id
 
     @property
     def type(self) -> str | None:

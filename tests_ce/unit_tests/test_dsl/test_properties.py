@@ -86,18 +86,21 @@ def test_properties_source_chain_uses_the_same_mutable_union() -> None:
     assert get_type_hints(dispatch.get_parser_by_element)["properties"] == required
 
 
-def test_direct_and_dotted_falsy_property_substitution_remains_asymmetric() -> None:
+def test_direct_and_dotted_falsy_property_substitution_are_the_same() -> None:
     attributes: dict[str, object] = {"direct": "{value}", "dotted": "{outer.value}"}
 
     resolved = dispatch.retrieve_element_attributes(attributes, {"value": 0, "outer": {"value": 0}})
 
     assert resolved is attributes
-    assert resolved == {"direct": 0, "dotted": "{outer.value}"}
+    assert resolved == {"direct": 0, "dotted": 0}
 
 
-def test_dotted_property_scalar_intermediate_raises_attribute_error() -> None:
-    with pytest.raises(AttributeError, match="'int' object has no attribute 'get'"):
-        dispatch.retrieve_element_attributes({"dotted": "{outer.value}"}, {"outer": 1})
+def test_dotted_property_with_a_scalar_intermediate_keeps_the_text_like_a_missing_property() -> None:
+    attributes: dict[str, object] = {"dotted": "{outer.value}", "missing": "{nothing}"}
+
+    resolved = dispatch.retrieve_element_attributes(attributes, {"outer": 1})
+
+    assert resolved == {"dotted": "{outer.value}", "missing": "{nothing}"}
 
 
 @pytest.mark.parametrize(

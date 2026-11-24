@@ -1,0 +1,40 @@
+{
+  "version": "5.0",
+  "environment_bindings": [
+    {
+      "environment": "mongodb",
+      "family": "mongodb"
+    }
+  ],
+  "product_roles": [
+    {
+      "product": "dm_s54_lines",
+      "field": "line_id",
+      "role": {
+        "kind": "identifier"
+      }
+    }
+  ],
+  "expectations": [
+    {
+      "kind": "exact_count",
+      "subject": {
+        "kind": "product",
+        "product": "dm_s54_lines"
+      },
+      "count": 5
+    },
+    {
+      "kind": "exact_count",
+      "subject": {
+        "kind": "declared_sink",
+        "sink": {
+          "kind": "mongodb",
+          "environment": "mongodb",
+          "entity": "dm_s54_lines"
+        }
+      },
+      "count": 5
+    }
+  ]
+}

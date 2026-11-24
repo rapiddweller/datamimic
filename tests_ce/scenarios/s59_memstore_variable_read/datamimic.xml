@@ -1,0 +1,8 @@
+<setup rngSeed="59">
+    <!-- A later step reads the stored rows with a variable: no copy product, no role pair. -->
+    <memstore id="mem"/>
+    <!-- 10 accounts: the producer writes its rows into the memstore and to CSV -->
+    <include uri="model/10_accounts.xml"/>
+    <!-- 90 report: one row that reads every stored account -->
+    <include uri="delivery/90_report.xml"/>
+</setup>

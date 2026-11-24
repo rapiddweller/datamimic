@@ -1,0 +1,12 @@
+{
+  "version": "5.0",
+  "environment_bindings": [
+    {"environment": "shop", "family": "database"}
+  ],
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "seed"}, "count": 3},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "paid"}, "count": 3},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "paid"}, "field": "status", "values": ["paid"]},
+    {"kind": "exact_count", "subject": {"kind": "declared_sink", "sink": {"kind": "database", "environment": "shop", "entity": "orders"}}, "count": 6}
+  ]
+}

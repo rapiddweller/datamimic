@@ -95,6 +95,11 @@ class SetupTask:
 
         self.execute_statements(self._setup_stmt, root_context)
 
+    def memstore_rows(self, memstore_id: str, entity: str) -> list[object] | None:
+        if not self._memstore_manager.contain(memstore_id):
+            return None
+        return self._memstore_manager.get_memstore(memstore_id).get_all_data_by_type(entity)
+
     @staticmethod
     def execute_statements(setup_stmt: SetupStatement, root_context: SetupContext) -> None:
         try:

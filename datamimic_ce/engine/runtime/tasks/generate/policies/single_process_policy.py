@@ -109,6 +109,10 @@ def _has_delete_target(stmt: GenerateStatement, seeded: bool, clients: ClientMap
     return any(operation is ExportOperation.DELETE for _, operation in stmt.client_operations)
 
 
+def _creates_table(stmt: GenerateStatement, seeded: bool, clients: ClientMap) -> bool:
+    return stmt.create_table is not None
+
+
 def _seeded(stmt: GenerateStatement, seeded: bool, clients: ClientMap) -> bool:
     """Under <setup rngSeed> nearly all generation draws on a per-worker rng that restarts per worker,
     so the output depends on the core count. CE runs any seeded generate single-process to keep it
@@ -177,6 +181,12 @@ POLICIES: tuple[SingleProcessPolicy, ...] = (
         feature="delete",
         applies=_has_delete_target,
         reason="delete operations run sequentially",
+        ee_scalable=False,
+    ),
+    SingleProcessPolicy(
+        feature="create-table",
+        applies=_creates_table,
+        reason="createTable creates the table once, from the first page, before any row is written",
         ee_scalable=False,
     ),
     SingleProcessPolicy(

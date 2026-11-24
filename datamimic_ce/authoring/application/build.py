@@ -398,6 +398,7 @@ class BuildDocumentWorkflow:
             expectations=expectations,
             verification=verification,
             diagnostics=(*diagnostics, *coverage.warnings()),
+            planned_operations=first.planned_operations,
         )
 
 

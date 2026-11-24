@@ -122,6 +122,9 @@ class TestGenerateTask:
         statement.targets = {"mongodb.upsert", "file.write"}
         statement.is_statement_operation = False
         statement.delete_intent_problem.return_value = None
+        statement.create_table_problem.return_value = None
+        statement.planned_table_clients = ()
+        statement.target_client_ids = frozenset()
         statement.selector = "test_selector"
         statement.source = "test_source"
         statement.multiprocessing = True
