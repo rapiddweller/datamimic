@@ -192,7 +192,7 @@ def consume_memstore_target(
     full_name: str,
     products: Mapping[str, list[dict[str, object]]],
 ) -> None:
-    """Preserve the existing first-memstore-target write rule."""
+    """Write the rows to the first memstore of ``targets`` that exists (the caller passes them in a fixed order)."""
     for target in targets:
         if setup_context.memstore_manager.contain(target):
             rows = products.get(full_name, [])

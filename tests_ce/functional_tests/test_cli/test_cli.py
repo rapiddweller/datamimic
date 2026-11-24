@@ -200,6 +200,15 @@ class TestCLI:
         assert result.exit_code == 1
         assert "Specify a demo name or use --all" in result.output
 
+    def test_demo_create_unknown_demo_fails_cleanly_and_leaves_no_directory(self, tmp_path):
+        target_dir = tmp_path / "unknown"
+
+        result = runner.invoke(app, ["demo", "create", "no-such-demo", "--target", str(target_dir)])
+
+        assert result.exit_code == 1
+        assert "Demo 'no-such-demo' not found" in result.output
+        assert not target_dir.exists()
+
     def test_demo_create_all_requires_target_directory(self):
         result = runner.invoke(app, ["demo", "create", "--all"])
         assert result.exit_code == 1

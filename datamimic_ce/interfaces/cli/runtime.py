@@ -24,7 +24,7 @@ from datamimic_ce.interfaces.project import (
     project_scaffold,
     validate_project_name,
 )
-from datamimic_ce.resources.api import demo_root
+from datamimic_ce.resources.api import demo_names, demo_root
 
 logger = logging.getLogger("DATAMIMIC")
 
@@ -121,6 +121,10 @@ def create_demo(
         return
     if demo_name is None:
         cli_presenter.fail("Specify a demo name or use --all", code=1)
+        return
+    if demo_name not in demo_names():
+        # Before the target directory is made: an unknown name must leave nothing behind.
+        cli_presenter.fail(f"Demo '{demo_name}' not found", code=1)
     handle_demo(demo_name, demos_path / demo_name, overwrite, target_directory)
 
 

@@ -469,7 +469,7 @@ class GenerateTask(CommonSubTask):
     def export_memstore(setup_context: SetupContext, current_stmt: GenerateStatement, merged_result: dict[str, list]):
         consume_memstore_target(
             setup_context,
-            list(current_stmt.targets),
+            sorted(current_stmt.targets),  # the targets are a set: the first memstore must not depend on hash order
             GenerateStatement.memstore_entity(current_stmt.target_entity, current_stmt.name),
             current_stmt.full_name,
             merged_result,

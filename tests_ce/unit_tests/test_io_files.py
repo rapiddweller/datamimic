@@ -243,3 +243,22 @@ def test_file_content_cache_rereads_changed_file(tmp_path):
     finally:
         FileContentStorage._file_data_cache.pop(str(path), None)
         FileContentStorage._file_signatures.pop(str(path), None)
+        FileContentStorage._file_variants.pop(str(path), None)
+
+
+def test_file_content_cache_reads_a_file_again_for_another_separator_or_reader(tmp_path):
+    """The cache holds content for the way it was read: the same path with another separator must not return the
+    first parse."""
+    path = tmp_path / "data.csv"
+    path.write_text("a,b\n1,2\n", encoding="utf-8")
+    key = str(path)
+    try:
+        assert FileUtil.read_csv_to_dict_list(path, "|") == [{"a,b": "1,2"}]
+        assert FileUtil.read_csv_to_dict_list(path, ",") == [{"a": "1", "b": "2"}]
+        assert FileUtil.read_csv_to_dict_list(path, ",") == [{"a": "1", "b": "2"}]
+        with pytest.raises(ValueError, match="column spec"):
+            FileUtil.read_fixed_width_to_dict_list(path)
+    finally:
+        for store in (FileContentStorage._file_data_cache, FileContentStorage._file_signatures):
+            store.pop(key, None)
+        FileContentStorage._file_variants.pop(key, None)

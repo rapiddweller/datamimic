@@ -561,3 +561,17 @@ class TestGenerateTask:
             pytest.raises(Exception, match="Test exception"),
         ):
             generate_task.execute(mock_context)
+
+
+def test_export_memstore_offers_the_targets_in_name_order(monkeypatch):
+    """The targets of a generate are a set. Which memstore receives the rows must not depend on the hash seed."""
+    from datamimic_ce.engine.dsl.api import GenerateStatement
+    from datamimic_ce.engine.dsl.model.generation.generate_model import GenerateModel
+    from datamimic_ce.engine.runtime.tasks.generate import task as task_module
+
+    offered: list[list[str]] = []
+    monkeypatch.setattr(task_module, "consume_memstore_target", lambda _ctx, targets, *_rest: offered.append(targets))
+    stmt = GenerateStatement(GenerateModel(name="rows", count="1", target="m3,m1,m2"), None)
+    stmt.sub_statements = []
+    task_module.GenerateTask.export_memstore(object(), stmt, {})
+    assert offered == [["m1", "m2", "m3"]]

@@ -157,6 +157,7 @@ class FileUtil:
                         StringIO(read_resource_bytes(file_path).decode(encoding), newline=""), delimiter=separator
                     )
                 ],
+                variant=("csv", separator, encoding),
             )
             if not _is_csv_rows(rows):
                 raise ValueError(f"Cached CSV data at '{file_path.name}' has an invalid shape")
@@ -270,7 +271,9 @@ class FileUtil:
         """
         try:
             lines = FileContentStorage.load_file_with_custom_func(
-                str(file_path), lambda: read_resource_bytes(file_path).decode(encoding).splitlines()
+                str(file_path),
+                lambda: read_resource_bytes(file_path).decode(encoding).splitlines(),
+                variant=("lines", encoding),
             )
         except FileNotFoundError as error:
             raise invalid_source_error(code=IssueCode.SOURCE_FILE_NOT_FOUND, name=file_path.name) from error
@@ -347,7 +350,9 @@ class FileUtil:
         """
         try:
             data = FileContentStorage.load_file_with_custom_func(
-                str(file_path), lambda: json.loads(read_resource_bytes(file_path).decode(encoding))
+                str(file_path),
+                lambda: json.loads(read_resource_bytes(file_path).decode(encoding)),
+                variant=("json", encoding),
             )
             if not _is_json_value(data):
                 raise invalid_source_error(
@@ -569,7 +574,9 @@ def load_source_rows(
     elif source_format is SourceFileFormat.XML:
         try:
             document = FileContentStorage.load_file_with_custom_func(
-                key, lambda: xmltodict.parse(read_resource_bytes(Path(key)), attr_prefix="@", cdata_key="#text")
+                key,
+                lambda: xmltodict.parse(read_resource_bytes(Path(key)), attr_prefix="@", cdata_key="#text"),
+                variant=("xml",),
             )
         except FileNotFoundError as error:
             raise invalid_source_error(code=IssueCode.SOURCE_FILE_NOT_FOUND, name=file_path.name) from error
