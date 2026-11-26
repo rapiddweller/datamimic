@@ -399,9 +399,18 @@ jobs:
           uv run pytest -n 0 -q --durations=20
           tests_ce/unit_tests/test_architecture_checker_pin.py
           tests_ce/unit_tests/test_architecture_pages.py
+          tests_ce/unit_tests/test_symlink_capability.py
           tests_ce/unit_tests/test_architecture_study_oracle.py::test_unseeded_json_comparison_rejects_nested_array_cardinality_change
           tests_ce/unit_tests/test_authoring/test_bounded_descriptor_size.py
           tests_ce/unit_tests/test_authoring/test_bounded_executor_windows.py
+          tests_ce/unit_tests/test_authoring/test_dm_json_codec.py::test_workspace_rechecks_symlink_containment
+          tests_ce/unit_tests/test_authoring/test_init.py::test_init_refuses_a_symlinked_project_directory
+          tests_ce/unit_tests/test_authoring/test_init.py::test_init_refuses_a_symlinked_target_inside_the_project
+          tests_ce/unit_tests/test_authoring/test_ready_coverage.py::test_the_workspace_lists_only_regular_files_sorted_and_relative
+          tests_ce/unit_tests/test_authoring/test_project_run.py::test_runner_stops_a_run_that_exceeds_the_timeout
+          tests_ce/unit_tests/test_authoring/test_project_run.py::test_a_failed_or_timed_out_run_still_gets_a_record
+          tests_ce/unit_tests/test_mcp/test_init_tool.py::test_a_symlinked_project_directory_is_refused
+          tests_ce/unit_tests/test_mcp/test_init_tool.py::test_a_symlinked_target_inside_the_project_is_refused
           tests_ce/unit_tests/test_authoring/test_build_verification.py::test_smoke_reuses_first_capture_and_real_json_exporter
           tests_ce/unit_tests/test_authoring/test_build_verification.py::test_cli_application_byte_parity_for_smoke_and_replay
           'tests_ce/unit_tests/test_authoring/test_set_order_scan.py::test_the_replay_under_other_hash_seeds_rejects_each_s17_negative_and_names_a_cause[set_order]'

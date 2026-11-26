@@ -81,7 +81,7 @@ def test_init_refuses_an_existing_file_and_writes_nothing(tmp_path: Path) -> Non
     assert not (tmp_path / PROJECT_ACCEPTANCE_PATH).exists()
 
 
-def test_init_refuses_a_symlinked_project_directory(tmp_path: Path) -> None:
+def test_init_refuses_a_symlinked_project_directory(tmp_path: Path, require_symlinks: None) -> None:
     real = tmp_path / "real"
     real.mkdir()
     link = tmp_path / "link"
@@ -94,7 +94,7 @@ def test_init_refuses_a_symlinked_project_directory(tmp_path: Path) -> None:
     assert list(real.iterdir()) == []
 
 
-def test_init_refuses_a_symlinked_target_inside_the_project(tmp_path: Path) -> None:
+def test_init_refuses_a_symlinked_target_inside_the_project(tmp_path: Path, require_symlinks: None) -> None:
     outside = tmp_path / "outside"
     outside.mkdir()
     project = tmp_path / "p"

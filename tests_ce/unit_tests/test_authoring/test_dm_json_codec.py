@@ -193,7 +193,7 @@ def test_workspace_validator_uses_logical_path_and_never_writes(tmp_path):
     assert list(tmp_path.iterdir()) == []
 
 
-def test_workspace_rechecks_symlink_containment(tmp_path):
+def test_workspace_rechecks_symlink_containment(tmp_path, require_symlinks):
     from pathlib import PurePosixPath
 
     from datamimic_ce.authoring.adapters.validator import CeDescriptorValidator

@@ -289,7 +289,7 @@ def test_the_ready_json_lists_each_expectation_declared_and_derived(tmp_path: Pa
     assert {item["result"] for item in items} == {"passed"}
 
 
-def test_the_workspace_lists_only_regular_files_sorted_and_relative(tmp_path: Path) -> None:
+def test_the_workspace_lists_only_regular_files_sorted_and_relative(tmp_path: Path, require_symlinks: None) -> None:
     from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
 
     (tmp_path / "b").mkdir()
