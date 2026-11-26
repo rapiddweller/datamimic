@@ -122,6 +122,8 @@ def test_a_seeded_checked_project_is_ready_with_clean_coverage(tmp_path: Path) -
     assert result.coverage.seeded
     assert not [item for item in result.diagnostics if item.code == AuthoringRuleId.COVERAGE_GAP]
     assert "action_required" not in result.model_dump(mode="json")
+    assert PurePosixPath("acceptance/build.json") == PROJECT_ACCEPTANCE_PATH
+    assert PROJECT_ACCEPTANCE_PATH not in result.coverage.unread_data_files
 
 
 def test_an_unseeded_project_is_ready_with_gaps_and_names_the_seed(tmp_path: Path) -> None:
@@ -136,6 +138,17 @@ def test_an_unseeded_project_is_ready_with_gaps_and_names_the_seed(tmp_path: Pat
     assert [(item.path, item.severity) for item in result.diagnostics if item.code == AuthoringRuleId.COVERAGE_GAP] == [
         (("coverage", "seeded"), "warning")
     ]
+    coverage = result.model_dump(mode="json")["coverage"]
+    assert coverage["seeded"] is False
+    assert coverage["products_without_expectation"] == []
+    assert set(coverage) == {
+        "expectation_count",
+        "products",
+        "products_without_expectation",
+        "unread_data_files",
+        "unchecked_declared_sinks",
+        "seeded",
+    }
 
 
 def test_a_product_without_expectation_is_a_gap_with_counted_facts(tmp_path: Path) -> None:
@@ -265,23 +278,6 @@ def test_the_documented_exempt_folders_are_the_ones_that_the_code_exempts() -> N
         assert f"`{name}" in text, name
 
 
-def test_the_coverage_is_part_of_the_ready_json(tmp_path: Path) -> None:
-    result = build_project(tmp_path, _UNSEEDED, expectations=[_CITIES])
-
-    assert isinstance(result, ReadyWithGapsBuild), result
-    coverage = result.model_dump(mode="json")["coverage"]
-    assert coverage["seeded"] is False
-    assert coverage["products_without_expectation"] == []
-    assert set(coverage) == {
-        "expectation_count",
-        "products",
-        "products_without_expectation",
-        "unread_data_files",
-        "unchecked_declared_sinks",
-        "seeded",
-    }
-
-
 def test_the_ready_json_lists_each_expectation_declared_and_derived(tmp_path: Path) -> None:
     result = build_project(tmp_path, _SEEDED, expectations=[{**_CITIES, "count": 3}])
 
@@ -358,12 +354,3 @@ def test_the_published_build_result_schema_has_all_three_outcomes() -> None:
     assert set(schema["discriminator"]["mapping"]) == {"ready", "ready_with_gaps", "rejected"}
     gaps = schema["$defs"]["ReadyWithGapsBuild"]
     assert {"action_required", "coverage", "artifact", "evidence"} <= set(gaps["required"])
-
-
-@pytest.mark.parametrize("name", ["acceptance/build.json"])
-def test_the_acceptance_file_is_never_counted_as_unread_data(tmp_path: Path, name: str) -> None:
-    result = build_project(tmp_path, _SEEDED, expectations=[_CITIES])
-
-    assert isinstance(result, ReadyBuild), result
-    assert PurePosixPath(name) == PROJECT_ACCEPTANCE_PATH
-    assert PurePosixPath(name) not in result.coverage.unread_data_files

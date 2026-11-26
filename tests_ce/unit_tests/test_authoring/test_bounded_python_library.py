@@ -37,6 +37,7 @@ def _rows(result) -> list[dict]:
     return [dict(row) for product in result.evidence for row in product.rows]
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize("filename", ["library_inline.xml", "library_unseeded.xml"])
 def test_library_function_reaches_ready_without_replay_when_unseeded(tmp_path: Path, filename: str) -> None:
     result = _build(tmp_path, filename)
@@ -46,6 +47,7 @@ def test_library_function_reaches_ready_without_replay_when_unseeded(tmp_path: P
     assert result.verification.deterministic_replay.status is VerificationGateStatus.NOT_REQUESTED
 
 
+@pytest.mark.integration
 def test_seeded_library_loads_once_and_build_replays_it_unrequested(tmp_path: Path) -> None:
     result = _build(tmp_path, "library_seeded.xml")
     assert result.outcome == "ready", result
@@ -55,6 +57,7 @@ def test_seeded_library_loads_once_and_build_replays_it_unrequested(tmp_path: Pa
     assert result.verification.deterministic_replay.status is VerificationGateStatus.PASSED
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize(
     ("filename", "message"),
     [
@@ -148,6 +151,7 @@ def _bounded_run(filename: str):
     )
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize("filename", ["library_entry.xml", "library_included.xml"])
 def test_entry_or_included_step_may_load_a_library(filename: str) -> None:
     result = _bounded_run(filename)
@@ -155,6 +159,7 @@ def test_entry_or_included_step_may_load_a_library(filename: str) -> None:
     assert [dict(row) for product in result.captured.products for row in product.rows] == [{"person_id": 2}]
 
 
+@pytest.mark.integration
 def test_included_library_is_checked_against_the_entry_seed() -> None:
     result = _bounded_run("library_included_refused.xml")
     assert not result.ok
@@ -202,6 +207,7 @@ def test_library_refusal_location_uses_only_basename_for_unsafe_uri(
     assert result.diagnostics[0].location.script_line == 1
 
 
+@pytest.mark.integration
 def test_forced_replay_names_why_a_seeded_library_model_failed(tmp_path: Path) -> None:
     result = _build(tmp_path, "library_module_level_draw.xml")
     assert result.outcome == "rejected"
@@ -214,6 +220,7 @@ def test_published_execute_capability_names_the_library_strategy() -> None:
     assert capability.bounded_execution.strategy is BoundedExecutionStrategy.PYTHON_LIBRARY
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize("relative", [False, True])
 def test_library_outside_the_workspace_is_refused_not_loaded(tmp_path: Path, relative: bool) -> None:
     workspace = tmp_path / "workspace"

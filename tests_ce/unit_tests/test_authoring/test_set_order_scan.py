@@ -127,6 +127,7 @@ def _build_negative(name: str, tmp_path: Path) -> BuildResult:
     return create_authoring_application(project, descriptor_path=PROJECT_ENTRY_PATH).build()
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize("name", _SET_ORDER_NEGATIVES)
 def test_the_replay_under_other_hash_seeds_rejects_each_s17_negative_and_names_a_cause(
     name: str, tmp_path: Path
@@ -137,6 +138,7 @@ def test_the_replay_under_other_hash_seeds_rejects_each_s17_negative_and_names_a
     assert ReplayCause.SET_ORDER.failure_message() in [item.message for item in built.diagnostics]
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize("name", _SET_ORDER_NEGATIVES)
 def test_mutant_replays_under_the_first_hash_seed_accept_each_s17_negative(
     name: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch

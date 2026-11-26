@@ -73,6 +73,22 @@ git push origin my-feature-or-fix
 
 A pull request runs a short lane: ruff, mypy, the ArchKeel contract check, `tests_ce/unit_tests` and the Python 3.11 wheel smoke test. A pull request that changes only `*.md` or `docs/**` runs the documentation tests. The full run (integration, functional, external services, Windows, determinism matrix, all wheel smoke tests, Sonar) starts when a change with code is merged into `development`, and on a release tag. To start it for a branch before a risky merge, run `gh workflow run main.yml --ref <branch>`.
 
+### Focused fast authoring tests
+
+Some tests in `tests_ce/unit_tests` exercise the real runtime and child processes.
+The `integration` marker identifies those tests in the Build verification,
+bounded Python library and set-order scan modules. To run only their isolated
+tests during development:
+
+```bash
+uv run pytest tests_ce/unit_tests/test_authoring/test_build_verification.py tests_ce/unit_tests/test_authoring/test_bounded_python_library.py tests_ce/unit_tests/test_authoring/test_set_order_scan.py -m "not integration" -n 0 --durations=20
+```
+
+The marker has not yet been applied throughout the suite, so `-m "not
+integration"` is not a guarantee that other modules are fast. Run the full
+unfiltered tests before submitting changes; CI continues to run the marked
+tests, including the real cross-process replay and its negative controls.
+
 ---
 
 ## 🏛️ Architecture Check

@@ -94,15 +94,28 @@ def executions(monkeypatch):
     return calls
 
 
-def test_default_build_uses_one_real_capture_and_unrequested_gates(tmp_path: Path, executions) -> None:
+@pytest.fixture
+def controlled_executions(monkeypatch):
+    calls = []
+
+    def execute(executor, request):
+        calls.append(request)
+        return _captured()
+
+    monkeypatch.setattr(CeBoundedExecutor, "execute", execute)
+    return calls
+
+
+def test_default_build_uses_one_capture_and_unrequested_gates(tmp_path: Path, controlled_executions) -> None:
     result = build_project(tmp_path, _document(seed=None))
     assert isinstance(result, ReadyWithGapsBuild), result
     assert result.coverage.open_gaps == (CoverageGapKind.SEEDED,)
-    assert len(executions) == 1
+    assert len(controlled_executions) == 1
     assert result.verification.smoke_export.status is VerificationGateStatus.NOT_REQUESTED
     assert result.verification.deterministic_replay.status is VerificationGateStatus.NOT_REQUESTED
 
 
+@pytest.mark.integration
 def test_smoke_reuses_first_capture_and_real_json_exporter(tmp_path: Path, executions) -> None:
     result = build_project(tmp_path, _document(), verification={"smoke_export": True})
     assert isinstance(result, ReadyBuild), result
@@ -117,6 +130,7 @@ def test_smoke_reuses_first_capture_and_real_json_exporter(tmp_path: Path, execu
     }, "Bounded smoke must not write project artifacts."
 
 
+@pytest.mark.integration
 def test_requested_smoke_without_exporter_is_not_applicable(tmp_path: Path) -> None:
     result = build_project(tmp_path, _document(exporter=False), verification={"smoke_export": True})
     assert isinstance(result, ReadyBuild), result
@@ -124,6 +138,7 @@ def test_requested_smoke_without_exporter_is_not_applicable(tmp_path: Path) -> N
     assert result.verification.smoke_export.applicable_exporters == 0
 
 
+@pytest.mark.integration
 def test_smoke_export_with_empty_nested_product(tmp_path: Path) -> None:
     result = build_project(
         tmp_path,
@@ -221,26 +236,27 @@ def test_replay_checks_complete_rows_beyond_response_samples(tmp_path: Path, mon
     assert replay.mismatches[0].first_difference == 1
 
 
-def test_seeded_replay_runs_once_per_hash_seed_and_passes(tmp_path: Path, executions) -> None:
+def test_seeded_replay_runs_once_per_hash_seed_and_passes(tmp_path: Path, controlled_executions) -> None:
     result = build_project(tmp_path, _document(), sample_rows=1, verification={"deterministic_replay": True})
     assert isinstance(result, ReadyBuild), result
-    assert [request.hash_seed for request in executions] == [1, 2, 3, 4]
+    assert [request.hash_seed for request in controlled_executions] == [1, 2, 3, 4]
     assert len(result.evidence[0].rows) == 1
     replay = result.verification.deterministic_replay
     assert replay.status is VerificationGateStatus.PASSED
     assert (replay.compared_products, replay.compared_rows) == (1, 2)
 
 
-def test_unseeded_replay_fails_without_claiming_comparison(tmp_path: Path, executions) -> None:
+def test_unseeded_replay_fails_without_claiming_comparison(tmp_path: Path, controlled_executions) -> None:
     result = build_project(tmp_path, _document(seed=None), verification={"deterministic_replay": True})
     assert isinstance(result, RejectedBuild)
-    assert len(executions) == 1
+    assert len(controlled_executions) == 1
     replay = result.verification.deterministic_replay
     assert replay.status is VerificationGateStatus.FAILED
     assert replay.compared_rows == 0
     assert "explicit" in replay.reason
 
 
+@pytest.mark.integration
 def test_capped_acceptance_cannot_be_rescued_by_replay(tmp_path: Path, executions) -> None:
     # A count range has no declared total, so Build runs it and caps the capture instead of refusing it first.
     document = _document().model_dump(mode="json")
@@ -266,7 +282,15 @@ def test_capped_acceptance_cannot_be_rescued_by_replay(tmp_path: Path, execution
     )
 
 
-def test_cli_application_byte_parity_for_smoke_and_replay(tmp_path: Path) -> None:
+def test_cli_application_byte_parity_for_smoke_and_replay(tmp_path: Path, monkeypatch) -> None:
+    calls = []
+    smoke = SmokeExportCapture(True, 1, 1, 0)
+
+    def execute(executor, request):
+        calls.append((request.hash_seed, request.smoke_export))
+        return _captured(smoke=smoke if request.smoke_export else None)
+
+    monkeypatch.setattr(CeBoundedExecutor, "execute", execute)
     expected = build_project(
         tmp_path, _document(), sample_rows=1, verification={"smoke_export": True, "deterministic_replay": True}
     )
@@ -274,6 +298,7 @@ def test_cli_application_byte_parity_for_smoke_and_replay(tmp_path: Path) -> Non
     result = CliRunner().invoke(app, ["authoring", "build", str(tmp_path)])
     assert result.exit_code == 0, result.stdout
     assert result.stdout.strip() == expected.model_dump_json(indent=2)
+    assert calls == [(1, True), (2, False), (3, False), (4, False)] * 2
 
 
 def test_missing_memstore_identity_proof_blocks_gates_before_execution(tmp_path: Path, executions) -> None:
@@ -305,6 +330,7 @@ def test_missing_memstore_identity_proof_blocks_gates_before_execution(tmp_path:
     assert result.verification.deterministic_replay.status is VerificationGateStatus.BLOCKED
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize("traversal_count", ["{1}", "{1/0}"])
 def test_dynamic_file_count_never_gets_exhaustion_proof(tmp_path: Path, traversal_count: str) -> None:
     (tmp_path / "rows.csv").write_text("id\n1\n2\n3\n", encoding="utf-8")
@@ -329,6 +355,7 @@ def test_dynamic_file_count_never_gets_exhaustion_proof(tmp_path: Path, traversa
     )
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize("traversal_count", [1, 3])
 def test_literal_file_count_agrees_with_unmodified_runtime(tmp_path: Path, traversal_count: int) -> None:
     from datamimic_ce.engine.runtime.api import create_run_session
@@ -357,6 +384,7 @@ def test_literal_file_count_agrees_with_unmodified_runtime(tmp_path: Path, trave
     assert result.verification.deterministic_replay.status is VerificationGateStatus.PASSED
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize("nested", [False, True], ids=["scalar", "nested"])
 @pytest.mark.parametrize("native_type", ["string", "decimal"])
 def test_fixed_value_keeps_native_types_at_every_depth(tmp_path: Path, nested: bool, native_type: str) -> None:
@@ -386,6 +414,7 @@ def test_fixed_value_keeps_native_types_at_every_depth(tmp_path: Path, nested: b
         assert any(item.code == "fixed_value" for item in result.diagnostics)
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize(
     "producer_properties,entity",
     [
@@ -437,6 +466,7 @@ def test_memstore_readback_uses_resolved_output_entity(
     assert result.verification.deterministic_replay.status is VerificationGateStatus.PASSED
 
 
+@pytest.mark.integration
 def test_conditional_field_union_matches_unmodified_runtime(tmp_path: Path) -> None:
     from datamimic_ce.engine.runtime.api import create_run_session
     from datamimic_ce.engine.runtime.contracts import RunRequest as RuntimeRequest

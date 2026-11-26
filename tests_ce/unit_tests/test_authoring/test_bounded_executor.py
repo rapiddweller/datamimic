@@ -172,6 +172,7 @@ def test_workspace_profile_loader_has_no_home_or_cwd_fallback(tmp_path, monkeypa
         workspace.load_connection_profile(root, "../environment")
 
 
+@pytest.mark.integration
 @pytest.mark.skipif(os.name not in {"posix", "nt"}, reason="requires POSIX process groups or Windows taskkill")
 def test_timeout_terminates_worker_children_and_grandchildren(tmp_path):
     import json
@@ -208,6 +209,7 @@ def _running(pid):
         return False
 
 
+@pytest.mark.integration
 @pytest.mark.skipif(os.name == "nt", reason="POSIX process groups only")
 def test_timeout_stays_timeout_while_the_killed_group_is_still_exiting(tmp_path, monkeypatch):
     """macOS killpg returns EPERM when no member of the group is alive but one is not reaped yet (#432). That can
