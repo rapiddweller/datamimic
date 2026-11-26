@@ -24,7 +24,14 @@ from datamimic_ce.authoring.domain.project_run import (
     ProjectRunRequest,
     UnverifiedProjectRunResult,
 )
-from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, BuildArtifact, BuildResult, ReadyBuild, RejectedBuild
+from datamimic_ce.authoring.domain.requests import (
+    PROJECT_ENTRY_PATH,
+    BuildArtifact,
+    BuildResult,
+    ReadyBuild,
+    ReadyWithGapsBuild,
+    RejectedBuild,
+)
 from tests_ce.unit_tests.test_authoring.test_ready_with_gaps import _coverage, _ready_fields
 
 FIXTURES = Path(__file__).parent / "project_run"
@@ -77,6 +84,15 @@ def ready_build() -> ReadyBuild:
     return ReadyBuild(**_ready_fields(_coverage()))
 
 
+def gaps_build() -> ReadyWithGapsBuild:
+    coverage = _coverage(seeded=False)
+    return ReadyWithGapsBuild(
+        **_ready_fields(coverage),
+        action_required=coverage.action_required() or "",
+        diagnostics=coverage.warnings(),
+    )
+
+
 def test_rejected_build_stops_before_any_run(tmp_path: Path) -> None:
     runner = FakeRunner(execution())
     rejected = RejectedBuild.from_input_error("broken")
@@ -110,11 +126,8 @@ def test_unverified_result_rejects_inconsistent_execution() -> None:
         UnverifiedProjectRunResult(outcome="not_run", message="not verified", execution=execution())
 
 
-def test_a_build_with_open_coverage_gaps_still_runs(tmp_path: Path) -> None:
-    root = project(tmp_path, "customers")
-    entry = root / PROJECT_ENTRY_PATH
-    entry.write_text(entry.read_text(encoding="utf-8").replace(' rngSeed="7"', ""), encoding="utf-8")
-    build = create_authoring_application(root, descriptor_path=PROJECT_ENTRY_PATH).build()
+def test_a_build_with_open_coverage_gaps_still_runs() -> None:
+    build = gaps_build()
     runner = FakeRunner(execution())
 
     result = workflow(build, (), runner).execute(ProjectRunRequest())
@@ -128,11 +141,8 @@ def test_a_build_with_open_coverage_gaps_still_runs(tmp_path: Path) -> None:
     assert "seeded" in (result.action_required or "")
 
 
-def test_run_preserves_build_warning_diagnostics(tmp_path: Path) -> None:
-    root = project(tmp_path, "customers")
-    entry = root / PROJECT_ENTRY_PATH
-    entry.write_text(entry.read_text(encoding="utf-8").replace(' rngSeed="7"', ""), encoding="utf-8")
-    build = create_authoring_application(root, descriptor_path=PROJECT_ENTRY_PATH).build()
+def test_run_preserves_build_warning_diagnostics() -> None:
+    build = gaps_build()
     assert any(item.severity == "warning" for item in build.diagnostics)
 
     result = workflow(build, (), FakeRunner(execution())).execute(ProjectRunRequest())
@@ -462,15 +472,11 @@ def test_cli_text_prints_build_diagnostics_when_project_is_rejected(tmp_path: Pa
     assert "parser validation" in result.output.lower()
 
 
-def test_project_run_result_validates_workflow_shapes_and_exit_fields(tmp_path: Path) -> None:
+def test_project_run_result_validates_workflow_shapes_and_exit_fields() -> None:
     from datamimic_ce.authoring.domain.project_run import ProjectRunResult
 
     ready = ready_build()
-    gaps_root = tmp_path / "gaps"
-    shutil.copytree(FIXTURES / "customers", gaps_root)
-    gaps_entry = gaps_root / PROJECT_ENTRY_PATH
-    gaps_entry.write_text(gaps_entry.read_text(encoding="utf-8").replace(' rngSeed="7"', ""), encoding="utf-8")
-    gaps_build = create_authoring_application(gaps_root, descriptor_path=PROJECT_ENTRY_PATH).build()
+    gaps = gaps_build()
     valid_results = (
         ProjectRunResult.from_input_error("bad params"),
         workflow(RejectedBuild.from_input_error("bad project"), (), FakeRunner(execution())).execute(
@@ -480,7 +486,7 @@ def test_project_run_result_validates_workflow_shapes_and_exit_fields(tmp_path: 
         workflow(ready, (), FakeRunner(execution())).execute(ProjectRunRequest()),
         workflow(ready, (), FakeRunner(execution(9))).execute(ProjectRunRequest()),
         workflow(ready, (), FakeRunner(execution(None, timed_out=True))).execute(ProjectRunRequest()),
-        workflow(gaps_build, (), FakeRunner(execution())).execute(ProjectRunRequest()),
+        workflow(gaps, (), FakeRunner(execution())).execute(ProjectRunRequest()),
     )
     for result in valid_results:
         ProjectRunResult.model_validate(result.model_dump(mode="json"))

@@ -53,6 +53,14 @@ from benchmarks.authoring_eval.oracle import (
 )
 from benchmarks.authoring_eval.run_subject import brief, isolation_problems
 
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.skipif(
+        os.name != "posix",
+        reason="authoring eval requires POSIX process-group and Bash sandbox isolation, unavailable on Windows",
+    ),
+]
+
 _ALL_CASES = sorted(path.name for path in CASES.iterdir() if path.is_dir())
 
 

@@ -397,7 +397,7 @@ def test_sqlite_worker_client_uses_unmodified_payload_task_id(tmp_path: Path, mo
     client = received.clients["db"]
     assert isinstance(client, RdbmsClient)
     assert client._task_id == "task-id-used-by-worker"
-    assert client._create_engine().url.database == "db/worker-transfer.sqlite"
+    assert Path(client._create_engine().url.database) == Path("db") / "worker-transfer.sqlite"
     GenerateWorker.cleanup_worker_context(received)
 
     with pytest.raises(ValueError, match="Task ID is required to create SQLite db in task folder"):
