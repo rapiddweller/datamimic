@@ -213,7 +213,7 @@ jobs:
       - name: Run documentation tests
         run: |
           uv sync --python 3.11
-          uv run pytest tests_ce/unit_tests/test_docs -q
+          uv run pytest tests_ce/unit_tests/test_docs tests_ce/nightly_tests/test_docs/test_agent_cli_documentation_contract.py -q
 
   install_dependencies:
     runs-on: ubuntu-22.04
@@ -386,6 +386,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - name: Set up Python 3.11
         uses: actions/setup-python@v6
         with:
@@ -443,6 +445,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Set Up Python
         uses: actions/setup-python@v6
@@ -663,8 +667,6 @@ jobs:
           git config --global --add safe.directory $(realpath .)
       - name: Checkout repository
         uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
         with:
           fetch-depth: 0
       - name: Install uv

@@ -71,7 +71,7 @@ git push origin my-feature-or-fix
 
 ## 🚦 CI
 
-A pull request runs a short lane: ruff, mypy, the ArchKeel contract check, `tests_ce/unit_tests` and the Python 3.11 wheel smoke test. A pull request that changes only `*.md` or `docs/**` runs the documentation tests. The full run (integration, functional, external services, Windows, determinism matrix, all wheel smoke tests, Sonar) starts when a change with code is merged into `development`, and on a release tag. To start it for a branch before a risky merge, run `gh workflow run main.yml --ref <branch>`.
+A code pull request runs ruff, mypy, the ArchKeel contract check, unit, integration and architecture tests, Windows portability proofs, and the Python 3.11 wheel smoke test. Documentation-only pull requests run documentation tests; documentation changes also trigger those tests on pushes. Non-PR code runs include coverage shards (including the nightly cases), functional and external-service tests, the determinism matrix, wheel smoke tests and Sonar. To start the main workflow for a branch before a risky merge, run `gh workflow run main.yml --ref <branch>`.
 
 ### Focused fast authoring tests
 

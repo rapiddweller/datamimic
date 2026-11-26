@@ -9,11 +9,13 @@ import copy
 import hashlib
 import json
 import re
+import shlex
 import subprocess
 import sys
 from pathlib import Path
 
 import yaml
+import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 ALLOWED_PLATFORM_NODE_SELECTIONS = {
@@ -154,6 +156,154 @@ def _collect_nodes(paths):
 
 def _inventory_matches(actual, expected):
     return len(actual) == len(set(actual)) == len(expected) == len(set(expected)) and set(actual) == set(expected)
+
+
+class _StrictWorkflowLoader(yaml.SafeLoader):
+    pass
+
+
+def _strict_mapping(loader, node, deep=False):
+    loader.flatten_mapping(node)
+    result = {}
+    for key_node, value_node in node.value:
+        key = loader.construct_object(key_node, deep=deep)
+        if key in result:
+            raise yaml.constructor.ConstructorError(
+                "mapping", node.start_mark, f"duplicate key {key!r}", key_node.start_mark
+            )
+        result[key] = loader.construct_object(value_node, deep=deep)
+    return result
+
+
+_StrictWorkflowLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _strict_mapping)
+
+
+def _strict_workflow(text):
+    return yaml.load(text, Loader=_StrictWorkflowLoader)
+
+
+def test_workflow_yaml_has_no_duplicate_mapping_keys():
+    for path in (ROOT / ".github/workflows").glob("*.yml"):
+        _strict_workflow(path.read_text(encoding="utf-8"))
+    with pytest.raises(yaml.constructor.ConstructorError, match="duplicate key"):
+        _strict_workflow(
+            "jobs:\n  x:\n    steps:\n      - uses: actions/checkout@v5\n        with: {}\n        with: {}\n"
+        )
+
+
+def _guard_jobs_have_full_checkout(workflow):
+    for job in workflow["jobs"].values():
+        steps = job.get("steps", [])
+        commands = "\n".join(step.get("run", "") for step in steps)
+        matrix = job.get("strategy", {}).get("matrix", {}).get("include", [])
+        selections = commands + "\n" + "\n".join(shard.get("args", "") for shard in matrix)
+        runs_guard = (
+            "tests_ce/architecture/test_integration_test_layout.py" in selections
+            or re.search(r"tests_ce/architecture(?=\s|$)", selections) is not None
+            or "make test-architecture" in selections
+        )
+        if runs_guard and not any(
+            step.get("uses", "").startswith("actions/checkout@") and step.get("with", {}).get("fetch-depth") == 0
+            for step in steps
+        ):
+            return False
+    return True
+
+
+def test_guard_jobs_fetch_parent_history():
+    workflow = _strict_workflow((ROOT / ".github/workflows/main.yml").read_text(encoding="utf-8"))
+    assert _guard_jobs_have_full_checkout(workflow)
+    checkout = next(
+        step
+        for step in workflow["jobs"]["windows_pr_tests"]["steps"]
+        if step.get("uses", "").startswith("actions/checkout@")
+    )
+    del checkout["with"]["fetch-depth"]
+    assert not _guard_jobs_have_full_checkout(workflow)
+
+
+def _ci_lane_paths(workflow):
+    jobs = workflow["jobs"]
+    paths = {}
+    for lane in ("unit", "integration"):
+        shards = jobs[f"{lane}_coverage_shard"]["strategy"]["matrix"]["include"]
+        paths[lane] = [arg for shard in shards if shard["pr"] for arg in shard["args"].split()]
+    paths["nightly"] = [
+        arg
+        for lane in ("unit", "integration")
+        for shard in jobs[f"{lane}_coverage_shard"]["strategy"]["matrix"]["include"]
+        if not shard["pr"]
+        for arg in shard["args"].split()
+    ]
+    paths["functional"] = [
+        arg
+        for shard in jobs["functional_coverage_shard"]["strategy"]["matrix"]["include"]
+        for arg in shard["args"].split()
+    ]
+    return paths
+
+
+def _fixed_test_paths(command):
+    return [arg for arg in shlex.split(command) if arg.startswith("tests_ce/")]
+
+
+def test_ci_paths_cover_manifest_lanes():
+    workflow = _strict_workflow((ROOT / ".github/workflows/main.yml").read_text(encoding="utf-8"))
+    manifest = json.loads((ROOT / "tests_ce/fixtures/lane_manifest.json").read_text(encoding="utf-8"))
+    for lane in ("unit", "integration", "functional"):
+        job = workflow["jobs"][f"{lane}_coverage_shard"]
+        test_steps = [
+            step
+            for step in job["steps"]
+            if "pytest" in step.get("run", "") or "coverage-unit-run" in step.get("run", "")
+        ]
+        assert test_steps and all("${{ matrix.args }}" in step["run"] for step in test_steps)
+    paths = _ci_lane_paths(workflow)
+    for lane, selected in paths.items():
+        assert _inventory_matches(_collect_nodes(selected), manifest["lanes"][lane]), lane
+    mutant = copy.deepcopy(workflow)
+    mutant["jobs"]["unit_coverage_shard"]["strategy"]["matrix"]["include"][0]["args"] = "tests_ce/unit_tests/precommit"
+    assert not _inventory_matches(_collect_nodes(_ci_lane_paths(mutant)["unit"]), manifest["lanes"]["unit"])
+
+    architecture = next(
+        step["run"]
+        for step in workflow["jobs"]["architecture_tests"]["steps"]
+        if step.get("name") == "Run architecture tests"
+    )
+    assert _inventory_matches(_collect_nodes(_fixed_test_paths(architecture)), manifest["lanes"]["architecture"])
+    manual = _strict_workflow((ROOT / ".github/workflows/manual-perf.yml").read_text(encoding="utf-8"))
+    manual_run = next(
+        step["run"]
+        for step in manual["jobs"]["scale"]["steps"]
+        if step.get("name") == "Run explicit large-count descriptors"
+    )
+    assert _inventory_matches(_collect_nodes(_fixed_test_paths(manual_run)), manifest["lanes"]["manual_perf"])
+
+    unit314 = workflow["jobs"]["unit_test_py314"]["strategy"]["matrix"]["include"][0]["args"].split()
+    expected = manifest["lanes"]["unit"] + manifest["lanes"]["architecture"]
+    expected += [node for node in manifest["lanes"]["nightly"] if node.split("::")[0] in unit314]
+    assert _inventory_matches(_collect_nodes(unit314), expected)
+    integration314 = next(
+        step["run"]
+        for step in workflow["jobs"]["integration_test_py314"]["steps"]
+        if step.get("name") == "Run authoring and MCP integration tests"
+    )
+    integration_paths = _fixed_test_paths(integration314)
+    expected = [
+        node
+        for node in manifest["lanes"]["integration"]
+        if node.startswith(("tests_ce/integration_tests/test_authoring/", "tests_ce/integration_tests/test_mcp/"))
+    ]
+    expected += [node for node in manifest["lanes"]["nightly"] if node.split("::")[0] in integration_paths]
+    assert _inventory_matches(_collect_nodes(integration_paths), expected)
+    all_nodes = set().union(*map(set, manifest["lanes"].values()))
+    for job_name in ("windows_pr_tests", "runtime_determinism_matrix"):
+        for step in workflow["jobs"][job_name]["steps"]:
+            command = step.get("run", "")
+            if "uv run pytest" not in command:
+                continue
+            selected = _collect_nodes(_fixed_test_paths(command))
+            assert len(selected) == len(set(selected)) and set(selected) <= all_nodes, step["name"]
 
 
 def _function_hash(tree, name):
