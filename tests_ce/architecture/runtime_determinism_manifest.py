@@ -39,9 +39,7 @@ def build_actual_manifest() -> RuntimeDeterminismManifest:
     from datamimic_ce.domains.facade import REGISTRY, generate_domain
     from datamimic_ce.domains.domain_core.runtime.determinism import canonical_json, hash_bytes
     from datamimic_ce.engine.runtime.api import iter_generator_capabilities as runtime_generator_capabilities
-    from tests_ce.integration_tests.test_determinism_seed_scenarios.test_determinism_seed_scenarios import (
-        seeded_model_hash,
-    )
+    from tests_ce.determinism_fixtures import seeded_model_hash
 
     hashes: dict[str, str] = {}
     for domain in sorted({key[0] for key in REGISTRY}):
@@ -261,8 +259,7 @@ def _compare_command(root: Path, expected_count: int) -> int:
             print(f"ERROR: {error}")
         return 1
     print(
-        f"{len(manifests)}/{expected_count} PASS: "
-        "all actual runtime hashes match each other and the committed goldens."
+        f"{len(manifests)}/{expected_count} PASS: all actual runtime hashes match each other and the committed goldens."
     )
     return 0
 

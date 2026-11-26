@@ -22,7 +22,7 @@ from datamimic_ce.engine.runtime.tasks.generate.workers.multiprocessing_generate
 from datamimic_ce.engine.runtime.tasks.setup import setup_task as setup_task_module
 from datamimic_ce.engine.runtime.tasks.setup.include_task import IncludeTask
 from datamimic_ce.engine.runtime.tasks.setup.setup_task import SetupTask
-from tests_ce.unit_tests.test_contexts.test_setup_context import _context
+from tests_ce.unit_tests.context_fixtures import _context
 
 
 class Engine:

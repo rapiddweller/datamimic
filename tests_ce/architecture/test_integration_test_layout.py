@@ -5,7 +5,9 @@
 """Guard the physical test lanes and their CI selection."""
 
 import ast
+import copy
 import hashlib
+import json
 import re
 import subprocess
 import sys
@@ -14,6 +16,27 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
+ALLOWED_PLATFORM_NODE_SELECTIONS = {
+    "tests_ce/unit_tests/test_architecture_study_oracle.py",
+    "tests_ce/unit_tests/test_authoring/test_dm_json_codec.py",
+    "tests_ce/unit_tests/test_authoring/test_init.py",
+    "tests_ce/unit_tests/test_authoring/test_ready_coverage.py",
+    "tests_ce/unit_tests/test_authoring/test_project_run.py",
+    "tests_ce/unit_tests/test_mcp/test_init_tool.py",
+    "tests_ce/unit_tests/test_authoring/test_build_verification.py",
+    "tests_ce/integration_tests/test_authoring/test_build_verification.py",
+    "tests_ce/integration_tests/test_authoring/test_set_order_scan.py",
+    "tests_ce/scenarios/test_scenarios.py",
+}
+LANES = {
+    "precommit": ["tests_ce/unit_tests/precommit"],
+    "unit": ["tests_ce/unit_tests"],
+    "integration": ["tests_ce/integration_tests"],
+    "nightly": ["tests_ce/nightly_tests"],
+    "manual_perf": ["tests_ce/manual_perf_tests"],
+    "functional": ["tests_ce/functional_tests", "tests_ce/conformance", "tests_ce/scenarios"],
+    "architecture": ["tests_ce/architecture"],
+}
 MOVED_NODE_DIGEST = "87acc25420514ee367d17e63fbc1a10b0460a2935b7af14511f957f63e6c2b9d"
 MOVED = {
     "test_bounded_executor.py": {
@@ -116,6 +139,171 @@ def _moved_nodes_ok(nodes):
         len(nodes) == len(set(nodes)) == 279
         and hashlib.sha256(("\n".join(sorted(nodes)) + "\n").encode()).hexdigest() == MOVED_NODE_DIGEST
     )
+
+
+def _collect_nodes(paths):
+    result = subprocess.run(
+        [sys.executable, "-m", "pytest", "--collect-only", "-q", "-n", "0", *paths],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+    return [line for line in result.stdout.splitlines() if line.startswith("tests_ce/") and "::" in line]
+
+
+def _inventory_matches(actual, expected):
+    return len(actual) == len(set(actual)) == len(expected) == len(set(expected)) and set(actual) == set(expected)
+
+
+def _function_hash(tree, name):
+    functions = [
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == name
+    ]
+    if len(functions) != 1:
+        raise ValueError(f"expected exactly one function {name!r}, found {len(functions)}")
+    function = copy.deepcopy(functions[0])
+    for node in ast.walk(function):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and getattr(node, "type_params", None) == []:
+            node._fields = tuple(field for field in node._fields if field != "type_params")
+    # Python 3.14 changed ast.dump's default to hide empty lists; retain the 3.11 representation.
+    options = {"show_empty": True} if sys.version_info >= (3, 14) else {}
+    return hashlib.sha256(ast.dump(function, include_attributes=False, **options).encode("utf-8")).hexdigest()
+
+
+def _parent_path(path):
+    return (
+        path.replace("tests_ce/integration_tests/test_authoring/", "tests_ce/unit_tests/test_authoring/", 1)
+        .replace("tests_ce/nightly_tests/test_authoring/", "tests_ce/unit_tests/test_authoring/", 1)
+        .replace("tests_ce/nightly_tests/test_benchmarks/", "tests_ce/unit_tests/test_benchmarks/", 1)
+    )
+
+
+def _moved_hashes(nodes):
+    current_trees = {}
+    parent_trees = {}
+    current_hashes = {}
+    parent_hashes = {}
+    for node in nodes:
+        path, name = node.split("::", 1)
+        name = name.split("[", 1)[0]
+        parent = _parent_path(path)
+        if path not in current_trees:
+            current_trees[path] = ast.parse((ROOT / path).read_text(encoding="utf-8"))
+        if parent not in parent_trees:
+            source = subprocess.run(
+                ["git", "show", f"a2954317:{parent}"],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                check=True,
+            ).stdout
+            parent_trees[parent] = ast.parse(source)
+        current_hashes[node] = _function_hash(current_trees[path], name)
+        parent_hashes[node] = _function_hash(parent_trees[parent], name)
+    return current_hashes, parent_hashes
+
+
+def _moved_hashes_match(nodes, manifest, current, parent):
+    hashes = manifest["moved_ast_hashes"]
+    exceptions = manifest["moved_ast_hash_exceptions"]
+    exceptional = {entry["node_id"]: entry for entry in exceptions}
+    if len(nodes) != 279 or len(set(nodes)) != 279 or len(hashes) != 268 or len(exceptions) != len(exceptional):
+        return False
+    if len(exceptions) != 11 or set(hashes) & set(exceptional) or set(hashes) | set(exceptional) != set(nodes):
+        return False
+    for node in nodes:
+        if node in exceptional:
+            entry = exceptional[node]
+            if not entry["reason"] or entry["current_hash"] != current[node] or entry["parent_hash"] != parent[node]:
+                return False
+        elif hashes[node] != current[node] or hashes[node] != parent[node]:
+            return False
+    return True
+
+
+def test_lane_manifest_and_parent_function_hashes():
+    manifest = json.loads((ROOT / "tests_ce/fixtures/lane_manifest.json").read_text(encoding="utf-8"))
+    assert manifest["source_commit"] == "a2954317"
+    assert set(manifest["lanes"]) == set(LANES)
+    for lane, paths in LANES.items():
+        nodes = _collect_nodes(paths)
+        assert _inventory_matches(nodes, manifest["lanes"][lane]), lane
+        if lane == "precommit":
+            assert len(nodes) == 168
+            assert _inventory_matches(nodes, manifest["precommit_exact"])
+            assert not _inventory_matches(nodes, manifest["precommit_exact"][:-1])
+            assert not _inventory_matches(nodes, manifest["precommit_exact"][:-1] + ["different-node"])
+            assert not _inventory_matches(nodes, manifest["precommit_exact"][:-1] + [manifest["precommit_exact"][0]])
+
+    moved_paths = [
+        "tests_ce/integration_tests/test_authoring/test_bounded_executor.py",
+        "tests_ce/integration_tests/test_authoring/test_bounded_python_library.py",
+        "tests_ce/integration_tests/test_authoring/test_build_verification.py",
+        "tests_ce/integration_tests/test_authoring/test_set_order_scan.py",
+        "tests_ce/nightly_tests/test_authoring/test_build_verification.py",
+        "tests_ce/nightly_tests/test_benchmarks",
+    ]
+    nodes = _collect_nodes(moved_paths)
+    current, parent = _moved_hashes(nodes)
+    assert _moved_hashes_match(nodes, manifest, current, parent)
+    mutant_current = current.copy()
+    first = next(iter(manifest["moved_ast_hashes"]))
+    path, name = first.split("::", 1)
+    tree = ast.parse((ROOT / path).read_text(encoding="utf-8"))
+    function = next(n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef) and n.name == name.split("[", 1)[0])
+    function.body.append(ast.Pass())
+    mutant_current[first] = _function_hash(tree, function.name)
+    assert not _moved_hashes_match(nodes, manifest, mutant_current, parent)
+    exception_node = manifest["moved_ast_hash_exceptions"][0]["node_id"]
+    path, name = exception_node.split("::", 1)
+    name = name.split("[", 1)[0]
+    original_tree = ast.parse((ROOT / path).read_text(encoding="utf-8"))
+    for mutation in ("helper", "assertion", "nonempty_type_params"):
+        tree = copy.deepcopy(original_tree)
+        function = next(n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef) and n.name == name)
+        if mutation == "helper":
+            call = next(n for n in ast.walk(function) if isinstance(n, ast.Call) and isinstance(n.func, ast.Name))
+            call.func.id += "_mutant"
+        elif mutation == "assertion":
+            assertion = next(n for n in ast.walk(function) if isinstance(n, ast.Assert))
+            assertion.test = ast.Constant(value=True)
+        else:
+            function._fields = (*[field for field in function._fields if field != "type_params"], "type_params")
+            function.type_params = [ast.Name(id="T", ctx=ast.Load())]
+        mutant_current = current.copy()
+        mutant_current[exception_node] = _function_hash(tree, name)
+        assert not _moved_hashes_match(nodes, manifest, mutant_current, parent), mutation
+    empty_tree = copy.deepcopy(original_tree)
+    empty_function = next(n for n in ast.walk(empty_tree) if isinstance(n, ast.FunctionDef) and n.name == name)
+    empty_function._fields = (*[field for field in empty_function._fields if field != "type_params"], "type_params")
+    empty_function.type_params = []
+    assert _function_hash(empty_tree, name) == current[exception_node]
+    exception = manifest["moved_ast_hash_exceptions"][0]
+    for field in ("current_hash", "parent_hash"):
+        original = exception[field]
+        exception[field] = "0" * 64
+        assert not _moved_hashes_match(nodes, manifest, current, parent)
+        exception[field] = original
+
+
+def test_platform_node_selection_exceptions_are_exact():
+    workflow = yaml.safe_load((ROOT / ".github/workflows/main.yml").read_text(encoding="utf-8"))
+    steps = [
+        *workflow["jobs"]["windows_pr_tests"]["steps"],
+        *workflow["jobs"]["architecture_tests"]["steps"],
+    ]
+    selected = set()
+    for step in steps:
+        if step.get("name") in (
+            "Run Windows portability and authoring proofs",
+            "Run seeded DSL replay and negative control",
+        ):
+            selected.update(re.findall(r"(tests_ce/[^\s'\"]+?\.py)::", step.get("run", "")))
+    assert selected == ALLOWED_PLATFORM_NODE_SELECTIONS
 
 
 def test_every_moved_parameterized_node_is_present_once():

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from tests_ce.unit_tests.conftest import _probe_symlinks
+from tests_ce.symlink_fixtures import _probe_symlinks
 
 
 def test_symlink_probe_cleans_up_successful_link(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

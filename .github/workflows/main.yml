@@ -395,6 +395,7 @@ jobs:
       - name: Install dependencies
         run: uv sync --python 3.11
       - name: Run Windows portability and authoring proofs
+        # Deliberate node selections keep platform-specific individual proofs bounded.
         run: >-
           uv run pytest -n 0 -q --durations=20
           tests_ce/unit_tests/test_architecture_checker_pin.py
@@ -416,6 +417,8 @@ jobs:
           tests_ce/integration_tests/test_authoring/test_build_verification.py::test_smoke_reuses_first_capture_and_real_json_exporter
           'tests_ce/integration_tests/test_authoring/test_set_order_scan.py::test_the_replay_under_other_hash_seeds_rejects_each_s17_negative_and_names_a_cause[set_order]'
           'tests_ce/integration_tests/test_authoring/test_set_order_scan.py::test_mutant_replays_under_the_first_hash_seed_accept_each_s17_negative[set_order]'
+      - name: Verify lane manifest and parent function hashes
+        run: uv run pytest tests_ce/architecture/test_integration_test_layout.py -n 0 -q
 
   runtime_determinism_matrix:
     name: Seeded runtime determinism on ${{ matrix.os }} Python ${{ matrix.python-version }} (${{ matrix.timezone }}, ${{ matrix.resolution }})
@@ -464,6 +467,7 @@ jobs:
         run: uv run pytest tests_ce/architecture/test_facade_determinism.py -q
 
       - name: Run Windows authoring process and handle proofs
+        # The same guard runs in the PR Windows portability job and on Ubuntu.
         if: matrix.cell == 'windows-py311-utc'
         run: >-
           uv run pytest
@@ -477,6 +481,10 @@ jobs:
           tests_ce/nightly_tests/test_authoring/test_derived_row_limit.py
           tests_ce/unit_tests/test_portable_errors.py
           tests_ce/unit_tests/precommit/test_error_pickling.py -q
+
+      - name: Verify lane manifest and parent function hashes
+        if: matrix.cell == 'windows-py311-utc'
+        run: uv run pytest tests_ce/architecture/test_integration_test_layout.py -n 0 -q
 
       - name: Run committed seeded entity replay proof
         run: >-
@@ -655,6 +663,10 @@ jobs:
           git config --global --add safe.directory $(realpath .)
       - name: Checkout repository
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+        with:
+          fetch-depth: 0
       - name: Install uv
         uses: astral-sh/setup-uv@v8.1.0
       - name: Install dependencies
@@ -812,6 +824,7 @@ jobs:
           uv run pytest tests_ce/architecture -n auto -q --durations=15
         shell: bash
       - name: Run seeded DSL replay and negative control
+        # Deliberate node selections run the bounded DSL replay and its negative proof.
         run: >-
           uv run pytest -q -n 0
           'tests_ce/scenarios/test_scenarios.py::test_scenario_builds_runs_and_replays[s01_flat_seeded]'
