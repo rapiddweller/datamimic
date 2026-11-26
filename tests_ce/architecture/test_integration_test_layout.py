@@ -173,6 +173,45 @@ def test_ci_coverage_counts_match_matrices():
     assert _coverage_counts_match(workflow)
     workflow["jobs"]["integration_coverage_shard"]["strategy"]["matrix"]["include"].pop()
     assert not _coverage_counts_match(workflow)
+    workflow = yaml.safe_load((ROOT / ".github/workflows/main.yml").read_text(encoding="utf-8"))
+    workflow["jobs"]["functional_coverage_shard"]["strategy"]["matrix"]["include"].pop()
+    assert not _coverage_counts_match(workflow)
+
+
+def _forbidden_scenario_selection(text):
+    return any(token in text for token in ("SCENARIO_" + "SHARD", "pytest_" + "deselected"))
+
+
+def test_scenario_collection_is_not_filtered():
+    tracked = subprocess.run(
+        ["git", "ls-files", "-z", "--", "tests_ce", ".github/workflows"],
+        cwd=ROOT,
+        capture_output=True,
+        check=True,
+    ).stdout.decode("utf-8")
+    for name in tracked.split("\0"):
+        path = ROOT / name
+        if not name or not path.is_file():
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue  # binary test fixtures
+        assert not _forbidden_scenario_selection(text), path
+    assert _forbidden_scenario_selection("SCENARIO_" + "SHARD")
+    assert _forbidden_scenario_selection("pytest_" + "deselected")
+
+
+def test_scenarios_use_one_parallel_physical_coverage_shard():
+    workflow = yaml.safe_load((ROOT / ".github/workflows/main.yml").read_text(encoding="utf-8"))
+    job = workflow["jobs"]["functional_coverage_shard"]
+    shards = job["strategy"]["matrix"]["include"]
+    assert [shard for shard in shards if "tests_ce/scenarios" in shard["args"]] == [
+        {"shard": "scenarios", "args": "tests_ce/scenarios", "workers": "-n 4"}
+    ]
+    commands = "\n".join(step.get("run", "") for step in job["steps"])
+    assert "coverage run --parallel-mode -m pytest" in commands
+    assert "${{ matrix.workers }}" in commands and "--cov --cov-report=" in commands
 
 
 def test_precommit_unit_allowlist_is_exact():

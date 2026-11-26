@@ -800,21 +800,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # SCENARIO_SHARD splits the entire parametrized scenario suite without exclusions.
-          - shard: scenarios-a
-            scenario_shard: 0/4
+          - shard: scenarios
             args: tests_ce/scenarios
-          - shard: scenarios-b
-            scenario_shard: 1/4
-            args: tests_ce/scenarios
-          - shard: scenarios-c
-            scenario_shard: 2/4
-            args: tests_ce/scenarios
-          - shard: scenarios-d
-            scenario_shard: 3/4
-            args: tests_ce/scenarios
+            workers: -n 4
           - shard: functional
             args: tests_ce/functional_tests tests_ce/conformance
+            workers: -n 0
     steps:
       - name: Setup git
         run: |
@@ -852,10 +843,9 @@ jobs:
       - name: Run functional tests with coverage
         env:
           COVERAGE_FILE: .coverage.${{ matrix.shard }}
-          SCENARIO_SHARD: ${{ matrix.scenario_shard }}
         run: |
           . .venv/bin/activate
-          uv run coverage run -m pytest ${{ matrix.args }} --durations=20
+          uv run coverage run --parallel-mode -m pytest ${{ matrix.args }} ${{ matrix.workers }} --cov --cov-report= --durations=20
         shell: bash
       - name: Upload coverage data
         uses: actions/upload-artifact@v6
@@ -895,7 +885,7 @@ jobs:
       - name: Combine functional coverage
         run: |
           . .venv/bin/activate
-          test "$(ls -A coverage-functional-data | wc -l)" -eq 5
+          test "$(ls -A coverage-functional-data | wc -l)" -eq 2
           uv run coverage combine coverage-functional-data
           uv run coverage xml
         shell: bash
