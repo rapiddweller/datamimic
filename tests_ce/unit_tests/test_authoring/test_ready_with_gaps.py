@@ -19,14 +19,8 @@ from datamimic_ce.authoring.domain.acceptance_contract import (
     build_coverage,
 )
 from datamimic_ce.authoring.domain.build_rules import authoring_rule_catalog
-from datamimic_ce.authoring.domain.capture import CaptureStatus, ProductCaptureEvidence
 from datamimic_ce.authoring.domain.coverage import (
-    BuildCoverage,
     CoverageGapKind,
-    ExpectationResult,
-    ListedExpectation,
-    ListedExpectations,
-    ProductCoverage,
     unread_data_files,
 )
 from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId, DiagnosticPhase
@@ -34,75 +28,18 @@ from datamimic_ce.authoring.domain.expectations import (
     DeclaredSinkIdentity,
     DeclaredSinkRowsSubject,
     ExactCountExpectation,
-    ExpectationIntentKind,
     PerParentCountExpectation,
     PerParentRowsSubject,
     ProductRowsSubject,
 )
-from datamimic_ce.authoring.domain.proof import AcceptanceOrigin
 from datamimic_ce.authoring.domain.requests import (
-    BuildArtifact,
-    BuildAssurance,
     ProductEvidence,
-    ProjectFileDigest,
     ReadyWithGapsBuild,
 )
+from tests_ce.authoring_coverage_fixtures import coverage as _coverage
+from tests_ce.authoring_coverage_fixtures import ready_fields as _ready_fields
 
-_DIGEST = "0" * 64
 _SINK = DeclaredSinkIdentity(kind="database", environment="dev", entity="orders")
-
-
-def _coverage(
-    *,
-    seeded: bool = True,
-    unread: tuple[str, ...] = (),
-    without: tuple[str, ...] = (),
-    sinks: tuple[DeclaredSinkIdentity, ...] = (),
-) -> BuildCoverage:
-    return BuildCoverage(
-        expectation_count=1,
-        products=(ProductCoverage(product="customers", expectations=1),),
-        products_without_expectation=without,
-        unread_data_files=tuple(PurePosixPath(item) for item in unread),
-        unchecked_declared_sinks=sinks,
-        seeded=seeded,
-    )
-
-
-def _ready_fields(coverage: BuildCoverage) -> dict[str, object]:
-    return {
-        "artifact": BuildArtifact(
-            files=(
-                ProjectFileDigest(path=PurePosixPath("acceptance/build.json"), sha256=_DIGEST),
-                ProjectFileDigest(path=PurePosixPath("datamimic.xml"), sha256=_DIGEST),
-            ),
-            ce_version="5.0.0-test",
-        ),
-        "assurance": BuildAssurance(mode="local_bounded"),
-        "coverage": coverage,
-        "expectations": ListedExpectations(
-            total=1,
-            truncated=False,
-            items=(
-                ListedExpectation(
-                    origin=AcceptanceOrigin.MODEL,
-                    kind=ExpectationIntentKind.EXACT_COUNT,
-                    subject=ProductRowsSubject(product="customers"),
-                    field=None,
-                    result=ExpectationResult.PASSED,
-                ),
-            ),
-        ),
-        "evidence": (
-            ProductEvidence(
-                name="customers",
-                count=2,
-                capture=ProductCaptureEvidence(
-                    status=CaptureStatus.COMPLETE, requested=2, observed=2, limit=10, reason="complete"
-                ),
-            ),
-        ),
-    }
 
 
 def _product(name: str, *sinks: DeclaredSinkIdentity) -> AcceptanceProductV1:

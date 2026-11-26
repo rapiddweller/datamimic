@@ -17,6 +17,13 @@ from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 _DIR = Path(__file__).resolve().parent
 
 
+@pytest.fixture(autouse=True)
+def _isolated_project(tmp_path, monkeypatch):
+    shutil.copytree(_DIR, tmp_path, dirs_exist_ok=True, ignore=shutil.ignore_patterns("output", "db", "__pycache__"))
+    (tmp_path / "db").mkdir(exist_ok=True)
+    monkeypatch.setitem(globals(), "_DIR", tmp_path)
+
+
 def _run(filename: str) -> dict:
     engine = DataMimicTest(test_dir=_DIR, filename=filename, capture_test_result=True)
     engine.test_with_timer()

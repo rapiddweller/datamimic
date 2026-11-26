@@ -45,11 +45,13 @@ does not establish descendant cleanup. Do not interpret the refusal as Windows
 sandbox support; a Windows implementation needs independently verified process
 tree containment, including descendants after their parent exits.
 
-The authoring evaluation suite in `test_authoring_eval.py` is POSIX-only: its
-CI lane runs on Ubuntu in `.github/workflows/benchmarks.yml`; the regular unit
-CI shards exclude the benchmark directory. The module is marked `integration`,
-so `pytest tests_ce/unit_tests -m "not integration"` excludes it from a fast
-local run. The benchmark CI lane does not filter this marker. The separate
-`test_process_group_guard.py` runs on Windows and POSIX, including in that fast
-run, and checks that both subprocess entry points fail before starting a child
-when process-group cleanup is unavailable.
+The authoring evaluation suite lives in
+`tests_ce/nightly_tests/test_benchmarks/test_authoring_eval.py` and is
+POSIX-only: its CI lane runs on Ubuntu in `.github/workflows/benchmarks.yml`.
+Neither the unit nor integration CI shards see it, and `make test-benchmarks`
+runs it on its own. The module
+is marked `integration`, but the benchmark CI lane does not filter this marker.
+The separate `tests_ce/unit_tests/test_benchmarks/test_process_group_guard.py`
+runs on Windows and POSIX with the fast unit suite and checks that both
+subprocess entry points fail before starting a child when process-group cleanup
+is unavailable.

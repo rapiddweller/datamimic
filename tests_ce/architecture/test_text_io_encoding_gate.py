@@ -107,7 +107,7 @@ def _collect_callsites(tree: ast.AST) -> list[tuple[int, str]]:
     return hits
 
 
-@pytest.mark.parametrize("module_path", production_modules(), ids=lambda p: str(p.relative_to(PROD_ROOT.parent)))
+@pytest.mark.parametrize("module_path", production_modules(), ids=lambda p: p.relative_to(PROD_ROOT.parent).as_posix())
 def test_text_io_declares_encoding(module_path: Path) -> None:
     rel = str(module_path.relative_to(PROD_ROOT.parent))
     hits = _collect_callsites(ast.parse(module_path.read_text(encoding="utf-8"), filename=str(module_path)))

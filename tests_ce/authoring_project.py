@@ -4,6 +4,7 @@
 
 """Write a one-entry project and Build it, the way an agent does: files first, then Build the directory."""
 
+from hashlib import sha256
 from pathlib import Path
 
 from datamimic_ce.authoring import create_authoring_application
@@ -15,6 +16,30 @@ from datamimic_ce.authoring.domain.requests import (
     BuildRequestV5,
     BuildResult,
 )
+
+
+def build_document(*, seed: int | None = 7, count: int = 2, exporter: bool = True) -> DmJsonDocumentV1:
+    """The one-entry model shared by unit and integration Build proofs."""
+    properties = {"name": "items", "count": count}
+    if exporter:
+        properties["target"] = "JSON"
+    return DmJsonDocumentV1.model_validate(
+        {
+            "root": {
+                "kind": "setup",
+                "properties": {"rng_seed": seed} if seed is not None else {},
+                "children": [
+                    {
+                        "kind": "generate",
+                        "properties": properties,
+                        "children": [
+                            {"kind": "key", "properties": {"name": "id", "generator": "IncrementGenerator"}},
+                        ],
+                    },
+                ],
+            }
+        }
+    )
 
 
 def write_project(root: Path, entry: DmJsonDocumentV1 | str, **acceptance: object) -> Path:
@@ -31,3 +56,8 @@ def write_project(root: Path, entry: DmJsonDocumentV1 | str, **acceptance: objec
 def build_project(root: Path, entry: DmJsonDocumentV1 | str, **acceptance: object) -> BuildResult:
     write_project(root, entry, **acceptance)
     return create_authoring_application(root, descriptor_path=PROJECT_ENTRY_PATH).build()
+
+
+def entry_digest(root: Path) -> str:
+    """Hash the exact persisted project entry used by a Build proof."""
+    return sha256((root / PROJECT_ENTRY_PATH).read_bytes()).hexdigest()

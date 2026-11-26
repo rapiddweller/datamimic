@@ -32,7 +32,8 @@ from datamimic_ce.authoring.domain.requests import (
     ReadyWithGapsBuild,
     RejectedBuild,
 )
-from tests_ce.unit_tests.test_authoring.test_ready_with_gaps import _coverage, _ready_fields
+from tests_ce.authoring_coverage_fixtures import coverage as _coverage
+from tests_ce.authoring_coverage_fixtures import ready_fields as _ready_fields
 
 FIXTURES = Path(__file__).parent / "project_run"
 EFFECT = ExternalEffect(kind=ExternalEffectKind.DATABASE, name="db", descriptor="datamimic.xml")
@@ -188,9 +189,7 @@ def test_effects_without_the_flag_are_listed_and_nothing_runs() -> None:
         ((EFFECT,), "The project reaches outside its directory; nothing was run."),
     ],
 )
-def test_the_refusal_names_the_python_files_it_would_run(
-    effects: tuple[ExternalEffect, ...], message: str
-) -> None:
+def test_the_refusal_names_the_python_files_it_would_run(effects: tuple[ExternalEffect, ...], message: str) -> None:
     result = workflow(ready_build(), effects, FakeRunner(execution())).execute(ProjectRunRequest())
     assert result.diagnostics[0].message == message
 

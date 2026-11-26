@@ -15,7 +15,7 @@ from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId
 from datamimic_ce.authoring.domain.proof import VerificationGateStatus
 from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, LintRequest
 
-_PROJECT = Path(__file__).parent / "project_build" / "order_desk"
+_PROJECT = Path(__file__).resolve().parents[2] / "fixtures" / "authoring" / "project_build" / "order_desk"
 
 
 def _build(project: Path = _PROJECT):

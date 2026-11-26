@@ -4,23 +4,13 @@ from pathlib import Path
 
 import pytest
 
+from tests_ce.symlink_fixtures import _probe_symlinks
+
 
 @pytest.fixture
 def require_symlinks(tmp_path: Path) -> None:
     """Skip only when Windows denies symlink creation; unexpected errors remain failures."""
     _probe_symlinks(tmp_path)
-
-
-def _probe_symlinks(tmp_path: Path) -> None:
-    link = tmp_path / "symlink-capability-probe"
-    try:
-        link.symlink_to(tmp_path, target_is_directory=True)
-    except OSError as error:
-        if getattr(error, "winerror", None) == 1314:
-            pytest.skip("Creating symlinks requires Windows Developer Mode or the symlink privilege")
-        raise
-    else:
-        link.unlink()
 
 
 @pytest.fixture

@@ -1,3 +1,7 @@
+# DATAMIMIC
+# Copyright (c) 2023-2026 Rapiddweller Asia Co., Ltd.
+# This software is licensed under the MIT License. See LICENSE.
+
 import pytest
 
 from datamimic_ce.domains.api import MaskConverter, MiddleMaskConverter

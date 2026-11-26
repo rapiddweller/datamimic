@@ -12,11 +12,20 @@ import json
 import shutil
 from pathlib import Path
 
+import pytest
+
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 _DIR = Path(__file__).resolve().parent
 
 _MAGIC = {"application/pdf": b"%PDF-", "image/png": b"\x89PNG", "image/jpeg": b"\xff\xd8\xff"}
+
+
+@pytest.fixture(autouse=True)
+def _isolated_project(tmp_path, monkeypatch):
+    shutil.copytree(_DIR, tmp_path, dirs_exist_ok=True, ignore=shutil.ignore_patterns("output", "db", "__pycache__"))
+    (tmp_path / "db").mkdir(exist_ok=True)
+    monkeypatch.setitem(globals(), "_DIR", tmp_path)
 
 
 def _run(filename: str) -> dict:
