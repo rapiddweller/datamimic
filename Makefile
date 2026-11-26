@@ -6,7 +6,7 @@ AGENT_PLUGIN_ARCHIVE ?= test-artifacts/agent-plugin/datamimic.zip
 
 PACKAGE := datamimic_ce
 TESTS := tests_ce
-AUTOMATIC_TESTS := $(addprefix $(TESTS)/,unit_tests integration_tests architecture functional_tests conformance scenarios)
+AUTOMATIC_TESTS := $(addprefix $(TESTS)/,unit_tests integration_tests architecture functional_tests conformance scenarios api_tests factory_tests)
 CE_COVERAGE_FILES := $(shell find $(PACKAGE) -type f -name '*.py')
 COVERAGE_OMIT := $(PACKAGE)/resources/examples/*.py,$(PACKAGE)/resources/demos/**/*.py,$(PACKAGE)/interfaces/demo.py
 UNIT_TEST_ARGS ?= $(TESTS)/unit_tests

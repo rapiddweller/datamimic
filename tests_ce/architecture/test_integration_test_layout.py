@@ -14,8 +14,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-import yaml
 import pytest
+import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 ALLOWED_PLATFORM_NODE_SELECTIONS = {
@@ -156,6 +156,28 @@ def _collect_nodes(paths):
 
 def _inventory_matches(actual, expected):
     return len(actual) == len(set(actual)) == len(expected) == len(set(expected)) and set(actual) == set(expected)
+
+
+def _automatic_makefile_paths_match(text):
+    match = re.search(r"^AUTOMATIC_TESTS\s*:=\s*\$\(addprefix \$\(TESTS\)/,([^)]*)\)\s*$", text, re.MULTILINE)
+    if match is None:
+        return False
+    selected = match.group(1).split()
+    excluded = {"manual_perf_tests", "nightly_tests", "external_service_tests"}
+    suites = {
+        path.name
+        for path in (ROOT / "tests_ce").iterdir()
+        if path.is_dir() and next(path.rglob("test_*.py"), None) is not None
+    }
+    return len(selected) == len(set(selected)) and set(selected) == suites - excluded
+
+
+def test_makefile_automatic_paths_cover_regular_suites():
+    text = (ROOT / "Makefile").read_text(encoding="utf-8")
+    assert _automatic_makefile_paths_match(text)
+    assert not _automatic_makefile_paths_match(text.replace(" api_tests", "", 1))
+    assert not _automatic_makefile_paths_match(text.replace(" factory_tests", "", 1))
+    assert not _automatic_makefile_paths_match(text.replace(" api_tests", " api_tests manual_perf_tests", 1))
 
 
 class _StrictWorkflowLoader(yaml.SafeLoader):

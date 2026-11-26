@@ -6910,6 +6910,7 @@
       "tests_ce/architecture/test_integration_test_layout.py::test_guard_jobs_fetch_parent_history",
       "tests_ce/architecture/test_integration_test_layout.py::test_guards_reject_returned_marker_and_node_id",
       "tests_ce/architecture/test_integration_test_layout.py::test_lane_manifest_and_parent_function_hashes",
+      "tests_ce/architecture/test_integration_test_layout.py::test_makefile_automatic_paths_cover_regular_suites",
       "tests_ce/architecture/test_integration_test_layout.py::test_moved_tests_exist_only_in_integration_or_nightly_modules",
       "tests_ce/architecture/test_integration_test_layout.py::test_nightly_coverage_shards_do_not_run_on_prs",
       "tests_ce/architecture/test_integration_test_layout.py::test_no_obsolete_workflow_node_ids_or_automatic_scale_tests",
