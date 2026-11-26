@@ -9,95 +9,109 @@ from tests_ce.architecture.completion_gate import check_completion, digest
 
 
 def packet():
+    frame = {
+        "status": "UNKNOWN",
+        "rules": {"U1": ["kind", "UNKNOWN"], "P1": ["kind", "PASS"]},
+        "violations": {},
+        "gaps": [{"kind": "external_type", "subject": "G1", "reason": "not proven"}],
+        "contract_digest": "contract",
+    }
     validation = {
-        "exit_code": 0, "observation_complete": "PASS", "declared_rules": "UNKNOWN",
-        "coverage": {"status": "PASS"}, "baseline_new": 0, "baseline_resolved": 0,
-        "measurements": {"scalars": {"violations": 0, "unknown_positions": 1}},
+        "outcome": "verdict",
+        "status": "UNKNOWN",
+        "exit_code": 2,
+        "frame": deepcopy(frame),
+        "baseline": {
+            "state": "current", "exit_code": 2, "new": [], "gone": [],
+            "accepted_entries": 2, "accepted_unknowns": 2, "accepted_rules": ["G1", "U1"],
+        },
     }
-    records = [{"id": "U1", "evidence_class": "UNKNOWN", "data": {"reason": "external_type"}}]
-    report = {
-        "schema_version": "2.0.0", "exit_code": 0, "observation_complete": "PASS",
-        "declared_rules": "UNKNOWN", "coverage": {"status": "PASS"}, "diagnostics": [],
-        "report_filter": {"only_architecture": True, "full_architecture": True, "component": None, "rule": None},
-        "filtered_violations": [], "recorded_unknowns": records,
-        "architecture_projection": {"source": {"source_digest": "source"}, "contract_digest": "contract", "analyzer_digest": "analyzer"},
-    }
-    known = {"budgets": {"calls_unresolved": 1428}, "schema_version": "1.3.0", "violations": []}
+    known = {"schema_version": "1.4.0", "budgets": {"calls_unresolved": 3}, "violations": []}
     review = {
+        "reviewed_by": "reviewer",
+        "contract_digest": "contract",
         "known_violations_digest": digest(known),
-        "reviewed_by": "Astra", "contract_digest": "contract",
-        "analyzer_digest": "analyzer",
-        "groups": [{"classification": "external_type", "reason": "Static evidence cannot prove the external provider.", "ids": ["U1"]}],
+        "expected": {
+            "pass": 1, "unknown": 1, "fail": 0, "gaps": 1, "accepted_entries": 2,
+            "accepted_unknowns": 2, "gaps_digest": digest(frame["gaps"]),
+        },
     }
-    return validation, report, review, known
+    return validation, frame, review, known
 
 
-def test_assessed_unknown_is_retained_and_accepted():
+def test_reviewed_unknown_retains_exit_two_and_evidence():
     validation, report, review, known = packet()
-    original = deepcopy(report)
+    original = deepcopy(validation)
     assert check_completion(validation, report, review, known) == 1
-    assert report == original
+    assert validation == original
 
 
-def test_source_validation_and_record_churn_needs_no_rebind():
+@pytest.mark.parametrize(
+    "change",
+    [
+        "validation_refusal", "report_refusal", "outcome", "missing_frame", "stale_report", "rule_fail",
+        "invalid_rule", "violation", "baseline_new", "baseline_gone", "baseline_state", "baseline_exit",
+        "unknown_exit_zero", "unknown_exit_one", "status_pass", "gaps_missing", "gap_unaccepted",
+        "rule_unaccepted", "underaccepted", "review_missing", "review_contract", "frame_contract",
+        "new_unknown", "changed_gap", "review_count", "baseline_missing", "bad_accepted",
+    ],
+)
+def test_hard_checks_and_negative_controls(change):
     validation, report, review, known = packet()
-    report["architecture_projection"]["source"]["source_digest"] = "edited"
-    validation["measurements"]["scalars"]["unknown_positions"] = 2
-    validation["coverage"]["calls_analyzed"] = 99
-    report["recorded_unknowns"][0].update(fact_id="F2", evidence_id="E2")
-    assert check_completion(validation, report, review, known) == 1
-
-
-HARD_CHECKS = [
-    "violation", "baseline_new", "baseline_resolved", "violation_scalar", "validation_failure", "report_failure",
-    "coverage", "observation", "rules", "report_exit", "report_diagnostic", "schema", "filter",
-    "filtered_violation", "not_unknown_class", "records_missing", "validation_exit",
-]
-
-
-@pytest.mark.parametrize("change", HARD_CHECKS)
-def test_hard_checks_still_fail(change):
-    validation, report, review, known = packet()
-    if change == "violation":
-        report["filtered_violations"] = [{"id": "V1"}]
-    elif change in {"baseline_new", "baseline_resolved"}:
-        validation[change] = 1
-    elif change == "violation_scalar":
-        validation["measurements"]["scalars"]["violations"] = 1
-    elif change == "validation_failure":
-        validation["failures"] = ["budget exceeded"]
-    elif change == "report_failure":
-        report["failures"] = ["budget exceeded"]
-    elif change == "coverage":
-        report["coverage"]["status"] = "UNKNOWN"
-    elif change == "observation":
-        validation["observation_complete"] = "UNKNOWN"
-    elif change == "rules":
-        validation["declared_rules"] = "FAIL"
-    elif change == "report_exit":
-        report["exit_code"] = 1
-    elif change == "report_diagnostic":
-        report["diagnostics"] = [{"code": "x"}]
-    elif change == "schema":
-        report["schema_version"] = "1.0.0"
-    elif change == "filter":
-        report["report_filter"]["component"] = "COMP-IO"
-    elif change == "filtered_violation":
-        report["filtered_violations"] = [{"id": "V1"}]
-    elif change == "not_unknown_class":
-        report["recorded_unknowns"][0]["evidence_class"] = "PROVEN"
-    elif change == "records_missing":
-        report["recorded_unknowns"] = None
+    frame = validation["frame"]
+    baseline = validation["baseline"]
+    if change == "validation_refusal":
+        validation["refusal"] = {"kind": "invalid"}
+    elif change == "report_refusal":
+        report["refusal"] = {"kind": "invalid"}
+    elif change == "outcome":
+        validation["outcome"] = "command_refused"
+    elif change == "missing_frame":
+        del validation["frame"]
+    elif change == "stale_report":
+        report["rules"]["P1"][1] = "UNKNOWN"
+    elif change in ("rule_fail", "invalid_rule"):
+        frame["rules"]["U1"][1] = report["rules"]["U1"][1] = "FAIL" if change == "rule_fail" else "OTHER"
+    elif change == "violation":
+        frame["violations"]["V1"] = report["violations"]["V1"] = {}
+    elif change in ("baseline_new", "baseline_gone"):
+        baseline[change.removeprefix("baseline_")] = ["changed"]
+    elif change == "baseline_state":
+        baseline["state"] = "stale"
+    elif change == "baseline_exit":
+        baseline["exit_code"] = 1
+    elif change in ("unknown_exit_zero", "unknown_exit_one"):
+        validation["exit_code"] = 0 if change == "unknown_exit_zero" else 1
+    elif change == "status_pass":
+        validation["status"] = "PASS"
+    elif change == "gaps_missing":
+        frame["gaps"] = report["gaps"] = None
+    elif change == "gap_unaccepted":
+        baseline["accepted_rules"].remove("G1")
+    elif change == "rule_unaccepted":
+        baseline["accepted_rules"].remove("U1")
+    elif change == "underaccepted":
+        baseline["accepted_unknowns"] = 0
+    elif change == "review_missing":
+        review["reviewed_by"] = ""
+    elif change == "review_contract":
+        review["contract_digest"] = "stale"
+    elif change == "frame_contract":
+        report["contract_digest"] = "stale"
+    elif change == "new_unknown":
+        frame["gaps"].append({"kind": "other", "subject": "G2", "reason": "unknown"})
+        report["gaps"] = deepcopy(frame["gaps"])
+        baseline["accepted_rules"].append("G2")
+    elif change == "changed_gap":
+        frame["gaps"][0]["reason"] = report["gaps"][0]["reason"] = "different"
+    elif change == "review_count":
+        review["expected"]["unknown"] += 1
+    elif change == "baseline_missing":
+        del validation["baseline"]
     else:
-        validation["exit_code"] = 2
+        baseline["accepted_rules"] = None
     with pytest.raises(ValueError):
         check_completion(validation, report, review, known)
-
-
-def test_whitespace_only_reformatting_of_known_violations_passes():
-    validation, report, review, known = packet()
-    reloaded = json.loads(json.dumps(known, indent=4, sort_keys=False))
-    assert check_completion(validation, report, review, reloaded) == 1
 
 
 @pytest.mark.parametrize("change", ["raised_budget", "added_baseline_entry"])
@@ -106,89 +120,21 @@ def test_known_violations_change_needs_a_new_review(change):
     if change == "raised_budget":
         known["budgets"]["calls_unresolved"] += 1
     else:
-        known["violations"].append({"id": "V1", "reason": "accepted"})
-    with pytest.raises(ValueError, match="known-violations.json changed after independent review"):
+        known["violations"].append({"id": "V1"})
+    with pytest.raises(ValueError, match="known-violations.json changed"):
         check_completion(validation, report, review, known)
 
 
-@pytest.mark.parametrize("change", ["contract", "analyzer", "reviewer"])
-def test_review_target_and_analyzer_must_match(change):
+def test_whitespace_only_reformatting_of_known_violations_passes():
     validation, report, review, known = packet()
-    review["reviewed_by" if change == "reviewer" else change + "_digest"] = "stale"
-    with pytest.raises(ValueError, match="does not match"):
-        check_completion(validation, report, review, known)
+    assert check_completion(validation, report, review, json.loads(json.dumps(known, indent=4))) == 1
 
 
-GROUP_BREAKS = ["new_unknown", "extra_group_id", "unreviewed", "duplicate", "no_reason", "no_classification"]
-
-
-@pytest.mark.parametrize("change", GROUP_BREAKS)
-def test_every_unknown_needs_exactly_one_assessment(change):
+def test_clean_pass_requires_exit_zero():
     validation, report, review, known = packet()
-    group = review["groups"][0]
-    if change == "new_unknown":
-        report["recorded_unknowns"].append({"id": "U2", "evidence_class": "UNKNOWN"})
-    elif change == "extra_group_id":
-        group["ids"].append("U9")
-    elif change == "unreviewed":
-        group["ids"] = []
-    elif change == "duplicate":
-        group["ids"].append("U1")
-    elif change == "no_reason":
-        group["reason"] = ""
-    else:
-        del group["classification"]
-    with pytest.raises(ValueError):
-        check_completion(validation, report, review, known)
-
-
-def publication_packet():
-    validation, report, review, known = packet()
-    diagnostic = {
-        "code": "interface.usage_unknown", "kind": "contract_invalid",
-        "pointer": "/components/0/public/0", "subject": "sample.models:Model",
-        "unknown_claim": "Inherited publication is not proven.", "remedy": "Resolve the inherited signature.",
-    }
-    validation.update(exit_code=2, diagnostics=[diagnostic])
-    review["validation_unknowns"] = {
-        "classification": "inherited_publication_usage_unproved",
-        "reason": "The registered service returns the model through an unresolved inherited type variable.",
-        "diagnostics": deepcopy(validation["diagnostics"]),
-    }
-    return validation, report, review, known
-
-
-def test_reviewed_validation_uncertainty_preserves_raw_exit_and_diagnostic():
-    validation, report, review, known = publication_packet()
-    original = deepcopy(validation)
-    assert check_completion(validation, report, review, known) == 1
-    assert validation == original
-
-
-@pytest.mark.parametrize("change", ["unreviewed", "unused", "claim", "pointer", "unexpected_exit", "empty"])
-def test_validation_uncertainty_cannot_bypass_completion(change):
-    validation, report, review, known = publication_packet()
-    if change == "unreviewed":
-        del review["validation_unknowns"]
-    elif change == "unused":
-        validation["diagnostics"][0]["code"] = "interface.unused"
-        review["validation_unknowns"]["diagnostics"] = deepcopy(validation["diagnostics"])
-    elif change in {"claim", "pointer"}:
-        key = "unknown_claim" if change == "claim" else "pointer"
-        validation["diagnostics"][0][key] = "changed"
-    elif change == "unexpected_exit":
-        validation["exit_code"] = 1
-    else:
-        validation["diagnostics"] = []
-        review["validation_unknowns"]["diagnostics"] = []
-    with pytest.raises(ValueError):
-        check_completion(validation, report, review, known)
-
-
-@pytest.mark.parametrize("source", ["validation", "report"])
-def test_reviewed_usage_uncertainty_cannot_hide_measurement_failure(source):
-    validation, report, review, known = publication_packet()
-    result = validation if source == "validation" else report
-    result["failures"] = ["measurement budget exceeded in calls_unresolved: 1278->1395"]
-    with pytest.raises(ValueError, match="failures remain"):
-        check_completion(validation, report, review, known)
+    for frame in (validation["frame"], report):
+        frame.update(status="PASS", rules={"P1": ["kind", "PASS"]}, gaps=[])
+    validation.update(status="PASS", exit_code=0)
+    validation["baseline"].update(exit_code=0, accepted_unknowns=0, accepted_rules=[])
+    review["expected"].update(unknown=0, gaps=0, accepted_unknowns=0, gaps_digest=digest([]))
+    assert check_completion(validation, report, review, known) == 0

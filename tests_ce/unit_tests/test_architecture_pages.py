@@ -1,5 +1,6 @@
 """Publish reports without losing red results, provenance, or older reviews."""
 
+import hashlib
 import importlib.util
 import json
 import os
@@ -133,22 +134,22 @@ def archive(path, source, **changes):
         "run_attempt": run["run_attempt"],
         "head_sha": run["head_sha"],
         "scanned_sha": run["head_sha"],
-        "archkeel_version": "4.0.1",
+        "archkeel_version": "4.0.2.dev952+g585b2e195",
     }
     metadata.update(changes)
     files = {
-        "metadata.json": json.dumps(metadata),
-        "architecture.json": json.dumps({"source": {"git_head": metadata["scanned_sha"]}}),
+        "architecture.json": json.dumps({"rules": {"example": ["kind", "FAIL"]}}),
         "architecture.report.html": "<!doctype html><title>Actual, Target, Diff</title>",
-        "architecture.detail.html": "<!doctype html><title>Detail</title>",
         "validation.json": json.dumps(
             {
-                "declared_rules": "FAIL",
-                "observation_complete": "UNKNOWN",
-                "measurements": {"scalars": {"violations": 91, "unknown_positions": 202}},
+                "status": "FAIL",
             }
         ),
+        "archkeel-status.json": json.dumps({"schemaVersion": 1, "pass": 0, "unknown": 1, "fail": 1}),
     }
+    for name in ("architecture.json", "architecture.report.html", "validation.json", "archkeel-status.json"):
+        metadata[name + "_sha256"] = hashlib.sha256(files[name].encode()).hexdigest()
+    files["metadata.json"] = json.dumps(metadata)
     with zipfile.ZipFile(path, "w") as zipped:
         for name, content in files.items():
             zipped.writestr(name, content)
@@ -185,7 +186,7 @@ def test_only_current_snapshot_is_published_with_native_explorer_and_unchanged_e
         for name in module.FILES:
             assert (site / name).read_bytes() == zipped.read(name)
     assert (site / "index.html").read_bytes() == (site / "architecture.report.html").read_bytes()
-    assert json.loads((site / "validation.json").read_text())["declared_rules"] == "FAIL"
+    assert json.loads((site / "validation.json").read_text())["status"] == "FAIL"
     assert not (site / "runs").exists()
     assert not (site / "pr").exists()
 
@@ -251,7 +252,7 @@ def test_incomplete_report_cannot_replace_an_existing_review(tmp_path):
     assert not (tmp_path / "site").exists()
 
 
-@pytest.mark.parametrize("name", ["metadata.json", "architecture.json", "validation.json"])
+@pytest.mark.parametrize("name", ["metadata.json", "architecture.json", "validation.json", "archkeel-status.json"])
 def test_malformed_json_cannot_publish(tmp_path, name):
     source = event()
     path = archive(tmp_path / "bad-json.zip", source)
@@ -260,6 +261,22 @@ def test_malformed_json_cannot_publish(tmp_path, name):
     with pytest.raises(ValueError):
         publisher().publish(path, tmp_path / "site", source)
     assert not (tmp_path / "site").exists()
+
+
+@pytest.mark.parametrize("change", [{"schemaVersion": 2}, {"pass": -1}, {"unknown": "1"}, {"fail": True}])
+def test_invalid_status_cannot_publish_even_with_matching_digest(tmp_path, change):
+    source = event()
+    path = archive(tmp_path / "bad-status.zip", source)
+    with zipfile.ZipFile(path) as zipped:
+        status = json.loads(zipped.read("archkeel-status.json"))
+        metadata = json.loads(zipped.read("metadata.json"))
+    status.update(change)
+    encoded = json.dumps(status).encode()
+    metadata["archkeel-status.json_sha256"] = hashlib.sha256(encoded).hexdigest()
+    replace_member(path, "archkeel-status.json", encoded)
+    replace_member(path, "metadata.json", json.dumps(metadata).encode())
+    with pytest.raises(ValueError, match="Invalid architecture status"):
+        publisher().publish(path, tmp_path / "site", source)
 
 
 def test_non_utf8_html_cannot_publish(tmp_path):
@@ -279,7 +296,7 @@ def test_report_scan_identity_must_match_metadata_and_push_head(tmp_path, field)
     if field == "report_sha":
         with zipfile.ZipFile(path) as zipped:
             report = json.loads(zipped.read("architecture.json"))
-        report["source"]["git_head"] = "b" * 40
+        report["rules"]["changed"] = ["kind", "PASS"]
         replace_member(path, "architecture.json", json.dumps(report).encode())
     else:
         # Push reports must describe the triggering commit. PR reports may
@@ -297,7 +314,7 @@ def test_duplicate_archive_member_cannot_publish(tmp_path):
     source = event()
     path = archive(tmp_path / "duplicate.zip", source)
     with zipfile.ZipFile(path, "a") as zipped, pytest.warns(UserWarning, match="Duplicate name"):
-        zipped.writestr("architecture.json", json.dumps({"source": {"git_head": SHA}}))
+        zipped.writestr("architecture.json", json.dumps({"rules": {}}))
 
     with pytest.raises(ValueError):
         publisher().publish(path, tmp_path / "site", source)
@@ -307,7 +324,7 @@ def test_duplicate_archive_member_cannot_publish(tmp_path):
 def test_allowlisted_report_symlink_cannot_publish(tmp_path):
     source = event()
     path = archive(tmp_path / "symlink.zip", source)
-    report = json.dumps({"source": {"git_head": SHA}}).encode()
+    report = json.dumps({"rules": {}}).encode()
     replace_member(path, "architecture.json", report, stat.S_IFLNK | 0o777)
 
     with pytest.raises(ValueError):

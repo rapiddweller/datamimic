@@ -1,8 +1,9 @@
-"""Reject architecture completion without a current independent UNKNOWN review."""
+"""Reject completion without current, reviewed ArchKeel 5.0 evidence."""
 
 import hashlib
 import json
 import sys
+from collections import Counter
 from pathlib import Path
 
 
@@ -11,69 +12,83 @@ def digest(value: object) -> str:
 
 
 def check_completion(validation: dict, report: dict, review: dict, known_violations: dict) -> int:
-    for result in (validation, report):
-        if result.get("failures"):
-            raise ValueError("Architecture validation or report failures remain.")
-        if not (
-            result.get("observation_complete") == "PASS"
-            and result.get("declared_rules") in {"PASS", "UNKNOWN"}
-            and (result.get("coverage") or {}).get("status") == "PASS"
-        ):
-            raise ValueError("Architecture observation or validation is incomplete.")
-    if report.get("exit_code") != 0 or report.get("diagnostics"):
-        raise ValueError("Architecture report is incomplete.")
-    # Budgets and accepted baseline entries are decisions; a change needs a measurement_amendment and a new digest.
+    if validation.get("refusal") or report.get("refusal") or validation.get("outcome") != "verdict":
+        raise ValueError("Architecture validation or report was refused.")
+    frame = validation.get("frame")
+    if not isinstance(frame, dict) or not isinstance(report, dict):
+        raise ValueError("Architecture frames are missing.")
+    for key in ("status", "rules", "violations", "gaps", "contract_digest"):
+        if key not in frame or frame[key] != report.get(key):
+            raise ValueError("Validation and report evidence does not match.")
+    rules, gaps, violations = frame["rules"], frame["gaps"], frame["violations"]
+    if not isinstance(rules, dict) or not isinstance(gaps, list) or not isinstance(violations, dict):
+        raise ValueError("Invalid architecture frame.")
+    if violations or any(
+        not isinstance(rule, list) or len(rule) != 2 or rule[1] not in ("PASS", "UNKNOWN")
+        for rule in rules.values()
+    ):
+        raise ValueError("Architecture violations or failed rules remain.")
+    counts = Counter(rule[1] for rule in rules.values())
+    status = "UNKNOWN" if counts["UNKNOWN"] or gaps else "PASS"
+    exit_code = 2 if status == "UNKNOWN" else 0
+    if (validation.get("status"), validation.get("exit_code"), frame["status"]) != (status, exit_code, status):
+        raise ValueError("Architecture status and exit code are inconsistent.")
+    baseline = validation.get("baseline")
+    if not isinstance(baseline, dict) or (
+        baseline.get("state") != "current"
+        or baseline.get("exit_code") != exit_code
+        or baseline.get("new") != []
+        or baseline.get("gone") != []
+    ):
+        raise ValueError("Architecture baseline is stale or has drift.")
+    accepted = baseline.get("accepted_rules")
+    accepted_unknowns = baseline.get("accepted_unknowns")
+    accepted_entries = baseline.get("accepted_entries")
+    if (
+        not isinstance(accepted, list)
+        or any(not isinstance(item, str) for item in accepted)
+        or type(accepted_unknowns) is not int
+        or type(accepted_entries) is not int
+        or accepted_entries < 0
+        or accepted_unknowns < len(gaps)
+        or any(not isinstance(gap, dict) or not isinstance(gap.get("subject"), str) for gap in gaps)
+    ):
+        raise ValueError("Accepted UNKNOWN coverage is invalid.")
+    subjects = {gap["subject"] for gap in gaps}
+    unknown_rules = {name for name, rule in rules.items() if rule[1] == "UNKNOWN"}
+    if not (subjects | unknown_rules) <= set(accepted) or accepted_unknowns < len(subjects | unknown_rules):
+        raise ValueError("Accepted UNKNOWNs do not cover the frame.")
     if review.get("known_violations_digest") != digest(known_violations):
-        raise ValueError("known-violations.json changed after independent review.")
-    diagnostics = validation.get("diagnostics") or []
-    assessment = review.get("validation_unknowns") or {}
-    if diagnostics:
-        if not (
-            validation.get("exit_code") == 2
-            and all(item.get("code") == "interface.usage_unknown" for item in diagnostics)
-            and assessment.get("classification") and assessment.get("reason")
-            and assessment.get("diagnostics") == diagnostics
-        ):
-            raise ValueError("Validation diagnostics are not independently assessed uncertainty.")
-    elif validation.get("exit_code") != 0 or assessment:
-        raise ValueError("Validation exit or review does not match its diagnostics.")
-    if validation["measurements"]["scalars"]["violations"] != 0 or any(
-        validation.get(key) != 0 for key in ("baseline_new", "baseline_resolved")
+        raise ValueError("known-violations.json changed after review.")
+    reviewer = review.get("reviewed_by")
+    if (
+        not isinstance(reviewer, str)
+        or not reviewer.strip()
+        or not isinstance(frame["contract_digest"], str)
+        or not frame["contract_digest"]
+        or review.get("contract_digest") != frame["contract_digest"]
     ):
-        raise ValueError("Architecture violations or baseline drift remain.")
-    selection = report.get("report_filter") or {}
-    if not (
-        report.get("schema_version") == "2.0.0" and selection.get("only_architecture") is True
-        and selection.get("full_architecture") is True
-        and selection.get("component") is None and selection.get("rule") is None
-        and report.get("filtered_violations") == []
-    ):
-        raise ValueError("Completion requires the full unfiltered architecture report.")
-    projection = report["architecture_projection"]
-    # Source and validation digests are not bound: they change with every edit and prove no review.
-    identities = {
-        "contract_digest": projection["contract_digest"],
-        "analyzer_digest": projection["analyzer_digest"],
+        raise ValueError("Independent review is missing or does not match the contract.")
+    expected = {
+        "pass": counts["PASS"],
+        "unknown": counts["UNKNOWN"],
+        "fail": counts["FAIL"],
+        "gaps": len(gaps),
+        "accepted_unknowns": accepted_unknowns,
+        "accepted_entries": baseline.get("accepted_entries"),
+        "gaps_digest": digest(gaps),
     }
-    if review.get("reviewed_by") != "Astra" or any(
-        not value or review.get(key) != value for key, value in identities.items()
-    ):
-        raise ValueError("Independent review does not match the current Target and analyzer.")
-    records = report.get("recorded_unknowns")
-    if not isinstance(records, list) or any(record.get("evidence_class") != "UNKNOWN" for record in records):
-        raise ValueError("Complete UNKNOWN records are unavailable.")
-    groups = review.get("groups") or []
-    if any(not group.get("classification") or not group.get("reason") for group in groups):
-        raise ValueError("Every UNKNOWN group needs an explicit assessment.")
-    assessed = [identity for group in groups for identity in group["ids"]]
-    if len(set(assessed)) != len(assessed) or sorted(assessed) != sorted(record["id"] for record in records):
-        raise ValueError("Every UNKNOWN must be independently assessed exactly once.")
-    return len(records)
+    if review.get("expected") != expected:
+        raise ValueError("Review evidence does not match the current UNKNOWNs.")
+    return len(gaps)
 
 
 if __name__ == "__main__":
     try:
-        count = check_completion(*(json.loads(Path(path).read_text()) for path in sys.argv[1:]))
+        validation, report, review, known = (
+            json.loads(Path(path).read_text(encoding="utf-8")) for path in sys.argv[1:]
+        )
+        count = check_completion(validation, report, review, known)
     except (ValueError, KeyError, TypeError, OSError) as error:
         raise SystemExit(str(error)) from error
-    print(f"Architecture completion: 0 violations; {count} assessed UNKNOWN records remain.")
+    print(f"Architecture completion: {validation['status']}; 0 violations; {count} reviewed UNKNOWN gaps.")

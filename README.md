@@ -25,8 +25,11 @@
   <a href="https://sonarcloud.io/summary/new_code?id=rapiddweller_datamimic"><img alt="Maintainability" src="https://sonarcloud.io/api/project_badges/measure?project=rapiddweller_datamimic&metric=sqale_rating"></a>
   <a href="https://www.python.org/downloads/"><img alt="Python 3.11 to 3.14" src="https://img.shields.io/badge/Python-3.11%20to%203.14-blue.svg"></a>
   <a href="https://github.com/rapiddweller/datamimic/blob/development/LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-green.svg"></a>
-  <a href="https://github.com/rapiddweller/datamimic/blob/development/docs/agent_plugin.md"><img alt="MCP Ready" src="https://img.shields.io/badge/MCP-ready-8A2BE2.svg"></a>
+  <a href="https://github.com/rapiddweller/datamimic/blob/development/docs/agent_plugin.md"><img alt="Agent plugins: Codex and Claude" src="https://img.shields.io/badge/Agent%20plugins-Codex%20%2B%20Claude-8A2BE2.svg"></a>
+  <a href="https://rapiddweller.github.io/datamimic/"><img alt="ArchKeel architecture status" src="https://img.shields.io/endpoint?url=https%3A%2F%2Frapiddweller.github.io%2Fdatamimic%2Farchkeel-status.json"></a>
 </p>
+
+ArchKeel UNKNOWN results are valid and remain visible in the architecture status.
 
 Independent random values do not agree with each other: an order points to a customer that does not exist, a postal code does not belong to its city, and the next run gives different rows.
 

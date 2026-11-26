@@ -36,6 +36,7 @@ def checker(tmp_path):
             import os
             import sys
             from pathlib import Path
+            from urllib.parse import unquote
 
             args = sys.argv[1:]
             with Path("calls.jsonl").open("a") as log:
@@ -43,16 +44,18 @@ def checker(tmp_path):
             if "archkeel" not in args:
                 sys.exit(0)
             source = args[args.index("--from") + 1]
-            version = os.environ.get("STUB_VERSION", source.removeprefix("archkeel=="))
+            version = os.environ.get("STUB_VERSION", unquote(source).rsplit("/", 1)[-1].split("-")[1])
             if "--version" in args:
                 print("archkeel " + version)
             elif "report" in args:
-                output = Path(args[args.index("--output") + 1])
-                output.parent.mkdir(parents=True, exist_ok=True)
-                output.write_text(json.dumps({"producer_version": version}))
+                if os.environ.get("REPORT_REFUSE") != "1":
+                    output = Path(args[args.index("--output") + 1])
+                    output.parent.mkdir(parents=True, exist_ok=True)
+                    output.write_text(json.dumps({"producer_version": version}))
+                sys.exit(int(os.environ.get("REPORT_EXIT", "0")))
             elif "validate" in args:
                 print(os.environ["NATIVE_RECEIPT"], end="")
-                sys.exit(3)
+                sys.exit(int(os.environ.get("VALIDATION_EXIT", "3")))
             else:
                 sys.exit(99)
             """
@@ -64,7 +67,7 @@ def checker(tmp_path):
     env = {
         **os.environ,
         "PATH": str(tmp_path) + os.pathsep + os.environ["PATH"],
-        "MAKEFLAGS": f"ARCHKEEL_SOURCE=archkeel=={ALTERNATE_VERSION}",
+        "MAKEFLAGS": f"ARCHKEEL_VERSION={ALTERNATE_VERSION}",
         "GITHUB_ENV": str(tmp_path / "github.env"),
         "NATIVE_RECEIPT": NATIVE_RECEIPT,
         "REPOSITORY": "rapiddweller/datamimic",
@@ -105,8 +108,8 @@ def test_alternate_pin_reaches_ci_metadata_report_and_native_validation(checker)
     assert gate.returncode != 0
     calls = [json.loads(line) for line in (directory / "calls.jsonl").read_text().splitlines()]
     checker_calls = [args for args in calls if "archkeel" in args]
-    assert len(checker_calls) == 4
-    assert all(args[args.index("--from") + 1] == f"archkeel=={ALTERNATE_VERSION}" for args in checker_calls)
+    assert len(checker_calls) == 5
+    assert all(f"archkeel-{ALTERNATE_VERSION}-py3-none-" in args[args.index("--from") + 1] for args in checker_calls)
     assert sum("validate" in args for args in checker_calls) == 2
     workflow = (ROOT / ".github/workflows/main.yml").read_text(encoding="utf-8")
     assert "ARCHKEEL_VERSION:" not in workflow
@@ -125,3 +128,39 @@ def test_stale_producer_cannot_write_checked_version_metadata(checker):
     assert result.returncode != 0
     assert not (directory / "github.env").exists()
     assert not (directory / REPORT_DIR / "metadata.json").exists()
+
+
+def test_exit_two_preserves_reports_and_validation(checker):
+    directory, env = checker
+    env.update(REPORT_EXIT="2", VALIDATION_EXIT="2")
+    result = subprocess.run(
+        ["make", "architecture-report", "architecture-validation-receipt"],
+        cwd=directory,
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    output = directory / REPORT_DIR
+    assert (output / "architecture.json").exists()
+    assert (output / "architecture.report.html").exists()
+    assert (output / "validation.json").read_text() == NATIVE_RECEIPT
+
+
+def test_refused_report_with_exit_two_cannot_pass_on_fresh_or_stale_files(checker):
+    directory, env = checker
+    env.update(REPORT_EXIT="2", REPORT_REFUSE="1")
+    output = directory / REPORT_DIR
+    output.mkdir(parents=True)
+    stale = output / "architecture.json"
+    stale.write_text('{"stale": true}')
+    result = subprocess.run(
+        ["make", "architecture-report"],
+        cwd=directory,
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode != 0
+    assert not stale.exists()
+    assert not (output / "architecture.report.html").exists()
