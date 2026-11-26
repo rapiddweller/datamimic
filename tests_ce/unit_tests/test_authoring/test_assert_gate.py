@@ -12,7 +12,6 @@ import pickle
 import shutil
 import subprocess
 import sys
-from hashlib import sha256
 from pathlib import Path
 
 import pytest
@@ -27,8 +26,6 @@ from datamimic_ce.authoring.domain.reference import AuthoringLearningReference
 from datamimic_ce.authoring.domain.requests import (
     PROJECT_ENTRY_PATH,
     BoundedExecutionRequest,
-    ReadyBuild,
-    ReadyWithGapsBuild,
     ReferenceRequest,
     ReferenceTopic,
     RejectedBuild,
@@ -37,25 +34,10 @@ from datamimic_ce.authoring.domain.requests import (
 )
 from datamimic_ce.errors import DescriptorLocation, IssueCode, task_config_error
 from datamimic_ce.interfaces.cli import app
-
-_PROJECT = Path(__file__).resolve().parents[2] / "scenarios" / "s21_assert_gate"
-_NEGATIVES = {item["name"]: item["patch"] for item in json.loads((_PROJECT / "scenario.json").read_text())["negatives"]}
-
-
-def _copy(tmp_path: Path, negative: str | None) -> Path:
-    project = tmp_path / "project"
-    shutil.copytree(_PROJECT, project, ignore=shutil.ignore_patterns("scenario.json"))
-    if negative is not None:  # the scenario.json patch is the single source of the variant
-        patch = _NEGATIVES[negative]
-        target = project / patch["file"]
-        target.write_text(target.read_text(encoding="utf-8").replace(patch["old"], patch["new"]), encoding="utf-8")
-    return project
-
-
-def _build(tmp_path: Path, negative: str) -> RejectedBuild:
-    result = create_authoring_application(_copy(tmp_path, negative), descriptor_path=PROJECT_ENTRY_PATH).build()
-    assert isinstance(result, RejectedBuild)
-    return result
+from tests_ce.assert_gate_fixtures import PROJECT as _PROJECT
+from tests_ce.assert_gate_fixtures import artifact_files as _artifact
+from tests_ce.assert_gate_fixtures import build_negative as _build
+from tests_ce.assert_gate_fixtures import copy_project as _copy
 
 
 def _codes(result: RejectedBuild) -> list[str]:
@@ -283,31 +265,6 @@ def test_a_forged_stopped_capture_that_does_not_validate_is_refused(tmp_path: Pa
     evidence = bounded_executor._decode_reply(payload, BoundedExecutionRequest(xml="<setup/>"), tmp_path)
 
     assert [str(item.code) for item in evidence.diagnostics] == ["serialization"]
-
-
-def _artifact(result: ReadyBuild | ReadyWithGapsBuild | RejectedBuild) -> dict[str, str]:
-    artifact = result.review_artifact if isinstance(result, RejectedBuild) else result.artifact
-    assert artifact is not None
-    return {item.path.as_posix(): item.sha256 for item in artifact.files}
-
-
-# A failed <assert> and a condition that raises (#445): every EVIDENCE rejection binds the files the run read.
-@pytest.mark.parametrize("negative", ["fails_at_middle_row", "condition_raises"])
-def test_the_review_artifact_binds_the_files_the_stopped_run_read(tmp_path: Path, negative: str) -> None:
-    ready = create_authoring_application(_copy(tmp_path / "ready", None), descriptor_path=PROJECT_ENTRY_PATH).build()
-    assert isinstance(ready, (ReadyBuild, ReadyWithGapsBuild))
-    first = _build(tmp_path / "first", negative)
-    project = _copy(tmp_path / "second", negative)
-    items = project / "data" / "entity" / "items.json"
-    # A byte that no assert or check reads: the run stops at the same row with the same diagnostics.
-    items.write_text(items.read_text(encoding="utf-8").replace('"S1"', '"S9"'), encoding="utf-8")
-    second = create_authoring_application(project, descriptor_path=PROJECT_ENTRY_PATH).build()
-    assert isinstance(second, RejectedBuild)
-
-    assert [item.model_dump() for item in second.diagnostics] == [item.model_dump() for item in first.diagnostics]
-    assert set(_artifact(first)) == set(_artifact(ready))
-    assert _artifact(second)["data/entity/items.json"] == sha256(items.read_bytes()).hexdigest()
-    assert _artifact(first)["data/entity/items.json"] != _artifact(second)["data/entity/items.json"]
 
 
 def _stopped_project(tmp_path: Path) -> Path:

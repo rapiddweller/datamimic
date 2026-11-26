@@ -1,0 +1,21 @@
+name: Manual scale tests
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scale:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - uses: astral-sh/setup-uv@v8.1.0
+      - run: uv sync --python 3.11
+      - name: Run explicit large-count descriptors
+        run: >-
+          uv run pytest -q
+          tests_ce/manual_perf_tests/test_large_count

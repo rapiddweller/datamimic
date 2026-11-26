@@ -1,0 +1,40 @@
+name: Nightly authoring matrices
+on:
+  schedule:
+    - cron: '47 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  authoring:
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: verification
+            args: tests_ce/nightly_tests/test_authoring/test_build_verification.py
+          - shard: limits
+            args: tests_ce/nightly_tests/test_authoring/test_derived_row_limit.py
+          - shard: projects
+            args: >-
+              tests_ce/nightly_tests/test_assert_gate_artifact.py
+              tests_ce/nightly_tests/test_authoring/test_build_input_contract.py
+              tests_ce/nightly_tests/test_authoring/test_included_step_lint_context.py
+              tests_ce/nightly_tests/test_weighted_variable_replay.py
+          - shard: boundaries
+            args: >-
+              tests_ce/nightly_tests/test_docs/test_agent_cli_documentation_contract.py
+              tests_ce/nightly_tests/test_error_runtime_boundaries.py
+              tests_ce/nightly_tests/test_mcp/test_stdio_project_flow.py
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - uses: astral-sh/setup-uv@v8.1.0
+      - run: uv sync --python 3.11
+      - name: Run ${{ matrix.shard }} matrix
+        run: uv run pytest -q -n 0 ${{ matrix.args }} --durations=20

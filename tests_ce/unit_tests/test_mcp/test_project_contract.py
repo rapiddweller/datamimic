@@ -10,7 +10,7 @@ fastmcp_client = pytest.importorskip("fastmcp.client")
 Client = fastmcp_client.Client
 
 import datamimic_ce.interfaces.mcp.server as mcp_server  # noqa: E402
-from datamimic_ce.authoring.domain.requests import BUILD_PROTOCOL, BuildRequestV5, LintResult  # noqa: E402
+from datamimic_ce.authoring.domain.requests import BUILD_PROTOCOL, LintResult  # noqa: E402
 from datamimic_ce.interfaces.mcp.server import create_server  # noqa: E402
 from tests_ce.authoring_project import write_project  # noqa: E402
 
@@ -32,10 +32,6 @@ PROJECT_TOOLS = {
 @pytest.fixture
 def anyio_backend() -> str:
     return "asyncio"
-
-
-def test_build_protocol_matches_the_acceptance_contract() -> None:
-    assert BuildRequestV5().version == BUILD_PROTOCOL == "5.0"
 
 
 def test_cli_version_reports_build_protocol_and_the_runtime_versions() -> None:
@@ -132,18 +128,6 @@ async def test_each_call_gets_the_dotenv_of_its_own_project(
         for project in (first, second, first):
             await client.call_tool("datamimic_lint", {"project": str(project), "request": {"xml": "<setup/>"}})
     assert [item["PROJECT_ONLY_VALUE"] for item in seen] == ["one", "two", "one"]
-    assert "PROJECT_ONLY_VALUE" not in os.environ
-
-
-def test_child_environment_adds_project_values_without_touching_this_process(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    from datamimic_ce.authoring.adapters.bounded_executor import _child_environment
-
-    monkeypatch.delenv("PROJECT_ONLY_VALUE", raising=False)
-    assert _child_environment({}, None) is None
-    child = _child_environment({"PROJECT_ONLY_VALUE": "1"}, 5)
-    assert child is not None and child["PROJECT_ONLY_VALUE"] == "1" and child["PYTHONHASHSEED"] == "5"
     assert "PROJECT_ONLY_VALUE" not in os.environ
 
 

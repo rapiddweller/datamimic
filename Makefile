@@ -1,4 +1,4 @@
-.PHONY: help install install-pre-commit test test-unit test-architecture test-integration test-functional coverage coverage-unit coverage-unit-run coverage-unit-report typecheck lint format check architecture-check architecture-definition-check architecture-version architecture-report architecture-validation-receipt architecture-cycle-check installed-authoring-check agent-plugin-check agent-plugin-package clean
+.PHONY: help install install-pre-commit test test-unit test-architecture test-integration test-benchmarks test-functional coverage coverage-unit coverage-unit-run coverage-unit-report typecheck lint format check architecture-check architecture-definition-check architecture-version architecture-report architecture-validation-receipt architecture-cycle-check installed-authoring-check agent-plugin-check agent-plugin-package clean
 
 PYTHON ?= python
 INSTALLED_AUTHORING_ARGS ?=
@@ -22,7 +22,8 @@ help:
 	@echo "  agent-plugin-package  Build the separate agent plugin ZIP"
 	@echo "  test              Run the full test suite"
 	@echo "  test-unit         Run unit tests only"
-	@echo "  test-integration  Run integration tests only"
+	@echo "  test-integration  Run integration tests only (benchmarks excluded)"
+	@echo "  test-benchmarks   Run the POSIX-only authoring eval oracle"
 	@echo "  test-functional   Run functional tests only"
 	@echo "  coverage          Run tests with coverage report for $(PACKAGE)"
 	@echo "  coverage-unit     Run unit tests with complete CE coverage and regression floor"
@@ -66,6 +67,9 @@ test-architecture:
 
 test-integration:
 	pytest -q $(TESTS)/integration_tests
+
+test-benchmarks:
+	pytest -q $(TESTS)/nightly_tests/test_benchmarks
 
 test-functional:
 	pytest -q $(TESTS)/functional_tests

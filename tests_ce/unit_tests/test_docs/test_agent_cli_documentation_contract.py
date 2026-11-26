@@ -2,61 +2,13 @@
 
 import json
 import re
-import shutil
 from pathlib import Path
 
-import pytest
 import typer
 from typer.testing import CliRunner
 
 from datamimic_ce.interfaces.cli import app
-
-ROOT = Path(__file__).resolve().parents[3]
-
-
-def assert_cli_help(commands) -> None:
-    authoring = commands["authoring"].commands
-    assert all(command.help and command.help.strip() for command in authoring.values())
-    for name in ("run", "init"):
-        options = [param for param in commands[name].params if isinstance(param, typer.core.TyperOption)]
-        assert options
-        assert all(option.help and option.help.strip() for option in options)
-    assert authoring["run"].help.splitlines()[0] != authoring["dry-run"].help.splitlines()[0]
-
-
-def test_cli_command_and_option_help_is_declared() -> None:
-    assert_cli_help(typer.main.get_command(app).commands)
-
-
-@pytest.mark.parametrize("kind", ["command", "option"])
-def test_cli_help_check_rejects_blank_help(kind: str) -> None:
-    commands = typer.main.get_command(app).commands
-    if kind == "command":
-        commands["authoring"].commands["version"].help = " "
-    else:
-        commands["run"].params[1].help = " "
-    with pytest.raises(AssertionError):
-        assert_cli_help(commands)
-
-
-def _projects(path: Path) -> list[tuple[str, dict]]:
-    """Each documented project: an ``xml`` entry block followed by its ``json`` acceptance block."""
-    text = path.read_text()
-    entries = re.findall(r"```xml\n(.*?)```", text, re.DOTALL)
-    acceptances = [json.loads(block) for block in re.findall(r"```json\n(.*?)```", text, re.DOTALL)]
-    assert len(entries) == len(acceptances)
-    return list(zip(entries, acceptances, strict=True))
-
-
-def _build(project: tuple[str, dict], workspace: Path) -> dict:
-    entry, acceptance = project
-    (workspace / "datamimic.xml").write_text(entry, encoding="utf-8")
-    (workspace / "acceptance").mkdir()
-    (workspace / "acceptance" / "build.json").write_text(json.dumps(acceptance), encoding="utf-8")
-    result = CliRunner().invoke(app, ["authoring", "build", str(workspace)])
-    payload = json.loads(result.stdout)
-    assert result.exit_code == (0 if payload["outcome"] == "ready" else 1), result.stdout
-    return payload
+from tests_ce.documentation_contract_fixtures import ROOT, _build, _projects
 
 
 def test_agent_facing_readme_relative_links_resolve() -> None:
@@ -80,19 +32,6 @@ def test_agents_md_embedded_project_builds_ready(tmp_path: Path) -> None:
     result = _build(_projects(ROOT / "AGENTS.md")[0], tmp_path)
     assert result["outcome"] == "ready", result
     assert result["evidence"][0]["count"] == 3
-
-
-@pytest.mark.parametrize(
-    "index", range(5), ids=["nested_fk", "memstore_readback", "time_series", "file_sources", "create_table"]
-)
-def test_documented_structural_projects_build_ready(index: int, tmp_path: Path) -> None:
-    projects = _projects(ROOT / "docs/examples/authoring.md")
-    assert len(projects) == 5
-    # The file-source example reads the fixture of the scenario that holds the complete project.
-    if index == 3:
-        shutil.copytree(ROOT / "tests_ce/scenarios/s22_file_filter/data", tmp_path / "data")
-    result = _build(projects[index], tmp_path)
-    assert result["outcome"] == "ready", result
 
 
 def test_documented_random_fk_warning_holds(tmp_path: Path) -> None:

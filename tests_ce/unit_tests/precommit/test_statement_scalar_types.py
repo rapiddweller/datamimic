@@ -1,3 +1,7 @@
+# DATAMIMIC
+# Copyright (c) 2023-2026 Rapiddweller Asia Co., Ltd.
+# This software is licensed under the MIT License. See LICENSE.
+
 from typing import get_type_hints
 
 import pytest
@@ -33,9 +37,7 @@ def test_statement_scalar_getters_have_public_return_annotations() -> None:
         ("ItemStatement.condition", ItemStatement.condition.fget, str | None),
     ]
     missing = [
-        name
-        for name, getter, expected in getters
-        if getter is None or get_type_hints(getter).get("return") != expected
+        name for name, getter, expected in getters if getter is None or get_type_hints(getter).get("return") != expected
     ]
 
     assert not missing, f"{len(missing)} missing return annotations: {missing}"
