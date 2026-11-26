@@ -1,4 +1,5 @@
 name: Nightly authoring matrices
+# Coverage for these cases is collected by the non-PR shards in main.yml.
 on:
   schedule:
     - cron: '47 2 * * *'

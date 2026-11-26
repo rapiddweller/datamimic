@@ -1,20 +1,8 @@
 name: Authoring eval oracle tests
 run-name: ${{ github.actor || 'unknown' }} is running ${{ github.workflow || 'workflow' }} on ${{ github.repository || 'repo' }}
 # tests_ce/nightly_tests/test_benchmarks tests the blind-agent eval oracle (benchmarks/authoring_eval), not product code.
-# It runs when the oracle or its tests change, nightly, and by hand; main.yml leaves it out.
+# It runs nightly and by hand; main.yml leaves it out.
 on:
-  push:
-    branches:
-      - development
-    paths:
-      - 'benchmarks/**'
-      - 'tests_ce/nightly_tests/test_benchmarks/**'
-      - '.github/workflows/benchmarks.yml'
-  pull_request:
-    paths:
-      - 'benchmarks/**'
-      - 'tests_ce/nightly_tests/test_benchmarks/**'
-      - '.github/workflows/benchmarks.yml'
   schedule:
     - cron: '17 2 * * *'
   workflow_dispatch:

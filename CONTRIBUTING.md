@@ -75,19 +75,18 @@ A pull request runs a short lane: ruff, mypy, the ArchKeel contract check, `test
 
 ### Focused fast authoring tests
 
-Some tests in `tests_ce/unit_tests` exercise the real runtime and child processes.
-The `integration` marker identifies those tests in the Build verification,
-bounded Python library and set-order scan modules. To run only their isolated
-tests during development:
+Test lanes are separated by physical paths. To run the fast pre-commit unit
+lane during development:
 
 ```bash
-uv run pytest tests_ce/unit_tests/test_authoring/test_build_verification.py tests_ce/unit_tests/test_authoring/test_bounded_python_library.py tests_ce/unit_tests/test_authoring/test_set_order_scan.py -m "not integration" -n 0 --durations=20
+uv run pytest tests_ce/unit_tests/precommit -n 2 -q
 ```
 
-The marker has not yet been applied throughout the suite, so `-m "not
-integration"` is not a guarantee that other modules are fast. Run the full
-unfiltered tests before submitting changes; CI continues to run the marked
-tests, including the real cross-process replay and its negative controls.
+The main test paths are `tests_ce/unit_tests`, `tests_ce/integration_tests`,
+`tests_ce/architecture`, and the functional and scenario suites. Longer tests
+are in `tests_ce/nightly_tests`; scale tests in `tests_ce/manual_perf_tests`
+run only by manual dispatch. Cross-process replay and its negative controls
+remain part of the appropriate physical lane.
 
 ---
 

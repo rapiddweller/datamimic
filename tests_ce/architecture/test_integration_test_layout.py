@@ -103,8 +103,8 @@ def test_guards_reject_returned_marker_and_node_id():
     assert _integration_markers("pytestmark = [pytest.mark.integration]")
     workflow = (ROOT / ".github/workflows/main.yml").read_text(encoding="utf-8")
     mutant = workflow.replace(
-        "args: tests_ce/unit_tests tests_ce/architecture",
-        "args: tests_ce/integration_tests/test_authoring/test_build_verification.py"
+        "tests_ce/unit_tests tests_ce/architecture",
+        "tests_ce/integration_tests/test_authoring/test_build_verification.py"
         "::test_smoke_reuses_first_capture_and_real_json_exporter",
         1,
     )
@@ -176,6 +176,46 @@ def test_ci_coverage_counts_match_matrices():
     workflow = yaml.safe_load((ROOT / ".github/workflows/main.yml").read_text(encoding="utf-8"))
     workflow["jobs"]["functional_coverage_shard"]["strategy"]["matrix"]["include"].pop()
     assert not _coverage_counts_match(workflow)
+
+
+def _nightly_coverage_is_non_pr(workflow):
+    covered = set()
+    for lane in ("unit", "integration"):
+        job = workflow["jobs"][f"{lane}_coverage_shard"]
+        steps = job["steps"]
+        pr_step = next(
+            step for step in steps if step["name"] in ("Run unit tests in parallel", "Run integration tests")
+        )
+        if pr_step.get("if") != "github.event_name == 'pull_request' && matrix.pr":
+            return False
+        coverage_step = next(
+            step
+            for step in steps
+            if step["name"] in ("Run unit tests with coverage", "Run integration tests with coverage")
+        )
+        if coverage_step.get("if") != "github.event_name != 'pull_request'":
+            return False
+        for shard in job["strategy"]["matrix"]["include"]:
+            nightly = {arg for arg in shard["args"].split() if arg.startswith("tests_ce/nightly_tests/")}
+            if type(shard.get("pr")) is not bool or (nightly and shard["pr"]):
+                return False
+            if not shard["pr"]:
+                covered.update(nightly)
+    expected = {path.relative_to(ROOT).as_posix() for path in (ROOT / "tests_ce/nightly_tests").rglob("test_*.py")}
+    return covered == expected
+
+
+def test_nightly_coverage_shards_do_not_run_on_prs():
+    workflow = yaml.safe_load((ROOT / ".github/workflows/main.yml").read_text(encoding="utf-8"))
+    assert _nightly_coverage_is_non_pr(workflow)
+    unit = workflow["jobs"]["unit_coverage_shard"]
+    unit["strategy"]["matrix"]["include"][1]["pr"] = True
+    assert not _nightly_coverage_is_non_pr(workflow)
+    unit["strategy"]["matrix"]["include"][1]["pr"] = False
+    next(step for step in unit["steps"] if step["name"] == "Run unit tests in parallel")["if"] = (
+        "github.event_name == 'pull_request'"
+    )
+    assert not _nightly_coverage_is_non_pr(workflow)
 
 
 def _forbidden_scenario_selection(text):
