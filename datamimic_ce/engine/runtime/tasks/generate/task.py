@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import math
+from collections.abc import Callable
 from typing import Protocol
 from uuid import uuid4
 
@@ -328,8 +329,7 @@ class GenerateTask(CommonSubTask):
             try:
                 # Mark Ray initialization status for shutdown at the end of execution
                 # Ray is optional; only import/initialize if explicitly requested.
-                is_ray_initialized = False  # WHY: make Ray optional, avoid hard dependency
-                _ray_mod = None  # local handle to ray module if imported
+                _stop_ray: Callable[[], None] | None = None  # set only when this call started Ray
 
                 # Determine count of generate process
                 count = self._determine_count(context)
@@ -394,8 +394,6 @@ class GenerateTask(CommonSubTask):
                     elif mp_platform == "ray":
                         # Ray is optional; import lazily and raise a clear error if missing.
                         try:
-                            import ray as _ray
-
                             from datamimic_ce.engine.runtime.tasks.generate.workers.ray_generate_worker import (
                                 RayGenerateWorker,
                             )
@@ -405,16 +403,10 @@ class GenerateTask(CommonSubTask):
                                 "or set mp_platform='multiprocessing'."
                             ) from e
 
-                        _ray_mod = _ray
                         mp_worker = RayGenerateWorker()
                         # A Ray the caller already started is theirs: use it, never shut it down.
-                        if not _ray_mod.is_initialized():
-                            _ray_mod.init(
-                                ignore_reinit_error=True,
-                                local_mode=context.root.ray_debug,
-                                include_dashboard=False,
-                            )
-                            is_ray_initialized = True
+                        if RayGenerateWorker.start_ray(context.root.ray_debug):
+                            _stop_ray = RayGenerateWorker.stop_ray
                     else:
                         raise task_config_error(
                             code=IssueCode.TASK_MP_PLATFORM_UNSUPPORTED,
@@ -467,8 +459,8 @@ class GenerateTask(CommonSubTask):
                     context.root.export_session = None
                     cleanup_exporter_chunks(context.root.descriptor_dir, context.root.task_id)
                 # Shut down only a Ray this call started
-                if is_ray_initialized and _ray_mod is not None:
-                    _ray_mod.shutdown()
+                if _stop_ray is not None:
+                    _stop_ray()
 
     @staticmethod
     def export_memstore(setup_context: SetupContext, current_stmt: GenerateStatement, merged_result: dict[str, list]):

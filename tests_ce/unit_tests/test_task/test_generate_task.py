@@ -249,7 +249,15 @@ class TestGenerateTask:
         ],
     )
     def test_ray_shutdown_only_when_this_call_started_ray(
-        self, generate_task, mock_context, mock_statement, caller_started_ray, init_raises, expect_init, expect_shutdown
+        self,
+        request,
+        generate_task,
+        mock_context,
+        mock_statement,
+        caller_started_ray,
+        init_raises,
+        expect_init,
+        expect_shutdown,
     ):
         import sys
         import types
@@ -259,20 +267,17 @@ class TestGenerateTask:
         fake_ray.is_initialized = MagicMock(return_value=caller_started_ray)
         fake_ray.init = MagicMock(side_effect=RuntimeError("init failed") if init_raises else None)
         fake_ray.shutdown = MagicMock()
-        fake_worker_module = types.ModuleType("datamimic_ce.engine.runtime.tasks.generate.workers.ray_generate_worker")
-        fake_worker = MagicMock()
-        fake_worker.mp_process.return_value = {"test_full_name": []}
-        fake_worker_module.RayGenerateWorker = MagicMock(return_value=fake_worker)
+        fake_ray.remote = lambda function: function
         mock_context.ray_debug = False
+        worker_module = "datamimic_ce.engine.runtime.tasks.generate.workers.ray_generate_worker"
+        # patch.dict restores sys.modules on exit, so neither the fake ray nor the re-imported worker leaks.
+        sys_modules = patch.dict(sys.modules, {"ray": fake_ray})
+        sys_modules.start()
+        request.addfinalizer(sys_modules.stop)
+        sys.modules.pop(worker_module, None)  # re-import the real worker against the fake ray
 
         with (
-            patch.dict(
-                sys.modules,
-                {
-                    "ray": fake_ray,
-                    "datamimic_ce.engine.runtime.tasks.generate.workers.ray_generate_worker": fake_worker_module,
-                },
-            ),
+            patch(f"{worker_module}.RayGenerateWorker.mp_process", return_value={"test_full_name": []}),
             patch.object(generate_task, "_determine_count", return_value=2),
             patch.object(generate_task, "_determine_num_workers", return_value=2),
             patch.object(generate_task, "pre_execute"),
