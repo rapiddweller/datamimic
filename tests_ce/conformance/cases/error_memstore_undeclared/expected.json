@@ -1,0 +1,9 @@
+{
+  "area": "runtime",
+  "outcome": "error",
+  "error_code": "E007",
+  "issue_code": "I312",
+  "edition_notes": {
+    "EE": "The built-in mem store does not require a declaration. The readback is expected to succeed."
+  }
+}

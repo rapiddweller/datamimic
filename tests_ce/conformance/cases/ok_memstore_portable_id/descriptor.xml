@@ -1,0 +1,7 @@
+<setup rngSeed="7">
+    <memstore id="mem"/>
+    <generate name="written" count="2" target="mem">
+        <key name="id" generator="IncrementGenerator"/>
+    </generate>
+    <generate name="readback" source="mem" sourceEntity="written" count="2" distribution="ordered"/>
+</setup>
