@@ -476,8 +476,6 @@ def test_sequence_reservation_under_forced_interleaving(
                     assert second_attempt.wait(5)
                 result.one.return_value = (snapshot - 1, True)
                 result.scalar_one_or_none.return_value = None if snapshot == 1 else snapshot
-            elif "information_schema.COLUMNS" in sql:
-                result.scalar.return_value = 1  # Uninitialized AUTO_INCREMENT on an empty table.
             elif "setval" in sql:
                 next_value = params["last_value"] + 1
             elif "ALTER TABLE" in sql:
@@ -493,6 +491,7 @@ def test_sequence_reservation_under_forced_interleaving(
                 lock.release()
 
         connection.execute.side_effect = execute
+        connection.scalar.return_value = 1  # Uninitialized AUTO_INCREMENT on an empty MySQL table.
         connection.begin.return_value.__exit__.side_effect = end_transaction
         try:
             if prepare:

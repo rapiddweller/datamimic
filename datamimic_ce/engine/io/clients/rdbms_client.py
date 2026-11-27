@@ -831,14 +831,14 @@ class RdbmsClient(DatabaseClient):
             if counter is None:
                 # Fresh InnoDB tables can report NULL until the default counter is initialized.
                 # Do not treat a missing counter on a populated table as the default start.
-                fresh = connection.execute(
+                fresh = connection.scalar(
                     text(
                         "SELECT EXISTS (SELECT 1 FROM information_schema.COLUMNS "
                         "WHERE table_schema = :schema AND table_name = :table AND EXTRA = 'auto_increment') "
                         f"AND NOT EXISTS (SELECT 1 FROM {table})"
                     ),
                     params,
-                ).scalar()
+                )
                 if not fresh:
                     raise ValueError("SequenceTableGenerator could not read the MySQL AUTO_INCREMENT counter")
             start = 1 if counter is None else int(counter)
