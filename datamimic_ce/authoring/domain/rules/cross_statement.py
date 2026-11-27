@@ -271,7 +271,7 @@ class ClientMemstoreIdCollision(Rule):
                 yield ctx.diag(
                     ClientMemstoreIdCollision,
                     element,
-                    evidence=f'<{element.tag} id="{client_id}"> reuses the id of a declared memstore',
+                    evidence=f'<{etree.QName(element).localname} id="{client_id}"> reuses a declared memstore id',
                     fix_context=f'Rename the memstore or the client so "{client_id}" names only one of them.',
                 )
 
