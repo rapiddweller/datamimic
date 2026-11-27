@@ -12,6 +12,26 @@ from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralG
 from datamimic_ce.domains.domain_core.datasets.path import dataset_path
 from datamimic_ce.domains.shared.datasets.loader import read_weighted_values
 
+_StreetFileKey = tuple[Path, int, int]
+
+# Parsed street files, keyed by resolved path plus mtime/size, so one dataset never serves another's
+# rows and an edited file is re-read. Per process (workers fill their own copy); one entry per country.
+_street_files: dict[_StreetFileKey, tuple[tuple[str, ...], tuple[float, ...]]] = {}
+
+
+def _load_street_file(file_path: Path) -> tuple[tuple[str, ...], tuple[float, ...]]:
+    try:
+        stat = file_path.stat()
+    except OSError:
+        values, weights = read_weighted_values(file_path)  # raises the reader's own error for a missing file
+        return tuple(values), tuple(weights)
+    key = (file_path, stat.st_mtime_ns, stat.st_size)
+    cached = _street_files.get(key)
+    if cached is None:
+        values, weights = read_weighted_values(file_path)
+        cached = _street_files[key] = (tuple(values), tuple(weights))
+    return cached
+
 
 class StreetNameGenerator(BaseLiteralGenerator):
     """
@@ -24,8 +44,8 @@ class StreetNameGenerator(BaseLiteralGenerator):
         # Prepare file path
         file_path = dataset_path("common", "street", f"street_{street_code}.csv", start=Path(__file__))
 
-        # Load file data
-        self._values, self._wgt = read_weighted_values(file_path)
+        # Load file data (parsed once per file and process; the rng stays per generator)
+        self._values, self._wgt = _load_street_file(file_path)
         super().__init__(rng=rng)
 
     def generate(self) -> str:
