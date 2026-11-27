@@ -120,8 +120,7 @@ class NumericDistributionCapability(AuthoringModel):
 class ExpectationCapability(AuthoringModel):
     domain: Literal[CapabilityDomain.EXPECTATION] = CapabilityDomain.EXPECTATION
     name: NonEmptyStrictStr
-    json_schema: dict[str, JsonValue]
-    usage_example: dict[str, JsonValue]
+    schema_name: Literal["build_request_v5"] = "build_request_v5"
 
 
 CatalogCapability = Annotated[

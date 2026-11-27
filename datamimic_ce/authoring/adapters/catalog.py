@@ -200,7 +200,6 @@ class CeDslCatalog:
         )
         source_distributions: tuple[SourceDistribution, ...] = tuple(SourceDistribution)
         numeric_distributions: tuple[NumberDistribution, ...] = tuple(NumberDistribution)
-        expectation_schema = TypeAdapter(ExpectationIntent).json_schema()
         return DslCatalogSnapshot(
             element_capabilities=tuple(elements),
             generator_capabilities=tuple(
@@ -239,12 +238,7 @@ class CeDslCatalog:
                 for item in sorted(numeric_distributions, key=lambda item: item.value)
             ),
             expectations=tuple(
-                ExpectationCapability(
-                    name=name,
-                    json_schema={"$ref": reference, "$defs": expectation_schema["$defs"]},
-                    usage_example=expectation_example(ExpectationIntentKind(name)),
-                )
-                for name, reference in sorted(expectation_schema["discriminator"]["mapping"].items())
+                ExpectationCapability(name=name) for name in sorted(kind.value for kind in ExpectationIntentKind)
             ),
         )
 
@@ -286,12 +280,16 @@ class CeDslCatalog:
                     rules=rules,
                 )
             case ReferenceTopic.EXPECTATIONS:
+                schema = TypeAdapter(ExpectationIntent).json_schema()
+                mapping = schema["discriminator"]["mapping"]
                 expectation_entries = tuple(
                     AuthoringVariantReference(
-                        name=entry.name, json_schema=entry.json_schema, usage_example=entry.usage_example
+                        name=name,
+                        json_schema={"$ref": reference, "$defs": schema["$defs"]},
+                        usage_example=expectation_example(ExpectationIntentKind(name)),
                     )
-                    for entry in self.snapshot().expectations
-                    if request.name is None or request.name == entry.name
+                    for name, reference in sorted(mapping.items())
+                    if request.name is None or request.name == name
                 )
                 return ReferenceResult(
                     topic=request.topic,
