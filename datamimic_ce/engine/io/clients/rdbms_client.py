@@ -640,29 +640,67 @@ class RdbmsClient(DatabaseClient):
         """Create the table when no table of that name exists (createTable); never alter or drop one.
 
         An existing table must have every written column and the same primary key, else the run fails with I930. The
-        table name lookup ignores case, as the row writes do; column names compare exactly."""
-        self._require_write("createTable")
+        table name lookup ignores case, as the row writes do; column names compare exactly. PostgreSQL runs
+        serialize with other runs using this protocol; unrelated DDL does not take this lock."""
+        with _normalize_database_errors("rdbms.create_table") as failures:
+            self._require_write("createTable")
+            dbms = self._credential.dbms
+            schema = self._credential.db_schema
+            table = create_table_definition(entity, columns, primary_key, schema)
+            native_create = dbms in (Dbms.SQLITE, Dbms.MYSQL)
+            # Do not upgrade SQLite's lookup snapshot to a write after another run may have committed.
+            existing = self._find_table_name(entity) if native_create else None
+            with self._write_transaction() as connection:
+                if dbms is Dbms.POSTGRESQL:
+                    # IF NOT EXISTS alone can race on PostgreSQL catalog inserts.
+                    connection.execute(
+                        text(
+                            "SELECT pg_catalog.pg_advisory_xact_lock("
+                            "pg_catalog.hashtext('datamimic_table:' || "
+                            "CAST(COALESCE(CAST(:schema AS name), pg_catalog.current_schema()) AS text)), "
+                            "pg_catalog.hashtext(CAST(CAST(:entity AS name) AS text)))"
+                        ),
+                        {"schema": schema, "entity": entity.lower()},
+                    )
+                if not native_create:
+                    existing = self._find_table_name(entity, connection)
+                if existing is None and not native_create:
+                    table.create(connection, checkfirst=True)
+                    actual_name, action = table.fullname, "created"
+                else:
+                    action = "exists"
+                    if existing is None:
+                        connection.execute(_CreateTableIfNotExists(table))
+                        # The statement may have been a no-op; validate the actual winner.
+                        existing = self._find_table_name(entity, connection)
+                        if existing is None:
+                            raise sqlalchemy.exc.NoSuchTableError(table.fullname)
+                        action = "ensured"
+                    reflected = Table(existing, MetaData(), autoload_with=connection, schema=schema)
+                    actual_name = reflected.fullname
+                    difference = table_difference(table, reflected)
+                    if difference is not None:
+                        raise operation_error(
+                            code=IssueCode.OPERATION_TABLE_DRIFT, target=actual_name, difference=difference
+                        )
+            logger.info("OPERATION | rdbms.create_table | table=%s | action=%s", actual_name, action)
+        if failures:
+            raise failures[0]
+
+    @contextmanager
+    def _write_transaction(self) -> Iterator[Connection]:
         engine = self._create_engine()
-        schema = self._credential.db_schema
-        table = create_table_definition(entity, columns, primary_key, schema)
-        failure: OperationError | None = None
-        try:
-            existing = self._find_table_name(entity)
-            if existing is None:
-                table.create(engine, checkfirst=True)
-                logger.info("OPERATION | rdbms.create_table | table=%s | action=created", table.fullname)
-                return
-            reflected = Table(existing, MetaData(), autoload_with=engine, schema=schema)
-        except sqlalchemy.exc.SQLAlchemyError as error:
-            failure = _operation_failure("rdbms.create_table", error)
-        if failure is not None:
-            raise failure
-        difference = table_difference(table, reflected)
-        if difference is not None:
-            raise operation_error(
-                code=IssueCode.OPERATION_TABLE_DRIFT, target=reflected.fullname, difference=difference
-            )
-        logger.info("OPERATION | rdbms.create_table | table=%s | action=exists", reflected.fullname)
+        if self._credential.dbms is Dbms.POSTGRESQL:
+            # Hold advisory locks even when the engine uses AUTOCOMMIT. Reads after taking a lock
+            # must see changes committed by its previous holder.
+            with (
+                engine.connect() as connection,
+                connection.execution_options(isolation_level="READ COMMITTED").begin(),
+            ):
+                yield connection
+        else:
+            with engine.begin() as connection:
+                yield connection
 
     @staticmethod
     def _truncate_or_delete_all(engine, table) -> tuple[str, int | None]:
@@ -674,9 +712,9 @@ class RdbmsClient(DatabaseClient):
         with engine.begin() as connection:
             return "delete_all", connection.execute(table.delete()).rowcount
 
-    def _find_table_name(self, table_name: str) -> str | None:
+    def _find_table_name(self, table_name: str, connection: Connection | None = None) -> str | None:
         """The name of the table in the database that matches ``table_name`` without case; None when none does."""
-        inspector = inspect(self._create_engine())
+        inspector = inspect(connection if connection is not None else self._create_engine())
         tables_in_db = inspector.get_table_names(schema=self._credential.db_schema)
         return next((table for table in tables_in_db if table.lower() == table_name.lower()), None)
 
@@ -747,18 +785,12 @@ class RdbmsClient(DatabaseClient):
             if count < 1:
                 raise ValueError("Sequence reservation count must be positive")
             dbms = self._credential.dbms
-            if dbms is Dbms.POSTGRESQL:
-                # The transaction must hold the lock even if the configured engine uses AUTOCOMMIT,
-                # and catalog reads after the lock must see a sequence created by the prior holder.
-                with (
-                    self._create_engine().connect() as connection,
-                    connection.execution_options(isolation_level="READ COMMITTED").begin(),
-                ):
+            if dbms not in (Dbms.POSTGRESQL, Dbms.MYSQL):
+                raise ValueError(f"SequenceTableGenerator is not supported for dbms '{dbms}'")
+            with self._write_transaction() as connection:
+                if dbms is Dbms.POSTGRESQL:
                     return self._reserve_postgresql_sequence(connection, sequence_name, count)
-            if dbms is Dbms.MYSQL:
-                with self._create_engine().begin() as connection:
-                    return self._advance_mysql_auto_increment(connection, sequence_name, table_name, column_name, count)
-            raise ValueError(f"SequenceTableGenerator is not supported for dbms '{dbms}'")
+                return self._advance_mysql_auto_increment(connection, sequence_name, table_name, column_name, count)
         raise failures[0]
 
     def _reserve_postgresql_sequence(self, connection: Connection, sequence_name: str, count: int) -> int:
@@ -1082,6 +1114,14 @@ def create_table_definition(
         ),
         schema=schema,
     )
+
+
+class _CreateTableIfNotExists(CreateTable):
+    """Use SQLAlchemy's DDL flag, which the older sqlalchemy-stubs package omits."""
+
+    def __init__(self, table: Table) -> None:
+        CreateTable.__init__(self, table)
+        self.if_not_exists = True
 
 
 def create_table_ddl(table: Table, dbms: Dbms) -> str:
