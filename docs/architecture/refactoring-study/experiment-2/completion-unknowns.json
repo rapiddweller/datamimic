@@ -316,9 +316,8 @@
     },
     {
       "classification": "missing_annotation",
-      "reason": "Retain UNKNOWN and real source-contract debt: Statement.get_parent_full_name, Memstore.removeNotExistingIds client, Memstore.get_data_by_type/get_all_data_by_type and RdbmsConnectionConfig.get_connection_config have missing boundary annotations. These pre-existing positions are not relabelled as analyzer-only limitations or newly fixed by this adoption.",
+      "reason": "Retain UNKNOWN and real source-contract debt: Memstore.removeNotExistingIds client, Memstore.get_data_by_type/get_all_data_by_type and RdbmsConnectionConfig.get_connection_config have missing boundary annotations. These pre-existing positions are not relabelled as analyzer-only limitations or newly fixed by this adoption. Issue 779 annotates the return of Statement.get_parent_full_name (-> str), so its record UNKNOWN-BOUNDARY-TYPE-POSITION-21ed92d464a88f7c no longer exists natively; no other record of this group changes.",
       "ids": [
-        "UNKNOWN-BOUNDARY-TYPE-POSITION-21ed92d464a88f7c",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-844aad32733e6b57",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-b46539b39643885f",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-fb89cb4d48b5e5bd",
