@@ -23,6 +23,7 @@ from .expectations import (
     ExpectationIntent,
     FieldAbsentExpectation,
     ForeignKeyExpectation,
+    GroupSumExpectation,
     PerParentCountExpectation,
     PerParentRowsSubject,
     ProductRowsSubject,
@@ -210,6 +211,8 @@ def validate_acceptance_subject(
     subject: ProductRowsSubject | PerParentRowsSubject | DeclaredSinkRowsSubject,
     path: tuple[str | int, ...],
     field: str | None = None,
+    *,
+    field_key: str = "field",
 ) -> None:
     names: tuple[str, ...]
     if isinstance(subject, PerParentRowsSubject):
@@ -255,7 +258,7 @@ def validate_acceptance_subject(
         if field is not None and field not in fields:
             _reject(
                 "Expectation references an unknown field.",
-                path + ("field",),
+                path + (field_key,),
                 remediation=(
                     f"Declare the field as a <key> {owner}; Build knows only declared fields, not fields that "
                     "appear only in rows a script or source produces."
@@ -273,6 +276,13 @@ def validate_acceptance_check(spec: AcceptanceSpecV1, check: AcceptanceCheckV1) 
         validate_acceptance_subject(
             spec, expectation.parent.subject, check.path + ("parent",), expectation.parent.field
         )
+    elif isinstance(expectation, GroupSumExpectation):
+        for key, field in (
+            ("group_by", expectation.group_by),
+            ("field", expectation.field),
+            ("equals_field", expectation.equals_field),
+        ):
+            validate_acceptance_subject(spec, expectation.subject, check.path, field, field_key=key)
     elif isinstance(expectation, RowConditionExpectation):
         tree = parse_row_condition(expectation.condition)
         call_functions = {id(node.func) for node in ast.walk(tree) if isinstance(node, ast.Call)}

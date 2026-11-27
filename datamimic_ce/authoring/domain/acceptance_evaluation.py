@@ -11,6 +11,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
+from fractions import Fraction
 from typing import assert_never
 from uuid import UUID
 
@@ -42,6 +43,7 @@ from datamimic_ce.authoring.domain.expectations import (
     FieldPresentExpectation,
     FixedValueExpectation,
     ForeignKeyExpectation,
+    GroupSumExpectation,
     PerParentCountExpectation,
     PerParentRowsSubject,
     ProductRowsSubject,
@@ -53,6 +55,8 @@ from datamimic_ce.authoring.domain.expectations import (
 )
 from datamimic_ce.authoring.domain.proof import AcceptanceOrigin
 from datamimic_ce.authoring.domain.row_conditions import (
+    MAX_DECIMAL_ADJUSTED_EXPONENT,
+    MAX_STRING_LENGTH,
     RowConditionError,
     RowConditionFailure,
     evaluate_row_condition,
@@ -264,14 +268,69 @@ def _groups(
     return {key: tuple(value) for key, value in groups.items()}
 
 
-def _decimal(value: object) -> Decimal | None:
+def _decimal(value: object, *, bounded: bool = False) -> Decimal | None:
+    if bounded and (
+        not isinstance(value, int | float | Decimal | str)
+        or (isinstance(value, str) and len(value) > MAX_STRING_LENGTH)
+    ):
+        return None
     try:
         if isinstance(value, bool):
             return None
         number = Decimal(str(value))
-        return number if number.is_finite() else None
     except (InvalidOperation, ValueError):
         return None
+    if not number.is_finite():
+        return None
+    if bounded and (
+        abs(Decimal.adjusted(number)) > MAX_DECIMAL_ADJUSTED_EXPONENT
+        or len(Decimal.as_tuple(number).digits) > MAX_STRING_LENGTH
+    ):
+        return None
+    return number
+
+
+def _check_group_sum(
+    rows: tuple[Mapping[str, object], ...] | None, expectation: GroupSumExpectation
+) -> _ExpectationFailure | None:
+    label = _subject_label(expectation.subject)
+    if not rows:
+        return _ExpectationFailure(f"{label} has no groups captured by '{expectation.group_by}'", {})
+    keys = _values(rows, expectation.group_by)
+    left = _values(rows, expectation.field)
+    right = _values(rows, expectation.equals_field)
+    if keys is None or left is None or right is None:
+        return _ExpectationFailure(
+            f"{label} is missing a group_sum field: '{expectation.group_by}', "
+            f"'{expectation.field}' or '{expectation.equals_field}'",
+            {},
+        )
+    balances: dict[str | int, Fraction] = {}
+    for key, left_value, right_value in zip(keys, left, right, strict=True):
+        if not isinstance(key, str | int) or isinstance(key, bool):
+            return _ExpectationFailure(
+                f"{label} requires a string or integer group key in '{expectation.group_by}'", {}
+            )
+        left_amount, right_amount = _decimal(left_value, bounded=True), _decimal(right_value, bounded=True)
+        if left_amount is None or right_amount is None:
+            return _ExpectationFailure(
+                f"{label} requires bounded finite numbers or decimal strings in "
+                f"'{expectation.field}' and '{expectation.equals_field}'",
+                {},
+            )
+        # Summing the exact difference avoids Decimal context rounding and retains a zero balance for each group.
+        delta = Fraction(left_amount) - Fraction(right_amount)
+        if key in balances:
+            delta += balances[key]
+        balances[key] = delta
+    mismatches = sum(balances[key] != 0 for key in balances)
+    if mismatches:
+        return _ExpectationFailure(
+            f"{label} has {mismatches} unbalanced group(s) by '{expectation.group_by}': "
+            f"'{expectation.field}' and '{expectation.equals_field}' must have equal sums in each group",
+            {"actual": mismatches},
+        )
+    return None
 
 
 def _check_expectation(
@@ -279,6 +338,8 @@ def _check_expectation(
     captured: CapturedRows,
     expectation: ExpectationIntent,
 ) -> _ExpectationFailure | None:
+    if isinstance(expectation, GroupSumExpectation):
+        return _check_group_sum(_subject_rows(spec, captured, expectation.subject), expectation)
     if isinstance(expectation, ExactCountExpectation):
         rows = _subject_rows(spec, captured, expectation.subject)
         if rows is None:

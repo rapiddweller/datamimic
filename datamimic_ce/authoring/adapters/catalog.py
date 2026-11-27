@@ -19,6 +19,7 @@ from datamimic_ce.authoring.domain.capabilities import (
     DslCatalogSnapshot,
     ElementPropertyCapability,
     EntityCapability,
+    ExpectationCapability,
     ExporterTargetCapability,
     GeneratorCapability,
     NumericDistributionCapability,
@@ -235,6 +236,9 @@ class CeDslCatalog:
             numeric_distributions=tuple(
                 NumericDistributionCapability(name=item.value, single_process_only=item in POSITIONAL_NUMBER_SEQUENCES)
                 for item in sorted(numeric_distributions, key=lambda item: item.value)
+            ),
+            expectations=tuple(
+                ExpectationCapability(name=name) for name in sorted(kind.value for kind in ExpectationIntentKind)
             ),
         )
 

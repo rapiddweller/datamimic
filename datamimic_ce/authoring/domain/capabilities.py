@@ -27,6 +27,7 @@ class CapabilityDomain(StrEnum):
     SOURCE_SUFFIX = "source_suffix"
     SOURCE_DISTRIBUTION = "source_distribution"
     NUMERIC_DISTRIBUTION = "numeric_distribution"
+    EXPECTATION = "expectation"
 
 
 class AttributeCapability(AuthoringModel):
@@ -116,6 +117,12 @@ class NumericDistributionCapability(AuthoringModel):
     single_process_only: bool
 
 
+class ExpectationCapability(AuthoringModel):
+    domain: Literal[CapabilityDomain.EXPECTATION] = CapabilityDomain.EXPECTATION
+    name: NonEmptyStrictStr
+    schema_name: Literal["build_request_v5"] = "build_request_v5"
+
+
 CatalogCapability = Annotated[
     AuthoringElementCapability
     | GeneratorCapability
@@ -126,7 +133,8 @@ CatalogCapability = Annotated[
     | ExporterTargetCapability
     | SourceSuffixCapability
     | SourceDistributionCapability
-    | NumericDistributionCapability,
+    | NumericDistributionCapability
+    | ExpectationCapability,
     Field(discriminator="domain"),
 ]
 
@@ -166,6 +174,7 @@ class DslCatalogSnapshot(AuthoringModel):
     source_suffix_capabilities: tuple[SourceSuffixCapability, ...] = ()
     source_distributions: tuple[SourceDistributionCapability, ...] = ()
     numeric_distributions: tuple[NumericDistributionCapability, ...] = ()
+    expectations: tuple[ExpectationCapability, ...] = ()
 
     def _values(self, domain: CapabilityDomain) -> tuple[CatalogCapability, ...]:
         match domain:
@@ -189,6 +198,8 @@ class DslCatalogSnapshot(AuthoringModel):
                 return self.source_distributions
             case CapabilityDomain.NUMERIC_DISTRIBUTION:
                 return self.numeric_distributions
+            case CapabilityDomain.EXPECTATION:
+                return self.expectations
         assert_never(domain)
 
     def capability_names(self, domain: CapabilityDomain) -> tuple[str, ...]:

@@ -162,9 +162,10 @@ Consumer rules:
    the per-file hashes to detect a damaged file. `commit_sha` and
    `package_version` identify the producer; they are not compatibility signals.
 
-Authoring commands default to `--format json`, except `init` and
-`export-contract`, which print text. For commands that support `--format`,
-`--format text` prints readable results.
+Authoring commands default to `--format json`, except `export-contract`, which
+prints its output path. For commands that support `--format`, `--format text`
+prints readable results. `authoring init` prints the same `ProjectInitResult`
+JSON as the MCP tool `datamimic_init`; its exit codes are the same in both formats.
 Compile and decompile return discriminated `ready`/`rejected` results. Build
 returns `ready`, `ready_with_gaps` (exit code 3: the run passed but open coverage
 gaps remain; fix them before you report success), or `rejected` (exit code 1).
