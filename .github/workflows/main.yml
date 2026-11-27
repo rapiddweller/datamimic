@@ -679,7 +679,9 @@ jobs:
         include:
           - shard: unit-runtime
             # Bash expands this into immediate physical paths; new test modules remain included.
-            args: tests_ce/unit_tests/!(test_authoring|test_mcp|__pycache__|conftest.py|__init__.py)
+            args: >-
+              tests_ce/unit_tests/!(test_authoring|test_mcp|__pycache__)/
+              tests_ce/unit_tests/@(test_*.py|*_test.py)
             pr: true
           - shard: unit-authoring-mcp
             args: tests_ce/unit_tests/test_authoring tests_ce/unit_tests/test_mcp
@@ -945,10 +947,15 @@ jobs:
       matrix:
         include:
           - shard: integration-runtime
-            args: tests_ce/integration_tests/!(test_authoring|test_mcp|__pycache__|conftest.py|__init__.py)
+            args: >-
+              tests_ce/integration_tests/!(test_authoring|test_mcp|test_page_process|__pycache__)/
+              tests_ce/integration_tests/@(test_*.py|*_test.py)
             pr: true
-          - shard: integration-authoring-mcp
-            args: tests_ce/integration_tests/test_authoring tests_ce/integration_tests/test_mcp
+          - shard: integration-authoring-mcp-paging
+            # Include the slow SQLite paging cases to balance the two integration shards.
+            args: >-
+              tests_ce/integration_tests/test_authoring tests_ce/integration_tests/test_mcp
+              tests_ce/integration_tests/test_page_process
             pr: true
           - shard: integration-nightly
             args: tests_ce/nightly_tests/integration
