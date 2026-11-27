@@ -30,10 +30,7 @@ def test_inline_sql_seeds_a_table(project_dir):
     assert [r["v"] for r in rows] == [5]
 
 
-def test_inline_bash_runs_and_warns_about_determinism(monkeypatch):
-    from datamimic_ce.errors import factory
-
-    monkeypatch.setattr(factory, "_emitted_warnings", set())
+def test_inline_bash_runs_and_warns_about_determinism():
     messages: list[str] = []
 
     class _Capture(logging.Handler):
