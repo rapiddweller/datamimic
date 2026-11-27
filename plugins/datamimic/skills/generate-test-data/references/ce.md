@@ -158,3 +158,5 @@ unless `allow_side_effects` is true, which needs the user's confirmation of the
 named targets. Local `output/` files can be written without that opt-in.
 `run-project` can exit code 0 when `build_outcome` is `ready_with_gaps`; inspect
 `action_required` and fix the gaps before reporting a clean proof.
+Use `build.files` to identify the Build proof and check `build_file_mismatches`
+even when `build_outcome` is `ready`: a listed path failed the digest check before or after execution.

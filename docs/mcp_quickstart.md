@@ -114,12 +114,15 @@ for SSE. Stdio uses its owning process's access controls.
 A `datamimic_run_project` result keeps `outcome` and reports why no execution
 occurred in `not_run_reason` (`input`, `build_rejected`, or
 `side_effects_not_allowed`; `null` after a run). Build warning diagnostics remain
-in the result after execution.
+in the result after execution. Like the [CLI result](api/cli.md#authoring-run-project---prove-then-run-a-project),
+it gives the Build outcome and input digests, output SHA-256 digests, and any
+Build file mismatches.
 
 Every execution of the project entry also leaves an audit record beside the project:
 `docs/runs/<UTC start>_<task id>/` holds `run.json` (task id, actor, UTC start and end,
 CE and Python version, parameter names without their values, the Build proof digests of
-a verified run, outcome, exit code, written files) and `run.log` (the full log, not only
+a verified run in `proof.files`, `build_outcome`, `build_file_mismatches`, execution
+outcome, exit code, written files) and `run.log` (the full log, not only
 `log_tail`). The result names that folder in `record_path`; the task id is also the name
 of the `output/<task id>/` folder. `docs/` is no Build input, so a record never opens a
 coverage gap. `run.log` is the raw log, not redacted: an error message can quote a parameter value, so the file is created with mode 0600 and a project should not commit `docs/runs/`. When the record cannot be written, the run still ends normally, `record_path`

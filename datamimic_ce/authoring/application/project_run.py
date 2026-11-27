@@ -78,6 +78,7 @@ class ProjectRunWorkflow:
             return ProjectRunResult(
                 outcome="not_run",
                 not_run_reason="side_effects_not_allowed",
+                build=build.artifact,
                 build_outcome=outcome_name,
                 coverage=build.coverage,
                 action_required=action_required,
@@ -93,7 +94,7 @@ class ProjectRunWorkflow:
                     *tuple(item for item in build.diagnostics if item.severity == "warning"),
                 ),
             )
-        execution = self._runner.run(request.params, request.timeout_seconds, build.artifact)
+        execution = self._runner.run(request.params, request.timeout_seconds, build)
         outcome: Literal["completed", "failed", "timeout"] = (
             "timeout" if execution.timed_out else "completed" if execution.exit_code == 0 else "failed"
         )
@@ -121,7 +122,9 @@ class ProjectRunWorkflow:
             outcome=outcome,
             exit_code=execution.exit_code,
             duration_seconds=execution.duration_seconds,
+            build=build.artifact,
             build_outcome=outcome_name,
+            build_file_mismatches=execution.build_file_mismatches,
             coverage=build.coverage,
             action_required=action_required,
             artifacts=execution.artifacts,

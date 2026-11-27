@@ -18,9 +18,10 @@ from .domain.reference import ReferenceResult
 from .domain.requests import (
     BoundedExecutionEvidence,
     BoundedExecutionRequest,
-    BuildArtifact,
     IncludeGraphResult,
     LintResult,
+    ReadyBuild,
+    ReadyWithGapsBuild,
     ReferenceRequest,
 )
 
@@ -65,5 +66,8 @@ class ExternalEffectsDetector(Protocol):
 
 class ProjectRunner(Protocol):
     def run(
-        self, params: tuple[ProjectParam, ...], timeout_seconds: int, proof: BuildArtifact | None = None
+        self,
+        params: tuple[ProjectParam, ...],
+        timeout_seconds: int,
+        build: ReadyBuild | ReadyWithGapsBuild | None = None,
     ) -> ProjectRunExecution: ...
