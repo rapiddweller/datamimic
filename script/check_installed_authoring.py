@@ -254,7 +254,7 @@ def check_installed(with_mcp, checkout):
     cli_built = json.loads(cli("authoring", "build", str(clean)))
     assert cli_built["outcome"] == "ready" and cli_built["evidence"][0]["count"] == 2, cli_built
     started = Path(tempfile.mkdtemp(prefix="datamimic-installed-init-")) / "starter"
-    assert "Wrote the flat project" in cli("authoring", "init", str(started))
+    assert json.loads(cli("authoring", "init", str(started)))["outcome"] == "written"
     assert json.loads(cli("authoring", "build", str(started)))["outcome"] == "ready"
     cli_gaps = json.loads(cli("authoring", "build", str(Path.cwd()), status=3))
     assert cli_gaps["outcome"] == "ready_with_gaps", cli_gaps
