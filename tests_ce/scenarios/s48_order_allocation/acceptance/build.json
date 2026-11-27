@@ -44,7 +44,7 @@
     {"kind": "row_condition", "subject": {"kind": "product", "product": "allocation_checks"}, "condition": "days_to_expiry >= 0"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "allocation_checks"}, "condition": "lot_allocated <= lot_quantity"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "allocation_checks"}, "condition": "lots_of_order <= max_lots"},
-    {"kind": "row_condition", "subject": {"kind": "product", "product": "order_checks"}, "condition": "allow_partial == 'yes' or backordered == 0"},
+    {"kind": "group_sum", "subject": {"kind": "product", "product": "order_checks"}, "group_by": "order_id", "field": "shipped", "equals_field": "owed"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "order_checks"}, "condition": "backordered == 0 or valid_left == 0 or lots_used == max_lots"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "decision_checks"}, "condition": "unexplained == 0"}
   ],

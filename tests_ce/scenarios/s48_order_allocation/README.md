@@ -50,7 +50,7 @@ directory for each run.
 | A1 the expiry date is a valid ship day, the day after is not | the `excluded_by` key of `lot_decisions` in step 20 | `days_to_expiry >= 0` on `allocation_checks` |
 | A2 no lot ships more than its quantity | `fill` in `allocate_orders` | `lot_allocated <= lot_quantity` |
 | A3 a lot serves only its product | the `excluded_by` key in step 20 | `same_product` |
-| A4 an order without `allow_partial` is filled completely; a partial order ships all valid stock | `solve` and the partial pass | `allow_partial == 'yes' or backordered == 0`, `backordered == 0 or valid_left == 0 or lots_used == max_lots` on `order_checks` |
+| A4 an order without `allow_partial` is filled completely; a partial order ships all valid stock | `solve` and the partial pass | `group_sum` on `order_checks`: per `order_id`, `shipped` equals `owed` (the order quantity, or `shipped` for a partial order); `backordered == 0 or valid_left == 0 or lots_used == max_lots` on `order_checks` |
 | A5 an order uses at most `max_lots_per_order` lots | `sets` and the partial pass in `allocate_orders` | `lots_of_order <= max_lots`, read from the policy; the caller requirement `max_lots_per_order <= 2` on `policy`; the pin that O8 ships 6 of 8 |
 
 The output checks read the orders, the lots and the allocation again. They do not read the eligibility step or the
@@ -94,6 +94,7 @@ Each negative is one text patch in `scenario.json`. Build rejects the variant wi
 | `a3_product_ignored` | A lot of another product may serve an order. |
 | `a2_oversell` | An allocation line takes the whole order from a lot. |
 | `a4_partial_ships_nothing` | A partial order ships nothing. |
+| `a4_one_unit_short` | The first allocation line ships one unit less: O1 receives 5 of 6 and `group_sum` rejects the order. |
 | `a5_lot_limit_raised` | `max_lots_per_order` is 3: O8 ships all 8 from three lots, and the O8 pin fails. The caller also requires at most 2. |
 | `a5_search_ignores_limit` | The partial pass takes any number of lots: O8 uses three and `lots_of_order <= max_lots` fails. |
 | `infeasible_three_lots_needed` | O8 does not allow a partial shipment: it needs three lots and no allocation exists. |
@@ -105,6 +106,7 @@ Each negative is one text patch in `scenario.json`. Build rejects the variant wi
 
 ## Known limits
 
+- `group_sum` compares two sums per group for equality. The caps (A2, A5) and the second half of A4 are inequalities, so they stay `row_condition`. The A4 sum is vacuous for a partial order, whose `owed` is what it shipped.
 - Build reports two DM214 warnings: the `nestedKey` elements `lot_decisions` and `lots` have no `defaultValue`. A
   fallback would hide a failure in the decision evidence.
 - A product that goes to the store needs a readback and an identifier, so step 93 exports each of them. The nested key of `order_decisions` is `lot_reasons`: the name `lots` would hit the product `lots`.
