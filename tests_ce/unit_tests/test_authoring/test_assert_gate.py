@@ -446,7 +446,7 @@ def test_an_assert_in_step_10_still_lists_every_check_it_could_not_evaluate(tmp_
         "policy",
         "qualifications",
     ]
-    assert len(_not_evaluated(result)) == 73
+    assert len(_not_evaluated(result)) == 77
 
 
 def test_the_learning_reference_says_when_to_use_an_assert_or_an_expectation(tmp_path: Path) -> None:

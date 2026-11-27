@@ -234,6 +234,13 @@ def _duplicate_values(values: tuple[object, ...]) -> tuple[object, ...]:
     return tuple(duplicates)
 
 
+def _readback_identities(rows: tuple[Mapping[str, object], ...], fields: tuple[str, ...]) -> set[str] | None:
+    if any(field not in row for row in rows for field in fields):
+        return None
+    identities = {_display(tuple(row[field] for field in fields)) for row in rows}
+    return identities if len(identities) == len(rows) else None
+
+
 def _groups(
     spec: AcceptanceSpecV1,
     captured: CapturedRows,
@@ -831,16 +838,13 @@ def evaluate_acceptance_with_results(
     for readback in spec.readbacks:
         if {readback.producer, readback.consumer} & not_run:
             continue
-        producer = _values(rows_by_name[readback.producer], readback.producer_field)
-        consumer = _values(rows_by_name[readback.consumer], readback.consumer_field)
-        if (
-            producer is None
-            or consumer is None
-            or len(producer) != len(consumer)
-            or _duplicate_values(producer)
-            or _duplicate_values(consumer)
-            or set(map(_display, producer)) != set(map(_display, consumer))
-        ):
+        producer = _readback_identities(
+            rows_by_name[readback.producer], tuple(join.parent_field for join in readback.joins)
+        )
+        consumer = _readback_identities(
+            rows_by_name[readback.consumer], tuple(join.child_field for join in readback.joins)
+        )
+        if producer is None or consumer is None or producer != consumer:
             diagnostics.append(
                 catalog_diagnostic(
                     AuthoringRuleId.VALIDATION,
