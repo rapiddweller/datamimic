@@ -483,11 +483,13 @@ class DateTimeGenerator(ClockAnchoredDomainGenerator):
                 dom = cur.day
                 dw = self._dom_weights[dom - 1] if self._dom_weights else 1.0
                 # Apply DOM sugar masks (allowed set and/or 'last')
+                # The day set and 'last' combine with OR.
                 allowed_set = self._dom_allowed_set
-                if allowed_set is not None and dom not in allowed_set:
-                    dw = 0.0
-                if self._dom_allow_last and dom != calendar.monthrange(y, m)[1]:
-                    dw = 0.0
+                if allowed_set is not None or self._dom_allow_last:
+                    in_set = allowed_set is not None and dom in allowed_set
+                    is_last = self._dom_allow_last and dom == calendar.monthrange(y, m)[1]
+                    if not (in_set or is_last):
+                        dw = 0.0
                 day_weights.append(mw * ww * dw)
                 cur = cur + timedelta(days=1)
             if not days:

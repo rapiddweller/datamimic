@@ -1,0 +1,15 @@
+{
+  "title": "Day-of-month set combined with last",
+  "proves": [
+    "dom='1,15,last' selects the listed days or the last day of the month (OR), in leap and non-leap February and in 30- and 31-day months",
+    "last alone, a duplicate such as '31,last' and a range with last behave the same way"
+  ],
+  "products": {
+    "leap_feb": 40, "plain_feb": 40, "days30": 40, "days31": 40,
+    "last_only": 40, "dup_last31": 40, "missing31": 40, "range_last": 40
+  },
+  "negatives": [
+    {"name": "extra_day_in_set", "diagnostic": "allowed_values",
+     "patch": {"file": "datamimic.xml", "old": "max='2024-02-29 23:59:59', random=True, dom='1,15,last'", "new": "max='2024-02-29 23:59:59', random=True, dom='1,15,last,2'"}}
+  ]
+}
