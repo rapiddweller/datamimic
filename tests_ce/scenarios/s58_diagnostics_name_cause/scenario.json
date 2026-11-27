@@ -18,7 +18,7 @@
      "patch": {"file": "datamimic.xml", "old": "<generate name=\"parents\" count=\"2\">", "new": "<generate name=\"parents\" count=\"4\">"}},
     {"name": "int_on_a_text_key", "diagnostic": "child_execution", "issue": "I832",
      "message": "ValueError",
-     "remediation": "Keep a text key as text: cast only a value that holds a number.",
+     "remediation": "A function rejected the value that the script read. Check the value the script reads and the input that the function accepts; the error type and line above name the failing call.",
      "patch": {"file": "datamimic.xml", "old": "script=\"branch\"", "new": "script=\"int(branch)\""}},
     {"name": "mistyped_element", "diagnostic": "DM101",
      "remediation": "Did you mean <variable>?",
