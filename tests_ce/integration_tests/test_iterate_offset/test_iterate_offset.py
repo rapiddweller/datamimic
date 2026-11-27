@@ -8,7 +8,6 @@
 offset shrinks the available window - the count default, cyclic wrap-around, and page windows
 all operate on the post-offset region (a cyclic wrap must never re-include skipped rows)."""
 
-import shutil
 from pathlib import Path
 
 import pytest
@@ -98,15 +97,7 @@ def test_offset_on_memstore_source_is_rejected():
         engine.test_with_timer()
 
 
-def test_offset_on_db_client_source_is_rejected():
-    output_dir = _dir / "output"
-    db_dirs = (_dir / "db", _dir.parents[2] / "db")
-    for d in (output_dir, *db_dirs):
-        shutil.rmtree(d, ignore_errors=True)
-    try:
-        engine = DataMimicTest(_dir, "test_offset_client_rejected.xml", capture_test_result=True)
-        with pytest.raises(ValueError, match="file sources"):
-            engine.test_with_timer()
-    finally:
-        for d in (output_dir, *db_dirs):
-            shutil.rmtree(d, ignore_errors=True)
+def test_offset_on_db_client_source_is_rejected(project_dir):
+    engine = DataMimicTest(project_dir, "test_offset_client_rejected.xml", capture_test_result=True)
+    with pytest.raises(ValueError, match="file sources"):
+        engine.test_with_timer()

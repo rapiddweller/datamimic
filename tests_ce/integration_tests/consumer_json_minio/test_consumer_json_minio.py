@@ -5,14 +5,10 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-from pathlib import Path
-
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 
 class TestConsumerJsonMinio:
-    _test_dir = Path(__file__).resolve().parent
-
-    def test_json_consumer(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_json_consumer.xml")
+    def test_json_consumer(self, project_dir):
+        engine = DataMimicTest(test_dir=project_dir, filename="test_json_consumer.xml")
         engine.test_with_timer()

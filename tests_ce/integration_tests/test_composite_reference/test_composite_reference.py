@@ -15,17 +15,15 @@ import pytest
 
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
-_TEST_DIR = Path(__file__).resolve().parent
 
-
-def _run(filename: str, gen: str = "events") -> list[dict]:
-    engine = DataMimicTest(test_dir=_TEST_DIR, filename=filename, capture_test_result=True)
+def _run(project_dir: Path, filename: str, gen: str = "events") -> list[dict]:
+    engine = DataMimicTest(test_dir=project_dir, filename=filename, capture_test_result=True)
     engine.test_with_timer()
     return engine.capture_result()[gen]
 
 
-def test_composite_reference_distinct_tuples_and_multiple_targets():
-    rows = _run("composite_reference.xml")
+def test_composite_reference_distinct_tuples_and_multiple_targets(project_dir):
+    rows = _run(project_dir, "composite_reference.xml")
     assert len(rows) == 6
     # each <field> target is set on the entity (mixed types: aisle TEXT, bin INT)
     tuples = [(r["aisle"], r["bin"]) for r in rows]
@@ -34,11 +32,11 @@ def test_composite_reference_distinct_tuples_and_multiple_targets():
     assert len(set(tuples)) == 6
     assert set(tuples) == {("A", 1), ("A", 2), ("B", 1), ("B", 2), ("C", 1), ("C", 2)}
     # seed-reproducible
-    assert [(r["aisle"], r["bin"]) for r in _run("composite_reference.xml")] == tuples
+    assert [(r["aisle"], r["bin"]) for r in _run(project_dir, "composite_reference.xml")] == tuples
 
 
-def test_three_fields_three_types():
-    rows = _run("composite_three_fields.xml", gen="rows")
+def test_three_fields_three_types(project_dir):
+    rows = _run(project_dir, "composite_three_fields.xml", gen="rows")
     assert len(rows) == 4
     tuples = [(r["region"], r["yr"], r["price"]) for r in rows]
     # three component types: TEXT -> str, INTEGER -> int, REAL -> float
@@ -46,20 +44,20 @@ def test_three_fields_three_types():
     assert len(set(tuples)) == 4  # the 4 distinct (region, year, price) combos
 
 
-def test_composite_unique_exhaustion_raises():
+def test_composite_unique_exhaustion_raises(project_dir):
     with pytest.raises(Exception, match="unique"):
-        _run("composite_exhausted.xml", gen="x")
+        _run(project_dir, "composite_exhausted.xml", gen="x")
 
 
-def test_composite_non_unique_allows_repeats():
-    rows = _run("composite_nonunique.xml", gen="x")
+def test_composite_non_unique_allows_repeats(project_dir):
+    rows = _run(project_dir, "composite_nonunique.xml", gen="x")
     assert len(rows) == 20  # with replacement -> more rows than the 6 distinct combos
     valid = {("A", 1), ("A", 2), ("B", 1), ("B", 2), ("C", 1), ("C", 2)}
     assert {(r["aisle"], r["bin"]) for r in rows} <= valid
 
 
-def test_legacy_single_field_reference_still_works():
-    rows = _run("legacy_single.xml", gen="x")
+def test_legacy_single_field_reference_still_works(project_dir):
+    rows = _run(project_dir, "legacy_single.xml", gen="x")
     assert len(rows) == 3
     assert {r["aisle"] for r in rows} == {"A", "B", "C"}  # distinct aisles (deduped)
 
@@ -72,9 +70,9 @@ def test_legacy_single_field_reference_still_works():
 _VALID_PAIRS = {("EU", "E1"), ("EU", "E2"), ("US", "U1"), ("US", "U2"), ("US", "U3")}
 
 
-def test_composite_fk_tuple_integrity_against_sparse_parent():
+def test_composite_fk_tuple_integrity_against_sparse_parent(project_dir):
     # 30 children, fan-out (one-to-many) onto 5 sparse parent rows.
-    rows = _run("fk_integrity.xml", gen="orders")
+    rows = _run(project_dir, "fk_integrity.xml", gen="orders")
     pairs = {(r["region"], r["code"]) for r in rows}
     # Every (region, code) is a REAL parent row — never an invented cross like ('EU','U1').
     assert pairs <= _VALID_PAIRS
@@ -84,31 +82,31 @@ def test_composite_fk_tuple_integrity_against_sparse_parent():
     assert len(rows) == 30  # fan-out: far more children than the 5 distinct parents
 
 
-def test_composite_fk_unique_assignment_no_double_booking():
+def test_composite_fk_unique_assignment_no_double_booking(project_dir):
     # unique="true" -> each parent tuple assigned at most once (1:1 slot assignment).
-    rows = _run("fk_unique_assignment.xml", gen="assignments")
+    rows = _run(project_dir, "fk_unique_assignment.xml", gen="assignments")
     pairs = [(r["region"], r["code"]) for r in rows]
     assert len(pairs) == len(set(pairs)) == 5  # no double-booking
     assert set(pairs) == _VALID_PAIRS  # the whole sparse parent, each exactly once
 
 
-def test_composite_unique_holds_across_pages():
+def test_composite_unique_holds_across_pages(project_dir):
     # count(6) > pageSize(2): the full unique sequence is cached once, so distinctness holds
     # across pages (regression for the per-page-seed cross-page bug).
-    rows = _run("composite_paged.xml")
+    rows = _run(project_dir, "composite_paged.xml")
     tuples = [(r["aisle"], r["bin"]) for r in rows]
     assert len(set(tuples)) == 6
 
 
-def test_composite_unique_holds_under_multiprocessing():
+def test_composite_unique_holds_under_multiprocessing(project_dir):
     # CE policy: a composite unique <reference> is a global constraint -> forced single-process,
     # so it stays distinct even when numProcess > 1 (scaling these is an EE feature).
-    rows = _run("composite_mp.xml")
+    rows = _run(project_dir, "composite_mp.xml")
     tuples = [(r["aisle"], r["bin"]) for r in rows]
     assert len(set(tuples)) == 6
 
 
-def test_policy_logs_single_process_override():
+def test_policy_logs_single_process_override(project_dir):
     # The CE single-process policy informs the user (testable log) when it overrides a
     # multiprocess request (composite_mp.xml asks for numProcess=4). The DATAMIMIC logger has
     # its own handler (propagate=False), so capture by attaching directly to it.
@@ -122,7 +120,7 @@ def test_policy_logs_single_process_override():
     dm_logger = logging.getLogger("DATAMIMIC")
     dm_logger.addHandler(handler)
     try:
-        _run("composite_mp.xml")
+        _run(project_dir, "composite_mp.xml")
     finally:
         dm_logger.removeHandler(handler)
     control = [dict(part.split("=", 1) for part in m.split(" | ")[1:]) for m in messages if m.startswith("CONTROL |")]
@@ -141,6 +139,6 @@ def test_policy_logs_single_process_override():
         ("ref_duplicate_sourcekey.xml", "duplicate"),  # two <field> share a sourceKey
     ],
 )
-def test_composite_reference_invalid_raises(filename, match):
+def test_composite_reference_invalid_raises(project_dir, filename, match):
     with pytest.raises(Exception, match=match):
-        _run(filename, gen="x")
+        _run(project_dir, filename, gen="x")

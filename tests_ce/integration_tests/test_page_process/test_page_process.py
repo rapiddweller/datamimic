@@ -6,7 +6,6 @@
 
 
 import json
-import shutil
 from pathlib import Path
 
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
@@ -23,24 +22,24 @@ class TestPageProcess:
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_simple_simple_page_process_mp.xml")
         engine.test_with_timer()
 
-    def test_consumer_csv(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_page_process_csv.xml")
+    def test_consumer_csv(self, project_dir):
+        engine = DataMimicTest(test_dir=project_dir, filename="test_page_process_csv.xml")
         engine.test_with_timer()
 
-    def test_consumer_json(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_page_process_json.xml")
+    def test_consumer_json(self, project_dir):
+        engine = DataMimicTest(test_dir=project_dir, filename="test_page_process_json.xml")
         engine.test_with_timer()
 
-    def test_consumer_xml(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_page_process_xml.xml")
+    def test_consumer_xml(self, project_dir):
+        engine = DataMimicTest(test_dir=project_dir, filename="test_page_process_xml.xml")
         engine.test_with_timer()
 
-    def test_consumer_txt(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_page_process_txt.xml")
+    def test_consumer_txt(self, project_dir):
+        engine = DataMimicTest(test_dir=project_dir, filename="test_page_process_txt.xml")
         engine.test_with_timer()
 
-    def test_consumer_sqlite(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_page_process_sqlite.xml")
+    def test_consumer_sqlite(self, project_dir):
+        engine = DataMimicTest(test_dir=project_dir, filename="test_page_process_sqlite.xml")
         engine.test_with_timer()
 
     def test_multipage_distribution(self):
@@ -61,18 +60,14 @@ class TestPageProcess:
         assert len(cum_ids) == 12
         assert set(cum_ids) <= set(src_ids)
 
-    def test_memstore_survives_pagination_without_test_mode(self):
+    def test_memstore_survives_pagination_without_test_mode(self, project_dir):
         """Production mode (no test capture) prunes per-page accumulation to
         memstore-needed products only - the memstore must still see ALL pages."""
-        out_dir = self._test_dir / "output" / "memstore_prod_out"
-        shutil.rmtree(out_dir, ignore_errors=True)
-        try:
-            engine = DataMimicTest(test_dir=self._test_dir, filename="test_page_process_memstore_prod.xml")
-            engine.test_with_timer()
+        out_dir = project_dir / "output" / "memstore_prod_out"
+        engine = DataMimicTest(test_dir=project_dir, filename="test_page_process_memstore_prod.xml")
+        engine.test_with_timer()
 
-            files = list(out_dir.rglob("*.json"))
-            assert files, f"no JSON exported to {out_dir}"
-            rows = [row for f in files for row in json.loads(f.read_text())]
-            assert sorted(r["id"] for r in rows) == list(range(1, 26))
-        finally:
-            shutil.rmtree(out_dir, ignore_errors=True)
+        files = list(out_dir.rglob("*.json"))
+        assert files, f"no JSON exported to {out_dir}"
+        rows = [row for f in files for row in json.loads(f.read_text())]
+        assert sorted(r["id"] for r in rows) == list(range(1, 26))
