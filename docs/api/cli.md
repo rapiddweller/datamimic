@@ -123,6 +123,45 @@ datamimic authoring export-contract <bundle.tar.gz> [--package-version <version>
 `manifest.json` and the JSON contract files. The output path does not change
 the archive format.
 
+#### Contract bundle compatibility
+
+Every file in the bundle, including `manifest.json`, carries the same envelope:
+`schema_version` (currently `"1"`, a single integer string) and `producer`
+(`name`, `package_version`, `commit_sha`). `manifest.json` also lists a SHA-256
+per file and `content_sha256` over all of them. The Build protocol
+(`datamimic authoring version`, `build_protocol`) is versioned separately and
+governs Build requests and results, not the bundle.
+
+Compatible changes keep `schema_version` unchanged. A consumer must tolerate them:
+
+- a new file in the bundle, a new top-level or nested JSON property;
+- a new element, attribute, generator, rule, reference topic or schema id;
+- a new value in an enum the bundle already lists, for example a new
+  `ReferenceTopic`;
+- changed descriptions, ordering of entries, hashes, `producer` values.
+
+Breaking changes increment `schema_version` (`"1"` to `"2"`) and are named in the
+release notes of the release that introduces them:
+
+- removing or renaming a file, property, element, attribute or enum value;
+- changing the type, required-ness or meaning of an existing property;
+- changing the archive format or the manifest hash rule.
+
+Consumer rules:
+
+1. Read `manifest.json` first. Refuse a bundle whose `schema_version` is not one
+   the consumer supports, and report the producer's `package_version`; do not
+   guess at a newer layout.
+2. Ignore properties and files you do not know. Do not validate bundle contents
+   against a closed set of values; a value you do not know is new vocabulary,
+   not corruption.
+3. Treat an element, attribute or enum value you do not know as unsupported for
+   that feature only (no completion, no diagnostics from it); do not fail the
+   whole bundle.
+4. Use `content_sha256` to decide whether a cached bundle is current, and
+   the per-file hashes to detect a damaged file. `commit_sha` and
+   `package_version` identify the producer; they are not compatibility signals.
+
 Authoring commands default to `--format json`, except `export-contract`, which
 prints its output path. For commands that support `--format`, `--format text`
 prints readable results. `authoring init` prints the same `ProjectInitResult`
