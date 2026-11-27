@@ -36,7 +36,7 @@ Independent random values do not agree with each other: an order points to a cus
 
 - **Connected.** One XML project describes tables, nested records, references between records and conditions. CE writes CSV, JSON, XML, XLSX, DbUnit and fixed-width files, and writes to PostgreSQL, MySQL, Oracle, MS SQL Server, SQLite and MongoDB.
 - **Repeatable.** Set `<setup rngSeed="7">`. The same CE version, project files and seed give the same rows on the tested platforms. CI compares seeded output on Linux with Python 3.11 to 3.14 and on Windows with Python 3.11, on each run.
-- **Proven, not only generated.** `datamimic authoring build` runs the project with a row limit, checks each rule in `acceptance/build.json`, and replays the seeded run. The result is `ready` or `rejected`. `ready` is your proof that the data follows your rules. A ready Build lists every project file it read with its SHA-256. For a coding agent, `ready` is the signal that the work is done.
+- **Proven, not only generated.** `datamimic authoring build` runs the project with a row limit, checks each rule in `acceptance/build.json`, and replays the seeded run. The result is `ready`, `ready_with_gaps` or `rejected`. `ready` is your proof that the data follows your rules. A ready Build lists every project file it read with its SHA-256. For a coding agent, `ready` is the signal that the work is done.
 - **Made for coding agents.** One plugin for Claude Code and Codex installs the skills and a local MCP server. The MCP tools mirror the CLI commands.
 
 > **Pre-release.** CE 5.0 is not on PyPI yet. PyPI has 4.3.0, which does not have the commands on this page. Until 5.0.0 is released, install from the GitHub branch `development` as shown below.
@@ -128,6 +128,7 @@ customer_id|line_no|amount
 | Build outcome | Exit code | Meaning |
 |---|---|---|
 | `ready` | 0 | All declared expectations passed on a complete, bounded capture. |
+| `ready_with_gaps` | 3 | Passed, but `coverage` names what Build did not check. Fix each gap before you report success. |
 | `rejected` | 1 | Read the first entry in `diagnostics`, correct the project, build again. |
 
 ## Why not only Faker?
@@ -184,7 +185,7 @@ In an empty project the agent can start with `datamimic_init`, which writes the 
 
 <!-- Recording placeholder: docs/assets/agent-quick-start.gif, at most 30 seconds, recorded after P4a. Keep the text block above. -->
 
-The first start of the MCP server downloads CE from GitHub and takes about 7 s. Later starts take about 1 s. We measured both on one machine.
+The first start of the MCP server downloads CE from GitHub and takes about 7 s when uv has the other packages cached; with an empty cache expect minutes. Later starts take about 1 s. We measured these on one machine.
 If the server does not connect, the skills still work with the command line.
 To use the MCP server without the plugin, install `python -m pip install "datamimic-ce[mcp] @ git+https://github.com/rapiddweller/datamimic@development"`.
 
@@ -199,7 +200,7 @@ More: [agent plugin guide](https://github.com/rapiddweller/datamimic/blob/develo
 ## Engineering you can check
 
 - **The architecture contract is checked in public.** In each CI run, ArchKeel compares the observed structure of the code with the declared target contracts. The job `archkeel_check` must pass before a release. The [report](https://rapiddweller.github.io/datamimic/) is public. The budgets for accepted violations are ratchets: a raise needs an argued and verified amendment. A change to a contract needs an independent architecture review, recorded in a review note or in an approving review on the pull request ([how](https://github.com/rapiddweller/datamimic/blob/development/CONTRIBUTING.md)). There are 25 contract files, for example [`architecture-contract.json`](https://github.com/rapiddweller/datamimic/blob/development/architecture-contract.json), and the list of accepted violations in [`known-violations.json`](https://github.com/rapiddweller/datamimic/blob/development/known-violations.json) is empty.
-- **The DSL is specified by checked-in projects.** Each of the 43 [scenarios](https://github.com/rapiddweller/datamimic/tree/development/tests_ce/scenarios) is a real `datamimic.xml` with an `acceptance/build.json`, a list of what it proves, and negatives that must fail. CI builds every scenario with `datamimic authoring build`.
+- **The DSL is specified by checked-in projects.** Each of the 56 [scenarios](https://github.com/rapiddweller/datamimic/tree/development/tests_ce/scenarios) is a real `datamimic.xml` with an `acceptance/build.json`, a list of what it proves, and negatives that must fail. CI builds every scenario with `datamimic authoring build`.
 - **CE and Enterprise compatibility is recorded.** The [parity matrix](https://github.com/rapiddweller/datamimic/blob/development/docs/architecture/inner/ce-ee-parity.md) lists each difference between the two editions with its status. CE runs the 8 shared [conformance cases](https://github.com/rapiddweller/datamimic/tree/development/tests_ce/conformance/cases) in CI; the Enterprise Core runner follows.
 - **Seeded output is measured.** CI compares seeded output on 8 configurations: Linux with Python 3.11 (UTC, Los Angeles, lowest permitted dependency versions), 3.12, 3.13 and 3.14 (UTC), and Windows with Python 3.11 (UTC, Pacific). See the job [`runtime_determinism_matrix`](https://github.com/rapiddweller/datamimic/blob/development/.github/workflows/main.yml).
 
@@ -273,10 +274,10 @@ Authoring commands print JSON and accept a file or `-` for standard input.
 
 | Command | MCP tool | Use |
 |---|---|---|
-| `datamimic authoring init <project>` | none | Write a starter project that Build proves as `ready` |
+| `datamimic authoring init <project>` | `datamimic_init` | Write a starter project that Build proves as `ready` |
 | `datamimic authoring build <project>` | `datamimic_build` | Check a project against `acceptance/build.json` |
 | `datamimic authoring run-project <project>` | `datamimic_run_project` | Build, then run for real data |
-| `datamimic run <datamimic.xml>` | none | Run a model |
+| `datamimic run <datamimic.xml>` | `datamimic_run_project_unverified` (stdio only, needs confirmation) | Run a model without Build |
 | `datamimic authoring lint <file>` | `datamimic_lint` | Check one XML file |
 | `datamimic authoring dry-run <file>` | `datamimic_dry_run` | Run one XML file with a bounded capture |
 | `datamimic authoring run <file>` | `datamimic_run` | Run one XML file with limits |
@@ -284,11 +285,11 @@ Authoring commands print JSON and accept a file or `-` for standard input.
 | `datamimic authoring schema [--name <name>]` | `datamimic_schema` | Show a contract schema |
 | `datamimic authoring capabilities` | `datamimic_capabilities` | List the DSL vocabulary |
 | `datamimic authoring capability --domain element --name generate` | `datamimic_capability` | Show one element |
-| `datamimic authoring reference --topic assembly --name model` | `datamimic_reference` | Read focused guidance |
+| `datamimic authoring reference --topic assembly --name starter` | `datamimic_reference` | Read focused guidance |
 | `datamimic authoring compile -` / `decompile <file>` | `datamimic_compile` / `datamimic_decompile` | Convert between DM JSON and XML |
 | `datamimic init`, `demo list`, `demo create`, `info`, `version` | none | Project and demo helpers |
 
-Exit codes: 0 for success, 1 for a rejected result, 2 for a usage error.
+Exit codes: 0 for success, 1 for a rejected result, 2 for a usage error, 3 for a Build with gaps.
 
 ## Python API
 

@@ -11,8 +11,8 @@ One install gives the agent the skills and a local DATAMIMIC server (`datamimic_
 tools, server name `datamimic`). The server starts through `uvx` from the plugin's
 [`.mcp.json`](../plugins/datamimic/.mcp.json). Until CE 5.0 is released, that file
 installs the package from the GitHub branch `development`; after the release it
-names the published `datamimic-ce[mcp]>=5.0.0,<6`. It is the only file that holds
-the install reference.
+names the published `datamimic-ce[mcp]>=5.0.0,<6`. It is the only plugin file that
+holds the install reference.
 
 Requirements: [uv](https://docs.astral.sh/uv/) on the PATH. `uvx` picks a Python
 from `>=3.11,<3.15` by itself; it does not use your project's virtual environment.
