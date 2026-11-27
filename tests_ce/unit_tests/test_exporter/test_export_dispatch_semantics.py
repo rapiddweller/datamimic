@@ -31,6 +31,7 @@ from datamimic_ce.engine.io.exporters.formats.txt_exporter import TXTExporter
 from datamimic_ce.engine.io.exporters.formats.xml_exporter import XMLExporter
 from datamimic_ce.engine.io.exporters.registry import create_exporter_list
 from datamimic_ce.engine.runtime.tasks.generate import export_order
+from datamimic_ce.errors import MissingMemstoreProductError
 from tests_ce.unit_tests.test_exporter.exporter_test_util import MockSetupContext
 
 
@@ -127,7 +128,8 @@ def test_memstore_uses_first_known_target_with_native_rows() -> None:
     exporter_registry.consume_memstore_target(context, ["unknown", "first", "second"], entity, "full", products)
     first = stores["first"].get_data_by_type(entity)
     assert first is not rows and first[0] is row and first[0]["value"] is native
-    assert stores["second"].get_all_data_by_type(entity) == []
+    with pytest.raises(MissingMemstoreProductError):
+        stores["second"].get_all_data_by_type(entity)
 
     exporter_registry.consume_memstore_target(context, ["first"], entity, "full", products)
     current = stores["first"].get_data_by_type(entity)

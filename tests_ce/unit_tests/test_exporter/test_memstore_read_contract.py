@@ -2,9 +2,10 @@
 
 import pytest
 
+from datamimic_ce.engine.io.api import Memstore
 from datamimic_ce.engine.io.contracts import DataSourcePagination
 from datamimic_ce.engine.io.data_sources.router import read_generate_memstore_source
-from datamimic_ce.engine.io.api import Memstore
+from datamimic_ce.errors import MissingMemstoreProductError
 
 
 def test_raw_getter_returns_live_list_and_distinguishes_empty_from_missing() -> None:
@@ -17,9 +18,12 @@ def test_raw_getter_returns_live_list_and_distinguishes_empty_from_missing() -> 
 
     assert memstore.get_data_by_type("rows") == [{"id": 1}, {"id": 2}]
     assert memstore.get_data_by_type("empty") == []
-    assert memstore.get_all_data_by_type("missing") == []
-    with pytest.raises(KeyError, match="Data naming 'missing' is empty in memstore"):
+    assert memstore.get_all_data_by_type("rows") is raw_rows
+    assert memstore.get_all_data_by_type("empty") == []
+    with pytest.raises(MissingMemstoreProductError, match="Data naming 'missing' is empty in memstore"):
         memstore.get_data_by_type("missing")
+    with pytest.raises(MissingMemstoreProductError, match="Data naming 'missing' is empty in memstore"):
+        memstore.get_all_data_by_type("missing")
 
 
 def test_raw_getter_rejects_removed_paging_arguments() -> None:
