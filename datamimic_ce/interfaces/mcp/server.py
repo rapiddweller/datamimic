@@ -7,7 +7,7 @@ import secrets
 from collections.abc import Awaitable, Callable
 from functools import wraps
 from pathlib import Path, PurePosixPath
-from typing import Annotated, ParamSpec, Protocol, TypeVar, cast
+from typing import Annotated, ParamSpec, Protocol, TypeVar
 
 from anyio import to_thread
 from dotenv import dotenv_values
@@ -82,24 +82,21 @@ _PROJECT_ARGUMENT = "Absolute path of the directory that holds datamimic.xml."
 _XML_ARGUMENT_EXAMPLE = '{"project": "/absolute/project", "xml": "<setup/>"}'
 
 
-def _guarded(hint: str) -> Callable[[Callable[_P, Awaitable[_R]]], Callable[_P, Awaitable[ToolResult]]]:
+def _guarded(function: Callable[_P, Awaitable[_R]], hint: str) -> Callable[_P, Awaitable[ToolResult]]:
     """Refuse a result over the size limit and name the argument that narrows it."""
 
-    def decorate(function: Callable[_P, Awaitable[_R]]) -> Callable[_P, Awaitable[ToolResult]]:
-        @wraps(function)
-        async def guarded(*args: _P.args, **kwargs: _P.kwargs) -> ToolResult:
-            result = await function(*args, **kwargs)
-            # FastMCP 4 serializes JSON compactly, without ASCII escaping.
-            encoded: bytes = to_json(to_jsonable_python(result))
-            text = str(encoded, "utf-8")
-            size = len(text)
-            if size > MAX_RESULT_CHARACTERS:
-                raise ToolError(json.dumps({"error": "result_too_large", "size": size, "hint": hint}))
-            return ToolResult(content=[TextContent(type="text", text=text)])
+    @wraps(function)
+    async def guarded(*args: _P.args, **kwargs: _P.kwargs) -> ToolResult:
+        result = await function(*args, **kwargs)
+        # FastMCP 4 serializes JSON compactly, without ASCII escaping.
+        encoded: bytes = to_json(to_jsonable_python(result))
+        text = str(encoded, "utf-8")
+        size = len(text)
+        if size > MAX_RESULT_CHARACTERS:
+            raise ToolError(json.dumps({"error": "result_too_large", "size": size, "hint": hint}))
+        return ToolResult(content=[TextContent(type="text", text=text)])
 
-        return guarded
-
-    return decorate
+    return guarded
 
 
 class _CompatibleRequestTool(FunctionTool):
@@ -107,53 +104,51 @@ class _CompatibleRequestTool(FunctionTool):
 
     flat_example: str = ""
 
-    @classmethod
-    def from_wrapped_function(
-        cls, function: Callable[..., Awaitable[ToolResult]], name: str, flat_example: str
-    ) -> _CompatibleRequestTool:
-        tool = cast(_CompatibleRequestTool, cls.from_function(function, name=name, output_schema=None))
-        tool.flat_example = flat_example
-        schema = tool.parameters
-        properties = schema["properties"]
-        request = properties.pop("request")
-        reference = request.get("$ref")
-        request_model = schema["$defs"][reference.rsplit("/", 1)[-1]] if reference else request
-        fields = request_model["properties"]
-        schema["required"].remove("request")
-        schema["additionalProperties"] = False
-        properties.update(fields)
-        properties["request"] = {**request, "deprecated": True, "description": "Legacy wrapper for one release."}
-        schema["oneOf"] = [
-            {
-                "title": "Preferred: flat arguments",
-                "required": request_model.get("required", []),
-                "not": {"required": ["request"]},
-            },
-            {"title": "Legacy: request wrapper", "required": ["request"], "properties": dict.fromkeys(fields, False)},
-        ]
-        tool.description = (
-            f"{tool.description} Prefer flat arguments: {flat_example}. The request wrapper is deprecated."
+    async def run(self, arguments: dict[str, JsonValue]) -> ToolResult:
+        project = (
+            {"project": arguments["project"]}
+            if "project" in self.parameters["properties"] and "project" in arguments
+            else {}
         )
-        return tool
-
-    async def run(self, arguments: dict[str, object]) -> ToolResult:
-        request = dict(arguments)
-        project = {}
-        if "project" in self.parameters["properties"] and "project" in request:
-            project["project"] = request.pop("project")
+        request = {key: arguments[key] for key in arguments if key not in project}
         if "request" in request and len(request) != 1:
             raise ToolValidationError(f"Do not mix flat arguments with request. Use {self.flat_example}.")
         wrapped = request if "request" in request else {"request": request}
         try:
             return await super().run({**project, **wrapped})
         except ToolValidationError as exc:
-            cause = exc.__cause__
-            details = (
-                cause.json(include_input=False, include_context=False, include_url=False)
-                if isinstance(cause, ValidationError)
-                else str(exc)
-            )
-            raise ToolValidationError(f"Invalid arguments. Use {self.flat_example}. {details}") from exc
+            raise ToolValidationError(f"Invalid arguments. Use {self.flat_example}.") from exc
+
+
+def _compatible_tool(function: Callable[_P, Awaitable[ToolResult]], name: str, flat_example: str) -> FunctionTool:
+    tool = _CompatibleRequestTool.from_function(function, name=name, output_schema=None)
+    assert isinstance(tool, _CompatibleRequestTool)
+    tool.flat_example = flat_example
+    schema = tool.parameters
+    properties = schema["properties"]
+    request = properties["request"]
+    # FastMCP can inline the request model or keep it in Pydantic's local $defs.
+    reference_prefix = "#/$defs/"
+    request_model = schema["$defs"][request["$ref"][len(reference_prefix) :]] if "$ref" in request else request
+    request_model = {"required": [], **request_model}
+    fields = request_model["properties"]
+    schema["required"] = [field for field in schema["required"] if field != "request"]
+    schema["properties"] = {
+        **properties,
+        **fields,
+        "request": {**request, "deprecated": True, "description": "Legacy wrapper for one release."},
+    }
+    schema["additionalProperties"] = False
+    schema["oneOf"] = [
+        {
+            "title": "Preferred: flat arguments",
+            "required": request_model["required"],
+            "not": {"required": ["request"]},
+        },
+        {"title": "Legacy: request wrapper", "required": ["request"], "properties": {field: False for field in fields}},
+    ]
+    tool.description = f"{tool.description} Prefer flat arguments: {flat_example}. The request wrapper is deprecated."
+    return tool
 
 
 def _project_root(project: str, workspace_root: Path | None, *, new: bool = False) -> Path | str:
@@ -189,11 +184,13 @@ def create_server(
         """Register one tool whose result may not exceed the size limit."""
 
         def register(function: Callable[_P, Awaitable[_R]]) -> Callable[_P, Awaitable[_R]]:
-            guarded = _guarded(hint)(function)
-            if flat_example is None:
-                server.tool(name, output_schema=None)(guarded)
-            else:
-                server.add_tool(_CompatibleRequestTool.from_wrapped_function(guarded, name, flat_example))
+            guarded = _guarded(function, hint)
+            definition = (
+                FunctionTool.from_function(guarded, name=name, output_schema=None)
+                if flat_example is None
+                else _compatible_tool(guarded, name, flat_example)
+            )
+            server.add_tool(definition)
             return function
 
         return register
