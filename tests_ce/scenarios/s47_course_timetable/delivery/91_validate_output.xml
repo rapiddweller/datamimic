@@ -32,7 +32,6 @@
     <generate name="course_checks" source="mem" sourceEntity="courses" distribution="ordered" target="CSV">
         <variable name="timetable" source="mem" sourceEntity="timetable" storage="data" distribution="ordered"/>
         <key name="course_id" script="course_id"/>
-        <key name="sessions_required" script="sessions"/>
         <key name="sessions_planned" script="sum(row.course_id == course_id for row in timetable)"/>
         <key name="days" script="len({row.day for row in timetable if row.course_id == course_id})"/>
     </generate>

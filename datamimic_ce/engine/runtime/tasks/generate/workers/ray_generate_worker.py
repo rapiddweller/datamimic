@@ -19,6 +19,19 @@ class RayGenerateWorker(GenerateWorker):
     Worker class for generating and exporting data by page in multiprocessing using Ray.
     """
 
+    @staticmethod
+    def start_ray(local_mode: bool) -> bool:
+        """Start Ray unless the caller already did; True when this call started it."""
+        if ray.is_initialized():
+            return False
+        ray.init(ignore_reinit_error=True, local_mode=local_mode, include_dashboard=False)
+        return True
+
+    @staticmethod
+    def stop_ray() -> None:
+        """Shut down a Ray that start_ray started."""
+        ray.shutdown()
+
     def mp_process(
         self,
         copied_context: WorkerContextPayload,

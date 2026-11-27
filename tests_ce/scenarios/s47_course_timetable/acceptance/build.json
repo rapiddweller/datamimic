@@ -41,7 +41,7 @@
     {"kind": "row_condition", "subject": {"kind": "product", "product": "session_checks"}, "condition": "teacher_sessions_in_slot == 1 and not teacher_off"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "session_checks"}, "condition": "room_sessions_in_slot == 1"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "session_checks"}, "condition": "student_clashes == 0"},
-    {"kind": "row_condition", "subject": {"kind": "product", "product": "course_checks"}, "condition": "sessions_planned == sessions_required"},
+    {"kind": "group_count", "subject": {"kind": "product", "product": "timetable"}, "group_by": "course_id", "reference": {"kind": "product", "product": "courses"}, "reference_key": "course_id", "count_field": "sessions"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "course_checks"}, "condition": "days == sessions_planned"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "decision_checks"}, "condition": "unexplained == 0"}
   ],
