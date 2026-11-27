@@ -69,8 +69,11 @@ class _DirectUrl(BaseModel):
     vcs_info: _VcsInfo | None = None
 
 
-def _git_commit(direct_url_json: str | None) -> str | None:
-    """The commit of a git install; None for every other install, so a commit is never guessed."""
+def _git_commit(direct_url_json: bytes | None) -> str | None:
+    """The commit of a git install; None for every other install, so a commit is never guessed.
+
+    The bytes are parsed as JSON, so bytes that are not UTF-8 are a ValidationError, the same as bad JSON (#704).
+    """
     if direct_url_json is None:
         return None
     try:
@@ -127,11 +130,11 @@ class AuthoringApplication:
         try:
             distribution = metadata.distribution("datamimic-ce")
             ce_version = distribution.version
-            # PackagePath.read_text takes an encoding; Distribution.read_text does not.
+            # Read the bytes and let the JSON parser judge them: a text read could raise UnicodeDecodeError (#704).
             for file in distribution.files or ():
                 if file.name == "direct_url.json":
                     with contextlib.suppress(OSError):
-                        direct_url = file.read_text(encoding="utf-8")
+                        direct_url = file.read_binary()
         except metadata.PackageNotFoundError:
             pass
         facts = {

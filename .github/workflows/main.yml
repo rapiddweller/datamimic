@@ -218,7 +218,7 @@ jobs:
   install_dependencies:
     runs-on: ubuntu-22.04
     container: python:3.11-slim-bookworm
-    needs: [setup, changes]
+    needs: changes
     if: needs.changes.outputs.code == 'true'
     permissions:
       contents: read
@@ -619,10 +619,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - shard: unit
+          - shard: unit-architecture
             args: >-
               tests_ce/unit_tests tests_ce/architecture
-              tests_ce/nightly_tests/unit tests_ce/nightly_tests/test_benchmarks
+              tests_ce/nightly_tests/unit
+          - shard: benchmarks
+            args: tests_ce/nightly_tests/test_benchmarks
     steps:
       - name: Setup git
         run: |
@@ -675,11 +677,20 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - shard: unit
-            args: tests_ce/unit_tests
+          - shard: unit-runtime
+            # Bash expands this into immediate physical paths; new test modules remain included.
+            args: >-
+              tests_ce/unit_tests/!(test_authoring|test_mcp|__pycache__)/
+              tests_ce/unit_tests/@(test_*.py|*_test.py)
+            pr: true
+          - shard: unit-authoring-mcp
+            args: tests_ce/unit_tests/test_authoring tests_ce/unit_tests/test_mcp
             pr: true
           - shard: unit-nightly
-            args: tests_ce/nightly_tests/unit tests_ce/nightly_tests/test_benchmarks
+            args: tests_ce/nightly_tests/unit
+            pr: false
+          - shard: benchmarks
+            args: tests_ce/nightly_tests/test_benchmarks
             pr: false
     steps:
       - name: Setup git
@@ -701,7 +712,7 @@ jobs:
       - name: Run unit tests in parallel
         if: github.event_name == 'pull_request' && matrix.pr
         run: |
-          . .venv/bin/activate
+          shopt -s extglob
           uv run pytest ${{ matrix.args }} -n auto -q --durations=20
         shell: bash
       - name: Run unit tests with coverage
@@ -709,8 +720,10 @@ jobs:
         env:
           COVERAGE_FILE: .coverage.${{ matrix.shard }}
         run: |
-          . .venv/bin/activate
-          uv run make coverage-unit-run UNIT_TEST_ARGS="${{ matrix.args }}"
+          shopt -s extglob
+          paths=(${{ matrix.args }})
+          printf -v args '%q ' "${paths[@]}"
+          uv run make coverage-unit-run UNIT_TEST_ARGS="$args"
         shell: bash
       - name: Upload coverage data
         if: github.event_name != 'pull_request'
@@ -724,8 +737,8 @@ jobs:
 
   unit_test:
     runs-on: ubuntu-22.04
-    needs: [install_dependencies, unit_coverage_shard]
-    if: ${{ !cancelled() && needs.install_dependencies.result == 'success' && needs.unit_coverage_shard.result == 'success' }}
+    needs: unit_coverage_shard
+    if: ${{ !cancelled() && needs.unit_coverage_shard.result == 'success' }}
     container: python:3.11-slim-bookworm
     steps:
       - name: Setup git
@@ -755,10 +768,9 @@ jobs:
         if: github.event_name != 'pull_request'
         run: |
           . .venv/bin/activate
-          test "$(ls -A coverage-unit-data | wc -l)" -eq 2
+          test "$(ls -A coverage-unit-data | wc -l)" -eq 4
           uv run coverage combine coverage-unit-data
           uv run make coverage-unit-report
-          uv run make test-architecture
         shell: bash
       - name: Package agent plugin
         run: uv run make agent-plugin-package
@@ -778,7 +790,6 @@ jobs:
   architecture_tests:
     name: Architecture tests
     needs: install_dependencies
-    if: github.event_name == 'pull_request'
     runs-on: ubuntu-22.04
     container: python:3.11-slim-bookworm
     steps:
@@ -799,15 +810,20 @@ jobs:
           path: .venv
           key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml', './uv.lock') }}
       - name: Run architecture tests
+        if: github.event_name == 'pull_request'
         run: |
           . .venv/bin/activate
           uv run pytest tests_ce/architecture -n auto -q --durations=15
         shell: bash
+      - name: Run full architecture tests
+        if: github.event_name != 'pull_request'
+        run: uv run make test-architecture
       - name: Run seeded DSL replay and negative control
+        if: github.event_name == 'pull_request'
         # Deliberate node selections run the bounded DSL replay and its negative proof.
         run: >-
           uv run pytest -q -n 0
-          'tests_ce/scenarios/test_scenarios.py::test_scenario_builds_runs_and_replays[s01_flat_seeded]'
+          'tests_ce/scenarios/test_scenario_replays.py::test_scenario_builds_runs_and_replays[s01_flat_seeded]'
           'tests_ce/scenarios/test_scenarios.py::test_negative_is_rejected_with_named_diagnostic[s01_flat_seeded/wrong_count]'
 
   functional_coverage_shard:
@@ -818,8 +834,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - shard: scenarios
-            args: tests_ce/scenarios
+          - shard: scenario-replays
+            args: tests_ce/scenarios/test_scenario_replays.py
+            workers: -n 4
+          - shard: scenario-variants
+            args: tests_ce/scenarios/test_scenarios.py
             workers: -n 4
           - shard: functional
             args: tests_ce/functional_tests tests_ce/conformance
@@ -908,7 +927,7 @@ jobs:
       - name: Combine functional coverage
         run: |
           . .venv/bin/activate
-          test "$(ls -A coverage-functional-data | wc -l)" -eq 2
+          test "$(ls -A coverage-functional-data | wc -l)" -eq 3
           uv run coverage combine coverage-functional-data
           uv run coverage xml
         shell: bash
@@ -927,8 +946,16 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - shard: integration
-            args: tests_ce/integration_tests
+          - shard: integration-runtime
+            args: >-
+              tests_ce/integration_tests/!(test_authoring|test_mcp|test_page_process|__pycache__)/
+              tests_ce/integration_tests/@(test_*.py|*_test.py)
+            pr: true
+          - shard: integration-authoring-mcp-paging
+            # Include the slow SQLite paging cases to balance the two integration shards.
+            args: >-
+              tests_ce/integration_tests/test_authoring tests_ce/integration_tests/test_mcp
+              tests_ce/integration_tests/test_page_process
             pr: true
           - shard: integration-nightly
             args: tests_ce/nightly_tests/integration
@@ -951,7 +978,7 @@ jobs:
       - name: Run integration tests
         if: github.event_name == 'pull_request' && matrix.pr
         run: |
-          . .venv/bin/activate
+          shopt -s extglob
           uv run pytest ${{ matrix.args }} -n auto --durations=20
         shell: bash
       - name: Run integration tests with coverage
@@ -959,7 +986,7 @@ jobs:
         env:
           COVERAGE_FILE: .coverage.${{ matrix.shard }}
         run: |
-          . .venv/bin/activate
+          shopt -s extglob
           uv run coverage run -m pytest ${{ matrix.args }} --durations=20
         shell: bash
       - name: Upload coverage data
@@ -974,9 +1001,9 @@ jobs:
 
   integration_test:
     runs-on: ubuntu-22.04
-    needs: [install_dependencies, integration_coverage_shard]
+    needs: integration_coverage_shard
     # The shards run the tests; a push combines their coverage here.
-    if: ${{ !cancelled() && needs.install_dependencies.result == 'success' && needs.integration_coverage_shard.result == 'success' }}
+    if: ${{ !cancelled() && needs.integration_coverage_shard.result == 'success' }}
     container: python:3.11-slim-bookworm
     steps:
       - name: Setup git
@@ -1008,7 +1035,7 @@ jobs:
         if: github.event_name != 'pull_request'
         run: |
           . .venv/bin/activate
-          test "$(ls -A coverage-integration-data | wc -l)" -eq 2
+          test "$(ls -A coverage-integration-data | wc -l)" -eq 3
           uv run coverage combine coverage-integration-data
           uv run coverage xml
         shell: bash
@@ -1325,9 +1352,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Download unit test coverage report
+      - name: Download coverage reports
         uses: actions/download-artifact@v7
         with:
+          pattern: coverage-{unit,functional,integration,external-service,factory,api}
           path: coverage-reports
 
       - name: Move coverage reports to coverage directory and rename them
@@ -1344,8 +1372,6 @@ jobs:
           rm -rf coverage-reports/coverage-external-service
           rm -rf coverage-reports/coverage-factory
           rm -rf coverage-reports/coverage-api
-          rm -rf coverage-reports/artifact
-          rm -rf coverage-reports/setup
 
         shell: bash
 
@@ -1487,6 +1513,7 @@ jobs:
       [
         e2e_test,
         unit_test,
+        architecture_tests,
         functional_test,
         integration_test,
         external_service_test,
