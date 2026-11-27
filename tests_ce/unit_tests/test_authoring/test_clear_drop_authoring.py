@@ -211,7 +211,7 @@ def test_build_of_a_project_that_only_cleans_up_has_no_product_to_prove_and_is_r
     assert _rows(workspace) == 2
 
 
-def test_a_skipped_clear_does_not_turn_a_zero_row_build_into_ready(workspace: Path):
+def test_a_skipped_clear_does_not_change_the_outcome_of_a_zero_row_build(workspace: Path):
     zero = '<generate name="rows" count="0"><key name="x" constant="1"/></generate>'
     expectations = [{"kind": "exact_count", "subject": {"kind": "product", "product": "rows"}, "count": 0}]
     bindings = [{"environment": "db", "family": "database"}]
@@ -221,7 +221,7 @@ def test_a_skipped_clear_does_not_turn_a_zero_row_build_into_ready(workspace: Pa
     with_clear = build_project(
         workspace, _setup(_CLEAR, zero), version="5.0", environment_bindings=bindings, expectations=expectations
     )
-    assert alone.outcome == with_clear.outcome == "rejected"
+    assert alone.outcome == with_clear.outcome == "ready"
 
 
 def test_build_rejects_a_clear_that_would_not_run_as_written(workspace: Path):
