@@ -23,6 +23,7 @@ from .expectations import (
     ExpectationIntent,
     FieldAbsentExpectation,
     ForeignKeyExpectation,
+    GroupCountExpectation,
     GroupSumExpectation,
     PerParentCountExpectation,
     PerParentRowsSubject,
@@ -269,9 +270,18 @@ def validate_acceptance_subject(
 
 def validate_acceptance_check(spec: AcceptanceSpecV1, check: AcceptanceCheckV1) -> None:
     expectation = check.expectation
-    for subject in expectation_subjects(expectation):
+    subjects = (
+        (expectation.subject,) if isinstance(expectation, GroupCountExpectation) else expectation_subjects(expectation)
+    )
+    for subject in subjects:
         validate_acceptance_subject(spec, subject, check.path + ("subject",))
-    if isinstance(expectation, ForeignKeyExpectation):
+    if isinstance(expectation, GroupCountExpectation):
+        validate_acceptance_subject(spec, expectation.subject, check.path, expectation.group_by, field_key="group_by")
+        reference_path = check.path + ("reference",)
+        validate_acceptance_subject(spec, expectation.reference, reference_path)
+        for key, field in (("reference_key", expectation.reference_key), ("count_field", expectation.count_field)):
+            validate_acceptance_subject(spec, expectation.reference, check.path, field, field_key=key)
+    elif isinstance(expectation, ForeignKeyExpectation):
         validate_acceptance_subject(spec, expectation.child.subject, check.path + ("child",), expectation.child.field)
         validate_acceptance_subject(
             spec, expectation.parent.subject, check.path + ("parent",), expectation.parent.field

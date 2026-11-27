@@ -26,6 +26,8 @@
         <key name="allow_partial" script="allow_partial"/>
         <key name="shipped" script="sum(row.quantity for row in allocations if row.order_id == order_id)"/>
         <key name="backordered" script="quantity - shipped"/>
+        <!-- A4: what the order must receive; Build sums it against `shipped` per order with group_sum. A partial order owes what it got. -->
+        <key name="owed" script="shipped if allow_partial == 'yes' else quantity"/>
         <key name="lots_used" script="len({row.lot_id for row in allocations if row.order_id == order_id})"/>
         <key name="max_lots" script="policy[0].max_lots_per_order"/>
         <!-- A4: the stock that was still good on the ship date after the whole allocation. -->

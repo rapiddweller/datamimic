@@ -43,6 +43,7 @@ from datamimic_ce.authoring.domain.expectations import (
     FieldPresentExpectation,
     FixedValueExpectation,
     ForeignKeyExpectation,
+    GroupCountExpectation,
     GroupSumExpectation,
     PerParentCountExpectation,
     PerParentRowsSubject,
@@ -290,6 +291,57 @@ def _decimal(value: object, *, bounded: bool = False) -> Decimal | None:
     return number
 
 
+def _check_group_count(
+    rows: tuple[Mapping[str, object], ...] | None,
+    reference: tuple[Mapping[str, object], ...] | None,
+    expectation: GroupCountExpectation,
+) -> _ExpectationFailure | None:
+    label = _subject_label(expectation.subject)
+    reference_label = _subject_label(expectation.reference)
+    if rows is None or reference is None:
+        return _ExpectationFailure(f"captured {label} or {reference_label} is incomplete", {})
+    if not reference:
+        return _ExpectationFailure(f"{reference_label} lists no expected groups for '{expectation.group_by}'", {})
+    keys = _values(rows, expectation.group_by)
+    reference_keys = _values(reference, expectation.reference_key)
+    reference_counts = _values(reference, expectation.count_field)
+    if keys is None or reference_keys is None or reference_counts is None:
+        return _ExpectationFailure(
+            f"{label} or {reference_label} is missing a group_count field: '{expectation.group_by}', "
+            f"'{expectation.reference_key}' or '{expectation.count_field}'",
+            {},
+        )
+    expected: dict[str | int, int] = {}
+    for reference_key, reference_count in zip(reference_keys, reference_counts, strict=True):
+        if not isinstance(reference_key, str | int) or isinstance(reference_key, bool) or reference_key in expected:
+            return _ExpectationFailure(
+                f"{reference_label} requires a unique string or integer group key in '{expectation.reference_key}'", {}
+            )
+        if not isinstance(reference_count, int) or isinstance(reference_count, bool) or reference_count < 0:
+            return _ExpectationFailure(
+                f"{reference_label} requires a whole number from 0 in '{expectation.count_field}'", {}
+            )
+        expected[reference_key] = reference_count
+    observed: dict[str | int, int] = {}
+    for key in keys:
+        if not isinstance(key, str | int) or isinstance(key, bool):
+            return _ExpectationFailure(
+                f"{label} requires a string or integer group key in '{expectation.group_by}'", {}
+            )
+        observed[key] = observed.get(key, 0) + 1
+    # A group that the reference does not list is expected to hold 0 rows; a listed group without rows holds 0.
+    mismatches = sum(observed.get(key, 0) != count for key, count in expected.items())
+    unexpected = sum(key not in expected for key in observed)
+    if mismatches or unexpected:
+        return _ExpectationFailure(
+            f"{label} has {mismatches} group(s) whose row count differs from '{expectation.count_field}' of "
+            f"{reference_label}, and {unexpected} group(s) that {reference_label} does not list, by "
+            f"'{expectation.group_by}'",
+            {"actual": mismatches + unexpected},
+        )
+    return None
+
+
 def _check_group_sum(
     rows: tuple[Mapping[str, object], ...] | None, expectation: GroupSumExpectation
 ) -> _ExpectationFailure | None:
@@ -340,6 +392,12 @@ def _check_expectation(
 ) -> _ExpectationFailure | None:
     if isinstance(expectation, GroupSumExpectation):
         return _check_group_sum(_subject_rows(spec, captured, expectation.subject), expectation)
+    if isinstance(expectation, GroupCountExpectation):
+        return _check_group_count(
+            _subject_rows(spec, captured, expectation.subject),
+            _subject_rows(spec, captured, expectation.reference),
+            expectation,
+        )
     if isinstance(expectation, ExactCountExpectation):
         rows = _subject_rows(spec, captured, expectation.subject)
         if rows is None:
