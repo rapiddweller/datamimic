@@ -20,6 +20,7 @@ from hashlib import sha256
 from itertools import islice
 from pathlib import Path, PurePosixPath
 
+import psutil
 from lxml import etree
 
 from datamimic_ce.authoring.adapters import dryrun
@@ -172,12 +173,23 @@ def _snapshot_workspace(source: Path, destination: Path) -> None:
 
 def _terminate_process_tree(process: subprocess.Popen[bytes]) -> None:
     """Kill the private POSIX group, or use Windows' descendant-aware taskkill."""
+    descendants: list[psutil.Process] = []
     if os.name == "nt":
-        completed = subprocess.run(
-            ["taskkill", "/PID", str(process.pid), "/T", "/F"], capture_output=True, timeout=2, check=False
-        )
-        if completed.returncode != 0:
-            raise OSError("taskkill did not terminate the bounded process tree")
+        try:
+            # A Windows venv launcher can exit before its Python worker releases the workspace cwd.
+            # Capture the descendants while the launcher still owns them.
+            launcher = psutil.Process(process.pid)
+            descendants = psutil.Process.children(launcher, recursive=True)
+        except psutil.NoSuchProcess:
+            pass
+        except psutil.Error as error:
+            raise OSError("bounded descendants could not be enumerated") from error
+        finally:
+            completed = subprocess.run(
+                ["taskkill", "/PID", str(process.pid), "/T", "/F"], capture_output=True, timeout=2, check=False
+            )
+            if completed.returncode != 0:
+                raise OSError("taskkill did not terminate the bounded process tree")
     else:
         # macOS gives EPERM when no member of the group is alive but one is not reaped; a live member makes it succeed.
         with suppress(ProcessLookupError, PermissionError):
@@ -186,10 +198,15 @@ def _terminate_process_tree(process: subprocess.Popen[bytes]) -> None:
             process.wait(timeout=0.2)
         with suppress(ProcessLookupError, PermissionError):
             os.killpg(process.pid, signal.SIGKILL)
+    deadline = time.monotonic() + 1
     try:
         process.wait(timeout=1)
-    except subprocess.TimeoutExpired as error:
-        raise OSError("bounded worker did not stop") from error
+        if descendants:
+            _, alive = psutil.wait_procs(descendants, timeout=max(0, deadline - time.monotonic()))
+            if alive:
+                raise OSError("bounded descendants did not stop")
+    except (subprocess.TimeoutExpired, psutil.Error) as error:
+        raise OSError("bounded process tree could not be reaped") from error
 
 
 def _read_file_digests(
