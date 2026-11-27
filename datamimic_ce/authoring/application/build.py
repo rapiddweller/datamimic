@@ -16,6 +16,7 @@ from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
 from datamimic_ce.authoring.domain.build_verification import (
     blocked_verification,
     replay_evidence,
+    replay_failure_reason,
     smoke_export_evidence,
     unseeded_replay_evidence,
 )
@@ -302,7 +303,9 @@ class BuildDocumentWorkflow:
                         replay = replay.model_copy(
                             update={
                                 "status": VerificationGateStatus.FAILED,
-                                "reason": "The replay did not provide complete passing acceptance evidence.",
+                                "reason": replay_failure_reason(
+                                    second, "The replay did not provide complete passing acceptance evidence"
+                                ),
                             }
                         )
                         diagnostics += (*second.diagnostics, *replay_acceptance)

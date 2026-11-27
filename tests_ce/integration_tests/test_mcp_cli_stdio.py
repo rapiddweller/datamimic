@@ -63,7 +63,7 @@ async def test_cli_stdio_authoring_roundtrip(anyio_backend: str) -> None:
         }
         result = await client.call_tool(
             "datamimic_reference",
-            {"request": {"topic": "overview"}},
+            {"topic": "overview"},
         )
         assert json.loads(result.content[0].text)["topic"] == "overview"
 

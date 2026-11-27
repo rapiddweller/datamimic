@@ -150,9 +150,11 @@ original file intact. Raw XML inspection uses `authoring lint` then
 `authoring dry-run`; normal execution uses `datamimic run model.xml`.
 Dry-run does not read `acceptance/build.json`; its `--max-count` defaults to 10.
 
-The connected `datamimic_*` tools run the same operations: follow their input schemas,
-including `request` wrappers, and pass the absolute `project` directory on every
-project tool; the server needs no workspace option. `authoring run-project` builds
+The connected `datamimic_*` tools run the same operations. Pass arguments directly,
+for example `{"topic": "assembly", "name": "starter"}` to `datamimic_reference`.
+Pass the absolute `project` directory at the top level on every project tool.
+If an older server advertises a required `request` wrapper, nest the other
+arguments inside it. `authoring run-project` builds
 the project first and then produces the real data; it refuses external targets
 unless `allow_side_effects` is true, which needs the user's confirmation of the
 named targets. Local `output/` files can be written without that opt-in.
