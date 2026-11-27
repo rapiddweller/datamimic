@@ -7,12 +7,14 @@
 import copy
 import logging
 import sys
+from collections.abc import Callable
 from contextlib import suppress
 from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
+from functools import wraps
 from pathlib import Path
-from typing import Protocol, runtime_checkable
+from typing import ParamSpec, Protocol, TypeVar, runtime_checkable
 from urllib.parse import quote
 
 import oracledb
@@ -121,6 +123,26 @@ _CONNECTION_IDENTITY = {
 
 # <execute> scripts are raw SQL: no bind parameters (":new" in a trigger) and no DBAPI percent formatting ("g % 3")
 _RAW_SCRIPT = {"no_parameters": True}
+
+_P = ParamSpec("_P")
+_R = TypeVar("_R")
+
+
+def _normalize_database_errors(target: str) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
+    """Normalize database failures without retaining their statements or driver messages."""
+
+    def decorate(method: Callable[_P, _R]) -> Callable[_P, _R]:
+        @wraps(method)
+        def wrapped(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+            try:
+                return method(*args, **kwargs)
+            except sqlalchemy.exc.SQLAlchemyError as error:
+                failure = _operation_failure(target, error)
+            raise failure
+
+        return wrapped
+
+    return decorate
 
 
 class RdbmsClient(DatabaseClient):
@@ -428,6 +450,7 @@ class RdbmsClient(DatabaseClient):
             raise ValueError(f"DBMS '{dbms}' has no generic SQLAlchemy driver")
         return f"{dbms}+{driver}"
 
+    @_normalize_database_errors("database read")
     def get_by_page_with_type(self, table_name: str, pagination: DataSourcePagination | None = None):
         """Rows of a table, ordered by its primary key, else by every column. For a stable snapshot that
         order keeps OFFSET pages disjoint across pages and workers, and keeps full reads that are sliced
@@ -492,6 +515,7 @@ class RdbmsClient(DatabaseClient):
                 raise failure
         return self._columns_by_selector[query]
 
+    @_normalize_database_errors("database read")
     def get_random_rows_by_columns(self, table_name: str, column_names: list[str]) -> list[tuple]:
         """Fetch the given columns for a <reference> in a stable order, preserving row-tuple
         integrity. The reference task does the distinct/with-replacement sampling deterministically
@@ -558,6 +582,7 @@ class RdbmsClient(DatabaseClient):
             raise ValueError(f"{operation} on '{table_name}' requires primary-key value(s) {missing} in each record")
         return [table.c[k] == row[k] for k in pk]
 
+    @_normalize_database_errors("database write")
     def update(self, table_name: str, data_list: list) -> int:
         """UPDATE each record by primary key; returns the number of matched rows.
         Row-by-row statements: test-data volumes, not a bulk path."""
@@ -576,6 +601,7 @@ class RdbmsClient(DatabaseClient):
                 matched += connection.execute(table.update().where(*clause).values(**values)).rowcount
         return matched
 
+    @_normalize_database_errors("database write")
     def upsert(self, table_name: str, data_list: list) -> None:
         """UPDATE by primary key, INSERT the rows that matched nothing."""
         self._require_write("upsert")
@@ -594,6 +620,7 @@ class RdbmsClient(DatabaseClient):
                 if not exists:
                     connection.execute(table.insert(), [row])
 
+    @_normalize_database_errors("database write")
     def delete(self, table_name: str, data_list: list) -> int:
         """DELETE each record by primary key; returns the number of deleted rows."""
         self._require_write("delete")
@@ -717,6 +744,7 @@ class RdbmsClient(DatabaseClient):
         quote = preparer.quote_identifier
         return ".".join(quote(part) for part in parts)
 
+    @_normalize_database_errors("database sequence")
     def get_current_sequence_number(
         self, sequence_name: str, table_name: str | None = None, column_name: str | None = None
     ) -> int:
@@ -776,9 +804,11 @@ class RdbmsClient(DatabaseClient):
                 return current_value
             except Exception as err:
                 transaction.rollback()
-                logger.error(f"Failed to get current sequence number for {sequence_name}: {err}")
+                if not isinstance(err, sqlalchemy.exc.SQLAlchemyError):
+                    logger.error(f"Failed to get current sequence number for {sequence_name}: {err}")
                 raise
 
+    @_normalize_database_errors("database sequence")
     def increase_sequence_number(
         self,
         sequence_name: str,
@@ -820,7 +850,8 @@ class RdbmsClient(DatabaseClient):
                 transaction.commit()
             except Exception as err:
                 transaction.rollback()
-                logger.error(f"Failed to increase sequence number for {sequence_name}: {err}")
+                if not isinstance(err, sqlalchemy.exc.SQLAlchemyError):
+                    logger.error(f"Failed to increase sequence number for {sequence_name}: {err}")
                 raise
 
     def _advance_mysql_auto_increment(

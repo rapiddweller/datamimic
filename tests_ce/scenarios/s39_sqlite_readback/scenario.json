@@ -8,7 +8,8 @@
     "Build does not prove that the load wrote the rows: Build isolates the write target and skips the clear, so the readback in Build shows the fixture rows, not the generated rows",
     "a readback needs a literal count: without count Build cannot prove the cardinality and reports the capture as unknown, not DM211, because the lint of a step sees the client that the entry declares (#493); a count above the rows of the table stops the source early (DM316)",
     "the table comes from a checked-in SQLite file, because Build refuses an <execute> step (unsupported_bounded_operation): a project that needs no readback of a checked-in table can create its own with createTable (s59_create_table)",
-    "a SQL script on a missing table, a selector on a missing table and a selector with invalid SQL all fail the run with the category sqlite_error, never with a guessed table_not_found, and without the SQL text; the message says to check the database name and to leave the .sqlite suffix out (#684)"
+    "a SQL script on a missing table, a selector on a missing table and a selector with invalid SQL all fail the run with the category sqlite_error, never with a guessed table_not_found, and without the SQL text; the message says to check the database name and to leave the .sqlite suffix out (#684)",
+    "a SQLite constraint error in a DSL upsert is reported as a typed database write failure (#739)"
   ],
   "products": {
     "orders": 12,
@@ -111,6 +112,15 @@
     }
   ],
   "run_failures": [
+    {
+      "name": "upsert_constraint_error_is_typed",
+      "run_error": "Operation 'database write' failed:",
+      "patch": {
+        "file": "delivery/91_load.xml",
+        "old": "<generate name=\"orders\" count=\"12\" target=\"shop\">",
+        "new": "<execute target=\"shop\" type=\"sql\">CREATE TRIGGER reject_orders BEFORE INSERT ON orders BEGIN SELECT RAISE(ABORT, 'reject'); END;</execute>\n    <generate name=\"orders\" count=\"12\" target=\"shop.upsert\">"
+      }
+    },
     {
       "name": "sql_script_on_a_missing_table",
       "run_error": "Operation 'SQL script' failed: OperationalError (sqlite_error) [1]",
