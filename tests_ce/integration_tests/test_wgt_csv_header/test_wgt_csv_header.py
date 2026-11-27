@@ -12,26 +12,24 @@ from pathlib import Path
 
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
-_dir = Path(__file__).resolve().parent
 
-
-def _run():
-    engine = DataMimicTest(test_dir=_dir, filename="wgt_csv_header.xml", capture_test_result=True)
+def _run(project_dir: Path):
+    engine = DataMimicTest(test_dir=project_dir, filename="wgt_csv_header.xml", capture_test_result=True)
     engine.test_with_timer()
     return engine.capture_result()
 
 
-def test_wgt_csv_with_header_applies_weights():
-    result = _run()
+def test_wgt_csv_with_header_applies_weights(project_dir):
+    result = _run(project_dir)
     rows = result["with_header"]
     true_count = sum(1 for r in rows if r["active"])
     ratio = true_count / len(rows)
     assert 0.7 < ratio < 0.9, f"expected ~80% true, got {ratio:.1%}"
 
 
-def test_wgt_csv_without_header_still_works():
+def test_wgt_csv_without_header_still_works(project_dir):
     """Regression: the pre-existing headerless format must keep working unchanged."""
-    result = _run()
+    result = _run(project_dir)
     rows = result["no_header"]
     true_count = sum(1 for r in rows if r["active"])
     ratio = true_count / len(rows)

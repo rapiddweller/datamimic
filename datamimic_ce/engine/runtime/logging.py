@@ -116,7 +116,7 @@ class _GenerationTimer(AbstractContextManager[dict[str, int]]):
         self._start_time = 0.0
 
     def __enter__(self) -> dict[str, int]:
-        self._start_time = time.time()
+        self._start_time = time.perf_counter()
         return self._result
 
     def __exit__(
@@ -128,7 +128,7 @@ class _GenerationTimer(AbstractContextManager[dict[str, int]]):
         if not self._report_logging or exc_type is not None:
             return
         records_count = self._result.get("records_count", 0)
-        elapsed_time = time.time() - self._start_time
+        elapsed_time = time.perf_counter() - self._start_time
         match self._process:
             case "generate":
                 process_name = "Generating"
@@ -138,12 +138,11 @@ class _GenerationTimer(AbstractContextManager[dict[str, int]]):
                 process_name = "Processing"
         # A nested product runs once per parent row: its line is one parent's share, not a product total
         scope = " per parent invocation" if self._nested else ""
+        rate = f"{int(records_count / elapsed_time):,} records/second" if elapsed_time > 0 else "N/A records/second"
         logger.info(
             f"{process_name} {records_count:,} records '{self._product_name}'{scope} "
             f"took {round(elapsed_time, 5)} seconds "
-            f"({int(records_count / elapsed_time):,} records/second)"
-            if elapsed_time > 0
-            else "N/A records/second"
+            f"({rate})"
         )
 
 

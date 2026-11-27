@@ -5,9 +5,11 @@
 
 import logging
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
+from datamimic_ce.engine.runtime import logging as runtime_logging
 from datamimic_ce.engine.runtime.api import run
 from datamimic_ce.engine.runtime.contracts import RunRequest
 from datamimic_ce.engine.runtime.logging import gen_timer
@@ -55,3 +57,16 @@ def test_timer_stays_silent_on_exception(dm_caplog: pytest.LogCaptureFixture, re
     with pytest.raises(ValueError), gen_timer("process", report_logging, "x"):
         raise ValueError("boom")
     assert timing_lines(dm_caplog) == []
+
+
+@pytest.mark.parametrize(("end", "rate"), [(10.0, "N/A"), (10.5, "4")])
+@pytest.mark.parametrize("phase", ["generate", "export", "process"])
+def test_timer_keeps_phase_and_count_when_clock_does_not_advance(
+    monkeypatch: pytest.MonkeyPatch, dm_caplog: pytest.LogCaptureFixture, end: float, rate: str, phase: str
+) -> None:
+    times = iter([10.0, end])
+    monkeypatch.setattr(runtime_logging, "time", SimpleNamespace(perf_counter=lambda: next(times)))
+    with gen_timer(phase, True, "x") as result:
+        result["records_count"] = 2
+    label = {"generate": "Generating", "export": "Export phase for", "process": "Processing"}[phase]
+    assert timing_lines(dm_caplog) == [f"{label} 2 records 'x' took {end - 10.0} seconds ({rate} records/second)"]

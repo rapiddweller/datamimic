@@ -14,8 +14,8 @@ from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 _TEST_DIR = Path(__file__).resolve().parent
 
 
-def _run(filename: str, gen: str = "g") -> list[dict]:
-    engine = DataMimicTest(test_dir=_TEST_DIR, filename=filename, capture_test_result=True)
+def _run(filename: str, gen: str = "g", project_dir: Path = _TEST_DIR) -> list[dict]:
+    engine = DataMimicTest(test_dir=project_dir, filename=filename, capture_test_result=True)
     engine.test_with_timer()
     return engine.capture_result()[gen]
 
@@ -25,8 +25,8 @@ def test_inline_python_updates_namespace():
     assert [r["v"] for r in rows] == [42, 42]
 
 
-def test_inline_sql_seeds_a_table():
-    rows = _run("inline_sql.xml")
+def test_inline_sql_seeds_a_table(project_dir):
+    rows = _run("inline_sql.xml", project_dir=project_dir)
     assert [r["v"] for r in rows] == [5]
 
 

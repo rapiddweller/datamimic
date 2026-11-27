@@ -105,7 +105,7 @@ def _looks_like_datetime(node: ast.AST) -> bool:
     return False
 
 
-@pytest.mark.parametrize("module_path", production_modules(), ids=lambda p: str(p.relative_to(PROD_ROOT.parent)))
+@pytest.mark.parametrize("module_path", production_modules(), ids=lambda p: p.relative_to(PROD_ROOT.parent).as_posix())
 def test_no_raw_wall_clock_in_production(module_path: Path) -> None:
     """Every CE production module either uses now_utc_naive() / resolve_clock()
     or is on the explicit allow-list."""

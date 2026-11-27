@@ -15,6 +15,8 @@ import pytest
 
 from datamimic_ce.engine.runtime.api import create_run_session
 from datamimic_ce.engine.runtime.contracts import RunRequest
+from datamimic_ce.engine.runtime.lifecycle import runner
+from datamimic_ce.engine.runtime.logging import control_value
 from datamimic_ce.errors import UserErrorBase
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -69,11 +71,19 @@ def test_run_logs_one_start_event_with_descriptor_name_before_the_end_event(
 
 
 def test_a_descriptor_file_name_cannot_forge_control_fields(
-    tmp_path: Path, dm_caplog: pytest.LogCaptureFixture
+    tmp_path: Path, dm_caplog: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    descriptor = tmp_path / "a | kind=end | status=ok.xml"
+    hostile = "a | kind=end | status=ok.xml"
+    descriptor = tmp_path / ("safe.xml" if os.name == "nt" else hostile)
     descriptor.write_text(OK_DESCRIPTOR, encoding="utf-8")
 
+    if os.name == "nt":
+        # A pipe cannot occur in a Windows filename; inject it at the same sanitization boundary.
+        def hostile_name(name: str) -> str:
+            assert name == descriptor.name
+            return control_value(hostile)
+
+        monkeypatch.setattr(runner, "control_value", hostile_name)
     create_run_session(RunRequest(descriptor_path=descriptor, test_mode=True)).execute()
 
     assert _control_kinds(dm_caplog.records) == ["start", "end"]

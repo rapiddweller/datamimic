@@ -240,7 +240,8 @@ try:
                 relative = item.relative_to(output)
                 if task_id is not None and relative.parts[0] == task_id:
                     relative = Path(*relative.parts[1:])
-                files[str(relative)] = output_digest(item)
+                relative_key = relative.as_posix()
+                files[relative_key] = output_digest(item)
                 if not seeded and item.suffix == ".json":
                     try:
                         with item.open(encoding="utf-8") as exported_file:
@@ -250,12 +251,12 @@ try:
                             if complete_shape(output_shape):
                                 output_shape["length"] = len(payload) if isinstance(payload, list) else 1
                                 output_shape["nested_cardinalities"] = nested_cardinalities(payload)
-                                output_schemas[str(relative)] = output_shape
+                                output_schemas[relative_key] = output_shape
                     except (OSError, UnicodeError, json.JSONDecodeError):
                         pass
                 elif not seeded and item.suffix == ".xml":
                     output_shape = xml_shape(item)
-                    output_schemas[str(relative)] = output_shape
+                    output_schemas[relative_key] = output_shape
     record["output_files"] = files if seeded else sorted(files)
     if seeded:
         record["output_digest"] = hashlib.sha256(

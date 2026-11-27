@@ -21,3 +21,11 @@ repos:
         pass_filenames: false
         types: [python]
         files: ^datamimic_ce/
+      - id: precommit-unit
+        name: pre-commit unit tests
+        entry: uv run --no-sync python -m pytest -n 2 -q
+        language: system
+        pass_filenames: false
+        always_run: true
+        args:
+          - tests_ce/unit_tests/precommit

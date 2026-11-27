@@ -40,6 +40,7 @@ from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 _TEST_DIR = Path(__file__).resolve().parent
 
+
 @dataclass(frozen=True)
 class SourceMatrixCase:
     descriptor: str
@@ -66,8 +67,8 @@ SOURCE_CASES = (
 )
 
 
-def _run(filename: str) -> dict:
-    engine = DataMimicTest(test_dir=_TEST_DIR, filename=filename, capture_test_result=True)
+def _run(project_dir: Path, filename: str) -> dict:
+    engine = DataMimicTest(test_dir=project_dir, filename=filename, capture_test_result=True)
     engine.test_with_timer()
     return engine.capture_result()
 
@@ -77,8 +78,8 @@ def _vals(result: dict, product: str) -> list[int]:
 
 
 @pytest.mark.parametrize("case", SOURCE_CASES, ids=lambda case: case.descriptor.removesuffix(".xml"))
-def test_distribution_invariants(case: SourceMatrixCase):
-    res = _run(case.descriptor)
+def test_distribution_invariants(project_dir: Path, case: SourceMatrixCase):
+    res = _run(project_dir, case.descriptor)
     src = list(range(case.low, case.low + 27))
 
     # ordered: source order, verbatim
@@ -100,20 +101,20 @@ def test_distribution_invariants(case: SourceMatrixCase):
 
 
 @pytest.mark.parametrize("case", SOURCE_CASES, ids=lambda case: case.descriptor.removesuffix(".xml"))
-def test_replays_identically_under_seed(case: SourceMatrixCase):
-    a, b = _run(case.descriptor), _run(case.descriptor)
+def test_replays_identically_under_seed(project_dir: Path, case: SourceMatrixCase):
+    a, b = _run(project_dir, case.descriptor), _run(project_dir, case.descriptor)
     for product in ("ordered", "random", "cumulated"):
         assert _vals(a, product) == _vals(b, product)
 
 
-def test_sql_selector_cyclic_pages_wrap_without_changing_order(tmp_path: Path):
+def test_sql_selector_cyclic_pages_wrap_without_changing_order(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.chdir(tmp_path)
     (tmp_path / "seed.sql").write_text(
-        "DROP TABLE IF EXISTS items; CREATE TABLE items (v INTEGER); "
-        "INSERT INTO items (v) VALUES (0), (1), (2);",
+        "DROP TABLE IF EXISTS items; CREATE TABLE items (v INTEGER); INSERT INTO items (v) VALUES (0), (1), (2);",
         encoding="utf-8",
     )
     (tmp_path / "datamimic.xml").write_text(
-        f'<setup rngSeed="42"><database id="db" database="selector_{tmp_path.name}" dbms="sqlite"/>'
+        '<setup rngSeed="42"><database id="db" database="selector" dbms="sqlite"/>'
         '<execute uri="seed.sql" target="db"/>'
         '<generate name="rows" count="8" pageSize="4" target="">'
         '<variable name="row" source="db" selector="SELECT v FROM items ORDER BY v" '
@@ -147,15 +148,15 @@ def _nested_vals(result: dict, product: str) -> list[int]:
     return [int(item["v"]) for row in result["outer"] for item in row[product]]
 
 
-def test_nested_key_all_distributions():
+def test_nested_key_all_distributions(project_dir):
     """<nestedKey source> honors all three distributions: runs, stays in range,
     deterministic. (Bell shape is proven on the <variable>/<generate> cells.)"""
-    res = _run("nestedkey_source.xml")
+    res = _run(project_dir, "nestedkey_source.xml")
     for product in ("ordered", "random", "cumulated"):
         vals = _nested_vals(res, product)
         assert len(vals) == 50 * 10
         assert all(1 <= v <= 27 for v in vals)  # memstore IncrementGenerator -> 1..27
 
-    res2 = _run("nestedkey_source.xml")
+    res2 = _run(project_dir, "nestedkey_source.xml")
     for product in ("ordered", "random", "cumulated"):
         assert _nested_vals(res, product) == _nested_vals(res2, product)

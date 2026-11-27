@@ -150,17 +150,10 @@ def test_unknown_column_message_names_the_statement_and_the_column() -> None:
     )
 
 
-def test_where_on_a_database_client_is_refused_before_any_read() -> None:
-    dirs = (_DIR / "output", _DIR / "db", _ROOT / "db")
-    for directory in dirs:
-        shutil.rmtree(directory, ignore_errors=True)
-    try:
-        error = _refusal("refused_client.xml")
-        assert error.issue_code is IssueCode.GENERATE_ROW_SELECTION_FILE_ONLY
-        assert "not database client 'db'" in str(error)
-    finally:
-        for directory in dirs:
-            shutil.rmtree(directory, ignore_errors=True)
+def test_where_on_a_database_client_is_refused_before_any_read(project_dir: Path) -> None:
+    error = _refusal("refused_client.xml", project_dir)
+    assert error.issue_code is IssueCode.GENERATE_ROW_SELECTION_FILE_ONLY
+    assert "not database client 'db'" in str(error)
 
 
 def test_two_processes_keep_the_same_rows_as_one_process() -> None:

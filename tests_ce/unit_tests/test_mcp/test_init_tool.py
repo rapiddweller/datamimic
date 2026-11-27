@@ -82,7 +82,7 @@ async def test_init_never_overwrites_and_writes_nothing(anyio_backend: str, tmp_
 
 
 @pytest.mark.anyio
-async def test_a_symlinked_project_directory_is_refused(anyio_backend: str, tmp_path: Path) -> None:
+async def test_a_symlinked_project_directory_is_refused(anyio_backend: str, tmp_path: Path, require_symlinks: None) -> None:
     real = tmp_path / "real"
     real.mkdir()
     link = tmp_path / "link"
@@ -96,7 +96,9 @@ async def test_a_symlinked_project_directory_is_refused(anyio_backend: str, tmp_
 
 
 @pytest.mark.anyio
-async def test_a_symlinked_target_inside_the_project_is_refused(anyio_backend: str, tmp_path: Path) -> None:
+async def test_a_symlinked_target_inside_the_project_is_refused(
+    anyio_backend: str, tmp_path: Path, require_symlinks: None
+) -> None:
     outside = tmp_path / "outside"
     outside.mkdir()
     project = tmp_path / "p"

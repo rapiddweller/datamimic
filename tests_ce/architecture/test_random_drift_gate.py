@@ -103,7 +103,7 @@ def _collect_callsites(tree: ast.AST) -> list[tuple[int, str]]:
     return hits
 
 
-@pytest.mark.parametrize("module_path", production_modules(), ids=lambda p: str(p.relative_to(PROD_ROOT.parent)))
+@pytest.mark.parametrize("module_path", production_modules(), ids=lambda p: p.relative_to(PROD_ROOT.parent).as_posix())
 def test_no_raw_random_module_in_production(module_path: Path) -> None:
     """Every CE production module draws randomness through a resolved RNG
     or is on the explicit allow-list."""

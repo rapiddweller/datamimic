@@ -989,6 +989,8 @@ def test_unseeded_json_comparison_rejects_nested_array_cardinality_change(tmp_pa
     one_item = capture(1)
     two_items = capture(2)
 
+    assert one_item["output_files"] == two_items["output_files"] == ["out/rows.json"]
+    assert set(one_item["output_schemas"]) == set(two_items["output_schemas"]) == {"out/rows.json"}
     assert one_item["products"]["rows"]["rows"] == two_items["products"]["rows"]["rows"] == 1
     assert shape_compatible(
         one_item["products"]["rows"]["value_shape"], two_items["products"]["rows"]["value_shape"]

@@ -17,6 +17,7 @@ SCRIPT = Path(__file__).resolve().parents[2] / "script/architecture_study/publis
 SHA = "a" * 40
 
 
+@pytest.mark.skipif(os.name == "nt", reason="Exercises the Ubuntu Bash workflow")
 @pytest.mark.parametrize(
     "artifact,job,expected_status,available",
     [
@@ -134,7 +135,7 @@ def archive(path, source, **changes):
         "run_attempt": run["run_attempt"],
         "head_sha": run["head_sha"],
         "scanned_sha": run["head_sha"],
-        "archkeel_version": "4.0.2.dev952+g585b2e195",
+        "archkeel_version": "4.0.2.dev1021+g0840b4d62",
     }
     metadata.update(changes)
     files = {

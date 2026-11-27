@@ -597,6 +597,12 @@ def child_env(**extra: str) -> dict[str, str]:
     return {key: os.environ[key] for key in _ENV_KEYS if key in os.environ} | {"PATH": _SYSTEM_PATH} | extra
 
 
+def require_process_groups() -> None:
+    """Reject unsupported hosts before starting untrusted processes, not after losing their descendants."""
+    if os.name != "posix" or not hasattr(os, "killpg"):
+        raise RuntimeError("authoring eval requires POSIX process groups; Windows process isolation is not supported")
+
+
 def wait_then_kill_group(process: subprocess.Popen[bytes], timeout: float) -> int | None:
     """The exit code, or None on a timeout. Every process left in the group of ``process`` (started with
     ``start_new_session=True``) ends with it. A process that calls setsid() leaves the group and is out of reach."""
@@ -615,16 +621,21 @@ def wait_then_kill_group(process: subprocess.Popen[bytes], timeout: float) -> in
 def _start(work: Path, hash_seed: str) -> tuple[subprocess.Popen[bytes], IO[bytes]]:
     """The project's scripts are untrusted code: the run sees its copy as the cwd and none of the operator's secrets.
     Stdout goes to a file, not a pipe: a descendant that keeps a pipe open blocks the read until it exits."""
+    require_process_groups()
     stdout = tempfile.TemporaryFile()  # noqa: SIM115 - _finish closes it
-    process = subprocess.Popen(
-        # -P: the cwd is the project copy, and a module there must not replace the capture code
-        [sys.executable, "-P", "-m", "benchmarks.authoring_eval.capture", str(work)],
-        cwd=work,
-        env=child_env(PYTHONPATH=str(REPO_ROOT), PYTHONHASHSEED=hash_seed),
-        stdout=stdout,
-        stderr=subprocess.DEVNULL,
-        start_new_session=True,
-    )
+    try:
+        process = subprocess.Popen(
+            # -P: the cwd is the project copy, and a module there must not replace the capture code
+            [sys.executable, "-P", "-m", "benchmarks.authoring_eval.capture", str(work)],
+            cwd=work,
+            env=child_env(PYTHONPATH=str(REPO_ROOT), PYTHONHASHSEED=hash_seed),
+            stdout=stdout,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+    except BaseException:
+        stdout.close()
+        raise
     return process, stdout
 
 

@@ -1,6 +1,7 @@
 """Read-only CE clients fail before durable writes or unproved selectors."""
 
 from contextlib import contextmanager
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -211,10 +212,11 @@ def test_mongo_unproved_queries_never_open_connection(monkeypatch, query):
     connect.assert_not_called()
 
 
-def test_read_only_sqlite_uri_handles_filename_parameters(tmp_path, monkeypatch):
+@pytest.mark.parametrize("database", ["source#mode=rw&x", "source%3Fmode=rw&x"])
+def test_read_only_sqlite_uri_handles_filename_parameters(tmp_path, monkeypatch, database):
     monkeypatch.chdir(tmp_path)
     (tmp_path / "db").mkdir()
-    path = tmp_path / "db" / "source?mode=rw&x.sqlite"
+    path = tmp_path / "db" / f"{database}.sqlite"
     import sqlite3
 
     with sqlite3.connect(path) as connection:
@@ -225,7 +227,7 @@ def test_read_only_sqlite_uri_handles_filename_parameters(tmp_path, monkeypatch)
         port=None,
         user=None,
         password=None,
-        database="source?mode=rw&x",
+        database=database,
         db_schema=None,
         read_only=True,
         isolation_level="AUTOCOMMIT",
@@ -237,3 +239,29 @@ def test_read_only_sqlite_uri_handles_filename_parameters(tmp_path, monkeypatch)
         connection.execute(text("INSERT INTO rows VALUES(1)"))
     assert reader._engine_kwargs["isolation_level"] == "SERIALIZABLE"
     assert "execution_options" not in reader._engine_kwargs
+
+
+def test_read_only_sqlite_uri_escapes_question_mark_in_filename(tmp_path, monkeypatch):
+    # A literal question mark is not a valid Windows filename, but must not become
+    # a URI parameter on platforms that permit it.
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(Path, "exists", lambda self: True)
+    config = RdbmsConnectionConfig(
+        dbms=Dbms.SQLITE,
+        host=None,
+        port=None,
+        user=None,
+        password=None,
+        database="source?mode=rw&x",
+        db_schema=None,
+        read_only=True,
+    )
+    reader = RdbmsClient(config, task_id="test")
+    create = MagicMock()
+    monkeypatch.setattr(reader, "_new_engine", create)
+    monkeypatch.setattr(reader, "_configure_read_only_engine", lambda: None)
+
+    reader._create_engine()
+
+    url = create.call_args.args[0]
+    assert url.endswith("/source%3Fmode%3Drw%26x.sqlite?mode=ro&uri=true")

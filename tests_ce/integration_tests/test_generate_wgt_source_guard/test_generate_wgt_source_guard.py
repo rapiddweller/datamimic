@@ -14,26 +14,22 @@ no resampling) is coherent, just unweighted.
 <generate source="x.wgt.ent.csv"> draws `count` rows by the weights of its weightColumn, with replacement,
 as EE does (#452). It needs weightColumn and count, and refuses what the draw would ignore."""
 
-from pathlib import Path
-
 import pytest
 
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
-_dir = Path(__file__).resolve().parent
 
-
-def test_generate_source_wgt_csv_headerless_raises():
-    engine = DataMimicTest(_dir, "generate_wgt_plain.xml", capture_test_result=True)
+def test_generate_source_wgt_csv_headerless_raises(project_dir):
+    engine = DataMimicTest(project_dir, "generate_wgt_plain.xml", capture_test_result=True)
     with pytest.raises(ValueError, match=r"\.wgt\.csv"):
         engine.test_with_timer()
 
 
-def test_generate_source_wgt_csv_with_header_reads_as_plain_csv():
+def test_generate_source_wgt_csv_with_header_reads_as_plain_csv(project_dir):
     """A headered '.wgt.csv' is NOT weighted (no resampling, no bias toward the higher-weight
     row) - just an ordinary headered CSV read, weight column included as literal data. Must NOT
     raise, unlike the headerless case."""
-    engine = DataMimicTest(_dir, "generate_wgt_with_header.xml", capture_test_result=True)
+    engine = DataMimicTest(project_dir, "generate_wgt_with_header.xml", capture_test_result=True)
     engine.test_with_timer()
     rows = engine.capture_result()["rows"]
     assert {row["value"] for row in rows} <= {"true", "false"}
@@ -49,8 +45,8 @@ def _run_inline(tmp_path, setup: str, products: str = "id,name,weight\n1,Cheap,8
     return engine.capture_result()["rows"]
 
 
-def test_generate_source_wgt_ent_csv_draws_by_weight_without_the_weight_column():
-    engine = DataMimicTest(_dir, "generate_wgt_ent.xml", capture_test_result=True)
+def test_generate_source_wgt_ent_csv_draws_by_weight_without_the_weight_column(project_dir):
+    engine = DataMimicTest(project_dir, "generate_wgt_ent.xml", capture_test_result=True)
     engine.test_with_timer()
     rows = engine.capture_result()["rows"]
     assert len(rows) == 200

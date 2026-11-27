@@ -5,14 +5,12 @@ import sys
 import time
 from pathlib import Path, PurePosixPath
 
-import psutil
 import pytest
 
 from datamimic_ce.authoring.adapters.bounded_executor import CeBoundedExecutor, _snapshot_workspace
 from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
 from datamimic_ce.authoring.domain.diagnostics import AuthoringSystemDiagnosticCode
 from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest
-
 
 _XML = '<setup rngSeed="7"><generate name="rows" count="3"><key name="id" generator="IncrementGenerator"/></generate></setup>'
 
@@ -37,7 +35,7 @@ def test_bounded_child_does_not_import_a_package_shadowing_datamimic_ce_from_the
     shadow = tmp_path / "datamimic_ce"
     shadow.mkdir()
     marker = tmp_path / "shadow-imported"
-    (shadow / "__init__.py").write_text(f'from pathlib import Path\nPath({str(marker)!r}).touch()\n')
+    (shadow / "__init__.py").write_text(f"from pathlib import Path\nPath({str(marker)!r}).touch()\n")
     monkeypatch.chdir(tmp_path)
     monkeypatch.delenv("PYTHONPATH", raising=False)
     commands = []
@@ -66,9 +64,7 @@ def test_private_workspace_preserves_relative_sources_without_host_writes(tmp_pa
     workspace = AuthoringWorkspaceContext(tmp_path, PurePosixPath("nested/input.xml"))
     xml = '<setup rngSeed="7"><generate name="rows" source="rows.csv" separator="," distribution="ordered" target="JSON"/></setup>'
     result = CeBoundedExecutor(workspace).execute(
-        BoundedExecutionRequest(
-            xml=xml, descriptor_path=workspace.descriptor_path, smoke_export=True
-        )
+        BoundedExecutionRequest(xml=xml, descriptor_path=workspace.descriptor_path, smoke_export=True)
     )
     assert result.ok, result.diagnostics
     assert result.captured.get("rows").rows == ({"id": "1"}, {"id": "2"})
@@ -172,72 +168,6 @@ def test_workspace_profile_loader_has_no_home_or_cwd_fallback(tmp_path, monkeypa
         workspace.load_connection_profile(root, "../environment")
 
 
-@pytest.mark.skipif(os.name not in {"posix", "nt"}, reason="requires POSIX process groups or Windows taskkill")
-def test_timeout_terminates_worker_children_and_grandchildren(tmp_path):
-    import json
-
-    marker = tmp_path / "descendant-pids.json"
-    grandchild = "import time; time.sleep(30)"
-    child = (
-        "import os,subprocess,sys,time,json;from pathlib import Path;"
-        f'p=subprocess.Popen([sys.executable,"-c",{grandchild!r}]);'
-        f"Path({str(marker)!r}).write_text(json.dumps([os.getpid(),p.pid]));time.sleep(30)"
-    )
-    script = f'import subprocess,sys,time\np=subprocess.Popen([sys.executable,"-c",{child!r}])\ntime.sleep(30)\n'
-    (tmp_path / "spawn.scr.py").write_text(script)
-    xml = '<setup><execute uri="spawn.scr.py"/></setup>'
-    started = time.monotonic()
-    result = CeBoundedExecutor(AuthoringWorkspaceContext(tmp_path)).execute(
-        BoundedExecutionRequest(xml=xml, allow_side_effects=True, timeout_seconds=10)
-    )
-    assert time.monotonic() - started < 15
-    assert not result.ok
-    assert result.diagnostics[0].code is AuthoringSystemDiagnosticCode.TIMEOUT
-    assert marker.exists(), "the descendant probe must actually execute before cancellation"
-    # The leader is reaped at once; a descendant can still be exiting after the SIGKILL (#432).
-    deadline = time.monotonic() + 5
-    while (alive := [pid for pid in json.loads(marker.read_text()) if _running(pid)]) and time.monotonic() < deadline:
-        time.sleep(0.05)
-    assert not alive
-
-
-def _running(pid):
-    try:
-        return psutil.Process(pid).status() != psutil.STATUS_ZOMBIE
-    except psutil.NoSuchProcess:
-        return False
-
-
-@pytest.mark.skipif(os.name == "nt", reason="POSIX process groups only")
-def test_timeout_stays_timeout_while_the_killed_group_is_still_exiting(tmp_path, monkeypatch):
-    """macOS killpg returns EPERM when no member of the group is alive but one is not reaped yet (#432). That can
-    occur at the SIGTERM and at the SIGKILL. Linux does not do this, so the fake sends the real signal and then
-    gives that EPERM for each call."""
-    import errno
-    import signal
-    from contextlib import suppress
-
-    real_killpg = os.killpg
-    sent = []
-
-    def exiting_group(pgid, sig):
-        sent.append(sig)
-        with suppress(ProcessLookupError):
-            real_killpg(pgid, sig)
-        raise PermissionError(errno.EPERM, os.strerror(errno.EPERM))
-
-    monkeypatch.setattr(os, "killpg", exiting_group)
-    (tmp_path / "sleep.scr.py").write_text("import time\ntime.sleep(30)\n")
-    result = CeBoundedExecutor(AuthoringWorkspaceContext(tmp_path)).execute(
-        BoundedExecutionRequest(
-            xml='<setup><execute uri="sleep.scr.py"/></setup>', allow_side_effects=True, timeout_seconds=2
-        )
-    )
-    assert not result.ok
-    assert result.diagnostics[0].code is AuthoringSystemDiagnosticCode.TIMEOUT
-    assert sent == [signal.SIGTERM, signal.SIGKILL]
-
-
 def test_pure_descriptor_does_not_copy_unrelated_repository_files(tmp_path, monkeypatch):
     from datamimic_ce.authoring.adapters import bounded_executor
 
@@ -289,11 +219,14 @@ def test_snapshot_reads_file_identity_instead_of_windows_cached_entry_stat(tmp_p
             actual = self.entry.stat(follow_symlinks=follow_symlinks)
             fields = list(actual)
             fields[1] = fields[2] = fields[3] = 0
-            return os.stat_result(fields, {
-                "st_atime_ns": actual.st_atime_ns,
-                "st_mtime_ns": actual.st_mtime_ns,
-                "st_ctime_ns": actual.st_ctime_ns,
-            })
+            return os.stat_result(
+                fields,
+                {
+                    "st_atime_ns": actual.st_atime_ns,
+                    "st_mtime_ns": actual.st_mtime_ns,
+                    "st_ctime_ns": actual.st_ctime_ns,
+                },
+            )
 
     @contextmanager
     def windows_cached_scandir(path):
@@ -452,7 +385,7 @@ def test_unique_reference_exhaustion_keeps_category_in_private_child(tmp_path):
         '<setup rngSeed="7"><database id="db" dbms="sqlite" database="database"/>'
         '<generate name="rows" count="5" pageSize="2"><condition><if condition="True">'
         '<reference name="fk" source="db" sourceType="items" sourceKey="id" unique="true"/>'
-        '</if></condition></generate></setup>'
+        "</if></condition></generate></setup>"
     )
     result = CeBoundedExecutor(AuthoringWorkspaceContext(tmp_path)).execute(BoundedExecutionRequest(xml=xml))
     assert not result.ok

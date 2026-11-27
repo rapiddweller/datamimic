@@ -244,7 +244,7 @@ jobs:
       - name: Run documentation tests
         run: |
           uv sync --python 3.11
-          uv run pytest tests_ce/unit_tests/test_docs -q
+          uv run pytest tests_ce/unit_tests/test_docs tests_ce/nightly_tests/test_docs/test_agent_cli_documentation_contract.py -q
 
   install_dependencies:
     runs-on: ubuntu-22.04
@@ -409,6 +409,48 @@ jobs:
             make installed-authoring-check PYTHON="$RUNNER_TEMP/authoring-wheel-$version/bin/python"
           done
 
+  windows_pr_tests:
+    name: Windows portability and authoring tests
+    if: github.event_name == 'pull_request' && needs.changes.outputs.code == 'true'
+    needs: changes
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.1.0
+      - name: Install dependencies
+        run: uv sync --python 3.11
+      - name: Run Windows portability and authoring proofs
+        # Deliberate node selections keep platform-specific individual proofs bounded.
+        run: >-
+          uv run pytest -n 0 -q --durations=20
+          tests_ce/unit_tests/test_architecture_checker_pin.py
+          tests_ce/unit_tests/test_architecture_pages.py
+          tests_ce/unit_tests/test_symlink_capability.py
+          tests_ce/unit_tests/test_architecture_study_oracle.py::test_unseeded_json_comparison_rejects_nested_array_cardinality_change
+          tests_ce/unit_tests/test_authoring/test_bounded_descriptor_size.py
+          tests_ce/unit_tests/test_authoring/test_bounded_executor_windows.py
+          tests_ce/unit_tests/test_authoring/test_dm_json_codec.py::test_workspace_rechecks_symlink_containment
+          tests_ce/unit_tests/test_authoring/test_init.py::test_init_refuses_a_symlinked_project_directory
+          tests_ce/unit_tests/test_authoring/test_init.py::test_init_refuses_a_symlinked_target_inside_the_project
+          tests_ce/unit_tests/test_authoring/test_ready_coverage.py::test_the_workspace_lists_only_regular_files_sorted_and_relative
+          tests_ce/unit_tests/test_authoring/test_project_run.py::test_runner_stops_a_run_that_exceeds_the_timeout
+          tests_ce/unit_tests/test_authoring/test_project_run.py::test_a_failed_or_timed_out_run_still_gets_a_record
+          tests_ce/unit_tests/test_mcp/test_init_tool.py::test_a_symlinked_project_directory_is_refused
+          tests_ce/unit_tests/test_mcp/test_init_tool.py::test_a_symlinked_target_inside_the_project_is_refused
+          tests_ce/unit_tests/test_authoring/test_build_verification.py::test_cli_application_byte_parity_for_smoke_and_replay
+          tests_ce/unit_tests/test_benchmarks/test_process_group_guard.py
+          tests_ce/integration_tests/test_authoring/test_build_verification.py::test_smoke_reuses_first_capture_and_real_json_exporter
+          'tests_ce/integration_tests/test_authoring/test_set_order_scan.py::test_the_replay_under_other_hash_seeds_rejects_each_s17_negative_and_names_a_cause[set_order]'
+          'tests_ce/integration_tests/test_authoring/test_set_order_scan.py::test_mutant_replays_under_the_first_hash_seed_accept_each_s17_negative[set_order]'
+
   runtime_determinism_matrix:
     name: Seeded runtime determinism on ${{ matrix.os }} Python ${{ matrix.python-version }} (${{ matrix.timezone }}, ${{ matrix.resolution }})
     if: github.event_name != 'pull_request'
@@ -432,6 +474,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Set Up Python
         uses: actions/setup-python@v6
@@ -461,10 +505,14 @@ jobs:
           uv run pytest
           tests_ce/unit_tests/test_authoring/test_bounded_executor_windows.py
           tests_ce/unit_tests/test_authoring/test_bounded_executor.py
+          tests_ce/integration_tests/test_authoring/test_bounded_executor.py
           tests_ce/unit_tests/test_authoring/test_capture_boundary.py
           tests_ce/unit_tests/test_authoring/test_build_verification.py
+          tests_ce/integration_tests/test_authoring/test_build_verification.py
+          tests_ce/nightly_tests/test_authoring/test_build_verification.py
+          tests_ce/nightly_tests/test_authoring/test_derived_row_limit.py
           tests_ce/unit_tests/test_portable_errors.py
-          tests_ce/unit_tests/test_error_pickling.py -q
+          tests_ce/unit_tests/precommit/test_error_pickling.py -q
 
       - name: Run committed seeded entity replay proof
         run: >-
@@ -602,10 +650,16 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - shard: authoring
-            args: tests_ce/unit_tests/test_authoring
-          - shard: rest
-            args: tests_ce/unit_tests --ignore=tests_ce/unit_tests/test_benchmarks --ignore=tests_ce/unit_tests/test_authoring tests_ce/architecture
+          - shard: unit
+            args: >-
+              tests_ce/unit_tests tests_ce/architecture
+              tests_ce/nightly_tests/test_assert_gate_artifact.py
+              tests_ce/nightly_tests/test_authoring/test_build_input_contract.py
+              tests_ce/nightly_tests/test_authoring/test_included_step_lint_context.py
+              tests_ce/nightly_tests/test_docs/test_agent_cli_documentation_contract.py
+              tests_ce/nightly_tests/test_error_runtime_boundaries.py
+              tests_ce/nightly_tests/test_weighted_variable_replay.py
+              tests_ce/nightly_tests/test_benchmarks/test_authoring_eval.py
     steps:
       - name: Setup git
         run: |
@@ -623,6 +677,34 @@ jobs:
       - name: Run unit and architecture tests
         run: uv run pytest ${{ matrix.args }} -q -n auto --dist=load --durations=20
 
+  integration_test_py314:
+    name: Authoring integration tests on Python 3.14
+    needs: changes
+    if: github.event_name != 'pull_request' && needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-22.04
+    container: python:3.14-slim-bookworm
+    steps:
+      - name: Setup git
+        run: |
+          apt-get update
+          apt-get install -y git
+          git config --global --add safe.directory $(realpath .)
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.1.0
+      - name: Install dependencies
+        run: uv sync --python 3.14
+      - name: Run authoring and MCP integration tests
+        run: >-
+          uv run pytest tests_ce/integration_tests/test_authoring tests_ce/integration_tests/test_mcp
+          tests_ce/nightly_tests/test_authoring/test_build_verification.py
+          tests_ce/nightly_tests/test_authoring/test_derived_row_limit.py
+          tests_ce/nightly_tests/test_mcp/test_stdio_project_flow.py
+          -q -n auto --dist=load --durations=20
+
   unit_coverage_shard:
     name: ${{ github.event_name == 'pull_request' && 'Unit shard' || 'Unit coverage shard' }} ${{ matrix.shard }}
     runs-on: ubuntu-22.04
@@ -631,15 +713,20 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Serial coverage of the whole suite took about 46 minutes on two cores; the authoring suite is split in two by measured test time.
-        # A pull request runs the same shards in parallel without coverage.
         include:
-          - shard: authoring-a
-            args: tests_ce/unit_tests/test_authoring/test_derived_row_limit.py tests_ce/unit_tests/test_authoring/test_build_verification.py tests_ce/unit_tests/test_authoring/test_ready_coverage.py tests_ce/unit_tests/test_authoring/test_dryrun_includes.py tests_ce/unit_tests/test_authoring/test_assert_gate.py tests_ce/unit_tests/test_authoring/test_project_run.py tests_ce/unit_tests/test_authoring/test_dryrun.py
-          - shard: authoring-b
-            args: tests_ce/unit_tests/test_authoring --ignore=tests_ce/unit_tests/test_authoring/test_derived_row_limit.py --ignore=tests_ce/unit_tests/test_authoring/test_build_verification.py --ignore=tests_ce/unit_tests/test_authoring/test_ready_coverage.py --ignore=tests_ce/unit_tests/test_authoring/test_dryrun_includes.py --ignore=tests_ce/unit_tests/test_authoring/test_assert_gate.py --ignore=tests_ce/unit_tests/test_authoring/test_project_run.py --ignore=tests_ce/unit_tests/test_authoring/test_dryrun.py
-          - shard: rest
-            args: tests_ce/unit_tests --ignore=tests_ce/unit_tests/test_benchmarks --ignore=tests_ce/unit_tests/test_authoring
+          - shard: unit
+            args: tests_ce/unit_tests
+            pr: true
+          - shard: unit-nightly
+            args: >-
+              tests_ce/nightly_tests/test_assert_gate_artifact.py
+              tests_ce/nightly_tests/test_authoring/test_build_input_contract.py
+              tests_ce/nightly_tests/test_authoring/test_included_step_lint_context.py
+              tests_ce/nightly_tests/test_docs/test_agent_cli_documentation_contract.py
+              tests_ce/nightly_tests/test_error_runtime_boundaries.py
+              tests_ce/nightly_tests/test_weighted_variable_replay.py
+              tests_ce/nightly_tests/test_benchmarks/test_authoring_eval.py
+            pr: false
     steps:
       - name: Setup git
         run: |
@@ -658,7 +745,7 @@ jobs:
           path: .venv
           key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml', './uv.lock') }}
       - name: Run unit tests in parallel
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && matrix.pr
         run: |
           . .venv/bin/activate
           uv run pytest ${{ matrix.args }} -n auto -q --durations=20
@@ -714,7 +801,7 @@ jobs:
         if: github.event_name != 'pull_request'
         run: |
           . .venv/bin/activate
-          test "$(ls -A coverage-unit-data | wc -l)" -eq 3
+          test "$(ls -A coverage-unit-data | wc -l)" -eq 2
           uv run coverage combine coverage-unit-data
           uv run make coverage-unit-report
           uv run make test-architecture
@@ -762,6 +849,12 @@ jobs:
           . .venv/bin/activate
           uv run pytest tests_ce/architecture -n auto -q --durations=15
         shell: bash
+      - name: Run seeded DSL replay and negative control
+        # Deliberate node selections run the bounded DSL replay and its negative proof.
+        run: >-
+          uv run pytest -q -n 0
+          'tests_ce/scenarios/test_scenarios.py::test_scenario_builds_runs_and_replays[s01_flat_seeded]'
+          'tests_ce/scenarios/test_scenarios.py::test_negative_is_rejected_with_named_diagnostic[s01_flat_seeded/wrong_count]'
 
   functional_coverage_shard:
     if: github.event_name != 'pull_request'
@@ -772,16 +865,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - shard: builds-a
-            scenario_shard: 0/2
-            args: tests_ce/scenarios/test_scenarios.py::test_scenario_builds_runs_and_replays
-          - shard: builds-b
-            scenario_shard: 1/2
-            args: tests_ce/scenarios/test_scenarios.py::test_scenario_builds_runs_and_replays
-          - shard: negatives
-            args: tests_ce/scenarios/test_scenarios.py::test_negative_is_rejected_with_named_diagnostic
-          - shard: rest
-            args: tests_ce/functional_tests/ tests_ce/conformance/ tests_ce/scenarios/ --deselect=tests_ce/scenarios/test_scenarios.py::test_scenario_builds_runs_and_replays --deselect=tests_ce/scenarios/test_scenarios.py::test_negative_is_rejected_with_named_diagnostic
+          - shard: scenarios
+            args: tests_ce/scenarios
+            workers: -n 4
+          - shard: functional
+            args: tests_ce/functional_tests tests_ce/conformance
+            workers: -n 0
     steps:
       - name: Setup git
         run: |
@@ -819,10 +908,9 @@ jobs:
       - name: Run functional tests with coverage
         env:
           COVERAGE_FILE: .coverage.${{ matrix.shard }}
-          SCENARIO_SHARD: ${{ matrix.scenario_shard }}
         run: |
           . .venv/bin/activate
-          uv run coverage run -m pytest ${{ matrix.args }} --durations=20
+          uv run coverage run --parallel-mode -m pytest ${{ matrix.args }} ${{ matrix.workers }} --cov --cov-report= --durations=20
         shell: bash
       - name: Upload coverage data
         uses: actions/upload-artifact@v6
@@ -862,7 +950,7 @@ jobs:
       - name: Combine functional coverage
         run: |
           . .venv/bin/activate
-          test "$(ls -A coverage-functional-data | wc -l)" -eq 4
+          test "$(ls -A coverage-functional-data | wc -l)" -eq 2
           uv run coverage combine coverage-functional-data
           uv run coverage xml
         shell: bash
@@ -881,12 +969,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - shard: files
-            args: tests_ce/integration_tests/test_file_filter tests_ce/integration_tests/test_large_count tests_ce/integration_tests/test_blank_selector
-          - shard: pages
-            args: tests_ce/integration_tests/test_page_process tests_ce/integration_tests/test_source_file_errors tests_ce/integration_tests/test_decimal_json tests_ce/integration_tests/test_dotenv_entrypoints.py
-          - shard: rest
-            args: tests_ce/integration_tests/ --ignore=tests_ce/integration_tests/test_file_filter --ignore=tests_ce/integration_tests/test_large_count --ignore=tests_ce/integration_tests/test_blank_selector --ignore=tests_ce/integration_tests/test_page_process --ignore=tests_ce/integration_tests/test_source_file_errors --ignore=tests_ce/integration_tests/test_decimal_json --ignore=tests_ce/integration_tests/test_dotenv_entrypoints.py
+          - shard: integration
+            args: tests_ce/integration_tests
+            pr: true
+          - shard: integration-nightly
+            args: >-
+              tests_ce/nightly_tests/test_authoring/test_build_verification.py
+              tests_ce/nightly_tests/test_authoring/test_derived_row_limit.py
+              tests_ce/nightly_tests/test_mcp/test_stdio_project_flow.py
+            pr: false
     steps:
       - name: Setup git
         run: |
@@ -903,10 +994,10 @@ jobs:
           path: .venv
           key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml', './uv.lock') }}
       - name: Run integration tests
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && matrix.pr
         run: |
           . .venv/bin/activate
-          uv run pytest ${{ matrix.args }} --durations=20
+          uv run pytest ${{ matrix.args }} -n auto --durations=20
         shell: bash
       - name: Run integration tests with coverage
         if: github.event_name != 'pull_request'
@@ -962,7 +1053,7 @@ jobs:
         if: github.event_name != 'pull_request'
         run: |
           . .venv/bin/activate
-          test "$(ls -A coverage-integration-data | wc -l)" -eq 3
+          test "$(ls -A coverage-integration-data | wc -l)" -eq 2
           uv run coverage combine coverage-integration-data
           uv run coverage xml
         shell: bash
@@ -1016,22 +1107,21 @@ jobs:
             mongo: true
             sql: false
             args: >-
-              tests_ce/external_service_tests
-              --ignore=tests_ce/external_service_tests/test_demo/demo-mongodb
-              --ignore=tests_ce/external_service_tests/test_entity_stringify_mongo
-              --ignore=tests_ce/external_service_tests/test_integration_mongodb
-              --ignore=tests_ce/external_service_tests/test_mongodb
-              --ignore=tests_ce/external_service_tests/test_mongodb_error
-              --ignore=tests_ce/external_service_tests/test_mongodb_reference
-              --ignore=tests_ce/external_service_tests/test_mongodb_routing_matrix
-              --ignore=tests_ce/external_service_tests/test_authoring_read_only.py
-              --ignore=tests_ce/external_service_tests/test_rdbms
-              --ignore=tests_ce/external_service_tests/test_rdbms_functional
-              --ignore=tests_ce/external_service_tests/test_rdbms_reference
-              --ignore=tests_ce/external_service_tests/test_rdbms_sql_matrix
-              --ignore=tests_ce/external_service_tests/test_sequence_table_generator
-              --ignore=tests_ce/external_service_tests/datamimic_demo
-              --ignore=tests_ce/external_service_tests/test_scenario_services
+              tests_ce/external_service_tests/data_migration
+              tests_ce/external_service_tests/data_source_cyclic
+              tests_ce/external_service_tests/integration_data_source_cyclic
+              tests_ce/external_service_tests/test_demo/demo-selector
+              tests_ce/external_service_tests/test_destructive_operations
+              tests_ce/external_service_tests/test_env
+              tests_ce/external_service_tests/test_functional_page_process
+              tests_ce/external_service_tests/test_functional_variable
+              tests_ce/external_service_tests/test_mp_consumer
+              tests_ce/external_service_tests/test_prefix_suffix
+              tests_ce/external_service_tests/test_selector
+              tests_ce/external_service_tests/test_sqlalchemy_extended_conf
+              tests_ce/external_service_tests/test_variable_storage
+              tests_ce/external_service_tests/test_variable
+              tests_ce/external_service_tests/test_client_process_ownership.py
     services:
       postgres:
         image: ${{ matrix.postgres && 'postgres:13' || '' }}
@@ -1451,6 +1541,7 @@ jobs:
         python_311_smoke,
         python_newer_smoke,
         unit_test_py314,
+        integration_test_py314,
         archkeel_check,
       ]
     environment:

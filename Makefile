@@ -1,4 +1,4 @@
-.PHONY: help install install-pre-commit test test-unit test-architecture test-integration test-functional coverage coverage-unit coverage-unit-run coverage-unit-report typecheck lint format check architecture-check architecture-definition-check architecture-version architecture-report architecture-validation-receipt architecture-cycle-check installed-authoring-check agent-plugin-check agent-plugin-package clean
+.PHONY: help install install-pre-commit test test-unit test-architecture test-integration test-benchmarks test-functional coverage coverage-unit coverage-unit-run coverage-unit-report typecheck lint format check architecture-check architecture-definition-check architecture-version architecture-report architecture-validation-receipt architecture-cycle-check installed-authoring-check agent-plugin-check agent-plugin-package clean
 
 PYTHON ?= python
 INSTALLED_AUTHORING_ARGS ?=
@@ -6,10 +6,11 @@ AGENT_PLUGIN_ARCHIVE ?= test-artifacts/agent-plugin/datamimic.zip
 
 PACKAGE := datamimic_ce
 TESTS := tests_ce
+AUTOMATIC_TESTS := $(addprefix $(TESTS)/,unit_tests integration_tests architecture functional_tests conformance scenarios api_tests factory_tests)
 CE_COVERAGE_FILES := $(shell find $(PACKAGE) -type f -name '*.py')
 COVERAGE_OMIT := $(PACKAGE)/resources/examples/*.py,$(PACKAGE)/resources/demos/**/*.py,$(PACKAGE)/interfaces/demo.py
 UNIT_TEST_ARGS ?= $(TESTS)/unit_tests
-ARCHKEEL_VERSION := 4.0.2.dev952+g585b2e195
+ARCHKEEL_VERSION := 4.0.2.dev1021+g0840b4d62
 ARCHKEEL_VERSION_URL := $(subst +,%2B,$(ARCHKEEL_VERSION))
 ifeq ($(OS),Windows_NT)
 ARCHKEEL_PLATFORM := win_amd64
@@ -27,9 +28,10 @@ help:
 	@echo "  installed-authoring-check  Check an installed wheel in an isolated workspace"
 	@echo "  agent-plugin-check  Check native plugin metadata and contained skill resources"
 	@echo "  agent-plugin-package  Build the separate agent plugin ZIP"
-	@echo "  test              Run the full test suite"
+	@echo "  test              Run automatic test lanes"
 	@echo "  test-unit         Run unit tests only"
-	@echo "  test-integration  Run integration tests only"
+	@echo "  test-integration  Run integration tests only (benchmarks excluded)"
+	@echo "  test-benchmarks   Run the POSIX-only authoring eval oracle"
 	@echo "  test-functional   Run functional tests only"
 	@echo "  coverage          Run tests with coverage report for $(PACKAGE)"
 	@echo "  coverage-unit     Run unit tests with complete CE coverage and regression floor"
@@ -63,7 +65,7 @@ install-pre-commit:
 	"$$(uv tool dir --bin)/pre-commit" install
 
 test:
-	pytest -q
+	pytest -q $(AUTOMATIC_TESTS)
 
 test-unit:
 	pytest -q $(TESTS)/unit_tests
@@ -74,11 +76,14 @@ test-architecture:
 test-integration:
 	pytest -q $(TESTS)/integration_tests
 
+test-benchmarks:
+	pytest -q $(TESTS)/nightly_tests/test_benchmarks
+
 test-functional:
 	pytest -q $(TESTS)/functional_tests
 
 coverage:
-	coverage run -m pytest $(TESTS)
+	coverage run -m pytest $(AUTOMATIC_TESTS)
 	coverage report --include="$(PACKAGE)/*"
 	coverage html --include="$(PACKAGE)/*"
 
