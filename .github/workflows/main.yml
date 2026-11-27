@@ -213,7 +213,7 @@ jobs:
       - name: Run documentation tests
         run: |
           uv sync --python 3.11
-          uv run pytest tests_ce/unit_tests/test_docs tests_ce/nightly_tests/test_docs/test_agent_cli_documentation_contract.py -q
+          uv run pytest tests_ce/unit_tests/test_docs tests_ce/nightly_tests/unit/test_docs -q
 
   install_dependencies:
     runs-on: ubuntu-22.04
@@ -478,8 +478,7 @@ jobs:
           tests_ce/unit_tests/test_authoring/test_capture_boundary.py
           tests_ce/unit_tests/test_authoring/test_build_verification.py
           tests_ce/integration_tests/test_authoring/test_build_verification.py
-          tests_ce/nightly_tests/test_authoring/test_build_verification.py
-          tests_ce/nightly_tests/test_authoring/test_derived_row_limit.py
+          tests_ce/nightly_tests/integration/test_authoring
           tests_ce/unit_tests/test_portable_errors.py
           tests_ce/unit_tests/precommit/test_error_pickling.py -q
 
@@ -622,13 +621,7 @@ jobs:
           - shard: unit
             args: >-
               tests_ce/unit_tests tests_ce/architecture
-              tests_ce/nightly_tests/test_assert_gate_artifact.py
-              tests_ce/nightly_tests/test_authoring/test_build_input_contract.py
-              tests_ce/nightly_tests/test_authoring/test_included_step_lint_context.py
-              tests_ce/nightly_tests/test_docs/test_agent_cli_documentation_contract.py
-              tests_ce/nightly_tests/test_error_runtime_boundaries.py
-              tests_ce/nightly_tests/test_weighted_variable_replay.py
-              tests_ce/nightly_tests/test_benchmarks/test_authoring_eval.py
+              tests_ce/nightly_tests/unit tests_ce/nightly_tests/test_benchmarks
     steps:
       - name: Setup git
         run: |
@@ -669,9 +662,7 @@ jobs:
       - name: Run authoring and MCP integration tests
         run: >-
           uv run pytest tests_ce/integration_tests/test_authoring tests_ce/integration_tests/test_mcp
-          tests_ce/nightly_tests/test_authoring/test_build_verification.py
-          tests_ce/nightly_tests/test_authoring/test_derived_row_limit.py
-          tests_ce/nightly_tests/test_mcp/test_stdio_project_flow.py
+          tests_ce/nightly_tests/integration
           -q -n auto --dist=load --durations=20
 
   unit_coverage_shard:
@@ -687,14 +678,7 @@ jobs:
             args: tests_ce/unit_tests
             pr: true
           - shard: unit-nightly
-            args: >-
-              tests_ce/nightly_tests/test_assert_gate_artifact.py
-              tests_ce/nightly_tests/test_authoring/test_build_input_contract.py
-              tests_ce/nightly_tests/test_authoring/test_included_step_lint_context.py
-              tests_ce/nightly_tests/test_docs/test_agent_cli_documentation_contract.py
-              tests_ce/nightly_tests/test_error_runtime_boundaries.py
-              tests_ce/nightly_tests/test_weighted_variable_replay.py
-              tests_ce/nightly_tests/test_benchmarks/test_authoring_eval.py
+            args: tests_ce/nightly_tests/unit tests_ce/nightly_tests/test_benchmarks
             pr: false
     steps:
       - name: Setup git
@@ -942,10 +926,7 @@ jobs:
             args: tests_ce/integration_tests
             pr: true
           - shard: integration-nightly
-            args: >-
-              tests_ce/nightly_tests/test_authoring/test_build_verification.py
-              tests_ce/nightly_tests/test_authoring/test_derived_row_limit.py
-              tests_ce/nightly_tests/test_mcp/test_stdio_project_flow.py
+            args: tests_ce/nightly_tests/integration
             pr: false
     steps:
       - name: Setup git
