@@ -248,7 +248,8 @@ def test_bounded_error_keeps_catalog_remediation_and_logical_field(tmp_path):
     assert not result.ok
     diagnostic = result.diagnostics[0]
     assert diagnostic.ce_error.issue_code.value == "I832"
-    assert "scope" in diagnostic.remediation
+    assert "raised an error while it ran" in diagnostic.remediation  # 1/0 is no scope or cast problem (#705)
+    assert "cast" not in diagnostic.remediation
     assert "key" in diagnostic.path
     assert "script" in diagnostic.path
     assert str(tmp_path) not in diagnostic.model_dump_json()

@@ -435,7 +435,13 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
             )
             for _ in message.smoke_diagnostics
         )
-        base_run_ok = any(product.rows for product in captured.products)
+        # A product that asked for 0 rows ran and holds none, which an exact_count 0 expectation proves. A product
+        # that asked for more rows and got none did not run.
+        base_run_ok = any(
+            product.rows
+            or (product.capture is not None and product.capture.requested == 0 and product.capture.complete)
+            for product in captured.products
+        )
         # A side-effect run of a clear or drop succeeded when the engine raised nothing; it captures no rows.
         ran_operation = bool(message.executed_operations)
         # A skipped clear or drop is reported, not failed: bounded execution neither ran it nor proves its effect.
