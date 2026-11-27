@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 import pickle
+import re
 import signal
 import stat
 import subprocess
@@ -70,8 +71,9 @@ _MAX_REPLY_BYTES = dryrun._MAX_WORKER_REPLY_BYTES
 
 
 _STDERR_READ_BYTES = 4096
-_STDERR_EXCERPT_LINES = 8
 _STDERR_EXCERPT_CHARS = 800
+_CONTROL_RUNS = r"[\x00-\x1f\x7f-\x9f]+"
+_CONTROL_EDGES = r"\A[\x00-\x20\x7f-\x9f]+|[\x00-\x20\x7f-\x9f]+\Z"
 
 
 def _stderr_excerpt(path: Path) -> str:
@@ -81,18 +83,21 @@ def _stderr_excerpt(path: Path) -> str:
     but a child that prints a secret or an input value passes it on, so the text is shown as written.
     """
     try:
-        with path.open("rb") as handle:
-            size = handle.seek(0, os.SEEK_END)
-            handle.seek(max(0, size - _STDERR_READ_BYTES))
-            data = handle.read(_STDERR_READ_BYTES)
+        descriptor = os.open(path, os.O_RDONLY)
     except OSError:
         return ""
-    text = data.decode("utf-8", "replace")
-    lines = [
-        "".join(char if char.isprintable() else " " for char in line).strip()
-        for line in text.splitlines()[-_STDERR_EXCERPT_LINES:]
-    ]
-    excerpt = " | ".join(line for line in lines if line)
+    try:
+        size = os.fstat(descriptor).st_size
+        os.lseek(descriptor, max(0, size - _STDERR_READ_BYTES), os.SEEK_SET)
+        data = os.read(descriptor, _STDERR_READ_BYTES)
+    except OSError:
+        return ""
+    finally:
+        os.close(descriptor)
+    text = str(data, "utf-8", "replace")
+    # Runs of line breaks and control characters become one " | " separator, so the excerpt is one line.
+    trimmed = re.sub(_CONTROL_EDGES, "", text)
+    excerpt = re.sub(_CONTROL_RUNS, " | ", trimmed)
     if len(excerpt) > _STDERR_EXCERPT_CHARS:
         excerpt = "..." + excerpt[-_STDERR_EXCERPT_CHARS:]
     return f" Child stderr (last lines): {excerpt}" if excerpt else ""
@@ -707,18 +712,21 @@ class CeBoundedExecutor:
             str(reply_file),
             str(workspace),
         ]
-        stderr_file = reply_file.with_name("stderr.log")
+        stderr_file = reply_file.parent / "stderr.log"
         try:
             # A file, not a pipe: the child never blocks on a full pipe and this process buffers nothing.
-            with stderr_file.open("wb") as stderr_sink:
+            stderr_descriptor = os.open(stderr_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
+            try:
                 process = subprocess.Popen(
                     command,
                     env=_child_environment(environment, request.hash_seed),
                     stdin=subprocess.DEVNULL,
                     stdout=subprocess.DEVNULL,
-                    stderr=stderr_sink,
+                    stderr=stderr_descriptor,
                     start_new_session=os.name == "posix",
                 )
+            finally:
+                os.close(stderr_descriptor)
         except OSError:
             return _failure(
                 AuthoringSystemDiagnosticCode.CHILD_CRASH, "Bounded child could not start.", request.max_count
