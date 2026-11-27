@@ -63,28 +63,6 @@ from datamimic_ce.errors.formatters import (
     warning_message,
 )
 
-_run_warnings: ContextVar[set[tuple[int, str]] | None] = ContextVar("run_warnings", default=None)
-# Workers outside the runtime lifecycle retain process-local deduplication.
-_process_warnings: set[tuple[int, str]] = set()
-
-
-class _TaskWarningScope(AbstractContextManager[None]):
-    def __enter__(self) -> None:
-        self._token: Token[set[tuple[int, str]] | None] = _run_warnings.set(set())
-
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_value: BaseException | None,
-        traceback: TracebackType | None,
-    ) -> None:
-        _run_warnings.reset(self._token)
-
-
-def task_warning_scope() -> AbstractContextManager[None]:
-    """Give each run its own warning history without rewriting frozen exceptions."""
-    return _TaskWarningScope()
-
 
 # The warnings of one run, for a caller that reports them by code and fields (authoring, #404), not as log text.
 @dataclass(frozen=True)
@@ -96,18 +74,49 @@ class CollectedWarning:
     line: int | None = None
 
 
-_collected_warnings: ContextVar[list[CollectedWarning] | None] = ContextVar("collected_warnings", default=None)
+@dataclass(frozen=True)
+class _WarningState:
+    emitted: set[tuple[int, str]]
+    collected: list[CollectedWarning] | None
+
+
+# Workers outside the runtime lifecycle retain process-local deduplication.
+_process_warning_state = _WarningState(set(), None)
+_warning_state: ContextVar[_WarningState | None] = ContextVar("warning_state", default=None)
+
+
+def _current_warning_state() -> _WarningState:
+    state = _warning_state.get()
+    return _process_warning_state if state is None else state
+
+
+class _TaskWarningScope(AbstractContextManager[None]):
+    def __init__(self, state: _WarningState) -> None:
+        self._state = state
+
+    def __enter__(self) -> None:
+        self._token: Token[_WarningState | None] = _warning_state.set(self._state)
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        _warning_state.reset(self._token)
+
+
+def task_warning_scope() -> AbstractContextManager[None]:
+    """Give each run its own warning history without rewriting frozen exceptions."""
+    return _TaskWarningScope(_WarningState(set(), _current_warning_state().collected))
 
 
 @contextmanager
 def collect_task_warnings() -> Iterator[list[CollectedWarning]]:
     """Collect each catalog warning emitted in this scope, also one that the log shows only once."""
     found: list[CollectedWarning] = []
-    token = _collected_warnings.set(found)
-    try:
+    with _TaskWarningScope(_WarningState(_current_warning_state().emitted, found)):
         yield found
-    finally:
-        _collected_warnings.reset(token)
 
 
 def task_warning(*, code: IssueCode, once: bool = True, **kwargs: object) -> None:
@@ -128,7 +137,8 @@ def task_warning(*, code: IssueCode, once: bool = True, **kwargs: object) -> Non
 
     if get_issue_definition(code).severity is not IssueSeverity.WARNING:
         raise ValueError(f"{code} is not a WARNING-severity issue; raise it with the error factory instead.")
-    collected = _collected_warnings.get()
+    warning_state = _current_warning_state()
+    collected = warning_state.collected
     if collected is not None:
         script, line = kwargs.get("script"), kwargs.get("line")
         collected.append(
@@ -136,9 +146,7 @@ def task_warning(*, code: IssueCode, once: bool = True, **kwargs: object) -> Non
         )
     msg = warning_message(code=code, **kwargs)
     key = (os.getpid(), msg)
-    emitted_warnings = _run_warnings.get()
-    if emitted_warnings is None:
-        emitted_warnings = _process_warnings
+    emitted_warnings = warning_state.emitted
     if not once or key not in emitted_warnings:
         if once:
             emitted_warnings.add(key)
