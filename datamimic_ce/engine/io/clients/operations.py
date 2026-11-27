@@ -161,7 +161,7 @@ def rdbms_increase_sequence_number(
 def rdbms_reserve_sequence_block(
     client: Client, sequence: str, count: int, table: str | None, column: str | None
 ) -> int:
-    if not isinstance(client, RdbmsClient):
+    if not is_rdbms_client(client):
         raise TypeError("Client is not an RDBMS client")
     return client.reserve_sequence_block(sequence, count, table, column)
 
