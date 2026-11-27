@@ -267,13 +267,17 @@ def init(
         ProjectPattern,
         typer.Option("--pattern", help="Starter project; each one is ready as written."),
     ] = ProjectPattern.FLAT,
+    output_format: OutputFormat = CliOutputFormat.JSON,
 ) -> None:
     """Write a starter project (datamimic.xml and acceptance/build.json) that Build accepts. Never overwrites."""
     application = create_authoring_application()
     result = init_project(project, application.scaffold(pattern))
-    if result.outcome == "not_written":
+    exit_code = 1 if result.outcome == "not_written" else 0
+    if output_format is CliOutputFormat.JSON:
+        emit_authoring(result, output_format, exit_code=exit_code)
+    if exit_code:
         typer.echo(f"Init failed: {result.diagnostics[0].message}", err=True)
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=exit_code)
     typer.echo(f"Wrote the {pattern.value} project to {project}: {', '.join(result.files)}")
     typer.echo(NEXT_STEP_HINT)
 
