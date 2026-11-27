@@ -10,7 +10,15 @@ from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralG
 
 class IncrementGenerator(BaseLiteralGenerator):
     """
-    Generate sequential number set
+    Generate sequential number set.
+
+    Parameters:
+        start: first value produced (default 1).
+        end: exclusive upper bound. A value is produced only while ``value + step <= end``,
+            so ``end`` itself is never produced: ``IncrementGenerator(1, 5)`` yields 1, 2, 3, 4.
+        step: positive increment (default 1). With ``step > 1`` the last value can fall short of
+            ``end - 1``: ``IncrementGenerator(1, 5, 2)`` yields 1, 3, and ``IncrementGenerator(1, 6, 2)``
+            yields 1, 3 (5 is not produced because 5 + 2 > 6).
     """
 
     # Do not cache increment generators globally as their state is usually
