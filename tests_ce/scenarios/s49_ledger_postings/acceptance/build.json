@@ -50,7 +50,7 @@
     {"kind": "row_condition", "subject": {"kind": "product", "product": "invoice_checks"}, "condition": "net_cents >= 1 and tax_rate_bp >= 0"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "payment_checks"}, "condition": "amount_cents >= 1"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "plan"}, "condition": "outcome != 'infeasible'"},
-    {"kind": "row_condition", "subject": {"kind": "product", "product": "line_checks"}, "condition": "entry_debits == entry_credits"},
+    {"kind": "group_sum", "subject": {"kind": "product", "product": "ledger_lines"}, "group_by": "entry_id", "field": "debit_cents", "equals_field": "credit_cents"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "line_checks"}, "condition": "one_sided"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "line_checks"}, "condition": "days_since_open >= 0"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "line_checks"}, "condition": "days_to_close == None or days_to_close >= 0"},

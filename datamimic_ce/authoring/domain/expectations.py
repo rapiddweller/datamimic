@@ -13,7 +13,12 @@ from pydantic import AliasChoices, BaseModel, ConfigDict, Field, JsonValue, fiel
 from pydantic.json_schema import JsonDict
 
 from .common import AuthoringModel, NonEmptyStrictStr, NonNegativeStrictInt
-from .row_conditions import ROW_CONDITION_GRAMMAR, parse_row_condition
+from .row_conditions import (
+    MAX_DECIMAL_ADJUSTED_EXPONENT,
+    MAX_STRING_LENGTH,
+    ROW_CONDITION_GRAMMAR,
+    parse_row_condition,
+)
 
 INTENT_REPAIR_ALIASES_SCHEMA_KEY = "x-datamimic-repair-aliases"
 
@@ -53,6 +58,7 @@ class ExpectationIntentKind(StrEnum):
     FIELD_PRESENT = "field_present"
     FIELD_ABSENT = "field_absent"
     ROW_CONDITION = "row_condition"
+    GROUP_SUM = "group_sum"
 
 
 class ExpectationSubjectKind(StrEnum):
@@ -327,6 +333,35 @@ class RowConditionExpectation(AuthoringModel):
         return value
 
 
+class GroupSumExpectation(AuthoringModel):
+    """Require two numeric fields to have equal sums in every observed group."""
+
+    usage_example: ClassVar[dict[str, JsonValue]] = {
+        "kind": "group_sum",
+        "subject": {"kind": "product", "product": "ledger_lines"},
+        "group_by": "entry_id",
+        "field": "debit_cents",
+        "equals_field": "credit_cents",
+    }
+
+    kind: Literal[ExpectationIntentKind.GROUP_SUM] = Field(
+        default=ExpectationIntentKind.GROUP_SUM, description="Expectation identity; must be 'group_sum'."
+    )
+    subject: ProductRowsSubject = Field(description="Complete captured product rows containing all three fields.")
+    group_by: NonEmptyStrictStr = Field(
+        description="Field containing a string or integer group key in each row. No observed groups fails the check."
+    )
+    field: NonEmptyStrictStr = Field(
+        description="Field to sum exactly. Finite numbers and decimal strings are accepted, including mixed numeric "
+        "representations. Booleans, nulls, missing fields and non-numeric text fail the check. "
+        f"Amounts have at most {MAX_STRING_LENGTH} coefficient digits, decimal strings are at most "
+        f"{MAX_STRING_LENGTH} characters, and adjusted exponents must be within ±{MAX_DECIMAL_ADJUSTED_EXPONENT}."
+    )
+    equals_field: NonEmptyStrictStr = Field(
+        description="Second numeric field summed under the same rules for equality."
+    )
+
+
 ExpectationIntent = Annotated[
     ExactCountExpectation
     | PerParentCountExpectation
@@ -337,7 +372,8 @@ ExpectationIntent = Annotated[
     | FixedValueExpectation
     | FieldPresentExpectation
     | FieldAbsentExpectation
-    | RowConditionExpectation,
+    | RowConditionExpectation
+    | GroupSumExpectation,
     Field(discriminator="kind"),
 ]
 ExpectationSubject = ProductRowsSubject | PerParentRowsSubject | DeclaredSinkRowsSubject
@@ -456,6 +492,13 @@ def expectation_identity(expectation: ExpectationIntent) -> tuple[object, ...]:
         return (expectation.kind, _subject_identity(expectation.subject), expectation.field, value)
     if isinstance(expectation, FieldPresentExpectation | FieldAbsentExpectation):
         return (expectation.kind, _subject_identity(expectation.subject), expectation.field)
+    if isinstance(expectation, GroupSumExpectation):
+        return (
+            expectation.kind,
+            _subject_identity(expectation.subject),
+            expectation.group_by,
+            *sorted((expectation.field, expectation.equals_field)),
+        )
     if isinstance(expectation, RowConditionExpectation):
         return (
             expectation.kind,
