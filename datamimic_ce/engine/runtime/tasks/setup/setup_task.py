@@ -24,6 +24,7 @@ from datamimic_ce.engine.io.api import (
 )
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.contracts import StatementTransformer
+from datamimic_ce.engine.runtime.storage.global_increment import GlobalIncrementRegistry
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
 from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task
 from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask, SetupSubTask
@@ -179,6 +180,10 @@ class SetupTask:
             if id(client) not in descriptor_ids:
                 memo[id(client)] = client
         child = copy.deepcopy(parent_context, memo)
+        # One run, one global counter: an include continues the parent's count.
+        if parent_context.global_increment_registry is None:
+            parent_context.global_increment_registry = GlobalIncrementRegistry()
+        child.global_increment_registry = parent_context.global_increment_registry
         child.enter_step(uri, parent_context)
         token_map: dict[int, int] = {}
         for token, _client, config in descriptor_clients:
