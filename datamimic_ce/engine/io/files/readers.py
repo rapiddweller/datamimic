@@ -12,14 +12,11 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from io import BytesIO, StringIO
 from pathlib import Path
-from typing import TypeAlias, TypeGuard
+from typing import TYPE_CHECKING, TypeAlias, TypeGuard
 from xml.parsers.expat import ExpatError
 
-import numpy as np
-import pandas as pd
 import xmltodict
 from lxml import etree
-from pandas import DataFrame
 
 from datamimic_ce.engine.dsl.parsers.input.resource import (
     read_resource_bytes,
@@ -30,6 +27,9 @@ from datamimic_ce.engine.dsl.parsers.input.xml import DTDForbiddenError, parse_x
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat
 from datamimic_ce.engine.io.files.cache import FileContentStorage
 from datamimic_ce.errors import IssueCode, invalid_source_error
+
+if TYPE_CHECKING:
+    from pandas import DataFrame
 
 logger = logging.getLogger("DATAMIMIC")
 
@@ -315,10 +315,13 @@ class FileUtil:
         return result
 
     @staticmethod
-    def read_weight_csv(file_path: Path, separator: str = ",", encoding: str = "utf-8") -> DataFrame:
+    def read_weight_csv(file_path: Path, separator: str = ",", encoding: str = "utf-8") -> "DataFrame":
         """
         Read a 2-column value|weight csv, header optional (ADR-029): see _is_weight_header.
         """
+        import numpy as np
+        import pandas as pd
+
         # Load file content from cache or file
         raw_data = FileUtil._read_raw_csv(file_path, separator, encoding)
 

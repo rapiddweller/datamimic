@@ -13,6 +13,7 @@ Smoke exporters consume the same validated full capture before projection.
 import io
 import os
 import pickle
+import sys
 import tempfile
 import uuid
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
@@ -21,7 +22,6 @@ from dataclasses import replace
 from enum import StrEnum
 from pathlib import Path, PurePosixPath
 
-from bson import ObjectId
 from lxml import etree
 from pydantic import ConfigDict, StrictBool, StrictStr, TypeAdapter, ValidationError
 from pydantic.dataclasses import dataclass
@@ -1168,13 +1168,18 @@ def _project_capture_object_ids(value: object) -> object:
     """Copy bounded capture containers, projecting only native BSON identifiers."""
     remaining = MAX_CAPTURE_ITEMS
     ancestors: set[int] = set()
+    object_id_type = None
+    if "bson" in sys.modules:
+        from bson import ObjectId
+
+        object_id_type = ObjectId
 
     def project(current: object, depth: int) -> object:
         nonlocal remaining
         remaining -= 1
         if remaining < 0 or depth > MAX_CAPTURE_DEPTH:
             raise ValueError("capture exceeds its item or depth budget")
-        if type(current) is ObjectId:
+        if type(current) is object_id_type:
             return CapturedObjectId(value=str(current))
         if not isinstance(current, dict | list | tuple):
             return current
@@ -1291,6 +1296,8 @@ def _validated_worker_success(message: _WorkerSuccess, max_count: int | None = N
 def _export_capture_value(value: CaptureValue) -> object:
     """Restore native exporter inputs only after the complete capture is validated."""
     if isinstance(value, CapturedObjectId):
+        from bson import ObjectId
+
         return ObjectId(value.value)
     if isinstance(value, dict):
         return {key: _export_capture_value(item) for key, item in value.items()}

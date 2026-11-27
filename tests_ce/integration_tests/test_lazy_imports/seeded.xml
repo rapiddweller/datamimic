@@ -1,0 +1,8 @@
+<setup rngSeed="443" defaultSeparator=",">
+    <generate name="rows" count="3" target="CSV">
+        <key name="draw" script="random.randint(100, 200)"/>
+        <key name="value" script="int(np.sum([draw, 2, 3]))"/>
+        <key name="clock" script="pd.Timestamp.now().isoformat()"/>
+        <key name="year" script="pd.Timestamp('2020-10-22').year"/>
+    </generate>
+</setup>

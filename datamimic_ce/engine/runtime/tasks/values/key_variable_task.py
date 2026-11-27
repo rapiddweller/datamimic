@@ -5,13 +5,12 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import ast
+import sys
 from abc import abstractmethod
 from collections.abc import Iterable, Iterator
 from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation, localcontext
 from random import Random
-
-import numpy
 
 from datamimic_ce.domains.api import StringGenerator, from_epoch_utc, to_epoch_utc
 from datamimic_ce.engine.dsl.api import (
@@ -330,8 +329,11 @@ class KeyVariableTask(Task):
             else:
                 value = self._generator.generate()
             # Convert numpy.bool_ to bool for being compatible with consumer (db,...)
-            if isinstance(value, numpy.bool_):
-                value = bool(value)
+            if "numpy" in sys.modules:
+                from numpy import bool_
+
+                if isinstance(value, bool_):
+                    value = bool(value)
         elif self._mode == self._PATTERN_MODE:
             if self._statement.pattern is None:
                 raise task_config_error(

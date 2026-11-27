@@ -17,7 +17,6 @@ from datamimic_ce.engine.io.clients.operations import (
     rdbms_increase_sequence_number,
     uses_mysql_sequence_storage,
 )
-from datamimic_ce.engine.io.clients.rdbms_client import ColumnKind, column_kind_of_type
 from datamimic_ce.engine.io.connection_config.mongodb_connection_config import (
     MongoDBConnectionConfig,
     MongoDBConnectionValues,
@@ -25,10 +24,12 @@ from datamimic_ce.engine.io.connection_config.mongodb_connection_config import (
 from datamimic_ce.engine.io.connection_config.properties import load_connection_profile
 from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig, sqlite_database_path
 from datamimic_ce.engine.io.contracts import (
+    ColumnKind,
     DataSourcePagination,
     Exporter,
     MemstoreSource,
     SmokeExportRequest,
+    column_kind_of_type,
 )
 from datamimic_ce.engine.io.data_sources.boundary.entities import resolve_source_entity
 from datamimic_ce.engine.io.data_sources.boundary.models import (

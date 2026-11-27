@@ -31,7 +31,7 @@ from datamimic_ce.engine.io.contracts import DataSourcePagination
 def test_create_rdbms_client_delegates_config_and_task_id() -> None:
     config = MagicMock(spec=RdbmsConnectionConfig)
     client = object()
-    with patch("datamimic_ce.engine.io.clients.operations.RdbmsClient", return_value=client) as factory:
+    with patch("datamimic_ce.engine.io.clients.rdbms_client.RdbmsClient", return_value=client) as factory:
         assert create_rdbms_client(config, "task-1") is client
     factory.assert_called_once_with(config, "task-1")
 

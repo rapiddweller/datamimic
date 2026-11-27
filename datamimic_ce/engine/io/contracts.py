@@ -3,12 +3,45 @@
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from dataclasses import dataclass
+from datetime import date, datetime
+from decimal import Decimal
+from enum import StrEnum
 from pathlib import Path
 from typing import Protocol, TypedDict
 
 
 class Exporter:
     pass
+
+
+class ColumnKind(StrEnum):
+    """Column type of a table that ``createTable`` creates; the RDBMS client maps each kind to a SQLAlchemy type."""
+
+    TEXT = "text"
+    INTEGER = "integer"
+    FLOAT = "float"
+    DECIMAL = "decimal"
+    BOOLEAN = "boolean"
+    BINARY = "binary"
+    DATE = "date"
+    DATETIME = "datetime"
+
+
+# bool before int and datetime before date: each is a subclass of the type after it.
+_VALUE_KINDS: tuple[tuple[type, ColumnKind], ...] = (
+    (bool, ColumnKind.BOOLEAN),
+    (int, ColumnKind.INTEGER),
+    (float, ColumnKind.FLOAT),
+    (Decimal, ColumnKind.DECIMAL),
+    (datetime, ColumnKind.DATETIME),
+    (date, ColumnKind.DATE),
+    (str, ColumnKind.TEXT),
+)
+
+
+def column_kind_of_type(python_type: type) -> ColumnKind | None:
+    """The column kind of a Python value type; None for a type no kind covers (NoneType included)."""
+    return next((kind for covered, kind in _VALUE_KINDS if issubclass(python_type, covered)), None)
 
 
 class ExportMetadata(TypedDict, total=False):
@@ -68,6 +101,8 @@ class SmokeExportRequest:
 
 
 __all__ = [
+    "ColumnKind",
+    "column_kind_of_type",
     "Exporter",
     "DataSourcePagination",
     "EntityValue",

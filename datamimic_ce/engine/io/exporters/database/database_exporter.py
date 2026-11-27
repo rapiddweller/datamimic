@@ -4,9 +4,15 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from datamimic_ce.engine.io.clients.rdbms_client import ColumnKind, RdbmsClient
-from datamimic_ce.engine.io.contracts import Exporter
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from datamimic_ce.engine.io.contracts import ColumnKind, Exporter
 from datamimic_ce.engine.io.exporters.core.routing import resolve_target_entity_from_metadata
+
+if TYPE_CHECKING:
+    from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 
 
 class DatabaseExporter(Exporter):
