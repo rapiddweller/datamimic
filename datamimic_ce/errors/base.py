@@ -28,7 +28,7 @@ class DomainError(Exception):
         )
 
     def __str__(self) -> str:
-        return ""
+        return self.message or type(self).__name__
 
     def to_dict(self) -> dict[str, object]:
         payload: dict[str, object] = {
