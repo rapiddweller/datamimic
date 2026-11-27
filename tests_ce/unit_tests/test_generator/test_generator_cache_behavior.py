@@ -1,8 +1,13 @@
 import copy
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from threading import Event, Lock
+from types import SimpleNamespace
+from unittest.mock import MagicMock
 
 import pytest
+from sqlalchemy.dialects import mysql, postgresql
 
 from datamimic_ce.engine.dsl.api import GenerateStatement, KeyStatement
 from datamimic_ce.engine.dsl.model.generation.generate_model import GenerateModel
@@ -47,15 +52,12 @@ class DummyRdbmsClient(RdbmsClient):
         self._seq: dict[str, int] = {}
         self._credential = DummyCredential(dbms)
 
-    def get_current_sequence_number(
-        self, sequence_name: str, table_name: str | None = None, column_name: str | None = None
+    def reserve_sequence_block(
+        self, sequence_name: str, count: int, table_name: str | None = None, column_name: str | None = None
     ) -> int:
-        return self._seq.get(sequence_name, 1000)
-
-    def increase_sequence_number(
-        self, sequence_name: str, increment: int, table_name: str | None = None, column_name: str | None = None
-    ) -> None:
-        self._seq[sequence_name] = self.get_current_sequence_number(sequence_name) + increment
+        start = self._seq.get(sequence_name, 1000)
+        self._seq[sequence_name] = start + count
+        return start
 
 
 @pytest.fixture()
@@ -144,8 +146,6 @@ def test_sequence_table_generator_uses_cache_key(setup_context: SetupContext):
     root_gen = DummyRootGenStmt(type_="gen", count=5)
     stmt = DummyStmt(name="id", parent_stmt=None, database="db1", root_gen=root_gen)
 
-    # Pagination is what makes the instance generation-ready; only such instances are cached
-    # (an unpaginated one, as built by GenerateTask.pre_execute, must NOT poison the cache).
     pagination = DataSourcePagination(skip=0, limit=5)
     g1 = util.create_generator("SequenceTableGenerator", stmt=stmt, key="seq:orders:id", pagination=pagination)
     g2 = util.create_generator("SequenceTableGenerator", stmt=stmt, key="seq:orders:id", pagination=pagination)
@@ -158,13 +158,13 @@ def test_sequence_table_generator_uses_cache_key(setup_context: SetupContext):
 @pytest.mark.parametrize("recover", [False, True])
 def test_sequence_key_task_reconstruction_preserves_paginated_generation(setup_context: SetupContext, recover: bool):
     class RecoveringClient(DummyRdbmsClient):
-        reads = 0
+        attempts = 0
 
-        def get_current_sequence_number(self, sequence_name, table_name=None, column_name=None):
-            self.reads += 1
-            if recover and self.reads == 1:
+        def reserve_sequence_block(self, sequence_name, count, table_name=None, column_name=None):
+            self.attempts += 1
+            if recover and self.attempts == 1:
                 raise RuntimeError("sequence temporarily unavailable")
-            return super().get_current_sequence_number(sequence_name, table_name, column_name)
+            return super().reserve_sequence_block(sequence_name, count, table_name, column_name)
 
     client = RecoveringClient()
     setup_context.clients["db1"] = client
@@ -180,9 +180,9 @@ def test_sequence_key_task_reconstruction_preserves_paginated_generation(setup_c
         task.execute(context)
         values.append(context.current_product["id"])
 
-    assert values == [995, 996, 997, 998, 999]
-    assert client.reads == (2 if recover else 1)
-    assert client._seq == {}  # Reconstruction does not reserve an extra sequence range.
+    assert values == list(range(1000, 1005))
+    assert client.attempts == (2 if recover else 1)
+    assert client._seq == {"orders_id_seq": 1005}
 
 
 def test_sequence_table_generator_unpaginated_instance_is_repositioned_by_the_first_page(
@@ -197,13 +197,14 @@ def test_sequence_table_generator_unpaginated_instance_is_repositioned_by_the_fi
     stmt = DummyStmt(name="id", parent_stmt=None, database="db1", root_gen=root_gen)
 
     unpaginated = util.create_generator("SequenceTableGenerator", stmt=stmt, key="seq:t:id")
+    unpaginated.pre_execute(setup_context)
     assert setup_context.generators["seq:t:id"] is unpaginated
 
     paginated = util.create_generator(
         "SequenceTableGenerator", stmt=stmt, key="seq:t:id", pagination=DataSourcePagination(skip=0, limit=5)
     )
     assert paginated is unpaginated
-    assert [paginated.generate() for _ in range(5)] == [995, 996, 997, 998, 999]
+    assert [paginated.generate() for _ in range(5)] == list(range(1000, 1005))
 
     same_page = util.create_generator(
         "SequenceTableGenerator", stmt=stmt, key="seq:t:id", pagination=DataSourcePagination(skip=0, limit=5)
@@ -268,13 +269,7 @@ def test_sequence_table_generator_pagination_monotonic_and_bounded(setup_context
     except StopIteration:
         pass
 
-    # start = current(1000) - total_count(10) + skip(2)
-    expected_start = 1000 - 10 + 2
-    assert values[0] == expected_start
-    # The generator should yield a small bounded window and be strictly increasing
-    assert all(values[i] < values[i + 1] for i in range(len(values) - 1))
-    # Allow for current implementation off-by-one behavior: size in {limit, limit+1}
-    assert len(values) in {pagination.limit, pagination.limit + 1}
+    assert values == [1002, 1003, 1004]
 
 
 def test_no_cache_when_generator_opt_out(setup_context: SetupContext):
@@ -296,7 +291,7 @@ def test_no_cache_when_generator_opt_out(setup_context: SetupContext):
 def test_sequence_table_generator_multi_process_partitions_non_overlapping():
     shared_client = DummyRdbmsClient()
 
-    # Two separate roots to simulate two processes
+    # Copy the parent-prepared generator to simulate worker context serialization.
     def mk_ctx() -> SetupContext:
         ctx = SetupContext(
             memstore_manager=MemstoreManager(),
@@ -330,45 +325,20 @@ def test_sequence_table_generator_multi_process_partitions_non_overlapping():
 
     root_gen = DummyRootGenStmt(type_="gen", count=10)
     stmt0 = DummyStmt(name="id", parent_stmt=None, database="db1", root_gen=root_gen)
-    stmt1 = DummyStmt(name="id", parent_stmt=None, database="db1", root_gen=root_gen)
-
     # Each process pages with its chunk's global skip (chunks are (0, 5) and (5, 10))
     pagination0 = DataSourcePagination(skip=0, limit=4)
     pagination1 = DataSourcePagination(skip=5, limit=4)
-    pagination = pagination0
-
     util0 = GeneratorUtil(context=ctx0)
     util1 = GeneratorUtil(context=ctx1)
 
-    g0 = util0.create_generator("SequenceTableGenerator", stmt=stmt0, key="mp:seq:0", pagination=pagination)
-    g1 = util1.create_generator("SequenceTableGenerator", stmt=stmt1, key="mp:seq:1", pagination=pagination1)
-
-    vals0, vals1 = [], []
-    try:
-        while True:
-            vals0.append(g0.generate())
-    except StopIteration:
-        pass
-    try:
-        while True:
-            vals1.append(g1.generate())
-    except StopIteration:
-        pass
-
-    # Expected starts per current algorithm
-    base = 1000 - root_gen.count
-    expected_start0 = base + pagination.skip
-    expected_start1 = base + pagination1.skip
-
-    assert vals0[0] == expected_start0
-    assert vals1[0] == expected_start1
-    assert all(vals0[i] < vals0[i + 1] for i in range(len(vals0) - 1))
-    assert all(vals1[i] < vals1[i + 1] for i in range(len(vals1) - 1))
-    # Length may be inclusive or exclusive of end due to current implementation
-    assert len(vals0) in {pagination.limit, pagination.limit + 1}
-    assert len(vals1) in {pagination.limit, pagination.limit + 1}
-    # Ensure partitions do not overlap
-    assert set(vals0).isdisjoint(set(vals1))
+    parent = util0.create_generator("SequenceTableGenerator", stmt=stmt0, key="mp:seq")
+    parent.pre_execute(ctx0)
+    ctx1.generators["mp:seq"] = copy.deepcopy(parent)
+    g0 = util0.create_generator("SequenceTableGenerator", stmt=stmt0, key="mp:seq", pagination=pagination0)
+    g1 = util1.create_generator("SequenceTableGenerator", stmt=stmt0, key="mp:seq", pagination=pagination1)
+    assert list(iter(g0.generate, None)) == list(range(1000, 1004))
+    assert list(iter(g1.generate, None)) == list(range(1005, 1009))
+    assert shared_client._seq == {"gen_id_seq": 1010}
 
 
 def test_sequence_table_generator_rejects_mysql_multiprocessing(setup_context: SetupContext):
@@ -411,7 +381,7 @@ def test_sequence_key_task_later_pages_continue_the_sequence(setup_context: Setu
     first = _run_page(_sequence_key_task(setup_context, DataSourcePagination(skip=0, limit=5)), setup_context, 5)
     second = _run_page(_sequence_key_task(setup_context, DataSourcePagination(skip=5, limit=5)), setup_context, 5)
 
-    assert first + second == list(range(990, 1000))
+    assert first + second == list(range(1000, 1010))
 
 
 def test_sequence_key_task_process_chunk_uses_global_skip_once(setup_context: SetupContext):
@@ -422,7 +392,19 @@ def test_sequence_key_task_process_chunk_uses_global_skip_once(setup_context: Se
     first = _run_page(_sequence_key_task(setup_context, DataSourcePagination(skip=5, limit=2)), setup_context, 2)
     second = _run_page(_sequence_key_task(setup_context, DataSourcePagination(skip=7, limit=3)), setup_context, 3)
 
-    assert first + second == [995, 996, 997, 998, 999]
+    assert first + second == list(range(1005, 1010))
+
+
+def test_sequence_page_cannot_emit_values_past_its_reservation(setup_context: SetupContext):
+    client = DummyRdbmsClient()
+    setup_context.clients["db1"] = client
+    task = _sequence_key_task(setup_context, DataSourcePagination(skip=0, limit=2), count="1")
+    context = GenIterContext(setup_context, "orders")
+    task.execute(context)
+    assert context.current_product["id"] == 1000
+    with pytest.raises(StopIteration):
+        task.execute(context)
+    assert client._seq == {"orders_id_seq": 1001}
 
 
 def test_sequence_key_task_repeated_invocation_of_the_same_page_reserves_a_new_block(setup_context: SetupContext):
@@ -437,3 +419,100 @@ def test_sequence_key_task_repeated_invocation_of_the_same_page_reserves_a_new_b
 
     assert runs[0] == [1000, 1001, 1002, 1003, 1004]
     assert runs[1] == [1005, 1006, 1007, 1008, 1009]
+
+
+@pytest.mark.parametrize("prepare", [True, False])
+@pytest.mark.parametrize("honor_lock", [True, False], ids=["serialized", "negative-control"])
+@pytest.mark.parametrize("dbms", [Dbms.POSTGRESQL, Dbms.MYSQL])
+def test_sequence_reservation_under_forced_interleaving(setup_context, monkeypatch, prepare, honor_lock, dbms):
+    second_context = copy.deepcopy(setup_context)
+    first_read = Event()
+    second_attempt = Event()
+    lock = Lock()
+    # One backend has already requested nextval() on a CACHE 20 sequence starting at 1000.
+    # Its local cache is below the shared high-water mark, which is the only value we read.
+    next_value = 1020
+
+    def run(context, first):
+        client = object.__new__(RdbmsClient)
+        client._credential = SimpleNamespace(dbms=dbms, db_schema="test", read_only=False)
+        dialect = postgresql.dialect() if dbms is Dbms.POSTGRESQL else mysql.dialect()
+        connection = MagicMock(dialect=dialect)
+        connection.execution_options.return_value = connection
+        engine = MagicMock()
+        engine.connect.return_value.__enter__.return_value = connection
+        engine.begin.return_value.__enter__.return_value = connection
+        monkeypatch.setattr(client, "_create_engine", lambda: engine)
+        context.clients["db1"] = client
+        holds_lock = False
+
+        def execute(query, params=None):
+            nonlocal next_value, holds_lock
+            sql = str(query)
+            result = MagicMock()
+            if "pg_advisory_xact_lock" in sql or "GET_LOCK" in sql:
+                if honor_lock:
+                    if not first:
+                        second_attempt.set()
+                    assert lock.acquire(timeout=5)
+                    holds_lock = True
+                result.scalar.return_value = 1
+            elif "RELEASE_LOCK" in sql:
+                end_transaction()
+                result.scalar.return_value = 1
+            elif "seqincrement" in sql:
+                result.scalar_one_or_none.return_value = 1
+            elif "SELECT last_value, is_called" in sql or "SELECT AUTO_INCREMENT" in sql:
+                snapshot = next_value
+                if first and not first_read.is_set():
+                    first_read.set()
+                    assert second_attempt.wait(5)
+                result.one.return_value = (snapshot - 1, True)
+                result.scalar_one_or_none.return_value = snapshot
+            elif "setval" in sql:
+                next_value = params["last_value"] + 1
+            elif "ALTER TABLE" in sql:
+                next_value = int(sql.rsplit(" ", 1)[-1])
+            elif "SET SESSION information_schema_stats_expiry" in sql:
+                pass
+            else:
+                pytest.fail(f"Unexpected sequence SQL: {sql}")
+            return result
+
+        def end_transaction(*_exc):
+            if holds_lock:
+                lock.release()
+
+        connection.execute.side_effect = execute
+        connection.begin.return_value.__exit__.side_effect = end_transaction
+        try:
+            if prepare:
+                _sequence_key_task(context, None, count="5").pre_execute(context)
+                page = DataSourcePagination(skip=0, limit=5)
+            else:
+                page = None  # Like a key under <if>, with no GenerateTask.pre_execute visit.
+            return _run_page(_sequence_key_task(context, page, count="5"), context, 5)
+        finally:
+            if not first:
+                second_attempt.set()
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        first = executor.submit(run, setup_context, True)
+        assert first_read.wait(5)
+        second = executor.submit(run, second_context, False)
+        assert first.result() == list(range(1020, 1025))
+        second_start = 1025 if honor_lock else 1020
+        assert second.result() == list(range(second_start, second_start + 5))
+
+
+@pytest.mark.parametrize("prepare", [True, False])
+def test_legacy_split_reservation_boundary_can_overlap(prepare):
+    count = 5
+    boundary = 1000
+    if prepare:
+        # A and B advance by count before either takes its boundary.
+        boundary += 2 * (count + 1)  # two calls to setval(nextval() + count)
+    # Both the split pre_execute and the unprepared path subtracted count from nextval().
+    first = range(boundary - count, boundary)
+    second = range(boundary - count + 1, boundary + 1)
+    assert len(set(first) & set(second)) == count - 1

@@ -47,17 +47,13 @@ class RecordingRdbmsClient(RdbmsClient):
         self.requested_names: list[str] = []
         self._credential = SimpleNamespace(dbms=Dbms.POSTGRESQL)
 
-    def get_current_sequence_number(
-        self, sequence_name: str, table_name: str | None = None, column_name: str | None = None
+    def reserve_sequence_block(
+        self, sequence_name: str, count: int, table_name: str | None = None, column_name: str | None = None
     ) -> int:
         self.requested_names.append(sequence_name)
-        return self._seq.get(sequence_name, 1000)
-
-    def increase_sequence_number(
-        self, sequence_name: str, increment: int, table_name: str | None = None, column_name: str | None = None
-    ) -> None:
-        self.requested_names.append(sequence_name)
-        self._seq[sequence_name] = self._seq.get(sequence_name, 1000) + increment
+        start = self._seq.get(sequence_name, 1000)
+        self._seq[sequence_name] = start + count
+        return start
 
 
 @pytest.fixture()
@@ -103,28 +99,28 @@ def _make(
 
 
 def test_default_name_is_the_existing_convention(setup_context: SetupContext):
-    _, client = _make(setup_context, "SequenceTableGenerator", key="k1")
+    gen, client = _make(setup_context, "SequenceTableGenerator", key="k1")
+    gen.generate()
     assert client.requested_names == ["orders_id_seq"]
 
 
 def test_empty_parens_behave_like_no_parens(setup_context: SetupContext):
-    _, client = _make(setup_context, "SequenceTableGenerator()", key="k2")
+    gen, client = _make(setup_context, "SequenceTableGenerator()", key="k2")
+    gen.generate()
     assert client.requested_names == ["orders_id_seq"]
 
 
 def test_explicit_sequence_name_reaches_client_verbatim(setup_context: SetupContext):
     gen, client = _make(setup_context, "SequenceTableGenerator(sequence='zsv.t_angebote_id_seq')", key="k3")
-    assert client.requested_names == ["zsv.t_angebote_id_seq"]
-    # pre_execute (the increment side) must resolve to the same explicit name
+    assert client.requested_names == []
     gen.pre_execute(setup_context)
-    assert client.requested_names[-1] == "zsv.t_angebote_id_seq"
+    assert client.requested_names == ["zsv.t_angebote_id_seq"]
 
 
 def test_pre_execute_uses_convention_name_when_no_override(setup_context: SetupContext):
     gen, client = _make(setup_context, "SequenceTableGenerator", key="k4")
     gen.pre_execute(setup_context)
-    # init read, reservation, re-anchor read on the reserved block
-    assert client.requested_names == ["orders_id_seq"] * 3
+    assert client.requested_names == ["orders_id_seq"]
 
 
 def test_positional_arg_is_rejected(setup_context: SetupContext):
