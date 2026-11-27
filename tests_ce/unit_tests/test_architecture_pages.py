@@ -16,6 +16,7 @@ SCRIPT = Path(__file__).resolve().parents[2] / "script/architecture_study/publis
 SHA = "a" * 40
 
 
+@pytest.mark.skipif(os.name == "nt", reason="Exercises the Ubuntu Bash workflow")
 @pytest.mark.parametrize(
     "artifact,job,expected_status,available",
     [

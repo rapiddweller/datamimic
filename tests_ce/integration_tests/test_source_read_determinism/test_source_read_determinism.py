@@ -31,8 +31,8 @@ _FILE_ORDER = [str(i) for i in range(12)]
 _FILE_NAMES = ["Alice", "Bob", "Carol", "Dave", "Eve", "Frank", "Grace", "Hank", "Ivy", "Jack", "Karen", "Leo"]
 
 
-def _order(filename: str) -> list[str]:
-    engine = DataMimicTest(test_dir=_TEST_DIR, filename=filename, capture_test_result=True)
+def _order(filename: str, project_dir: Path = _TEST_DIR) -> list[str]:
+    engine = DataMimicTest(test_dir=project_dir, filename=filename, capture_test_result=True)
     engine.test_with_timer()
     return [row["id"] for row in engine.capture_result()["rows"]]
 
@@ -138,15 +138,15 @@ def test_cascade_unseeded_is_non_deterministic() -> None:
 _SQLITE_ROW_IDS = [str(i) for i in range(12)]
 
 
-def test_sqlite_seeded_random_read_replays_identically() -> None:
+def test_sqlite_seeded_random_read_replays_identically(project_dir: Path) -> None:
     """`<setup rngSeed>` makes a random SQLite source read reproducible — and still shuffled."""
-    first = _order("sqlite_seeded.xml")
-    second = _order("sqlite_seeded.xml")
+    first = _order("sqlite_seeded.xml", project_dir)
+    second = _order("sqlite_seeded.xml", project_dir)
     assert first == second, "seeded sqlite random read must replay identically"
     assert sorted(first) == sorted(_SQLITE_ROW_IDS), "every source row must appear exactly once"
     assert first != _SQLITE_ROW_IDS, "it must be genuinely shuffled, not table order"
 
 
-def test_sqlite_unseeded_random_read_is_non_deterministic() -> None:
+def test_sqlite_unseeded_random_read_is_non_deterministic(project_dir: Path) -> None:
     """Without a setup seed, two random SQLite reads of the same source differ."""
-    assert _order("sqlite_unseeded.xml") != _order("sqlite_unseeded.xml")
+    assert _order("sqlite_unseeded.xml", project_dir) != _order("sqlite_unseeded.xml", project_dir)

@@ -6,11 +6,13 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path, PurePosixPath
+from types import SimpleNamespace
 
 import pytest
 from typer.testing import CliRunner
 
 from datamimic_ce.authoring import create_authoring_application
+from datamimic_ce.authoring.adapters import project_runner
 from datamimic_ce.authoring.adapters.external_effects import CeExternalEffectsDetector
 from datamimic_ce.authoring.adapters.project_runner import CeProjectRunner
 from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
@@ -18,6 +20,7 @@ from datamimic_ce.authoring.application.project_run import ProjectRunWorkflow
 from datamimic_ce.authoring.domain.project_run import ProjectRunRecord, ProjectRunRequest, ProjectRunResult
 from datamimic_ce.authoring.domain.requests import PROJECT_ACCEPTANCE_PATH, PROJECT_ENTRY_PATH
 from datamimic_ce.interfaces.cli import app
+from tests_ce.symlink_fixtures import _probe_symlinks
 
 fastmcp_client = pytest.importorskip("fastmcp.client")
 transports = pytest.importorskip("fastmcp.client.transports")
@@ -157,18 +160,14 @@ def test_run_project_reports_a_changed_or_missing_proof_file(tmp_path: Path, cha
 
 @pytest.mark.parametrize("target_change", ["none", "contents", "outside"])
 def test_run_project_checks_linked_acceptance_like_build(tmp_path: Path, target_change: str) -> None:
+    _probe_symlinks(tmp_path)
     project = tmp_path / "project"
     shutil.copytree(CSV_PROJECT, project)
     acceptance = project / PROJECT_ACCEPTANCE_PATH
     original = project / "docs" / "original.json"
     original.parent.mkdir()
     acceptance.rename(original)
-    try:
-        acceptance.symlink_to("../docs/original.json")
-    except OSError as error:
-        if sys.platform == "win32" and error.winerror == 1314:
-            pytest.skip("Windows denied creating this file symlink")
-        raise
+    acceptance.symlink_to("../docs/original.json")
 
     workspace = AuthoringWorkspaceContext(project, PROJECT_ENTRY_PATH)
     build = create_authoring_application(project, descriptor_path=PROJECT_ENTRY_PATH).build()
@@ -217,7 +216,16 @@ finally:
         )
         return popen([*command[:2], "-c", child, *command[3:]], **kwargs)
 
-    monkeypatch.setattr(subprocess, "Popen", launch)
+    monkeypatch.setattr(
+        project_runner,
+        "subprocess",
+        SimpleNamespace(
+            Popen=launch,
+            DEVNULL=subprocess.DEVNULL,
+            STDOUT=subprocess.STDOUT,
+            TimeoutExpired=subprocess.TimeoutExpired,
+        ),
+    )
     workflow = ProjectRunWorkflow(lambda: build, CeExternalEffectsDetector(workspace), CeProjectRunner(workspace))
     run = workflow.execute(ProjectRunRequest())
 

@@ -10,7 +10,6 @@ from typing import get_type_hints
 import dill
 import pytest
 
-from datamimic_ce.domains.api import RunSeed
 from datamimic_ce.engine.dsl.model.setup.include_model import IncludeModel
 from datamimic_ce.engine.dsl.model.setup.memstore_model import MemstoreModel
 from datamimic_ce.engine.dsl.model.setup.setup_model import SetupModel
@@ -23,7 +22,6 @@ from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig
 from datamimic_ce.engine.io.exporters import registry as exporter_registry
 from datamimic_ce.engine.io.exporters import session as export_session_module
-from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import TestResultExporter
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.storage.global_increment import GlobalIncrementRegistry
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
@@ -31,35 +29,7 @@ from datamimic_ce.engine.runtime.tasks.setup.include_task import IncludeTask
 from datamimic_ce.engine.runtime.tasks.setup.memstore_task import MemstoreTask
 from datamimic_ce.engine.runtime.tasks.setup.setup_task import SetupTask
 from datamimic_ce.engine.runtime.tasks.values.construction.converters import create_converter_list
-
-
-def _context(
-    clients: dict[str, RegisteredClient] | None = None,
-    namespace: dict[str, object] | None = None,
-    global_variables: dict[str, object] | None = None,
-    properties: dict[str, object] | None = None,
-) -> SetupContext:
-    return SetupContext(
-        memstore_manager=MemstoreManager(),
-        task_id="context-test",
-        test_mode=True,
-        test_result_exporter=TestResultExporter(),
-        default_separator="|",
-        default_locale="en",
-        default_dataset="US",
-        use_mp=False,
-        descriptor_dir=Path("."),
-        num_process=1,
-        default_variable_prefix="__",
-        default_variable_suffix="__",
-        default_line_separator="\n",
-        clients=clients,
-        properties=properties,
-        namespace={"nested": [1]} if namespace is None else namespace,
-        global_variables={"shared": [1]} if global_variables is None else global_variables,
-        generators={"cached": [1]},
-        run_seed=RunSeed.create(7),
-    )
+from tests_ce.unit_tests.context_fixtures import _context
 
 
 def test_setup_context_deepcopy_shares_globals_but_resets_runtime_state() -> None:

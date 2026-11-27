@@ -17,6 +17,6 @@ class TestIf:
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_simple_if.xml")
         test_engine.test_with_timer()
 
-    def test_complex_if(self):
-        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_complex_if.xml")
+    def test_complex_if(self, project_dir):
+        test_engine = DataMimicTest(test_dir=project_dir, filename="test_complex_if.xml")
         test_engine.test_with_timer()

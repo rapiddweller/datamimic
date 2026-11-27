@@ -10,7 +10,7 @@ from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.domain.dm_json import DmJsonDocumentV1
 from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, CompileDocumentRequest, RunRequest
 from datamimic_ce.interfaces.cli.authoring import app
-from tests_ce.authoring_project import build_project, write_project
+from tests_ce.authoring_project import write_project
 
 
 def oversized_document() -> DmJsonDocumentV1:
@@ -40,15 +40,23 @@ def application(root: Path):
     return create_authoring_application(workspace_root=root)
 
 
-def test_build_rejects_an_oversized_entry_without_echoing_the_document(tmp_path: Path) -> None:
-    result = build_project(tmp_path, oversized_document())
+@pytest.mark.parametrize("newline", ["\n", "\r\n"], ids=["lf", "crlf"])
+def test_build_rejects_an_oversized_entry_without_echoing_the_document(tmp_path: Path, newline: str) -> None:
+    write_project(tmp_path, oversized_document())
+    entry = tmp_path / PROJECT_ENTRY_PATH
+    xml = entry.read_text(encoding="utf-8").replace("xxx", "éxx", 1).replace("\n", newline)
+    entry.write_bytes(xml.encode("utf-8"))
+    result = application(tmp_path).build()
     assert result.outcome == "rejected"
     assert result.phase.value == "policy"
     diagnostic = result.diagnostics[0]
     assert diagnostic.code == "limit"
     assert diagnostic.path == ("descriptor", PROJECT_ENTRY_PATH.as_posix())
     assert diagnostic.expected == 1_000_000
-    assert diagnostic.actual == len((tmp_path / PROJECT_ENTRY_PATH).read_text(encoding="utf-8"))
+    assert diagnostic.actual == len(entry.read_bytes().decode("utf-8")) == len(xml)
+    assert diagnostic.actual != len(entry.read_bytes())
+    if newline == "\r\n":
+        assert diagnostic.actual != len(entry.read_text(encoding="utf-8"))
     assert diagnostic.remediation
     assert "x" * 200 not in result.model_dump_json()
 

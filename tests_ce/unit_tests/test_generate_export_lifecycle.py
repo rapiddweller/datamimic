@@ -50,10 +50,10 @@ def test_generate_finalizes_all_buffered_json_chunks(tmp_path: Path, multiproces
     assert sorted(ids) == [1, 2, 3, 4, 5]
     if not multiprocessing:
         assert [path.name for path in files] == ["rows_0.json", "rows_1.json", "rows_2.json"]
-        assert [path.read_bytes() for path in files] == [
-            b'[\n{"id": 1},\n{"id": 2}]',
-            b'[\n{"id": 3},\n{"id": 4}]',
-            b'[\n{"id": 5}]',
+        assert [path.read_text(encoding="utf-8").rstrip("\n") for path in files] == [
+            '[\n{"id": 1},\n{"id": 2}]',
+            '[\n{"id": 3},\n{"id": 4}]',
+            '[\n{"id": 5}]',
         ]
 
 

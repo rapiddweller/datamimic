@@ -9,6 +9,7 @@ FreeTDS opt-in, no proprietary ODBC package needed) vs. the default ODBC Driver 
 Mocks sqlalchemy.create_engine itself - no real connection needed to verify which dialect
 string/URL gets built for which credential."""
 
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -82,7 +83,7 @@ def test_sqlite_uses_task_directory_in_each_supported_environment(tmp_path, monk
     ) as create:
         client._create_engine()
 
-    assert create.call_args.args[0] == "sqlite:///db/warehouse.sqlite"
+    assert create.call_args.args[0] == f"sqlite:///{Path('db') / 'warehouse.sqlite'}"
     assert (tmp_path / "db").is_dir()
 
 

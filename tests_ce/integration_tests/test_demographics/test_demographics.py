@@ -5,14 +5,10 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-from pathlib import Path
-
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 
 class TestDemographics:
-    _test_dir = Path(__file__).resolve().parent
-
-    def test_simple(self):
-        test_engine = DataMimicTest(test_dir=self._test_dir, filename="demo.xml")
+    def test_simple(self, project_dir):
+        test_engine = DataMimicTest(test_dir=project_dir, filename="demo.xml")
         test_engine.test_with_timer()
