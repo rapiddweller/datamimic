@@ -7,7 +7,8 @@
 import copy
 import logging
 import sys
-from contextlib import suppress
+from collections.abc import Iterator
+from contextlib import contextmanager, suppress
 from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -121,6 +122,16 @@ _CONNECTION_IDENTITY = {
 
 # <execute> scripts are raw SQL: no bind parameters (":new" in a trigger) and no DBAPI percent formatting ("g % 3")
 _RAW_SCRIPT = {"no_parameters": True}
+
+
+@contextmanager
+def _normalize_database_errors(target: str) -> Iterator[list[OperationError]]:
+    """Normalize database failures without retaining their statements or driver messages."""
+    failures: list[OperationError] = []
+    try:
+        yield failures
+    except sqlalchemy.exc.SQLAlchemyError as error:
+        failures.append(_operation_failure(target, error))
 
 
 class RdbmsClient(DatabaseClient):
@@ -432,20 +443,23 @@ class RdbmsClient(DatabaseClient):
         """Rows of a table, ordered by its primary key, else by every column. For a stable snapshot that
         order keeps OFFSET pages disjoint across pages and workers, and keeps full reads that are sliced
         or shuffled per worker (random/cumulated/unique) identical in every worker."""
-        engine = self._create_engine()
+        with _normalize_database_errors("database read") as failures:
+            engine = self._create_engine()
 
-        with engine.connect() as conn:
-            actual_table_name = self._get_actual_table_name(table_name)
-            table = self._get_metadata(engine).tables[actual_table_name]
+            with engine.connect() as conn:
+                actual_table_name = self._get_actual_table_name(table_name)
+                table = self._get_metadata(engine).tables[actual_table_name]
 
-            query = select(table).order_by(*(table.primary_key.columns or table.c))
-            if pagination is None:
-                logger.info(f"page is None, get all data from table {actual_table_name}")
-            else:
-                query = query.offset(pagination.skip).limit(pagination.limit)
+                query = select(table).order_by(*(table.primary_key.columns or table.c))
+                if pagination is None:
+                    logger.info(f"page is None, get all data from table {actual_table_name}")
+                else:
+                    query = query.offset(pagination.skip).limit(pagination.limit)
 
-            result = conn.execute(query).fetchall()
-            return [dict(row._mapping) for row in result]
+                result = conn.execute(query).fetchall()
+                return [dict(row._mapping) for row in result]
+        if failures:
+            raise failures[0]
 
     def get_by_page_with_query(self, original_query: str, pagination: DataSourcePagination | None = None):
         """
@@ -497,18 +511,21 @@ class RdbmsClient(DatabaseClient):
         integrity. The reference task does the distinct/with-replacement sampling deterministically
         via runtime source selection / ctx.rng (so the full column set is returned, not a
         pre-limited slice)."""
-        engine = self._create_engine()
+        with _normalize_database_errors("database read") as failures:
+            engine = self._create_engine()
 
-        with engine.connect() as conn:
-            actual_table_name = self._get_actual_table_name(table_name)
-            table = self._get_metadata(engine).tables[actual_table_name]
-            columns = [table.c[name] for name in column_names]
-            # ORDER BY the selected columns (NOT random): a stable input order so the seeded
-            # shuffle is reproducible run-to-run. ORDER BY random() would
-            # destroy that reproducibility.
-            # fetch-all + sort suits reference/lookup tables; a huge source would want
-            # SELECT DISTINCT or DB-side sampling — an EE-scale concern, not CE's reference path.
-            return [tuple(row) for row in conn.execute(select(*columns).order_by(*columns)).fetchall()]
+            with engine.connect() as conn:
+                actual_table_name = self._get_actual_table_name(table_name)
+                table = self._get_metadata(engine).tables[actual_table_name]
+                columns = [table.c[name] for name in column_names]
+                # ORDER BY the selected columns (NOT random): a stable input order so the seeded
+                # shuffle is reproducible run-to-run. ORDER BY random() would
+                # destroy that reproducibility.
+                # fetch-all + sort suits reference/lookup tables; a huge source would want
+                # SELECT DISTINCT or DB-side sampling — an EE-scale concern, not CE's reference path.
+                return [tuple(row) for row in conn.execute(select(*columns).order_by(*columns)).fetchall()]
+        if failures:
+            raise failures[0]
 
     def insert(self, table_name: str, data_list: list):
         """
@@ -561,52 +578,61 @@ class RdbmsClient(DatabaseClient):
     def update(self, table_name: str, data_list: list) -> int:
         """UPDATE each record by primary key; returns the number of matched rows.
         Row-by-row statements: test-data volumes, not a bulk path."""
-        self._require_write("update")
-        if not data_list:
-            return 0
-        engine = self._create_engine()
-        table, pk = self._table_and_pk(engine, table_name)
-        matched = 0
-        with engine.begin() as connection:
-            for row in self._apply_global_json_config(data_list):
-                values = {k: v for k, v in row.items() if k not in pk}
-                if not values:
-                    raise ValueError(f"update on '{table_name}' has no non-key columns to set")
-                clause = self._pk_clause(table, row, pk, table_name, "update")
-                matched += connection.execute(table.update().where(*clause).values(**values)).rowcount
-        return matched
+        with _normalize_database_errors("database write") as failures:
+            self._require_write("update")
+            if not data_list:
+                return 0
+            engine = self._create_engine()
+            table, pk = self._table_and_pk(engine, table_name)
+            matched = 0
+            with engine.begin() as connection:
+                for row in self._apply_global_json_config(data_list):
+                    values = {k: v for k, v in row.items() if k not in pk}
+                    if not values:
+                        raise ValueError(f"update on '{table_name}' has no non-key columns to set")
+                    clause = self._pk_clause(table, row, pk, table_name, "update")
+                    matched += connection.execute(table.update().where(*clause).values(**values)).rowcount
+            return matched
+        if failures:
+            raise failures[0]
 
     def upsert(self, table_name: str, data_list: list) -> None:
         """UPDATE by primary key, INSERT the rows that matched nothing."""
-        self._require_write("upsert")
-        if not data_list:
-            return
-        engine = self._create_engine()
-        table, pk = self._table_and_pk(engine, table_name)
-        with engine.begin() as connection:
-            for row in self._apply_global_json_config(data_list):
-                clause = self._pk_clause(table, row, pk, table_name, "upsert")
-                values = {k: v for k, v in row.items() if k not in pk}
-                if values:
-                    exists = connection.execute(table.update().where(*clause).values(**values)).rowcount > 0
-                else:  # all-PK row: nothing to update, just ensure presence
-                    exists = connection.execute(select(table.c[pk[0]]).where(*clause)).first() is not None
-                if not exists:
-                    connection.execute(table.insert(), [row])
+        with _normalize_database_errors("database write") as failures:
+            self._require_write("upsert")
+            if not data_list:
+                return
+            engine = self._create_engine()
+            table, pk = self._table_and_pk(engine, table_name)
+            with engine.begin() as connection:
+                for row in self._apply_global_json_config(data_list):
+                    clause = self._pk_clause(table, row, pk, table_name, "upsert")
+                    values = {k: v for k, v in row.items() if k not in pk}
+                    if values:
+                        exists = connection.execute(table.update().where(*clause).values(**values)).rowcount > 0
+                    else:  # all-PK row: nothing to update, just ensure presence
+                        exists = connection.execute(select(table.c[pk[0]]).where(*clause)).first() is not None
+                    if not exists:
+                        connection.execute(table.insert(), [row])
+        if failures:
+            raise failures[0]
 
     def delete(self, table_name: str, data_list: list) -> int:
         """DELETE each record by primary key; returns the number of deleted rows."""
-        self._require_write("delete")
-        if not data_list:
-            return 0
-        engine = self._create_engine()
-        table, pk = self._table_and_pk(engine, table_name)
-        deleted = 0
-        with engine.begin() as connection:
-            for row in self._apply_global_json_config(data_list):
-                clause = self._pk_clause(table, row, pk, table_name, "delete")
-                deleted += connection.execute(table.delete().where(*clause)).rowcount
-        return deleted
+        with _normalize_database_errors("database write") as failures:
+            self._require_write("delete")
+            if not data_list:
+                return 0
+            engine = self._create_engine()
+            table, pk = self._table_and_pk(engine, table_name)
+            deleted = 0
+            with engine.begin() as connection:
+                for row in self._apply_global_json_config(data_list):
+                    clause = self._pk_clause(table, row, pk, table_name, "delete")
+                    deleted += connection.execute(table.delete().where(*clause)).rowcount
+            return deleted
+        if failures:
+            raise failures[0]
 
     def clear_table(self, table_name: str) -> None:
         """Remove every row and keep the table, its indexes and constraints (target="db.clear").
@@ -737,23 +763,25 @@ class RdbmsClient(DatabaseClient):
         self, sequence_name: str, count: int, table_name: str | None = None, column_name: str | None = None
     ) -> int:
         """Reserve count consecutive numbers and return the first, under a per-sequence database lock."""
-        self._require_write("reserve_sequence_block")
-        count = int(count)
-        if count < 1:
-            raise ValueError("Sequence reservation count must be positive")
-        dbms = self._credential.dbms
-        if dbms is Dbms.POSTGRESQL:
-            # The transaction must hold the lock even if the configured engine uses AUTOCOMMIT,
-            # and catalog reads after the lock must see a sequence created by the prior holder.
-            with (
-                self._create_engine().connect() as connection,
-                connection.execution_options(isolation_level="READ COMMITTED").begin(),
-            ):
-                return self._reserve_postgresql_sequence(connection, sequence_name, count)
-        if dbms is Dbms.MYSQL:
-            with self._create_engine().begin() as connection:
-                return self._advance_mysql_auto_increment(connection, sequence_name, table_name, column_name, count)
-        raise ValueError(f"SequenceTableGenerator is not supported for dbms '{dbms}'")
+        with _normalize_database_errors("database sequence") as failures:
+            self._require_write("reserve_sequence_block")
+            count = int(count)
+            if count < 1:
+                raise ValueError("Sequence reservation count must be positive")
+            dbms = self._credential.dbms
+            if dbms is Dbms.POSTGRESQL:
+                # The transaction must hold the lock even if the configured engine uses AUTOCOMMIT,
+                # and catalog reads after the lock must see a sequence created by the prior holder.
+                with (
+                    self._create_engine().connect() as connection,
+                    connection.execution_options(isolation_level="READ COMMITTED").begin(),
+                ):
+                    return self._reserve_postgresql_sequence(connection, sequence_name, count)
+            if dbms is Dbms.MYSQL:
+                with self._create_engine().begin() as connection:
+                    return self._advance_mysql_auto_increment(connection, sequence_name, table_name, column_name, count)
+            raise ValueError(f"SequenceTableGenerator is not supported for dbms '{dbms}'")
+        raise failures[0]
 
     def _reserve_postgresql_sequence(self, connection: Connection, sequence_name: str, count: int) -> int:
         schema, seq = self._split_sequence_schema(sequence_name, self._credential.db_schema or "public")
@@ -817,10 +845,10 @@ class RdbmsClient(DatabaseClient):
         # AUTO_INCREMENT is table-scoped. Case-fold the lock name so MySQL configurations with
         # case-insensitive identifiers cannot take distinct locks on the same table.
         lock_name = f"datamimic_seq_{schema.lower()}_{table_name.lower()}"[:64]
-        acquired = connection.execute(text("SELECT GET_LOCK(:name, 30)"), {"name": lock_name}).scalar()
-        if acquired != 1:
-            raise RuntimeError(f"Could not acquire MySQL advisory lock for sequence '{sequence_name}' within 30s")
         try:
+            acquired = connection.execute(text("SELECT GET_LOCK(:name, 30)"), {"name": lock_name}).scalar()
+            if acquired != 1:
+                raise RuntimeError(f"Could not acquire MySQL advisory lock for sequence '{sequence_name}' within 30s")
             connection.execute(text("SET SESSION information_schema_stats_expiry = 0"))
             # Fresh InnoDB tables can report NULL until their default counter is initialized.
             # A populated table with an unreadable counter must never be treated as fresh.
@@ -842,17 +870,15 @@ class RdbmsClient(DatabaseClient):
             advanced = connection.execute(counter_query, params).scalar_one_or_none()
             if advanced is None or int(advanced) < end:
                 raise ValueError("MySQL AUTO_INCREMENT counter could not reserve the requested sequence block")
-            return start
-        finally:
-            try:
-                released = connection.execute(text("SELECT RELEASE_LOCK(:name)"), {"name": lock_name}).scalar()
-                if released != 1:
-                    connection.invalidate()
-            except Exception as release_err:
-                # Closing a SQLAlchemy connection normally returns the session to the pool.
-                # Discard it so a failed release cannot leave a lock held by a pooled session.
-                connection.invalidate()
-                logger.error(f"Failed to release MySQL advisory lock '{lock_name}': {release_err}")
+            released = connection.execute(text("SELECT RELEASE_LOCK(:name)"), {"name": lock_name}).scalar()
+            if released != 1:
+                raise RuntimeError("Could not release MySQL sequence advisory lock")
+        except BaseException:
+            # Discard the session on failure so its lock cannot survive in the pool.
+            # Avoid a second SQL call that could obscure the original database error.
+            connection.invalidate()
+            raise
+        return start
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self._engine:

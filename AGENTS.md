@@ -33,8 +33,8 @@ same application. See `docs/agent_plugin.md`.
 | Execute the persisted project normally | `datamimic run datamimic.xml` |
 | Export editor/authoring contracts | `datamimic authoring export-contract contracts.tar.gz` |
 
-Authoring commands default to JSON, except `init` and `export-contract`, which
-print text. File input and `-` for stdin are supported where applicable.
+Authoring commands default to JSON, except `export-contract`, which prints its
+output path; `init` returns the `datamimic_init` result (`--format text` for humans). File input and `-` for stdin are supported where applicable.
 Exit codes: `0` succeeds, `1` rejects an input/operation or Build cannot read its input, `2` is CLI usage error.
 For `run` and `init`, invalid argument or option values detected before work exit `2`
 (including malformed runtime parameters, platform configuration and project names);

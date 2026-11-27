@@ -15,7 +15,7 @@ from typer.testing import CliRunner
 from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.adapters import workspace
 from datamimic_ce.authoring.adapters.workspace import write_project_scaffold
-from datamimic_ce.authoring.domain.project_scaffold import ProjectPattern, ProjectScaffold
+from datamimic_ce.authoring.domain.project_scaffold import ProjectInitResult, ProjectPattern, ProjectScaffold
 from datamimic_ce.authoring.domain.requests import PROJECT_ACCEPTANCE_PATH, PROJECT_ENTRY_PATH, ReadyBuild
 from datamimic_ce.interfaces.cli import app
 from datamimic_ce.interfaces.cli.presenter import NEXT_STEP_HINT
@@ -23,7 +23,39 @@ from datamimic_ce.interfaces.project import create_project_structure
 
 
 def _init(project: Path, *extra: str):
-    return CliRunner().invoke(app, ["authoring", "init", str(project), *extra])
+    return CliRunner().invoke(app, ["authoring", "init", str(project), "--format", "text", *extra])
+
+
+def test_init_defaults_to_the_json_result_that_the_mcp_tool_returns(tmp_path: Path) -> None:
+    result = CliRunner().invoke(app, ["authoring", "init", str(tmp_path / "shop")])
+
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout) == {
+        "outcome": "written",
+        "pattern": "flat",
+        "files": ["datamimic.xml", "acceptance/build.json"],
+        "diagnostics": [],
+    }
+    assert (
+        result.stdout
+        == ProjectInitResult.written(ProjectPattern.FLAT, scaffold_paths()).model_dump_json(indent=2) + "\n"
+    )
+
+
+def test_init_json_reports_a_refusal_with_exit_code_one_and_writes_nothing(tmp_path: Path) -> None:
+    (tmp_path / PROJECT_ENTRY_PATH).write_text("mine", encoding="utf-8")
+
+    result = CliRunner().invoke(app, ["authoring", "init", str(tmp_path)])
+
+    payload = json.loads(result.stdout)
+    assert result.exit_code == 1
+    assert payload["outcome"] == "not_written"
+    assert "these files exist already: datamimic.xml" in payload["diagnostics"][0]["message"]
+    assert not (tmp_path / PROJECT_ACCEPTANCE_PATH).exists()
+
+
+def scaffold_paths() -> tuple[PurePosixPath, ...]:
+    return (PROJECT_ENTRY_PATH, PROJECT_ACCEPTANCE_PATH)
 
 
 def test_init_writes_the_entry_and_the_acceptance_and_builds_ready(tmp_path: Path) -> None:

@@ -628,10 +628,12 @@ class CeBoundedExecutor:
         finally:
             try:
                 temporary.cleanup()
-            except OSError:
+            except OSError as error:
+                # A Windows file lock shows here; the path and the OS error say which file and why.
                 result = _failure(
                     AuthoringSystemDiagnosticCode.CLEANUP,
-                    "Private bounded workspace could not be removed.",
+                    f"Private bounded workspace could not be removed: {error.filename or temporary.name} "
+                    f"({type(error).__name__}: {error.strerror or error})",
                     request.max_count,
                 )
         return result

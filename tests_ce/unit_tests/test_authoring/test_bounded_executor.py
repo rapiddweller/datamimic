@@ -373,6 +373,27 @@ def test_workspace_cleanup_failure_blocks_success_after_actual_removal(monkeypat
     assert result.diagnostics[0].code is AuthoringSystemDiagnosticCode.CLEANUP
 
 
+def test_workspace_cleanup_failure_names_the_locked_path_and_the_os_error(monkeypatch):
+    import tempfile
+
+    import shutil
+
+    created = []
+
+    def locked(directory):
+        created.append(directory.name)
+        raise PermissionError(13, "The process cannot access the file", str(Path(directory.name) / "locked.txt"))
+
+    monkeypatch.setattr(tempfile.TemporaryDirectory, "cleanup", locked)
+    result = CeBoundedExecutor().execute(BoundedExecutionRequest(xml=_XML))
+    for name in created:
+        shutil.rmtree(name, ignore_errors=True)
+    message = result.diagnostics[0].message
+    assert result.diagnostics[0].code is AuthoringSystemDiagnosticCode.CLEANUP
+    assert "locked.txt" in message
+    assert "PermissionError: The process cannot access the file" in message
+
+
 def test_unique_reference_exhaustion_keeps_category_in_private_child(tmp_path):
     import sqlite3
     from datamimic_ce.errors import ErrorCode

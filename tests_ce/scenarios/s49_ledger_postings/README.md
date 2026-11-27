@@ -50,7 +50,7 @@ directory for each run.
 
 | Rule | Decided in | Checked in the output |
 |---|---|---|
-| L1 each entry balances | the lines of step 40 | `entry_debits == entry_credits` on the line checks |
+| L1 each entry balances | the lines of step 40 | `group_sum` on `ledger_lines`: sum `debit_cents` and `credit_cents` by `entry_id` |
 | L2 the account is open on the posting day; the closing day is open | step 40 and `accounts.ent.csv` | `days_since_open >= 0`, `days_to_close == None or days_to_close >= 0` |
 | L3 a line has one positive side | step 40 | `one_sided` |
 | L4 the currency of a line is the currency of its account; an invoice has a currency | `invoices.ent.csv` and step 40 | `currency_matches` |

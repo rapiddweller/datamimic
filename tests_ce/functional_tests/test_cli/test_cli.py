@@ -119,7 +119,7 @@ class TestCLI:
         assert "datamimic authoring build ." in hint and "datamimic run datamimic.xml" in hint
         assert "/tmp" not in hint and "my_project" not in hint
 
-    @pytest.mark.parametrize("init_args", [("init",), ("authoring", "init")])
+    @pytest.mark.parametrize("init_args", [("init",), ("authoring", "init", "--format", "text")])
     def test_init_hint_is_identical_and_run_writes_a_file_with_build_ready_around_it(
         self, init_args, tmp_path, monkeypatch
     ):
