@@ -1,0 +1,14 @@
+<setup rngSeed="7">
+    <!-- end is exclusive: IncrementGenerator(1,5) yields 1..4 -->
+    <generate name="ids" count="4">
+        <key name="id" generator="IncrementGenerator(1,5)"/>
+    </generate>
+    <!-- step > 1: IncrementGenerator(1,5,2) yields 1, 3 -->
+    <generate name="stepped" count="2">
+        <key name="id" generator="IncrementGenerator(1,5,2)"/>
+    </generate>
+    <!-- count beyond the range: the sequence is exhausted after 4 rows, the run still succeeds -->
+    <generate name="exhausted" count="6">
+        <key name="id" generator="IncrementGenerator(1,5)"/>
+    </generate>
+</setup>
