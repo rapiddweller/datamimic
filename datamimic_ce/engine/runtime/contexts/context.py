@@ -726,6 +726,10 @@ class SetupContext(Context):
     def default_source_scripted(self) -> bool | None:
         return self._default_source_scripted
 
+    def source_scripted(self, explicit: bool | None) -> bool:
+        """A statement's own sourceScripted wins; without one the setup default applies."""
+        return explicit if explicit is not None else bool(self._default_source_scripted)
+
     @property
     def report_logging(self) -> bool:
         return self._report_logging
