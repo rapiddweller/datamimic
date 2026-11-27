@@ -223,9 +223,10 @@ and asks for `type=`.
 The run creates the table once, before the first row. It never alters or drops a
 table. A second run finds the table and upserts. An existing table that
 lacks a written column or has another primary key fails with `I930` and the difference. Extra columns are allowed. A
-later page that writes a field the table lacks (for example a key with a
-`condition` that is false in the whole first page) also fails with `I930`: write
-each field in the first page.
+later page that writes a field the first page did not write (for example a key with a
+`condition` that is false in the whole first page) also fails with `I930`, even when
+an existing table has that column: only the first page is checked against the table.
+Write each field in the first page.
 
 `createTable="true"` needs at least one direct-child `<id>` (`I929`). Without
 `createTable`, or with `createTable="false"`, an `<id>` is a plain `<key>`. Build
