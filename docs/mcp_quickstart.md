@@ -23,9 +23,17 @@ a project takes the required `project` argument: the absolute path of the direct
 that holds `datamimic.xml`. A relative, missing or unusable path returns an `input`
 diagnostic, not a tool error. `datamimic-mcp --workspace-root <dir>` only restricts
 which projects a call may name; without it any project can be named. A project's
-`.env` is read for that call only. `version`, `schema`, `capabilities` and
-`capability` need no project. `reference`, codec, lint and bounded-run requests use
-`{"request": {...}}` next to `project`. Follow each tool's advertised input schema.
+`.env` is read for that call only. `version`, `schema`, `capabilities`,
+`capability` and `reference` need no project.
+
+Pass tool arguments directly, for example
+`{"project": "/absolute/project", "xml": "<setup/>"}` for `datamimic_lint`.
+For one transition release, `reference`, `compile`, `decompile`, `lint`,
+`dry_run` and `run` also accept the old `request` wrapper. Keep `project` at
+the top level: `{"project": "/absolute/project", "request": {"xml": "<setup/>"}}`.
+Use one form per call. With an older server, follow its advertised input schema.
+MCP argument schemas come from `tools/list`; `datamimic authoring export-contract`
+exports the DSL and Authoring contracts, whose payload shapes are unchanged.
 
 | MCP tool | CLI equivalent |
 |---|---|
@@ -99,7 +107,7 @@ claude mcp get datamimic_ce
 ```
 
 In either client, list tools and call `datamimic_reference` with
-`{"request": {"topic": "assembly", "name": "starter"}}` before authoring. For a
+`{"topic": "assembly", "name": "starter"}` before authoring. For a
 remote Platform project use its [HTTP/OAuth guide](https://docs.datamimic.io/advanced/connect-mcp-client/).
 
 ## SSE
