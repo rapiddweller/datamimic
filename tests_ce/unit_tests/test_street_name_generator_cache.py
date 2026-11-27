@@ -95,6 +95,10 @@ def test_edited_file_is_read_again(tmp_path: Path) -> None:
     assert module._load_street_file(path)[0] == ("Old Road",)
     path.write_text("New Avenue,1\nOther Lane,2\n", encoding="utf-8")
     assert module._load_street_file(path)[0] == ("New Avenue", "Other Lane")
+    assert list(module._street_files) == [path]  # one entry per path; the old version is gone
+    path.write_text("Third Street,1\n", encoding="utf-8")
+    assert module._load_street_file(path)[0] == ("Third Street",)
+    assert len(module._street_files) == 1
 
 
 def test_missing_file_still_raises(tmp_path: Path) -> None:

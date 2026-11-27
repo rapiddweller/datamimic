@@ -12,25 +12,26 @@ from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralG
 from datamimic_ce.domains.domain_core.datasets.path import dataset_path
 from datamimic_ce.domains.shared.datasets.loader import read_weighted_values
 
-_StreetFileKey = tuple[Path, int, int]
+_StreetRows = tuple[tuple[str, ...], tuple[float, ...]]
 
-# Parsed street files, keyed by resolved path plus mtime/size, so one dataset never serves another's
-# rows and an edited file is re-read. Per process (workers fill their own copy); one entry per country.
-_street_files: dict[_StreetFileKey, tuple[tuple[str, ...], tuple[float, ...]]] = {}
+# Parsed street files, keyed by resolved path; each entry carries the (mtime, size) it was parsed at, so one
+# dataset never serves another's rows and an edited file replaces its old entry. Per process (workers fill
+# their own copy); at most one entry per path.
+_street_files: dict[Path, tuple[tuple[int, int], _StreetRows]] = {}
 
 
-def _load_street_file(file_path: Path) -> tuple[tuple[str, ...], tuple[float, ...]]:
+def _load_street_file(file_path: Path) -> _StreetRows:
     try:
         stat = file_path.stat()
     except OSError:
         values, weights = read_weighted_values(file_path)  # raises the reader's own error for a missing file
         return tuple(values), tuple(weights)
-    key = (file_path, stat.st_mtime_ns, stat.st_size)
-    cached = _street_files.get(key)
-    if cached is None:
+    stamp = (stat.st_mtime_ns, stat.st_size)
+    cached = _street_files.get(file_path)
+    if cached is None or cached[0] != stamp:
         values, weights = read_weighted_values(file_path)
-        cached = _street_files[key] = (tuple(values), tuple(weights))
-    return cached
+        cached = _street_files[file_path] = (stamp, (tuple(values), tuple(weights)))
+    return cached[1]
 
 
 class StreetNameGenerator(BaseLiteralGenerator):
