@@ -143,6 +143,15 @@ def test_includes_share_the_global_counter_of_the_run(filename, expected):
     assert _include_ids(filename) == expected
 
 
+def test_include_after_first_use_continues_the_counter_of_a_declared_generator():
+    # The parent has already used `counter` when the include copies its cached generators.
+    engine = DataMimicTest(test_dir=_INCLUDE_DIR, filename="alias_include.xml", capture_test_result=True)
+    engine.test_with_timer()
+    captured = engine.capture_result()
+    assert [row["id"] for row in captured["rows"]] == [1, 2]
+    assert [row["id"] for row in captured["more"]] == [3, 4]
+
+
 def test_global_counter_restarts_in_the_next_run_of_the_same_process():
     assert _include_ids("two_includes.xml") == [1, 2, 3, 4]
     assert _include_ids("two_includes.xml") == [1, 2, 3, 4]

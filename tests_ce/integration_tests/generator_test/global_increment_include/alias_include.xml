@@ -1,0 +1,7 @@
+<setup>
+    <generator name="counter" generator="GlobalIncrementGenerator"/>
+    <generate name="rows" count="2" target="">
+        <key name="id" generator="counter"/>
+    </generate>
+    <include uri="alias_step.xml"/>
+</setup>
