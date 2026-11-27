@@ -153,7 +153,7 @@ class GeneratorUtil:
             cache_key = key or generator_str
             generator_from_ctx = self._context.root.generators.get(cache_key)
             if isinstance(generator_from_ctx, SequenceTableGenerator):
-                if not generator_from_ctx.matches_invocation(stmt, pagination):
+                if not generator_from_ctx.matches_invocation(stmt):
                     del self._context.root.generators[cache_key]
                     generator_from_ctx = None
                 elif pagination:
@@ -230,7 +230,7 @@ class GeneratorUtil:
                 # (explicitly named native DB sequences, migration parity). ast-parsed like DateTimeGenerator below, but
                 # keyword-only and single-kwarg - anything else raises, args are never silently dropped.
                 parsed_sequence = GeneratorUtil._parse_sequence_kwarg(generator_str)
-                result = cls(context=self._context, stmt=stmt, sequence=parsed_sequence, pagination=pagination)
+                result = cls(context=self._context, stmt=stmt, sequence=parsed_sequence)
                 if pagination:
                     result.add_pagination(pagination=pagination)
                 # Cached unpaginated too: GenerateTask.pre_execute reserves the block on this

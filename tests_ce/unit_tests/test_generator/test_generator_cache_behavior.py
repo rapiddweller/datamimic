@@ -469,13 +469,15 @@ def test_sequence_reservation_under_forced_interleaving(
                 result.scalar.return_value = 1
             elif "seqincrement" in sql:
                 result.scalar_one_or_none.return_value = 1
-            elif "SELECT last_value, is_called" in sql or "SELECT AUTO_INCREMENT" in sql:
+            elif "SELECT last_value, is_called" in sql or "FROM information_schema.TABLES" in sql:
                 snapshot = next_value
                 if first and not first_read.is_set():
                     first_read.set()
                     assert second_attempt.wait(5)
                 result.one.return_value = (snapshot - 1, True)
-                result.scalar_one_or_none.return_value = None if snapshot == 1 else snapshot
+                if snapshot == 1 and "FROM information_schema.TABLES" in sql:
+                    assert "EXTRA = 'auto_increment'" in sql and "AND NOT EXISTS" in sql
+                result.scalar_one_or_none.return_value = snapshot
             elif "setval" in sql:
                 next_value = params["last_value"] + 1
             elif "ALTER TABLE" in sql:
@@ -491,7 +493,6 @@ def test_sequence_reservation_under_forced_interleaving(
                 lock.release()
 
         connection.execute.side_effect = execute
-        connection.scalar.return_value = 1  # Uninitialized AUTO_INCREMENT on an empty MySQL table.
         connection.begin.return_value.__exit__.side_effect = end_transaction
         try:
             if prepare:
@@ -560,8 +561,9 @@ def test_lazy_sequence_reserves_once_per_nested_generate_invocation(run_with_seq
     ]
 
 
-def test_sequence_reserves_each_nested_lists_own_cardinality(run_with_sequence_counter):
-    captured, reservations = run_with_sequence_counter("sequence_table_nested_list.xml")
+@pytest.mark.parametrize("filename", ["sequence_table_nested_list.xml", "sequence_table_conditional_nested_list.xml"])
+def test_sequence_reserves_each_nested_lists_own_cardinality(run_with_sequence_counter, filename):
+    captured, reservations = run_with_sequence_counter(filename)
     assert reservations == [3, 3]
     assert [[item["id"] for item in row["items"]] for row in captured["parents"]] == [
         [1000, 1001, 1002],

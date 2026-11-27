@@ -822,26 +822,21 @@ class RdbmsClient(DatabaseClient):
             raise RuntimeError(f"Could not acquire MySQL advisory lock for sequence '{sequence_name}' within 30s")
         try:
             connection.execute(text("SET SESSION information_schema_stats_expiry = 0"))
+            # Fresh InnoDB tables can report NULL until their default counter is initialized.
+            # A populated table with an unreadable counter must never be treated as fresh.
             counter_query = text(
-                "SELECT AUTO_INCREMENT FROM information_schema.TABLES "
+                "SELECT CASE WHEN AUTO_INCREMENT IS NOT NULL THEN AUTO_INCREMENT "
+                "WHEN EXISTS (SELECT 1 FROM information_schema.COLUMNS "
+                "WHERE table_schema = :schema AND table_name = :table AND EXTRA = 'auto_increment') "
+                f"AND NOT EXISTS (SELECT 1 FROM {table}) THEN 1 END "
+                "FROM information_schema.TABLES "
                 "WHERE table_schema = :schema AND table_name = :table"
             )
             params = {"schema": schema, "table": table_name}
             counter = connection.execute(counter_query, params).scalar_one_or_none()
             if counter is None:
-                # Fresh InnoDB tables can report NULL until the default counter is initialized.
-                # Do not treat a missing counter on a populated table as the default start.
-                fresh = connection.scalar(
-                    text(
-                        "SELECT EXISTS (SELECT 1 FROM information_schema.COLUMNS "
-                        "WHERE table_schema = :schema AND table_name = :table AND EXTRA = 'auto_increment') "
-                        f"AND NOT EXISTS (SELECT 1 FROM {table})"
-                    ),
-                    params,
-                )
-                if not fresh:
-                    raise ValueError("SequenceTableGenerator could not read the MySQL AUTO_INCREMENT counter")
-            start = 1 if counter is None else int(counter)
+                raise ValueError("SequenceTableGenerator could not read the MySQL AUTO_INCREMENT counter")
+            start = int(counter)
             end = start + increment
             connection.execute(text(f"ALTER TABLE {table} AUTO_INCREMENT = {end}"))
             advanced = connection.execute(counter_query, params).scalar_one_or_none()

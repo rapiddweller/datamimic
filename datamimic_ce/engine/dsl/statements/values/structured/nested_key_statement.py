@@ -32,6 +32,8 @@ class NestedKeyStatement(CompositeStatement):
         self._converter = model.converter
         self._variable_prefix = model.variable_prefix
         self._variable_suffix = model.variable_suffix
+        # Runtime invocation ID and resolved local row count.
+        self.generation_plan: tuple[str, int] | None = None
         # Set by the runtime when a source or generator ended a list before its count; Build reads it (#450).
         self.ended_early = False
 
