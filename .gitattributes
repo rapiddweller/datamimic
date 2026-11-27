@@ -1,1 +1,2 @@
 .git_archival.txt export-subst
+tests_ce/fixtures/lane_baseline/** -text
