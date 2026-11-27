@@ -54,7 +54,7 @@ directory for each run.
 | T3 one session per teacher and slot, none in an unavailable slot | `refusal` | `teacher_sessions_in_slot == 1 and not teacher_off` |
 | T4 one session per room and slot | `refusal` | `room_sessions_in_slot == 1` |
 | T5 no student in two sessions of one slot | `refusal` | `student_clashes == 0` |
-| T6 all sessions placed, one per day at most | `solve` and `refusal` | `sessions_planned == sessions_required`, `days == sessions_planned` on `course_checks` |
+| T6 all sessions placed, one per day at most | `solve` and `refusal` | `group_count` on `timetable`: the rows of each `course_id` equal `sessions` of `courses`, so a course without a session counts 0 and fails; `days == sessions_planned` on `course_checks` |
 
 The output checks read the timetable and the data again. They do not read the search evidence, so a defect in the
 search is caught too.
@@ -82,13 +82,15 @@ places of each session and the places without a known rule word or without a rea
 
 ## Negatives
 
-Each negative is one text patch in `scenario.json`. Build rejects the variant with a `row_condition` that names the rule.
+Each negative is one text patch in `scenario.json`. Build rejects the variant with a `row_condition` that names the rule, or with `group_count` for the session count of a course.
 
 | Negative | What breaks |
 |---|---|
 | `t1_prerequisite_ignored` | Every enrolment is admitted. |
 | `t2_capacity_ignored`, `t3_*`, `t4_room_clash_ignored`, `t5_student_clash_ignored`, `t6_one_per_day_ignored` | The search ignores that rule. |
-| `t6_session_dropped` | The search places one session less for each course. |
+| `t6_session_dropped` | The search places one session less for each course; the one-session courses vanish from the timetable. |
+| `t6_wrong_count_for_one_course` | The search places one session less for C101 only. |
+| `t6_course_missing_from_timetable` | C401 has no session in the timetable. |
 | `infeasible_five_sessions_four_days` | C101 needs 5 sessions on 4 days. |
 | `budget_exhausted` | `search_budget` is 5. |
 | `evidence_rule_unnamed` | The evidence leaves the rule word empty. |

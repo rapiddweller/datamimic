@@ -23,6 +23,7 @@ from datamimic_ce.errors import (
     UserErrorBase,
     parser_validation_error,
     task_config_error,
+    task_warning_scope,
 )
 from datamimic_ce.errors.context.descriptor_identity import descriptor_scope, get_descriptor_name
 
@@ -79,7 +80,7 @@ class RuntimeRunSession:
         self._executed = True
         request = self._request
         settings = get_settings()
-        with descriptor_scope(get_descriptor_name() or request.descriptor_path.name):
+        with descriptor_scope(get_descriptor_name() or request.descriptor_path.name), task_warning_scope():
             logger.info(
                 f"CONTROL | kind=start | descriptor={control_value(request.descriptor_path.name)} | pid={os.getpid()}"
             )

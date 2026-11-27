@@ -1,0 +1,6 @@
+{
+  "version": "5.0",
+  "expectations": [
+    {"kind": "group_count", "subject": {"kind": "product", "product": "bookings"}, "group_by": "booked_class", "reference": {"kind": "product", "product": "classes"}, "reference_key": "class_id", "count_field": "seats"}
+  ]
+}

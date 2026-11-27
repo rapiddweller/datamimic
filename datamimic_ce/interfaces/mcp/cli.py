@@ -84,7 +84,7 @@ def serve(
 ) -> None:
     """Start the MCP adapter using stdio or SSE transport."""
 
-    from datamimic_ce.interfaces.mcp import server as mcp_server
+    import datamimic_ce.interfaces.mcp.server as mcp_server
 
     if transport == Transport.stdio:
         mcp_server.create_server(workspace_root=workspace_root, enable_unverified_run=True).run(Transport.stdio.value)
