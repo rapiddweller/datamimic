@@ -19,6 +19,7 @@ from datamimic_ce.engine.runtime.tasks.setup.setup_task import SetupTask
 from datamimic_ce.errors import (
     DomainError,
     IssueCode,
+    OperationError,
     UserErrorBase,
     parser_validation_error,
     task_config_error,
@@ -40,6 +41,7 @@ class RuntimeRunSession:
         self._request = request
         self._test_result_storage = TestResultExporter()
         self._setup_task: SetupTask | None = None
+        self._executed = False
 
         log_system_info()
         log_memory_info(request.platform_configs.root if request.platform_configs is not None else None)
@@ -71,6 +73,11 @@ class RuntimeRunSession:
             entity_stmt.targets = set()
 
     def execute(self) -> RunResult:
+        if self._executed:
+            raise OperationError(
+                f"A run session executes once; create a new session to run {self._request.descriptor_path.name} again."
+            )
+        self._executed = True
         request = self._request
         settings = get_settings()
         with descriptor_scope(get_descriptor_name() or request.descriptor_path.name), task_warning_scope():
