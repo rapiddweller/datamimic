@@ -23,7 +23,7 @@ from pathlib import Path, PurePosixPath
 import psutil
 from lxml import etree
 
-from datamimic_ce.authoring.adapters import dryrun
+import datamimic_ce.authoring.adapters.dryrun as dryrun
 from datamimic_ce.authoring.adapters.windows_snapshot import WindowsSnapshotRoot
 from datamimic_ce.authoring.adapters.workspace import (
     MAX_RESOURCE_BYTES,

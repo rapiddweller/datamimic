@@ -41,7 +41,9 @@ from sqlalchemy.schema import CreateTable
 from sqlalchemy.types import TypeEngine
 
 from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
-from datamimic_ce.engine.io.clients import sql_dialect
+
+# isort: split
+import datamimic_ce.engine.io.clients.sql_dialect as sql_dialect
 from datamimic_ce.engine.io.clients.database_client import DatabaseClient
 from datamimic_ce.engine.io.clients.entity_serialization import stringify_entity_value
 from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig, sqlite_database_path
