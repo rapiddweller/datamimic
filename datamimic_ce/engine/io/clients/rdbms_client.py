@@ -670,8 +670,7 @@ class RdbmsClient(DatabaseClient):
                 else:
                     action = "exists"
                     if existing is None:
-                        # sqlalchemy-stubs omits the IF NOT EXISTS option.
-                        connection.execute(CreateTable(table, if_not_exists=True))  # type: ignore[call-arg]
+                        connection.execute(_CreateTableIfNotExists(table))
                         # The statement may have been a no-op; validate the actual winner.
                         existing = self._find_table_name(entity, connection)
                         if existing is None:
@@ -1115,6 +1114,14 @@ def create_table_definition(
         ),
         schema=schema,
     )
+
+
+class _CreateTableIfNotExists(CreateTable):
+    """Use SQLAlchemy's DDL flag, which the older sqlalchemy-stubs package omits."""
+
+    def __init__(self, table: Table) -> None:
+        CreateTable.__init__(self, table)
+        self.if_not_exists = True
 
 
 def create_table_ddl(table: Table, dbms: Dbms) -> str:
