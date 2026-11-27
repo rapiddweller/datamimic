@@ -110,6 +110,23 @@ def test_cli_lint_keeps_the_source_attribute_repair_location(tmp_path: Path) -> 
     assert diagnostic["path"] == ["descriptor", "model.xml", "iterate", "attribute", "source"]
 
 
+def test_cli_stdin_lint_and_dry_run_keep_the_declared_descriptor_path(tmp_path: Path) -> None:
+    (tmp_path / "steps").mkdir()
+    (tmp_path / "steps" / "part.xml").write_text('<setup><generate name="rows" count="1"/></setup>')
+    buffer = '<setup rngSeed="7"><include uri="part.xml"/></setup>'
+    base = ["authoring", "lint", "-", "--workspace-root", str(tmp_path)]
+    default = CliRunner().invoke(app, base, input=buffer)
+    declared = CliRunner().invoke(app, [*base, "--descriptor-path", "steps/model.xml"], input=buffer)
+    assert default.exit_code == 1  # include resolves against the default model.xml, not steps/
+    assert declared.exit_code == 0, declared.stdout
+    broken = '<setup><iterate name="rows" count="1"/></setup>'
+    for command in ("lint", "dry-run"):
+        args = ["authoring", command, "-", "--descriptor-path", "ide/buffer.xml"]
+        result = CliRunner().invoke(app, args, input=broken)
+        diagnostic = json.loads(result.stdout)["diagnostics"][0]
+        assert diagnostic["path"] == ["descriptor", "ide/buffer.xml", "iterate", "attribute", "source"]
+
+
 @pytest.mark.parametrize(
     "body,issue,attribute",
     [
