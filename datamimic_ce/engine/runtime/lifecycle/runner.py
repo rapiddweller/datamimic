@@ -16,7 +16,14 @@ from datamimic_ce.engine.runtime.lifecycle.config import get_settings
 from datamimic_ce.engine.runtime.logging import control_value, log_memory_info, log_system_info, setup_logger
 from datamimic_ce.engine.runtime.process_titles import bootstrap_process_title, set_main_process_title
 from datamimic_ce.engine.runtime.tasks.setup.setup_task import SetupTask
-from datamimic_ce.errors import DomainError, IssueCode, UserErrorBase, parser_validation_error, task_config_error
+from datamimic_ce.errors import (
+    DomainError,
+    IssueCode,
+    UserErrorBase,
+    parser_validation_error,
+    task_config_error,
+    task_warning_scope,
+)
 from datamimic_ce.errors.context.descriptor_identity import descriptor_scope, get_descriptor_name
 
 logger = logging.getLogger("DATAMIMIC")
@@ -66,7 +73,7 @@ class RuntimeRunSession:
     def execute(self) -> RunResult:
         request = self._request
         settings = get_settings()
-        with descriptor_scope(get_descriptor_name() or request.descriptor_path.name):
+        with descriptor_scope(get_descriptor_name() or request.descriptor_path.name), task_warning_scope():
             logger.info(
                 f"CONTROL | kind=start | descriptor={control_value(request.descriptor_path.name)} | pid={os.getpid()}"
             )

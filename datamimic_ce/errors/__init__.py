@@ -66,6 +66,7 @@ from datamimic_ce.errors.factory import (
     tag_user_error,
     task_config_error,
     task_warning,
+    task_warning_scope,
     user_error,
 )
 from datamimic_ce.errors.formatters import (
@@ -138,6 +139,7 @@ __all__ = [
     "CollectedWarning",
     "collect_task_warnings",
     "task_warning",
+    "task_warning_scope",
     "descriptor_hint",
     "descriptor_hint_if_missing",
     "element_label",

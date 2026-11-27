@@ -12,14 +12,12 @@ from pathlib import Path
 import pytest
 
 from datamimic_ce.engine.runtime.scripting import expression_globals
-from datamimic_ce.errors import factory
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 _DIR = Path(__file__).resolve().parent
 
 
 def _warnings(caplog: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch, model: str) -> list[str]:
-    monkeypatch.setattr(factory, "_emitted_warnings", set())
     logger = logging.getLogger("DATAMIMIC")
     monkeypatch.setattr(logger, "propagate", False)
     logger.addHandler(caplog.handler)
