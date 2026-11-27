@@ -126,7 +126,9 @@ the archive format.
 Authoring commands default to `--format json`, except `init` and
 `export-contract`, which print text. For commands that support `--format`,
 `--format text` prints readable results.
-Compile, decompile and Build return discriminated `ready`/`rejected` results.
+Compile and decompile return discriminated `ready`/`rejected` results. Build
+returns `ready`, `ready_with_gaps` (exit code 3: the run passed but open coverage
+gaps remain; fix them before you report success), or `rejected` (exit code 1).
 Compilation readiness proves syntax only. Build additionally requires complete
 bounded capture and acceptance; `verification` requests smoke/replay gates.
 A ready Build lists every project file it read with its digest (`artifact.files`);
