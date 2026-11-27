@@ -112,10 +112,10 @@ class _EvalProxy:
         return getattr(self._resolve_target(), name)
 
     def __call__(self, *args: object, **kwargs: object) -> object:
-        target = self._resolve_target()
-        if not callable(target):
-            raise TypeError(f"'{type(target).__name__}' object is not callable")
-        return target(*args, **kwargs)
+        self._resolve_target()
+        if not callable(self._target):
+            raise TypeError(f"'{type(self._target).__name__}' object is not callable")
+        return self._target(*args, **kwargs)
 
     # A proxied class stays a class for type checks: isinstance(x, datetime.datetime) must not change under a seed.
     def __instancecheck__(self, instance: object) -> bool:
