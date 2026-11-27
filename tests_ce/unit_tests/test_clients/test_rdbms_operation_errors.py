@@ -3,6 +3,7 @@
 # This software is licensed under the MIT License. See LICENSE.
 
 import traceback
+from contextlib import nullcontext
 
 import pytest
 import sqlalchemy
@@ -25,7 +26,7 @@ from datamimic_ce.errors import OperationError
     ],
 )
 @pytest.mark.parametrize("fixed", [False, True], ids=["negative-control", "normalized"])
-def test_sqlalchemy_errors_are_normalized_without_sql(method, args, sequence, fixed, caplog):
+def test_sqlalchemy_errors_are_normalized_without_sql(method, args, sequence, fixed, caplog, monkeypatch):
     credential = RdbmsConnectionConfig(
         dbms="postgresql" if sequence else "sqlite",
         host=None,
@@ -50,8 +51,11 @@ def test_sqlalchemy_errors_are_normalized_without_sql(method, args, sequence, fi
 
     bound = getattr(client, method)
     if not fixed:
+        monkeypatch.setattr(
+            "datamimic_ce.engine.io.clients.rdbms_client._normalize_database_errors", lambda target: nullcontext()
+        )
         with pytest.raises(sqlalchemy.exc.SQLAlchemyError):
-            bound.__wrapped__(client, *args)
+            bound(*args)
         engine.dispose()
         return
 

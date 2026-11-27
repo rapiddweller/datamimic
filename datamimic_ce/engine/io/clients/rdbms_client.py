@@ -7,14 +7,13 @@
 import copy
 import logging
 import sys
-from collections.abc import Callable
-from contextlib import suppress
+from collections.abc import Iterator
+from contextlib import contextmanager, suppress
 from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
-from functools import wraps
 from pathlib import Path
-from typing import ParamSpec, Protocol, TypeVar, runtime_checkable
+from typing import Protocol, runtime_checkable
 from urllib.parse import quote
 
 import oracledb
@@ -124,25 +123,17 @@ _CONNECTION_IDENTITY = {
 # <execute> scripts are raw SQL: no bind parameters (":new" in a trigger) and no DBAPI percent formatting ("g % 3")
 _RAW_SCRIPT = {"no_parameters": True}
 
-_P = ParamSpec("_P")
-_R = TypeVar("_R")
 
-
-def _normalize_database_errors(target: str) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
+@contextmanager
+def _normalize_database_errors(target: str) -> Iterator[None]:
     """Normalize database failures without retaining their statements or driver messages."""
-
-    def decorate(method: Callable[_P, _R]) -> Callable[_P, _R]:
-        @wraps(method)
-        def wrapped(*args: _P.args, **kwargs: _P.kwargs) -> _R:
-            try:
-                return method(*args, **kwargs)
-            except sqlalchemy.exc.SQLAlchemyError as error:
-                failure = _operation_failure(target, error)
-            raise failure
-
-        return wrapped
-
-    return decorate
+    try:
+        yield
+    except sqlalchemy.exc.SQLAlchemyError as error:
+        failure = _operation_failure(target, error)
+    else:
+        return
+    raise failure
 
 
 class RdbmsClient(DatabaseClient):
@@ -450,25 +441,25 @@ class RdbmsClient(DatabaseClient):
             raise ValueError(f"DBMS '{dbms}' has no generic SQLAlchemy driver")
         return f"{dbms}+{driver}"
 
-    @_normalize_database_errors("database read")
     def get_by_page_with_type(self, table_name: str, pagination: DataSourcePagination | None = None):
         """Rows of a table, ordered by its primary key, else by every column. For a stable snapshot that
         order keeps OFFSET pages disjoint across pages and workers, and keeps full reads that are sliced
         or shuffled per worker (random/cumulated/unique) identical in every worker."""
-        engine = self._create_engine()
+        with _normalize_database_errors("database read"):
+            engine = self._create_engine()
 
-        with engine.connect() as conn:
-            actual_table_name = self._get_actual_table_name(table_name)
-            table = self._get_metadata(engine).tables[actual_table_name]
+            with engine.connect() as conn:
+                actual_table_name = self._get_actual_table_name(table_name)
+                table = self._get_metadata(engine).tables[actual_table_name]
 
-            query = select(table).order_by(*(table.primary_key.columns or table.c))
-            if pagination is None:
-                logger.info(f"page is None, get all data from table {actual_table_name}")
-            else:
-                query = query.offset(pagination.skip).limit(pagination.limit)
+                query = select(table).order_by(*(table.primary_key.columns or table.c))
+                if pagination is None:
+                    logger.info(f"page is None, get all data from table {actual_table_name}")
+                else:
+                    query = query.offset(pagination.skip).limit(pagination.limit)
 
-            result = conn.execute(query).fetchall()
-            return [dict(row._mapping) for row in result]
+                result = conn.execute(query).fetchall()
+                return [dict(row._mapping) for row in result]
 
     def get_by_page_with_query(self, original_query: str, pagination: DataSourcePagination | None = None):
         """
@@ -515,24 +506,24 @@ class RdbmsClient(DatabaseClient):
                 raise failure
         return self._columns_by_selector[query]
 
-    @_normalize_database_errors("database read")
     def get_random_rows_by_columns(self, table_name: str, column_names: list[str]) -> list[tuple]:
         """Fetch the given columns for a <reference> in a stable order, preserving row-tuple
         integrity. The reference task does the distinct/with-replacement sampling deterministically
         via runtime source selection / ctx.rng (so the full column set is returned, not a
         pre-limited slice)."""
-        engine = self._create_engine()
+        with _normalize_database_errors("database read"):
+            engine = self._create_engine()
 
-        with engine.connect() as conn:
-            actual_table_name = self._get_actual_table_name(table_name)
-            table = self._get_metadata(engine).tables[actual_table_name]
-            columns = [table.c[name] for name in column_names]
-            # ORDER BY the selected columns (NOT random): a stable input order so the seeded
-            # shuffle is reproducible run-to-run. ORDER BY random() would
-            # destroy that reproducibility.
-            # fetch-all + sort suits reference/lookup tables; a huge source would want
-            # SELECT DISTINCT or DB-side sampling — an EE-scale concern, not CE's reference path.
-            return [tuple(row) for row in conn.execute(select(*columns).order_by(*columns)).fetchall()]
+            with engine.connect() as conn:
+                actual_table_name = self._get_actual_table_name(table_name)
+                table = self._get_metadata(engine).tables[actual_table_name]
+                columns = [table.c[name] for name in column_names]
+                # ORDER BY the selected columns (NOT random): a stable input order so the seeded
+                # shuffle is reproducible run-to-run. ORDER BY random() would
+                # destroy that reproducibility.
+                # fetch-all + sort suits reference/lookup tables; a huge source would want
+                # SELECT DISTINCT or DB-side sampling — an EE-scale concern, not CE's reference path.
+                return [tuple(row) for row in conn.execute(select(*columns).order_by(*columns)).fetchall()]
 
     def insert(self, table_name: str, data_list: list):
         """
@@ -582,58 +573,58 @@ class RdbmsClient(DatabaseClient):
             raise ValueError(f"{operation} on '{table_name}' requires primary-key value(s) {missing} in each record")
         return [table.c[k] == row[k] for k in pk]
 
-    @_normalize_database_errors("database write")
     def update(self, table_name: str, data_list: list) -> int:
         """UPDATE each record by primary key; returns the number of matched rows.
         Row-by-row statements: test-data volumes, not a bulk path."""
-        self._require_write("update")
-        if not data_list:
-            return 0
-        engine = self._create_engine()
-        table, pk = self._table_and_pk(engine, table_name)
-        matched = 0
-        with engine.begin() as connection:
-            for row in self._apply_global_json_config(data_list):
-                values = {k: v for k, v in row.items() if k not in pk}
-                if not values:
-                    raise ValueError(f"update on '{table_name}' has no non-key columns to set")
-                clause = self._pk_clause(table, row, pk, table_name, "update")
-                matched += connection.execute(table.update().where(*clause).values(**values)).rowcount
-        return matched
+        with _normalize_database_errors("database write"):
+            self._require_write("update")
+            if not data_list:
+                return 0
+            engine = self._create_engine()
+            table, pk = self._table_and_pk(engine, table_name)
+            matched = 0
+            with engine.begin() as connection:
+                for row in self._apply_global_json_config(data_list):
+                    values = {k: v for k, v in row.items() if k not in pk}
+                    if not values:
+                        raise ValueError(f"update on '{table_name}' has no non-key columns to set")
+                    clause = self._pk_clause(table, row, pk, table_name, "update")
+                    matched += connection.execute(table.update().where(*clause).values(**values)).rowcount
+            return matched
 
-    @_normalize_database_errors("database write")
     def upsert(self, table_name: str, data_list: list) -> None:
         """UPDATE by primary key, INSERT the rows that matched nothing."""
-        self._require_write("upsert")
-        if not data_list:
-            return
-        engine = self._create_engine()
-        table, pk = self._table_and_pk(engine, table_name)
-        with engine.begin() as connection:
-            for row in self._apply_global_json_config(data_list):
-                clause = self._pk_clause(table, row, pk, table_name, "upsert")
-                values = {k: v for k, v in row.items() if k not in pk}
-                if values:
-                    exists = connection.execute(table.update().where(*clause).values(**values)).rowcount > 0
-                else:  # all-PK row: nothing to update, just ensure presence
-                    exists = connection.execute(select(table.c[pk[0]]).where(*clause)).first() is not None
-                if not exists:
-                    connection.execute(table.insert(), [row])
+        with _normalize_database_errors("database write"):
+            self._require_write("upsert")
+            if not data_list:
+                return
+            engine = self._create_engine()
+            table, pk = self._table_and_pk(engine, table_name)
+            with engine.begin() as connection:
+                for row in self._apply_global_json_config(data_list):
+                    clause = self._pk_clause(table, row, pk, table_name, "upsert")
+                    values = {k: v for k, v in row.items() if k not in pk}
+                    if values:
+                        exists = connection.execute(table.update().where(*clause).values(**values)).rowcount > 0
+                    else:  # all-PK row: nothing to update, just ensure presence
+                        exists = connection.execute(select(table.c[pk[0]]).where(*clause)).first() is not None
+                    if not exists:
+                        connection.execute(table.insert(), [row])
 
-    @_normalize_database_errors("database write")
     def delete(self, table_name: str, data_list: list) -> int:
         """DELETE each record by primary key; returns the number of deleted rows."""
-        self._require_write("delete")
-        if not data_list:
-            return 0
-        engine = self._create_engine()
-        table, pk = self._table_and_pk(engine, table_name)
-        deleted = 0
-        with engine.begin() as connection:
-            for row in self._apply_global_json_config(data_list):
-                clause = self._pk_clause(table, row, pk, table_name, "delete")
-                deleted += connection.execute(table.delete().where(*clause)).rowcount
-        return deleted
+        with _normalize_database_errors("database write"):
+            self._require_write("delete")
+            if not data_list:
+                return 0
+            engine = self._create_engine()
+            table, pk = self._table_and_pk(engine, table_name)
+            deleted = 0
+            with engine.begin() as connection:
+                for row in self._apply_global_json_config(data_list):
+                    clause = self._pk_clause(table, row, pk, table_name, "delete")
+                    deleted += connection.execute(table.delete().where(*clause)).rowcount
+            return deleted
 
     def clear_table(self, table_name: str) -> None:
         """Remove every row and keep the table, its indexes and constraints (target="db.clear").
@@ -744,7 +735,6 @@ class RdbmsClient(DatabaseClient):
         quote = preparer.quote_identifier
         return ".".join(quote(part) for part in parts)
 
-    @_normalize_database_errors("database sequence")
     def get_current_sequence_number(
         self, sequence_name: str, table_name: str | None = None, column_name: str | None = None
     ) -> int:
@@ -766,49 +756,49 @@ class RdbmsClient(DatabaseClient):
         :param column_name: MySQL only - the target column (paired with table_name).
         :return: Current sequence number
         """
-        self._require_write("get_current_sequence_number")
-        dbms = self._credential.dbms
-        with self._create_engine().connect() as connection:
-            transaction = connection.begin()
-            try:
-                if dbms is Dbms.POSTGRESQL:
-                    schema, seq = self._split_sequence_schema(sequence_name, self._credential.db_schema or "public")
-                    qualified_sequence = self._quoted_qualified_identifier(connection.dialect, schema, seq)
-                    exists = connection.execute(
-                        text(
-                            "SELECT EXISTS (SELECT 1 FROM pg_sequences "
-                            "WHERE schemaname = :schema AND sequencename = :seq_name)"
-                        ),
-                        {"schema": schema, "seq_name": seq},
-                    ).scalar()
-                    if not exists:
-                        connection.execute(text(f"CREATE SEQUENCE IF NOT EXISTS {qualified_sequence}"))
-                    current_value = connection.execute(
-                        text("SELECT nextval(CAST(:sequence_name AS regclass))"),
-                        {"sequence_name": qualified_sequence},
-                    ).scalar()
-                elif dbms is Dbms.MYSQL:
-                    current_value = self._advance_mysql_auto_increment(
-                        connection, sequence_name, table_name, column_name, 1
-                    )
-                else:
-                    # mssql/oracle: native-sequence support was prototyped and pulled - a
-                    # per-page/scan-phase re-instantiation of SequenceTableGenerator (existing
-                    # DATAMIMIC behavior, not new) calls this method multiple times per statement
-                    # with side-effecting advances, and the resulting id ranges were observed to
-                    # collide non-deterministically against MSSQL. Needs a fix to the range
-                    # arithmetic (or the scan-phase call pattern) before shipping, not just a
-                    # dialect-specific SQL port. See PR discussion.
-                    raise ValueError(f"SequenceTableGenerator is not supported for dbms '{dbms}'")
-                transaction.commit()
-                return current_value
-            except Exception as err:
-                transaction.rollback()
-                if not isinstance(err, sqlalchemy.exc.SQLAlchemyError):
-                    logger.error(f"Failed to get current sequence number for {sequence_name}: {err}")
-                raise
+        with _normalize_database_errors("database sequence"):
+            self._require_write("get_current_sequence_number")
+            dbms = self._credential.dbms
+            with self._create_engine().connect() as connection:
+                transaction = connection.begin()
+                try:
+                    if dbms is Dbms.POSTGRESQL:
+                        schema, seq = self._split_sequence_schema(sequence_name, self._credential.db_schema or "public")
+                        qualified_sequence = self._quoted_qualified_identifier(connection.dialect, schema, seq)
+                        exists = connection.execute(
+                            text(
+                                "SELECT EXISTS (SELECT 1 FROM pg_sequences "
+                                "WHERE schemaname = :schema AND sequencename = :seq_name)"
+                            ),
+                            {"schema": schema, "seq_name": seq},
+                        ).scalar()
+                        if not exists:
+                            connection.execute(text(f"CREATE SEQUENCE IF NOT EXISTS {qualified_sequence}"))
+                        current_value = connection.execute(
+                            text("SELECT nextval(CAST(:sequence_name AS regclass))"),
+                            {"sequence_name": qualified_sequence},
+                        ).scalar()
+                    elif dbms is Dbms.MYSQL:
+                        current_value = self._advance_mysql_auto_increment(
+                            connection, sequence_name, table_name, column_name, 1
+                        )
+                    else:
+                        # mssql/oracle: native-sequence support was prototyped and pulled - a
+                        # per-page/scan-phase re-instantiation of SequenceTableGenerator (existing
+                        # DATAMIMIC behavior, not new) calls this method multiple times per statement
+                        # with side-effecting advances, and the resulting id ranges were observed to
+                        # collide non-deterministically against MSSQL. Needs a fix to the range
+                        # arithmetic (or the scan-phase call pattern) before shipping, not just a
+                        # dialect-specific SQL port. See PR discussion.
+                        raise ValueError(f"SequenceTableGenerator is not supported for dbms '{dbms}'")
+                    transaction.commit()
+                    return current_value
+                except Exception as err:
+                    transaction.rollback()
+                    if not isinstance(err, sqlalchemy.exc.SQLAlchemyError):
+                        logger.error(f"Failed to get current sequence number for {sequence_name}: {err}")
+                    raise
 
-    @_normalize_database_errors("database sequence")
     def increase_sequence_number(
         self,
         sequence_name: str,
@@ -825,34 +815,37 @@ class RdbmsClient(DatabaseClient):
         :param table_name: MySQL only - see get_current_sequence_number.
         :param column_name: MySQL only - see get_current_sequence_number.
         """
-        self._require_write("increase_sequence_number")
-        increment = int(increment)  # callers may pass a raw XML attribute string (e.g. count=)
-        dbms = self._credential.dbms
-        with self._create_engine().connect() as connection:
-            transaction = connection.begin()
-            try:
-                if dbms is Dbms.POSTGRESQL:
-                    schema, seq = self._split_sequence_schema(sequence_name, self._credential.db_schema or "public")
-                    qualified_sequence = self._quoted_qualified_identifier(connection.dialect, schema, seq)
-                    connection.execute(
-                        text(
-                            "SELECT setval(CAST(:sequence_name AS regclass), "
-                            "nextval(CAST(:sequence_name AS regclass)) + :increment)"
-                        ),
-                        {"sequence_name": qualified_sequence, "increment": increment},
-                    )
-                elif dbms is Dbms.MYSQL:
-                    self._advance_mysql_auto_increment(connection, sequence_name, table_name, column_name, increment)
-                else:
-                    # See get_current_sequence_number - mssql/oracle native-sequence support
-                    # pulled pending a fix to the scan-phase re-instantiation interaction.
-                    raise ValueError(f"SequenceTableGenerator is not supported for dbms '{dbms}'")
-                transaction.commit()
-            except Exception as err:
-                transaction.rollback()
-                if not isinstance(err, sqlalchemy.exc.SQLAlchemyError):
-                    logger.error(f"Failed to increase sequence number for {sequence_name}: {err}")
-                raise
+        with _normalize_database_errors("database sequence"):
+            self._require_write("increase_sequence_number")
+            increment = int(increment)  # callers may pass a raw XML attribute string (e.g. count=)
+            dbms = self._credential.dbms
+            with self._create_engine().connect() as connection:
+                transaction = connection.begin()
+                try:
+                    if dbms is Dbms.POSTGRESQL:
+                        schema, seq = self._split_sequence_schema(sequence_name, self._credential.db_schema or "public")
+                        qualified_sequence = self._quoted_qualified_identifier(connection.dialect, schema, seq)
+                        connection.execute(
+                            text(
+                                "SELECT setval(CAST(:sequence_name AS regclass), "
+                                "nextval(CAST(:sequence_name AS regclass)) + :increment)"
+                            ),
+                            {"sequence_name": qualified_sequence, "increment": increment},
+                        )
+                    elif dbms is Dbms.MYSQL:
+                        self._advance_mysql_auto_increment(
+                            connection, sequence_name, table_name, column_name, increment
+                        )
+                    else:
+                        # See get_current_sequence_number - mssql/oracle native-sequence support
+                        # pulled pending a fix to the scan-phase re-instantiation interaction.
+                        raise ValueError(f"SequenceTableGenerator is not supported for dbms '{dbms}'")
+                    transaction.commit()
+                except Exception as err:
+                    transaction.rollback()
+                    if not isinstance(err, sqlalchemy.exc.SQLAlchemyError):
+                        logger.error(f"Failed to increase sequence number for {sequence_name}: {err}")
+                    raise
 
     def _advance_mysql_auto_increment(
         self, connection, sequence_name: str, table_name: str | None, column_name: str | None, increment: int
