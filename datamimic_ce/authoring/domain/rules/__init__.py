@@ -4,12 +4,10 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from datamimic_ce.authoring.domain.rules import (
-    best_practice,
-    cross_statement,
-    schema_rules,
-    semantic_rules,
-)
+import datamimic_ce.authoring.domain.rules.best_practice as best_practice
+import datamimic_ce.authoring.domain.rules.cross_statement as cross_statement
+import datamimic_ce.authoring.domain.rules.schema_rules as schema_rules
+import datamimic_ce.authoring.domain.rules.semantic_rules as semantic_rules
 from datamimic_ce.authoring.domain.rules.base import LintContext, Rule
 
 ALL_RULES: tuple[type[Rule], ...] = (

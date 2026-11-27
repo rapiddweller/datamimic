@@ -1063,7 +1063,7 @@ def _decode_worker_payload(payload: bytes) -> object:
     from uuid import UUID
     from xml.parsers.expat import ExpatError
 
-    from datamimic_ce.errors import base as errors
+    import datamimic_ce.errors.base as errors
     from datamimic_ce.errors.codes import DomainErrorCode, ErrorCode, IssueCode
     from datamimic_ce.errors.context import DescriptorLocation
 
