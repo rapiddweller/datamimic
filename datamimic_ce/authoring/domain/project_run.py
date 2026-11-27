@@ -24,6 +24,11 @@ LOG_TAIL_LINES = 50
 _PARAM_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
+def run_outcome(exit_code: int | None) -> Literal["completed", "failed", "timeout"]:
+    """The one outcome rule: no exit code means the run was stopped at its timeout."""
+    return "timeout" if exit_code is None else "completed" if exit_code == 0 else "failed"
+
+
 class ExternalEffectKind(StrEnum):
     DATABASE = "database"
     MONGODB = "mongodb"
@@ -146,11 +151,7 @@ class ProjectRunResult(AuthoringModel):
                 and self.coverage is not None
                 and not self.required_side_effects
                 and self.duration_seconds is not None
-                and (
-                    (self.outcome == "completed" and self.exit_code == 0)
-                    or (self.outcome == "failed" and self.exit_code is not None and self.exit_code != 0)
-                    or (self.outcome == "timeout" and self.exit_code is None)
-                )
+                and self.outcome == run_outcome(self.exit_code)
             )
         if (self.action_required is not None) != (self.build_outcome == "ready_with_gaps"):
             valid = False
@@ -175,6 +176,16 @@ class ProjectRunExecution(AuthoringModel):
     log_tail: tuple[StrictStr, ...]
     record_path: NonEmptyStrictStr | None = None
     build_file_mismatches: tuple[NonEmptyStrictStr, ...] | None = None
+
+    @model_validator(mode="after")
+    def timeout_has_no_exit_code(self) -> ProjectRunExecution:
+        if self.timed_out != (self.exit_code is None):
+            raise ValueError("A run timed out exactly when it has no exit code")
+        return self
+
+    @property
+    def outcome(self) -> Literal["completed", "failed", "timeout"]:
+        return run_outcome(self.exit_code)
 
 
 class ProjectRunRecord(AuthoringModel):
@@ -210,14 +221,8 @@ class UnverifiedProjectRunResult(AuthoringModel):
     def consistent_execution(self) -> UnverifiedProjectRunResult:
         if self.outcome == "not_run":
             valid = self.execution is None
-        elif self.execution is None:
-            valid = False
-        elif self.outcome == "timeout":
-            valid = self.execution.timed_out and self.execution.exit_code is None
-        elif self.outcome == "completed":
-            valid = not self.execution.timed_out and self.execution.exit_code == 0
         else:
-            valid = not self.execution.timed_out and self.execution.exit_code not in (None, 0)
+            valid = self.execution is not None and self.execution.outcome == self.outcome
         if not valid:
             raise ValueError("Unverified run outcome contradicts its execution")
         return self
