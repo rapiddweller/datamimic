@@ -5,13 +5,16 @@
 """createTable on <generate>: the static rules, the column types, the SQLite create and drift check, the single-process
 policy and the schema side effect. The end-to-end run and the Build rejections are scenario s59_create_table."""
 
+import sqlite3
+from contextlib import closing
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
+from sqlalchemy.schema import CreateTable
 
 from datamimic_ce.authoring.adapters.external_effects import external_effects
 from datamimic_ce.authoring.domain.project_run import ExternalEffectKind
@@ -148,6 +151,31 @@ def test_a_later_page_with_a_new_field_fails_instead_of_dropping_it(tmp_path, mo
         DataMimicTest(test_dir=tmp_path, filename="datamimic.xml").test_with_timer()
     assert caught.value.issue_code is IssueCode.OPERATION_TABLE_DRIFT
     assert "a later page writes the field(s) note" in str(caught.value)
+    assert "Table 'lines'" in str(caught.value)
+
+
+def test_a_later_page_field_of_an_existing_table_is_not_blamed_on_a_table_created_from_page_one(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "db").mkdir()
+    with closing(sqlite3.connect(tmp_path / "db" / "kept.sqlite")) as connection:
+        connection.execute("CREATE TABLE lines (line_id INTEGER PRIMARY KEY, audit_user TEXT)")
+        connection.commit()
+    (tmp_path / "datamimic.xml").write_text(
+        '<setup><database id="db" dbms="sqlite" database="kept"/>'
+        '<generate name="lines" count="4" pageSize="2" target="db" createTable="true">'
+        '<id name="line_id" generator="IncrementGenerator"/>'
+        '<key name="audit_user" constant="secret-value" condition="this.line_id &gt; 2"/></generate></setup>',
+        encoding="utf-8",
+    )
+    with pytest.raises(OperationError) as caught:
+        DataMimicTest(test_dir=tmp_path, filename="datamimic.xml").test_with_timer()
+    message = str(caught.value)
+    assert caught.value.issue_code is IssueCode.OPERATION_TABLE_DRIFT
+    assert "Table 'lines'" in message
+    assert "audit_user, which the first page did not write" in message
+    assert "whether it created the table or found it" in message
+    assert "table created from the first page does not have" not in message
+    assert "secret-value" not in message
 
 
 def test_a_field_in_every_page_passes_the_page_check(tmp_path, monkeypatch):
@@ -276,8 +304,46 @@ def test_ensure_table_creates_a_missing_table_and_accepts_it_again(tmp_path, dm_
     client.upsert("lines", [{"id": 1, "name": "a"}])
     client.upsert("lines", [{"id": 1, "name": "b"}])
     assert client.get("SELECT id, name FROM lines") == [(1, "b")]
-    assert "rdbms.create_table | table=lines | action=created" in dm_caplog.text
+    assert "rdbms.create_table | table=lines | action=ensured" in dm_caplog.text
     assert "rdbms.create_table | table=lines | action=exists" in dm_caplog.text
+
+
+@pytest.mark.parametrize("compatible", [True, False], ids=["matching", "drift"])
+def test_ensure_table_validates_the_winner_of_an_overlapping_create(tmp_path, compatible):
+    path = tmp_path / "t.db"
+    loser = _client(path)
+    winner = _client(path)
+    winner_columns = _COLUMNS if compatible else _COLUMNS[:1]
+    create_attempts = []
+
+    @event.listens_for(loser.engine, "before_execute")
+    def interleave(connection, statement, multiparams, params, execution_options):
+        if isinstance(statement, CreateTable):
+            create_attempts.append(statement)
+            # Both clients found the table missing. Commit the winner's DDL before sending the loser's.
+            winner.ensure_table("lines", winner_columns, ("id",))
+
+    if compatible:
+        loser.ensure_table("lines", _COLUMNS, ("id",))
+        loser.insert("lines", [{"id": 1, "name": "first"}])
+        assert winner.get("SELECT id, name FROM lines") == [(1, "first")]
+    else:
+        with pytest.raises(OperationError) as caught:
+            loser.ensure_table("lines", _COLUMNS, ("id",))
+        assert caught.value.issue_code is IssueCode.OPERATION_TABLE_DRIFT
+        assert "missing columns name" in str(caught.value)
+        assert [row[1] for row in winner.get("PRAGMA table_info(lines)")] == ["id"]
+    assert len(create_attempts) == 1
+
+
+def test_ensure_table_normalizes_a_sqlite_ddl_failure(tmp_path):
+    client = _client(tmp_path / "t.db")
+    client.execute_sql_script("CREATE TABLE owner (id INTEGER); CREATE INDEX lines ON owner (id)")
+    with pytest.raises(OperationError) as caught:
+        client.ensure_table("lines", _COLUMNS, ("id",))
+    assert caught.value.issue_code is IssueCode.OPERATION_EXECUTION_FAILED
+    assert caught.value.__context__ is None
+    assert caught.value.__cause__.statement is None
 
 
 @pytest.mark.parametrize(

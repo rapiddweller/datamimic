@@ -32,6 +32,7 @@ from datamimic_ce.authoring.domain.project_run import (
     ProjectParam,
     ProjectRunExecution,
     ProjectRunRecord,
+    run_outcome,
 )
 from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, BuildArtifact
 
@@ -158,9 +159,6 @@ class CeProjectRunner:
                 ProjectArtifact(path=path, bytes=after[path][0], sha256=_sha256(self._root / path))
                 for path in changed[:MAX_LISTED_ARTIFACTS]
             )
-            outcome: Literal["completed", "failed", "timeout"] = (
-                "timeout" if timed_out else "completed" if exit_code == 0 else "failed"
-            )
             ended_at = time.gmtime()
             build_file_mismatches = tuple(sorted(mismatches)) if mismatches is not None else None
             record = ProjectRunRecord(
@@ -174,7 +172,7 @@ class CeProjectRunner:
                 proof=proof,
                 build_outcome=build_outcome,
                 build_file_mismatches=build_file_mismatches,
-                outcome=outcome,
+                outcome=run_outcome(exit_code),
                 exit_code=exit_code,
                 duration_seconds=round(duration, 3),
                 outputs=artifacts,

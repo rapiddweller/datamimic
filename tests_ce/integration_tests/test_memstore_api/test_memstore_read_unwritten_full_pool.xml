@@ -1,0 +1,7 @@
+<setup rngSeed="1">
+    <memstore id="mem"/>
+    <generate name="demand" count="1" target="mem">
+        <key name="id" generator="IncrementGenerator"/>
+    </generate>
+    <variable name="row" source="mem" sourceEntity="slot" distribution="random"/>
+</setup>
