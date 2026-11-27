@@ -353,7 +353,18 @@ def _parent_path(path):
     )
 
 
-def _moved_hashes(nodes):
+def _baseline_source(parent, manifest, baseline_dir):
+    path = baseline_dir / (Path(parent).name + ".txt")
+    try:
+        source = path.read_bytes()
+    except FileNotFoundError as error:
+        raise AssertionError(f"missing baseline fixture: {path}") from error
+    expected = manifest["baseline_sha256"][parent]
+    assert hashlib.sha256(source).hexdigest() == expected, f"baseline fixture SHA-256 mismatch: {path}"
+    return source.decode("utf-8")
+
+
+def _moved_hashes(nodes, manifest, baseline_dir=ROOT / "tests_ce/fixtures/lane_baseline"):
     current_trees = {}
     parent_trees = {}
     current_hashes = {}
@@ -365,14 +376,7 @@ def _moved_hashes(nodes):
         if path not in current_trees:
             current_trees[path] = ast.parse((ROOT / path).read_text(encoding="utf-8"))
         if parent not in parent_trees:
-            source = subprocess.run(
-                ["git", "show", f"a2954317:{parent}"],
-                cwd=ROOT,
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                check=True,
-            ).stdout
+            source = _baseline_source(parent, manifest, baseline_dir)
             parent_trees[parent] = ast.parse(source)
         current_hashes[node] = _function_hash(current_trees[path], name)
         parent_hashes[node] = _function_hash(parent_trees[parent], name)
@@ -397,7 +401,7 @@ def _moved_hashes_match(nodes, manifest, current, parent):
     return True
 
 
-def test_lane_manifest_and_parent_function_hashes():
+def test_lane_manifest_and_parent_function_hashes(tmp_path):
     manifest = json.loads((ROOT / "tests_ce/fixtures/lane_manifest.json").read_text(encoding="utf-8"))
     assert manifest["source_commit"] == "a2954317"
     assert set(manifest["lanes"]) == set(LANES)
@@ -420,8 +424,17 @@ def test_lane_manifest_and_parent_function_hashes():
         "tests_ce/nightly_tests/test_benchmarks",
     ]
     nodes = _collect_nodes(moved_paths)
-    current, parent = _moved_hashes(nodes)
+    assert set(manifest["baseline_sha256"]) == {_parent_path(node.split("::", 1)[0]) for node in nodes}
+    current, parent = _moved_hashes(nodes, manifest)
     assert _moved_hashes_match(nodes, manifest, current, parent)
+    baseline_parent = next(iter(manifest["baseline_sha256"]))
+    fixture = tmp_path / (Path(baseline_parent).name + ".txt")
+    fixture.write_bytes((ROOT / "tests_ce/fixtures/lane_baseline" / fixture.name).read_bytes() + b"\n# mutant\n")
+    with pytest.raises(AssertionError, match="baseline fixture SHA-256 mismatch"):
+        _baseline_source(baseline_parent, manifest, tmp_path)
+    fixture.unlink()
+    with pytest.raises(AssertionError, match="missing baseline fixture"):
+        _baseline_source(baseline_parent, manifest, tmp_path)
     mutant_current = current.copy()
     first = next(iter(manifest["moved_ast_hashes"]))
     path, name = first.split("::", 1)

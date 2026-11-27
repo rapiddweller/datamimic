@@ -1,5 +1,12 @@
 {
   "source_commit": "a2954317",
+  "baseline_sha256": {
+    "tests_ce/unit_tests/test_authoring/test_bounded_executor.py": "a3cf7f8194a9b5924209b38655bc494a79d5996633205c1e77912e2b6e2af76e",
+    "tests_ce/unit_tests/test_authoring/test_bounded_python_library.py": "9cd4d8fe84c86f7a980c5cc49a46730a9e05e6ef2034725f079a246c544ba4be",
+    "tests_ce/unit_tests/test_authoring/test_build_verification.py": "7e97e21133682c066a3026947e3c724ef5c2dd536f4fbcb4549200c51f29bbe9",
+    "tests_ce/unit_tests/test_authoring/test_set_order_scan.py": "b70ff13d6765f8f028b526d8fe02ff8bf53bd498908f05f74c120fa373a38e71",
+    "tests_ce/unit_tests/test_benchmarks/test_authoring_eval.py": "05317d24c2b54fecefd5ac06481e20392b43869f2853dcfae106390c8bc334d6"
+  },
   "lanes": {
     "precommit": [
       "tests_ce/unit_tests/precommit/test_base_generator_hierarchy.py::test_base_literal_caller_rng_is_kept_even_when_random_zero",
