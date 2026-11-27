@@ -4,9 +4,11 @@
 
 import traceback
 from contextlib import nullcontext
+from unittest.mock import MagicMock
 
 import pytest
 import sqlalchemy
+from sqlalchemy.dialects import mysql
 
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig
@@ -23,6 +25,7 @@ from datamimic_ce.errors import OperationError
         ("delete", ("items", [{"id": 1}]), False),
         ("get_current_sequence_number", ("secret_sequence",), True),
         ("increase_sequence_number", ("secret_sequence",), True),
+        ("reserve_sequence_block", ("secret_sequence", 3), True),
     ],
 )
 @pytest.mark.parametrize("fixed", [False, True], ids=["negative-control", "normalized"])
@@ -68,3 +71,46 @@ def test_sqlalchemy_errors_are_normalized_without_sql(method, args, sequence, fi
     assert isinstance(caught.value.__cause__, sqlalchemy.exc.SQLAlchemyError)
     assert caught.value.__context__ is None
     engine.dispose()
+
+
+@pytest.mark.parametrize(
+    ("failed_statement", "invalidate_fails"),
+    [("GET_LOCK", False), ("ALTER TABLE", False), ("RELEASE_LOCK", False), ("ALTER TABLE", True)],
+)
+def test_mysql_reservation_failure_discards_the_session_without_logging_sql(failed_statement, invalidate_fails, caplog):
+    client = RdbmsClient(
+        RdbmsConnectionConfig(
+            dbms="mysql", host=None, port=None, user=None, password=None, database="test", db_schema=None
+        )
+    )
+    connection = MagicMock(dialect=mysql.dialect())
+    counter = iter((1000, 1003))
+
+    def execute(query, params=None):
+        sql = str(query)
+        if failed_statement in sql:
+            raise sqlalchemy.exc.OperationalError("secret_sql", None, RuntimeError("secret_driver_message"))
+        result = MagicMock()
+        result.scalar.return_value = 1
+        if "information_schema.TABLES" in sql:
+            result.scalar_one_or_none.return_value = next(counter)
+        return result
+
+    connection.execute.side_effect = execute
+    if invalidate_fails:
+        connection.invalidate.side_effect = sqlalchemy.exc.ProgrammingError(
+            "secret_cleanup", None, RuntimeError("secret_cleanup_driver_message")
+        )
+    engine = MagicMock()
+    engine.begin.return_value.__enter__.return_value = connection
+    client.engine = engine
+
+    with pytest.raises(OperationError) as caught:
+        client.reserve_sequence_block("item_seq", 3, "items", "id")
+
+    connection.invalidate.assert_called_once_with()
+    rendered = "".join(traceback.format_exception(caught.value))
+    assert "secret_" not in rendered
+    assert "secret_" not in caplog.text
+    assert isinstance(caught.value.__cause__, sqlalchemy.exc.OperationalError)
+    assert caught.value.__context__ is None

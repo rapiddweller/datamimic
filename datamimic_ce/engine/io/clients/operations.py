@@ -151,6 +151,14 @@ def rdbms_increase_sequence_number(
     client.increase_sequence_number(sequence, increment, table, column)
 
 
+def rdbms_reserve_sequence_block(
+    client: Client, sequence: str, count: int, table: str | None, column: str | None
+) -> int:
+    if not isinstance(client, RdbmsClient):
+        raise TypeError("Client is not an RDBMS client")
+    return client.reserve_sequence_block(sequence, count, table, column)
+
+
 def dispose_client_engine(client: RegisteredClient) -> None:
     if isinstance(client, RdbmsClient) and client.engine is not None:
         client.engine.dispose()

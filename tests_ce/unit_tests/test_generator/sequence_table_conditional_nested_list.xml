@@ -1,0 +1,12 @@
+<setup numProcess="1">
+    <database id="sourceDB" dbms="postgresql" database="test" />
+    <generate name="parents" count="2">
+        <nestedKey name="items" type="list" count="3">
+            <condition>
+                <if condition="True">
+                    <key name="id" type="int" database="sourceDB" generator="SequenceTableGenerator" />
+                </if>
+            </condition>
+        </nestedKey>
+    </generate>
+</setup>

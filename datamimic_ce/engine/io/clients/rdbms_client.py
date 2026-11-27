@@ -37,7 +37,7 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.dialects import registry
-from sqlalchemy.engine import Dialect, Engine
+from sqlalchemy.engine import Connection, Dialect, Engine
 from sqlalchemy.engine.default import DefaultDialect
 from sqlalchemy.engine.row import Row
 from sqlalchemy.pool import QueuePool
@@ -746,68 +746,8 @@ class RdbmsClient(DatabaseClient):
     def get_current_sequence_number(
         self, sequence_name: str, table_name: str | None = None, column_name: str | None = None
     ) -> int:
-        """
-        Get the current value of a database sequence: atomically advance it by 1 and return the
-        new value (same contract as Postgres nextval).
-
-        Supported for postgresql and mysql. mssql/oracle are not supported yet: prototyped with
-        native sequences, but SequenceTableGenerator is re-instantiated per page/scan-phase pass
-        (existing engine behavior) and each instantiation calls this side-effecting method, which
-        was observed to produce colliding id ranges against MSSQL non-deterministically - needs a
-        fix to that interaction, not just a dialect-specific SQL port.
-        :param sequence_name: Name of the sequence
-        :param table_name: MySQL only - the target table (convention case, unset for an explicit
-            sequence= name). MySQL has no freestanding sequence object, so it integrates directly
-            with the target table's own AUTO_INCREMENT counter instead - the only way a
-            MySQL-backed id column stays coherent with plain (non-generator) inserts into the
-            same table, mirroring why Postgres's native sequence already works this way.
-        :param column_name: MySQL only - the target column (paired with table_name).
-        :return: Current sequence number
-        """
-        with _normalize_database_errors("database sequence") as failures:
-            self._require_write("get_current_sequence_number")
-            dbms = self._credential.dbms
-            with self._create_engine().connect() as connection:
-                transaction = connection.begin()
-                try:
-                    if dbms is Dbms.POSTGRESQL:
-                        schema, seq = self._split_sequence_schema(sequence_name, self._credential.db_schema or "public")
-                        qualified_sequence = self._quoted_qualified_identifier(connection.dialect, schema, seq)
-                        exists = connection.execute(
-                            text(
-                                "SELECT EXISTS (SELECT 1 FROM pg_sequences "
-                                "WHERE schemaname = :schema AND sequencename = :seq_name)"
-                            ),
-                            {"schema": schema, "seq_name": seq},
-                        ).scalar()
-                        if not exists:
-                            connection.execute(text(f"CREATE SEQUENCE IF NOT EXISTS {qualified_sequence}"))
-                        current_value = connection.execute(
-                            text("SELECT nextval(CAST(:sequence_name AS regclass))"),
-                            {"sequence_name": qualified_sequence},
-                        ).scalar()
-                    elif dbms is Dbms.MYSQL:
-                        current_value = self._advance_mysql_auto_increment(
-                            connection, sequence_name, table_name, column_name, 1
-                        )
-                    else:
-                        # mssql/oracle: native-sequence support was prototyped and pulled - a
-                        # per-page/scan-phase re-instantiation of SequenceTableGenerator (existing
-                        # DATAMIMIC behavior, not new) calls this method multiple times per statement
-                        # with side-effecting advances, and the resulting id ranges were observed to
-                        # collide non-deterministically against MSSQL. Needs a fix to the range
-                        # arithmetic (or the scan-phase call pattern) before shipping, not just a
-                        # dialect-specific SQL port. See PR discussion.
-                        raise ValueError(f"SequenceTableGenerator is not supported for dbms '{dbms}'")
-                    transaction.commit()
-                    return current_value
-                except Exception as err:
-                    transaction.rollback()
-                    if not isinstance(err, sqlalchemy.exc.SQLAlchemyError):
-                        logger.error(f"Failed to get current sequence number for {sequence_name}: {err}")
-                    raise
-        if failures:
-            raise failures[0]
+        """Take one sequence value and return it."""
+        return self.reserve_sequence_block(sequence_name, 1, table_name, column_name)
 
     def increase_sequence_number(
         self,
@@ -816,77 +756,82 @@ class RdbmsClient(DatabaseClient):
         table_name: str | None = None,
         column_name: str | None = None,
     ) -> None:
-        """
-        Atomically advance the sequence by `increment` (a single atomic statement/lock-scoped
-        update per dialect - never a read-current-value-then-write-it-back-in-Python round trip,
-        which would race under the concurrent, multiprocess callers this generator exists for).
-        :param sequence_name: Name of the sequence
-        :param increment: Increment value
-        :param table_name: MySQL only - see get_current_sequence_number.
-        :param column_name: MySQL only - see get_current_sequence_number.
-        """
+        """Discard a block of sequence numbers (use reserve_sequence_block to receive its start)."""
+        self.reserve_sequence_block(sequence_name, increment, table_name, column_name)
+
+    def reserve_sequence_block(
+        self, sequence_name: str, count: int, table_name: str | None = None, column_name: str | None = None
+    ) -> int:
+        """Reserve count consecutive numbers and return the first, under a per-sequence database lock."""
         with _normalize_database_errors("database sequence") as failures:
-            self._require_write("increase_sequence_number")
-            increment = int(increment)  # callers may pass a raw XML attribute string (e.g. count=)
+            self._require_write("reserve_sequence_block")
+            count = int(count)
+            if count < 1:
+                raise ValueError("Sequence reservation count must be positive")
             dbms = self._credential.dbms
-            with self._create_engine().connect() as connection:
-                transaction = connection.begin()
-                try:
-                    if dbms is Dbms.POSTGRESQL:
-                        schema, seq = self._split_sequence_schema(sequence_name, self._credential.db_schema or "public")
-                        qualified_sequence = self._quoted_qualified_identifier(connection.dialect, schema, seq)
-                        connection.execute(
-                            text(
-                                "SELECT setval(CAST(:sequence_name AS regclass), "
-                                "nextval(CAST(:sequence_name AS regclass)) + :increment)"
-                            ),
-                            {"sequence_name": qualified_sequence, "increment": increment},
-                        )
-                    elif dbms is Dbms.MYSQL:
-                        self._advance_mysql_auto_increment(
-                            connection, sequence_name, table_name, column_name, increment
-                        )
-                    else:
-                        # See get_current_sequence_number - mssql/oracle native-sequence support
-                        # pulled pending a fix to the scan-phase re-instantiation interaction.
-                        raise ValueError(f"SequenceTableGenerator is not supported for dbms '{dbms}'")
-                    transaction.commit()
-                except Exception as err:
-                    transaction.rollback()
-                    if not isinstance(err, sqlalchemy.exc.SQLAlchemyError):
-                        logger.error(f"Failed to increase sequence number for {sequence_name}: {err}")
-                    raise
-        if failures:
-            raise failures[0]
+            if dbms is Dbms.POSTGRESQL:
+                # The transaction must hold the lock even if the configured engine uses AUTOCOMMIT,
+                # and catalog reads after the lock must see a sequence created by the prior holder.
+                with (
+                    self._create_engine().connect() as connection,
+                    connection.execution_options(isolation_level="READ COMMITTED").begin(),
+                ):
+                    return self._reserve_postgresql_sequence(connection, sequence_name, count)
+            if dbms is Dbms.MYSQL:
+                with self._create_engine().begin() as connection:
+                    return self._advance_mysql_auto_increment(connection, sequence_name, table_name, column_name, count)
+            raise ValueError(f"SequenceTableGenerator is not supported for dbms '{dbms}'")
+        raise failures[0]
+
+    def _reserve_postgresql_sequence(self, connection: Connection, sequence_name: str, count: int) -> int:
+        schema, seq = self._split_sequence_schema(sequence_name, self._credential.db_schema or "public")
+        qualified_sequence = self._quoted_qualified_identifier(connection.dialect, schema, seq)
+        # Cast to name before hashing so aliases due to PostgreSQL identifier truncation lock together.
+        connection.execute(
+            text(
+                "SELECT pg_catalog.pg_advisory_xact_lock("
+                "pg_catalog.hashtext('datamimic_seq:' || CAST(CAST(:schema AS name) AS text)), "
+                "pg_catalog.hashtext(CAST(CAST(:seq AS name) AS text)))"
+            ),
+            {"schema": schema, "seq": seq},
+        )
+        params = {"sequence_name": qualified_sequence}
+        increment = connection.execute(
+            text(
+                "SELECT seqincrement FROM pg_catalog.pg_sequence "
+                "WHERE seqrelid = pg_catalog.to_regclass(:sequence_name)"
+            ),
+            params,
+        ).scalar_one_or_none()
+        if increment is None:
+            connection.execute(text(f"CREATE SEQUENCE IF NOT EXISTS {qualified_sequence}"))
+        elif increment != 1:
+            raise ValueError("SequenceTableGenerator requires PostgreSQL sequences with INCREMENT BY 1")
+
+        # Read the shared high-water mark, including all values cached by other backends.
+        # nextval() on a pooled connection could return a session-local cached value below it.
+        last_value, is_called = connection.execute(
+            text(f"SELECT last_value, is_called FROM {qualified_sequence}")
+        ).one()
+        start = int(last_value) + int(is_called)
+        connection.execute(
+            text("SELECT pg_catalog.setval(CAST(:sequence_name AS regclass), :last_value)"),
+            {**params, "last_value": start + count - 1},
+        )
+        return start
 
     def _advance_mysql_auto_increment(
-        self, connection, sequence_name: str, table_name: str | None, column_name: str | None, increment: int
+        self,
+        connection: Connection,
+        sequence_name: str,
+        table_name: str | None,
+        column_name: str | None,
+        increment: int,
     ) -> int:
-        """MySQL has no freestanding sequence object (pre-MariaDB) - AUTO_INCREMENT is a
-        per-table column property, not an independently nameable thing. The only way a
-        MySQL-backed id column stays coherent with OTHER, non-generator inserts into the same
-        table (the same guarantee Postgres's native sequence gives for free, since a generator
-        there advances the exact object the column's own DEFAULT already points at)
-        is to advance that table's real AUTO_INCREMENT counter directly - not a separate,
-        unrelated counter table, which two independent counters could never keep in sync.
+        """Return the table's previous AUTO_INCREMENT under its session advisory lock.
 
-        Only supported for the convention-derived case (table_name/column_name known - a bare
-        `generator="SequenceTableGenerator"`, no explicit sequence=): an explicit legacy
-        sequence= name has no MySQL object to bind to, so it's a clear error rather than a
-        silently-wrong separate counter.
-
-        `information_schema.TABLES.AUTO_INCREMENT` alone is NOT reliable: it's served from
-        InnoDB's persistent statistics cache, refreshed only every `innodb_stats_auto_recalc`
-        threshold or `information_schema_stats_expiry` seconds (default 86400 = 24h). A plain
-        INSERT elsewhere doesn't force a refresh, so a stale read can return a LOWER value than
-        the table's real counter - handing out ids that collide with rows already inserted
-        by other means. `SET SESSION information_schema_stats_expiry = 0` forces this session's
-        read to bypass the cache and reflect the live value; it's session-scoped, so it doesn't
-        need any privilege beyond what this connection already has and doesn't affect other
-        sessions. GET_LOCK/RELEASE_LOCK are session-scoped advisory locks, independent of
-        transactions/DDL (ALTER TABLE ... AUTO_INCREMENT=n is DDL, not itself atomic against a
-        concurrent read-then-write), so they serialize concurrent callers around the whole
-        read-then-ALTER round trip safely.
+        Disabling the information_schema statistics cache makes the reads see the live counter.
+        ALTER TABLE implicitly commits, so a session lock spans both reads and the update.
         """
         self._require_write("_advance_mysql_auto_increment")
         if table_name is None or column_name is None:
@@ -895,36 +840,49 @@ class RdbmsClient(DatabaseClient):
                 "freestanding sequence object to bind an explicit name to. Omit sequence= to use the target "
                 "table's own AUTO_INCREMENT column instead."
             )
-        schema = self._credential.db_schema
-        table = self._quoted_qualified_identifier(
-            connection.dialect,
-            *((schema, table_name) if schema else (table_name,)),
-        )
-        lock_name = f"datamimic_seq_{schema}_{table_name}_{column_name}"[:64]
-        acquired = connection.execute(text("SELECT GET_LOCK(:name, 30)"), {"name": lock_name}).scalar()
-        if acquired != 1:
-            raise RuntimeError(f"Could not acquire MySQL advisory lock for sequence '{sequence_name}' within 30s")
+        schema = self._credential.db_schema or self._credential.database
+        table = self._quoted_qualified_identifier(connection.dialect, schema, table_name)
+        # AUTO_INCREMENT is table-scoped. Case-fold the lock name so MySQL configurations with
+        # case-insensitive identifiers cannot take distinct locks on the same table.
+        lock_name = f"datamimic_seq_{schema.lower()}_{table_name.lower()}"[:64]
         try:
+            acquired = connection.execute(text("SELECT GET_LOCK(:name, 30)"), {"name": lock_name}).scalar()
+            if acquired != 1:
+                raise RuntimeError(f"Could not acquire MySQL advisory lock for sequence '{sequence_name}' within 30s")
             connection.execute(text("SET SESSION information_schema_stats_expiry = 0"))
-            next_value = connection.execute(
-                text(
-                    "SELECT AUTO_INCREMENT FROM information_schema.TABLES "
-                    "WHERE table_schema = :schema AND table_name = :table"
-                ),
-                {"schema": schema, "table": table_name},
-            ).scalar()
-            next_value = int(next_value or 1)
-            connection.execute(text(f"ALTER TABLE {table} AUTO_INCREMENT = {next_value + int(increment)}"))
-            return next_value
-        finally:
+            # Fresh InnoDB tables can report NULL until their default counter is initialized.
+            # A populated table with an unreadable counter must never be treated as fresh.
+            counter_query = text(
+                "SELECT CASE WHEN AUTO_INCREMENT IS NOT NULL THEN AUTO_INCREMENT "
+                "WHEN EXISTS (SELECT 1 FROM information_schema.COLUMNS "
+                "WHERE table_schema = :schema AND table_name = :table AND EXTRA = 'auto_increment') "
+                f"AND NOT EXISTS (SELECT 1 FROM {table}) THEN 1 END "
+                "FROM information_schema.TABLES "
+                "WHERE table_schema = :schema AND table_name = :table"
+            )
+            params = {"schema": schema, "table": table_name}
+            counter = connection.execute(counter_query, params).scalar_one_or_none()
+            if counter is None:
+                raise ValueError("SequenceTableGenerator could not read the MySQL AUTO_INCREMENT counter")
+            start = int(counter)
+            end = start + increment
+            connection.execute(text(f"ALTER TABLE {table} AUTO_INCREMENT = {end}"))
+            advanced = connection.execute(counter_query, params).scalar_one_or_none()
+            if advanced is None or int(advanced) < end:
+                raise ValueError("MySQL AUTO_INCREMENT counter could not reserve the requested sequence block")
+            released = connection.execute(text("SELECT RELEASE_LOCK(:name)"), {"name": lock_name}).scalar()
+        except BaseException:
+            # Discard the session on failure so its lock cannot survive in the pool.
+            # Avoid a second SQL call that could obscure the original database error.
             try:
-                connection.execute(text("SELECT RELEASE_LOCK(:name)"), {"name": lock_name})
-            except Exception as release_err:
-                # Never let a lock-release failure mask the original error (or a successful
-                # result) from the try block above - just log it. The advisory lock is
-                # session-scoped anyway, so it's released automatically once this connection
-                # closes even if RELEASE_LOCK itself fails here.
-                logger.error(f"Failed to release MySQL advisory lock '{lock_name}': {release_err}")
+                connection.invalidate()
+            except sqlalchemy.exc.SQLAlchemyError:
+                logger.error("Failed to discard the MySQL connection after a sequence reservation error")
+            raise
+        if released != 1:
+            connection.invalidate()
+            raise RuntimeError("Could not release MySQL sequence advisory lock")
+        return start
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self._engine:

@@ -152,9 +152,13 @@ class GeneratorUtil:
             # Get generator from element <generator>
             cache_key = key or generator_str
             generator_from_ctx = self._context.root.generators.get(cache_key)
-            if generator_from_ctx is not None:
-                if isinstance(generator_from_ctx, SequenceTableGenerator) and pagination:
+            if isinstance(generator_from_ctx, SequenceTableGenerator):
+                if not generator_from_ctx.matches_invocation(stmt):
+                    del self._context.root.generators[cache_key]
+                    generator_from_ctx = None
+                elif pagination:
                     generator_from_ctx.add_pagination(pagination=pagination)
+            if generator_from_ctx is not None:
                 return generator_from_ctx
 
             # Parse generator string into type and parameters

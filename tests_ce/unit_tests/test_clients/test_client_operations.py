@@ -20,6 +20,7 @@ from datamimic_ce.engine.io.clients.operations import (
     is_rdbms_client,
     mongodb_count_collection,
     rdbms_get_current_sequence_number,
+    rdbms_reserve_sequence_block,
     uses_mysql_sequence_storage,
 )
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
@@ -79,6 +80,8 @@ def test_client_operations_reject_unsupported_client_kinds() -> None:
         mongodb_count_collection(rdbms, "collection")
     with pytest.raises(TypeError, match="not an RDBMS"):
         rdbms_get_current_sequence_number(mongodb, "seq", None, None)
+    with pytest.raises(TypeError, match="not an RDBMS"):
+        rdbms_reserve_sequence_block(mongodb, "seq", 1, None, None)
 
 
 def test_database_query_operation_forwards_pagination() -> None:

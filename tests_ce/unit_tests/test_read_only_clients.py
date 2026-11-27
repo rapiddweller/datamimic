@@ -49,6 +49,7 @@ def test_read_only_sqlite_reads_and_blocks_every_mutator_without_writes(tmp_path
         lambda: reader.delete("rows", [{"id": 1}]),
         lambda: reader.get_current_sequence_number("seq"),
         lambda: reader.increase_sequence_number("seq"),
+        lambda: reader.reserve_sequence_block("seq", 5),
         lambda: reader.get("DELETE FROM rows RETURNING id"),
     ]
     for attempt in attempts:
