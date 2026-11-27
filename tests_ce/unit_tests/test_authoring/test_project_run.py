@@ -128,6 +128,12 @@ def test_unverified_run_reports_execution_without_build(run: ProjectRunExecution
     assert result.execution == run
 
 
+@pytest.mark.parametrize("exit_code,timed_out", [(None, False), (1, True), (0, True)])
+def test_execution_rejects_a_timeout_flag_contradicting_the_exit_code(exit_code: int | None, timed_out: bool) -> None:
+    with pytest.raises(ValidationError):
+        execution(exit_code, timed_out)
+
+
 def test_unverified_result_rejects_inconsistent_execution() -> None:
     with pytest.raises(ValidationError):
         UnverifiedProjectRunResult(outcome="completed", message="not verified", execution=execution(1))
@@ -606,6 +612,7 @@ def test_a_second_run_writes_a_second_record_and_build_ignores_both(tmp_path: Pa
 @pytest.mark.parametrize(
     "script,expected_outcome,expected_exit",
     [
+        ("print('boom')", "completed", 0),
         ("import sys; print('boom'); sys.exit(3)", "failed", 3),
         ("import time; print('start', flush=True); time.sleep(60)", "timeout", None),
     ],
@@ -640,7 +647,7 @@ def test_a_failed_or_timed_out_run_still_gets_a_record(
     record = _record(root, run.record_path)
     assert record.exit_code == run.exit_code == expected_exit and record.proof is None
     assert record.build_outcome is None and record.build_file_mismatches is None
-    assert record.outcome == expected_outcome
+    assert record.outcome == run.outcome == expected_outcome
     assert run.timed_out is (expected_outcome == "timeout")
     assert (root / run.record_path / "run.log").read_text(encoding="utf-8").splitlines()[0] in {"boom", "start"}
 

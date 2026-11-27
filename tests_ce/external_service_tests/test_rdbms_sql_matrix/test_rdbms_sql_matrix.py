@@ -8,10 +8,21 @@
 the same rows. Covers deterministic paging of table sources and selectors (own ORDER BY, ties, aliases, unions,
 bounded selectors), the variable count path, <execute> script splitting, and dbms validation."""
 
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from threading import Barrier, Event
+from uuid import uuid4
 
 import pytest
+from sqlalchemy import event
+from sqlalchemy.schema import CreateTable
+from sqlalchemy.sql.elements import TextClause
 
+from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
+from datamimic_ce.engine.io.api import ColumnKind, load_connection_profile
+from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
+from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig
+from datamimic_ce.engine.runtime.lifecycle.config import get_settings
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 _TEST_DIR = Path(__file__).resolve().parent
@@ -81,3 +92,52 @@ def test_rdbms_sql_matrix(engine: str) -> None:
 def test_unsupported_dbms_fails_when_the_descriptor_is_read() -> None:
     with pytest.raises(Exception, match="dbms"):
         DataMimicTest(test_dir=_TEST_DIR, filename="invalid_dbms.xml").test_with_timer()
+
+
+@pytest.mark.parametrize("dbms", [Dbms.POSTGRESQL, Dbms.MYSQL])
+def test_overlapping_table_creation(dbms):
+    environment = "local" if get_settings().RUNTIME_ENVIRONMENT == "development" else "environment"
+    profile = load_connection_profile(_TEST_DIR, environment)
+    prefix = dbms.value + ".db."
+    config = RdbmsConnectionConfig(
+        dbms=dbms,
+        host=profile[prefix + "host"],
+        port=int(profile[prefix + "port"]),
+        database=profile[prefix + "database"],
+        user=profile[prefix + "user"],
+        password=profile[prefix + "password"],
+        db_schema=None,
+        isolation_level="AUTOCOMMIT",
+    )
+    clients = [RdbmsClient(config), RdbmsClient(config)]
+    table = "ce_create_" + uuid4().hex[:16]
+    both_reached = Event()
+    both_ready = Barrier(2, action=both_reached.set)
+
+    def meet_before_lock_or_create(connection, statement, multiparams, params, execution_options):
+        if dbms is Dbms.POSTGRESQL:
+            if isinstance(statement, TextClause) and "pg_advisory_xact_lock" in statement.text:
+                both_ready.wait(timeout=10)
+        elif isinstance(statement, CreateTable):
+            both_ready.wait(timeout=10)
+
+    try:
+        for client in clients:
+            event.listen(client._create_engine(), "before_execute", meet_before_lock_or_create)
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            columns = (("id", ColumnKind.INTEGER), ("note", ColumnKind.TEXT))
+            futures = [executor.submit(client.ensure_table, table, columns, ("id",)) for client in clients]
+            for future in futures:
+                future.result()
+        assert both_reached.is_set()
+        for number, client in enumerate(clients):
+            client.insert(table, [{"id": number, "note": "created"}])
+        assert clients[0].get(f"SELECT id, note FROM {table} ORDER BY id") == [(0, "created"), (1, "created")]
+    finally:
+        try:
+            if clients[0].engine is not None:
+                clients[0].execute_sql_script(f"DROP TABLE IF EXISTS {table}")
+        finally:
+            for client in clients:
+                if client.engine is not None:
+                    client.engine.dispose()
