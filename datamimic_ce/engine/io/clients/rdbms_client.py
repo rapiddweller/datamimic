@@ -871,13 +871,17 @@ class RdbmsClient(DatabaseClient):
             if advanced is None or int(advanced) < end:
                 raise ValueError("MySQL AUTO_INCREMENT counter could not reserve the requested sequence block")
             released = connection.execute(text("SELECT RELEASE_LOCK(:name)"), {"name": lock_name}).scalar()
-            if released != 1:
-                raise RuntimeError("Could not release MySQL sequence advisory lock")
         except BaseException:
             # Discard the session on failure so its lock cannot survive in the pool.
             # Avoid a second SQL call that could obscure the original database error.
-            connection.invalidate()
+            try:
+                connection.invalidate()
+            except sqlalchemy.exc.SQLAlchemyError:
+                logger.error("Failed to discard the MySQL connection after a sequence reservation error")
             raise
+        if released != 1:
+            connection.invalidate()
+            raise RuntimeError("Could not release MySQL sequence advisory lock")
         return start
 
     def __exit__(self, exc_type, exc_val, exc_tb):

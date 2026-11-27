@@ -73,8 +73,11 @@ def test_sqlalchemy_errors_are_normalized_without_sql(method, args, sequence, fi
     engine.dispose()
 
 
-@pytest.mark.parametrize("failed_statement", ["GET_LOCK", "ALTER TABLE", "RELEASE_LOCK"])
-def test_mysql_reservation_failure_discards_the_session_without_logging_sql(failed_statement, caplog):
+@pytest.mark.parametrize(
+    ("failed_statement", "invalidate_fails"),
+    [("GET_LOCK", False), ("ALTER TABLE", False), ("RELEASE_LOCK", False), ("ALTER TABLE", True)],
+)
+def test_mysql_reservation_failure_discards_the_session_without_logging_sql(failed_statement, invalidate_fails, caplog):
     client = RdbmsClient(
         RdbmsConnectionConfig(
             dbms="mysql", host=None, port=None, user=None, password=None, database="test", db_schema=None
@@ -94,6 +97,10 @@ def test_mysql_reservation_failure_discards_the_session_without_logging_sql(fail
         return result
 
     connection.execute.side_effect = execute
+    if invalidate_fails:
+        connection.invalidate.side_effect = sqlalchemy.exc.ProgrammingError(
+            "secret_cleanup", None, RuntimeError("secret_cleanup_driver_message")
+        )
     engine = MagicMock()
     engine.begin.return_value.__enter__.return_value = connection
     client.engine = engine
@@ -105,5 +112,5 @@ def test_mysql_reservation_failure_discards_the_session_without_logging_sql(fail
     rendered = "".join(traceback.format_exception(caught.value))
     assert "secret_" not in rendered
     assert "secret_" not in caplog.text
-    assert isinstance(caught.value.__cause__, sqlalchemy.exc.SQLAlchemyError)
+    assert isinstance(caught.value.__cause__, sqlalchemy.exc.OperationalError)
     assert caught.value.__context__ is None
