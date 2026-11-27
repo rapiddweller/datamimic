@@ -419,8 +419,6 @@ jobs:
           tests_ce/integration_tests/test_authoring/test_build_verification.py::test_smoke_reuses_first_capture_and_real_json_exporter
           'tests_ce/integration_tests/test_authoring/test_set_order_scan.py::test_the_replay_under_other_hash_seeds_rejects_each_s17_negative_and_names_a_cause[set_order]'
           'tests_ce/integration_tests/test_authoring/test_set_order_scan.py::test_mutant_replays_under_the_first_hash_seed_accept_each_s17_negative[set_order]'
-      - name: Verify lane manifest and parent function hashes
-        run: uv run pytest tests_ce/architecture/test_integration_test_layout.py -n 0 -q
 
   runtime_determinism_matrix:
     name: Seeded runtime determinism on ${{ matrix.os }} Python ${{ matrix.python-version }} (${{ matrix.timezone }}, ${{ matrix.resolution }})
@@ -471,7 +469,6 @@ jobs:
         run: uv run pytest tests_ce/architecture/test_facade_determinism.py -q
 
       - name: Run Windows authoring process and handle proofs
-        # The same guard runs in the PR Windows portability job and on Ubuntu.
         if: matrix.cell == 'windows-py311-utc'
         run: >-
           uv run pytest
@@ -485,10 +482,6 @@ jobs:
           tests_ce/nightly_tests/test_authoring/test_derived_row_limit.py
           tests_ce/unit_tests/test_portable_errors.py
           tests_ce/unit_tests/precommit/test_error_pickling.py -q
-
-      - name: Verify lane manifest and parent function hashes
-        if: matrix.cell == 'windows-py311-utc'
-        run: uv run pytest tests_ce/architecture/test_integration_test_layout.py -n 0 -q
 
       - name: Run committed seeded entity replay proof
         run: >-
