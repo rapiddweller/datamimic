@@ -66,4 +66,5 @@ def test_sqlalchemy_errors_are_normalized_without_sql(method, args, sequence, fi
     assert "secret_sequence" not in rendered
     assert "secret_marker" not in caplog.text
     assert isinstance(caught.value.__cause__, sqlalchemy.exc.SQLAlchemyError)
+    assert caught.value.__context__ is None
     engine.dispose()

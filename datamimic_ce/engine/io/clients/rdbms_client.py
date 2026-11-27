@@ -125,15 +125,13 @@ _RAW_SCRIPT = {"no_parameters": True}
 
 
 @contextmanager
-def _normalize_database_errors(target: str) -> Iterator[None]:
+def _normalize_database_errors(target: str) -> Iterator[list[OperationError]]:
     """Normalize database failures without retaining their statements or driver messages."""
+    failures: list[OperationError] = []
     try:
-        yield
+        yield failures
     except sqlalchemy.exc.SQLAlchemyError as error:
-        failure = _operation_failure(target, error)
-    else:
-        return
-    raise failure
+        failures.append(_operation_failure(target, error))
 
 
 class RdbmsClient(DatabaseClient):
@@ -445,7 +443,7 @@ class RdbmsClient(DatabaseClient):
         """Rows of a table, ordered by its primary key, else by every column. For a stable snapshot that
         order keeps OFFSET pages disjoint across pages and workers, and keeps full reads that are sliced
         or shuffled per worker (random/cumulated/unique) identical in every worker."""
-        with _normalize_database_errors("database read"):
+        with _normalize_database_errors("database read") as failures:
             engine = self._create_engine()
 
             with engine.connect() as conn:
@@ -460,6 +458,8 @@ class RdbmsClient(DatabaseClient):
 
                 result = conn.execute(query).fetchall()
                 return [dict(row._mapping) for row in result]
+        if failures:
+            raise failures[0]
 
     def get_by_page_with_query(self, original_query: str, pagination: DataSourcePagination | None = None):
         """
@@ -511,7 +511,7 @@ class RdbmsClient(DatabaseClient):
         integrity. The reference task does the distinct/with-replacement sampling deterministically
         via runtime source selection / ctx.rng (so the full column set is returned, not a
         pre-limited slice)."""
-        with _normalize_database_errors("database read"):
+        with _normalize_database_errors("database read") as failures:
             engine = self._create_engine()
 
             with engine.connect() as conn:
@@ -524,6 +524,8 @@ class RdbmsClient(DatabaseClient):
                 # fetch-all + sort suits reference/lookup tables; a huge source would want
                 # SELECT DISTINCT or DB-side sampling — an EE-scale concern, not CE's reference path.
                 return [tuple(row) for row in conn.execute(select(*columns).order_by(*columns)).fetchall()]
+        if failures:
+            raise failures[0]
 
     def insert(self, table_name: str, data_list: list):
         """
@@ -576,7 +578,7 @@ class RdbmsClient(DatabaseClient):
     def update(self, table_name: str, data_list: list) -> int:
         """UPDATE each record by primary key; returns the number of matched rows.
         Row-by-row statements: test-data volumes, not a bulk path."""
-        with _normalize_database_errors("database write"):
+        with _normalize_database_errors("database write") as failures:
             self._require_write("update")
             if not data_list:
                 return 0
@@ -591,10 +593,12 @@ class RdbmsClient(DatabaseClient):
                     clause = self._pk_clause(table, row, pk, table_name, "update")
                     matched += connection.execute(table.update().where(*clause).values(**values)).rowcount
             return matched
+        if failures:
+            raise failures[0]
 
     def upsert(self, table_name: str, data_list: list) -> None:
         """UPDATE by primary key, INSERT the rows that matched nothing."""
-        with _normalize_database_errors("database write"):
+        with _normalize_database_errors("database write") as failures:
             self._require_write("upsert")
             if not data_list:
                 return
@@ -610,10 +614,12 @@ class RdbmsClient(DatabaseClient):
                         exists = connection.execute(select(table.c[pk[0]]).where(*clause)).first() is not None
                     if not exists:
                         connection.execute(table.insert(), [row])
+        if failures:
+            raise failures[0]
 
     def delete(self, table_name: str, data_list: list) -> int:
         """DELETE each record by primary key; returns the number of deleted rows."""
-        with _normalize_database_errors("database write"):
+        with _normalize_database_errors("database write") as failures:
             self._require_write("delete")
             if not data_list:
                 return 0
@@ -625,6 +631,8 @@ class RdbmsClient(DatabaseClient):
                     clause = self._pk_clause(table, row, pk, table_name, "delete")
                     deleted += connection.execute(table.delete().where(*clause)).rowcount
             return deleted
+        if failures:
+            raise failures[0]
 
     def clear_table(self, table_name: str) -> None:
         """Remove every row and keep the table, its indexes and constraints (target="db.clear").
@@ -756,7 +764,7 @@ class RdbmsClient(DatabaseClient):
         :param column_name: MySQL only - the target column (paired with table_name).
         :return: Current sequence number
         """
-        with _normalize_database_errors("database sequence"):
+        with _normalize_database_errors("database sequence") as failures:
             self._require_write("get_current_sequence_number")
             dbms = self._credential.dbms
             with self._create_engine().connect() as connection:
@@ -798,6 +806,8 @@ class RdbmsClient(DatabaseClient):
                     if not isinstance(err, sqlalchemy.exc.SQLAlchemyError):
                         logger.error(f"Failed to get current sequence number for {sequence_name}: {err}")
                     raise
+        if failures:
+            raise failures[0]
 
     def increase_sequence_number(
         self,
@@ -815,7 +825,7 @@ class RdbmsClient(DatabaseClient):
         :param table_name: MySQL only - see get_current_sequence_number.
         :param column_name: MySQL only - see get_current_sequence_number.
         """
-        with _normalize_database_errors("database sequence"):
+        with _normalize_database_errors("database sequence") as failures:
             self._require_write("increase_sequence_number")
             increment = int(increment)  # callers may pass a raw XML attribute string (e.g. count=)
             dbms = self._credential.dbms
@@ -846,6 +856,8 @@ class RdbmsClient(DatabaseClient):
                     if not isinstance(err, sqlalchemy.exc.SQLAlchemyError):
                         logger.error(f"Failed to increase sequence number for {sequence_name}: {err}")
                     raise
+        if failures:
+            raise failures[0]
 
     def _advance_mysql_auto_increment(
         self, connection, sequence_name: str, table_name: str | None, column_name: str | None, increment: int
