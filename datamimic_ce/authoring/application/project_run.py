@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from pathlib import PurePosixPath
 from typing import Literal
 
 from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
@@ -32,7 +33,14 @@ def _refusal_message(effects: tuple[ExternalEffect, ...]) -> str:
     scripts = sorted({effect.name for effect in effects if effect.kind is ExternalEffectKind.EXECUTE})
     parts: list[str] = []
     if scripts:
-        parts.append(f"runs Python code from {', '.join(scripts)}")
+        inside = all(
+            script != "inline"
+            and not script.startswith(("/", "\\"))
+            and ":" not in script
+            and ".." not in PurePosixPath(script.replace("\\", "/")).parts
+            for script in scripts
+        )
+        parts.append(f"runs Python code from {', '.join(scripts)}" + (" (inside the project)" if inside else ""))
     if any(effect.kind is not ExternalEffectKind.EXECUTE for effect in effects):
         parts.append("reaches outside its directory")
     return f"The project {' and '.join(parts)}; nothing was run."

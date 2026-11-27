@@ -185,7 +185,11 @@ def test_effects_without_the_flag_are_listed_and_nothing_runs() -> None:
     [
         (
             (ExternalEffect(kind=ExternalEffectKind.EXECUTE, name="lib/solver.scr.py", descriptor="datamimic.xml"),),
-            "The project runs Python code from lib/solver.scr.py; nothing was run.",
+            "The project runs Python code from lib/solver.scr.py (inside the project); nothing was run.",
+        ),
+        (
+            (ExternalEffect(kind=ExternalEffectKind.EXECUTE, name="../x.py", descriptor="datamimic.xml"),),
+            "The project runs Python code from ../x.py; nothing was run.",
         ),
         (
             (
@@ -193,8 +197,8 @@ def test_effects_without_the_flag_are_listed_and_nothing_runs() -> None:
                 ExternalEffect(kind=ExternalEffectKind.EXECUTE, name="lib/a.scr.py", descriptor="datamimic.xml"),
                 EFFECT,
             ),
-            "The project runs Python code from lib/a.scr.py, lib/b.scr.py and reaches outside its directory; "
-            "nothing was run.",
+            "The project runs Python code from lib/a.scr.py, lib/b.scr.py (inside the project) and reaches "
+            "outside its directory; nothing was run.",
         ),
         ((EFFECT,), "The project reaches outside its directory; nothing was run."),
     ],
@@ -209,7 +213,9 @@ def test_a_hybrid_project_is_refused_with_its_lib_file_named(tmp_path: Path) -> 
     shutil.copytree(Path(__file__).parents[2] / "scenarios" / "s20_library_names", root)
     result = create_authoring_application(root, descriptor_path=PROJECT_ENTRY_PATH).run_project(ProjectRunRequest())
     assert result.not_run_reason == "side_effects_not_allowed"
-    assert result.diagnostics[0].message == "The project runs Python code from lib/helpers.scr.py; nothing was run."
+    assert result.diagnostics[0].message == (
+        "The project runs Python code from lib/helpers.scr.py (inside the project); nothing was run."
+    )
     assert [effect.name for effect in result.required_side_effects] == ["lib/helpers.scr.py"]
 
 
