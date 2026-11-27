@@ -16,25 +16,25 @@ _SHA = "0123456789abcdef0123456789abcdef01234567"
 
 
 class _File:
-    def __init__(self, name: str, text: str) -> None:
+    def __init__(self, name: str, data: bytes) -> None:
         self.name = name
-        self._text = text
+        self._data = data
 
-    def read_text(self, encoding: str) -> str:
-        assert encoding == "utf-8"  # the architecture gate: a text read names its encoding
-        return self._text
+    def read_binary(self) -> bytes:
+        return self._data
 
 
 class _Distribution:
     version = "9.9.9"
 
-    def __init__(self, direct_url: str | None) -> None:
+    def __init__(self, direct_url: bytes | None) -> None:
         # A wheel from an index has other metadata files but no direct_url.json.
-        self.files = [_File("RECORD", "x")] + ([] if direct_url is None else [_File("direct_url.json", direct_url)])
+        self.files = [_File("RECORD", b"x")] + ([] if direct_url is None else [_File("direct_url.json", direct_url)])
 
 
-def _version(monkeypatch: pytest.MonkeyPatch, direct_url: str | None) -> RuntimeVersion:
-    monkeypatch.setattr(metadata, "distribution", lambda name: _Distribution(direct_url))
+def _version(monkeypatch: pytest.MonkeyPatch, direct_url: str | bytes | None) -> RuntimeVersion:
+    data = direct_url.encode() if isinstance(direct_url, str) else direct_url
+    monkeypatch.setattr(metadata, "distribution", lambda name: _Distribution(data))
     return create_authoring_application().version()
 
 
@@ -66,6 +66,21 @@ def test_the_commit_is_named_only_for_a_git_install_that_records_one(
         assert "commit" not in reported.model_dump()
     else:
         assert isinstance(reported, GitRuntimeVersion) and reported.commit == commit
+
+
+@pytest.mark.parametrize(
+    "direct_url",
+    [
+        b"\xff\xfe{}",  # not UTF-8 at all (#704)
+        b'{"vcs_info": {"vcs": "git", "commit_id": "0123456789abcdef0123456789abcdef01234567"}, "note": "\xff"}',
+    ],
+)
+def test_a_direct_url_that_is_not_utf8_gives_no_commit_and_no_error(
+    monkeypatch: pytest.MonkeyPatch, direct_url: bytes
+) -> None:
+    reported = _version(monkeypatch, direct_url)
+
+    assert reported.ce_version == "9.9.9" and type(reported) is RuntimeVersion
 
 
 def test_a_missing_distribution_gives_an_unknown_version_and_no_commit(monkeypatch: pytest.MonkeyPatch) -> None:

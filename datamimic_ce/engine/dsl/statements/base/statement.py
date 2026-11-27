@@ -46,8 +46,9 @@ class Statement(ABC):  # noqa: B024
         """The statement a direct child should treat as its logical parent."""
         return self
 
-    def get_parent_full_name(self):
+    def get_parent_full_name(self) -> str:
         # Split the path into components
+        assert self.full_name is not None
         path_components = self.full_name.split(NAME_SEPARATOR)
         # Remove the last component
         path_components.pop()

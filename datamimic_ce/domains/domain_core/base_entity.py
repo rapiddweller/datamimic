@@ -38,12 +38,12 @@ class IdentifierRegistry:
         key = (entity_name, name)
         seen = self._seen.setdefault(key, set())
         if candidate not in seen:
-            self._seen[key] = seen | {candidate}
+            seen |= {candidate}
             return candidate
 
         for alternative in _identifier_alternatives(identifier_format, candidate, len(seen)):
             if alternative not in seen:
-                self._seen[key] = seen | {alternative}
+                seen |= {alternative}
                 return alternative
 
         raise ValueError(f"Unique identifier space exhausted for {entity_name}.{name}")
