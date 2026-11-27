@@ -94,7 +94,9 @@ class ProjectRunWorkflow:
                     *tuple(item for item in build.diagnostics if item.severity == "warning"),
                 ),
             )
-        execution = self._runner.run(request.params, request.timeout_seconds, build)
+        execution = self._runner.run(
+            request.params, request.timeout_seconds, build.artifact, build_outcome=outcome_name
+        )
         outcome: Literal["completed", "failed", "timeout"] = (
             "timeout" if execution.timed_out else "completed" if execution.exit_code == 0 else "failed"
         )

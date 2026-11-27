@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import PurePosixPath
-from typing import Protocol
+from typing import Literal, Protocol
 
 from .domain.capabilities import DslCatalogSnapshot
 from .domain.diagnostics import Diagnostic
@@ -18,10 +18,9 @@ from .domain.reference import ReferenceResult
 from .domain.requests import (
     BoundedExecutionEvidence,
     BoundedExecutionRequest,
+    BuildArtifact,
     IncludeGraphResult,
     LintResult,
-    ReadyBuild,
-    ReadyWithGapsBuild,
     ReferenceRequest,
 )
 
@@ -69,5 +68,7 @@ class ProjectRunner(Protocol):
         self,
         params: tuple[ProjectParam, ...],
         timeout_seconds: int,
-        build: ReadyBuild | ReadyWithGapsBuild | None = None,
+        proof: BuildArtifact | None = None,
+        *,
+        build_outcome: Literal["ready", "ready_with_gaps"] | None = None,
     ) -> ProjectRunExecution: ...

@@ -6,6 +6,7 @@ import os
 import shutil
 import sys
 from pathlib import Path
+from typing import Literal
 
 import pytest
 from pydantic import ValidationError
@@ -27,8 +28,6 @@ from datamimic_ce.authoring.domain.requests import (
     PROJECT_ENTRY_PATH,
     BuildArtifact,
     BuildResult,
-    ReadyBuild,
-    ReadyWithGapsBuild,
     RejectedBuild,
 )
 
@@ -51,10 +50,12 @@ class FakeRunner:
         self,
         params: tuple[ProjectParam, ...],
         timeout_seconds: int,
-        build: ReadyBuild | ReadyWithGapsBuild | None = None,
+        proof: BuildArtifact | None = None,
+        *,
+        build_outcome: Literal["ready", "ready_with_gaps"] | None = None,
     ) -> ProjectRunExecution:
         self.calls.append(params)
-        if build is not None:
+        if proof is not None:
             return self.execution.model_copy(update={"build_file_mismatches": ()})
         return self.execution
 

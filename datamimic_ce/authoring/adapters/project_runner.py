@@ -33,7 +33,7 @@ from datamimic_ce.authoring.domain.project_run import (
     ProjectRunExecution,
     ProjectRunRecord,
 )
-from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, BuildArtifact, ReadyBuild, ReadyWithGapsBuild
+from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, BuildArtifact
 
 RECORD_FOLDER = "docs/runs"
 _UTC_SECONDS = "%Y-%m-%dT%H:%M:%SZ"
@@ -107,7 +107,9 @@ class CeProjectRunner:
         self,
         params: tuple[ProjectParam, ...],
         timeout_seconds: int,
-        build: ReadyBuild | ReadyWithGapsBuild | None = None,
+        proof: BuildArtifact | None = None,
+        *,
+        build_outcome: Literal["ready", "ready_with_gaps"] | None = None,
     ) -> ProjectRunExecution:
         # The task id names output/<task id>, so the record and the output files link to each other.
         task_id = uuid.uuid4().hex
@@ -122,7 +124,7 @@ class CeProjectRunner:
         descriptor, log_path = tempfile.mkstemp(prefix="datamimic-run-")
         try:
             try:
-                mismatches = self._mismatched_build_files(build.artifact) if build is not None else None
+                mismatches = self._mismatched_build_files(proof) if proof is not None else None
                 process = subprocess.Popen(  # noqa: S603 - fixed interpreter and arguments, no shell
                     command,
                     cwd=self._root,
@@ -144,8 +146,8 @@ class CeProjectRunner:
                         timed_out = True
                 if timed_out:
                     exit_code = None
-                if mismatches is not None and build is not None:
-                    mismatches.update(self._mismatched_build_files(build.artifact))
+                if mismatches is not None and proof is not None:
+                    mismatches.update(self._mismatched_build_files(proof))
                 tail = _log_tail(descriptor)
             finally:
                 os.close(descriptor)
@@ -169,8 +171,8 @@ class CeProjectRunner:
                 ce_version=metadata.version("datamimic_ce"),
                 python_version=platform.python_version(),
                 param_names=tuple(param.name for param in params),
-                proof=build.artifact if build is not None else None,
-                build_outcome=build.outcome if build is not None else None,
+                proof=proof,
+                build_outcome=build_outcome,
                 build_file_mismatches=build_file_mismatches,
                 outcome=outcome,
                 exit_code=exit_code,
