@@ -19,36 +19,36 @@ from datamimic_ce.domains.shared.generators.region_groups import REGION_GROUPS
 _dir = Path(__file__).resolve().parent
 
 
-def _run():
-    engine = DataMimicTest(test_dir=_dir, filename="address_region_group.xml", capture_test_result=True)
+def _run(project_dir: Path):
+    engine = DataMimicTest(test_dir=project_dir, filename="address_region_group.xml", capture_test_result=True)
     engine.test_with_timer()
     return engine.capture_result()
 
 
-def test_europe_draws_vary_per_row_and_stay_in_the_group():
-    result = _run()
+def test_europe_draws_vary_per_row_and_stay_in_the_group(project_dir):
+    result = _run(project_dir)
     codes = {row["country_code"] for row in result["europe_rows"]}
     assert len(codes) > 1, "dataset='europe' produced the same country for every row"
     assert codes <= set(REGION_GROUPS["EUROPE"])
 
 
-def test_europe_sub_generators_are_consistent_with_the_drawn_country():
+def test_europe_sub_generators_are_consistent_with_the_drawn_country(project_dir):
     """city/phone/street must reflect the SAME country_code that was drawn for that row, not a
     stale one left over from AddressGenerator's own (shared, reused) fixed dataset."""
-    result = _run()
+    result = _run(project_dir)
     for row in result["europe_rows"]:
         assert row["city_country_code"] == row["country_code"]
         assert row["street"]
         assert row["phone"]
 
 
-def test_single_country_dataset_is_unaffected():
-    result = _run()
+def test_single_country_dataset_is_unaffected(project_dir):
+    result = _run(project_dir)
     assert {row["country_code"] for row in result["de_rows"]} == {"DE"}
 
 
-def test_europe_is_deterministic_under_a_seed():
-    r1, r2 = _run(), _run()
+def test_europe_is_deterministic_under_a_seed(project_dir):
+    r1, r2 = _run(project_dir), _run(project_dir)
     assert [row["country_code"] for row in r1["europe_rows"]] == [row["country_code"] for row in r2["europe_rows"]]
 
 

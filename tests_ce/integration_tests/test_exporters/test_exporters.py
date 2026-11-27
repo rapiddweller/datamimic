@@ -5,34 +5,30 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-from pathlib import Path
-
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 
 class TestExporter:
-    _test_dir = Path(__file__).resolve().parent
-
-    def test_multi_json(self):
+    def test_multi_json(self, project_dir):
         for _i in range(1):
-            test_engine = DataMimicTest(test_dir=self._test_dir, filename="multi_json.xml")
+            test_engine = DataMimicTest(test_dir=project_dir, filename="multi_json.xml")
             test_engine.test_with_timer()
 
-    def test_single_csv(self):
+    def test_single_csv(self, project_dir):
         for _i in range(1):
-            test_engine = DataMimicTest(test_dir=self._test_dir, filename="single_csv.xml")
+            test_engine = DataMimicTest(test_dir=project_dir, filename="single_csv.xml")
             test_engine.test_with_timer()
 
-    def test_single_combined(self):
+    def test_single_combined(self, project_dir):
         for _i in range(1):
-            test_engine = DataMimicTest(test_dir=self._test_dir, filename="single_combine_all.xml")
+            test_engine = DataMimicTest(test_dir=project_dir, filename="single_combine_all.xml")
             test_engine.test_with_timer()
 
-    def test_single_cascaded_cases(self):
+    def test_single_cascaded_cases(self, project_dir):
         for _i in range(1):
-            test_engine = DataMimicTest(test_dir=self._test_dir, filename="single_cascaded_cases.xml")
+            test_engine = DataMimicTest(test_dir=project_dir, filename="single_cascaded_cases.xml")
             test_engine.test_with_timer()
 
-    def test_multi_xml(self):
-        test_engine = DataMimicTest(test_dir=self._test_dir, filename="multi_xml.xml")
+    def test_multi_xml(self, project_dir):
+        test_engine = DataMimicTest(test_dir=project_dir, filename="multi_xml.xml")
         test_engine.test_with_timer()

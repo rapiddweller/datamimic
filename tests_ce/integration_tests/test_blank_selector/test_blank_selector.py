@@ -9,6 +9,7 @@ access, and `datamimic run`, `authoring dry-run` and `authoring build` agree on 
 next to this test, run on SQLite."""
 
 import sqlite3
+from contextlib import closing
 from pathlib import Path, PurePosixPath
 
 import pytest
@@ -58,8 +59,8 @@ def _record_queries(monkeypatch: pytest.MonkeyPatch) -> list[str]:
     return calls
 
 
-def _refusal(descriptor: str) -> UserErrorBase:
-    engine = DataMimicTest(test_dir=_DIR, filename=descriptor, capture_test_result=True)
+def _refusal(project_dir: Path, descriptor: str) -> UserErrorBase:
+    engine = DataMimicTest(test_dir=project_dir, filename=descriptor, capture_test_result=True)
     with pytest.raises(UserErrorBase) as caught:
         engine.test_with_timer()
     return caught.value
@@ -67,10 +68,10 @@ def _refusal(descriptor: str) -> UserErrorBase:
 
 @pytest.mark.parametrize(("descriptor", "element", "attribute", "product"), _BLANK, ids=_IDS)
 def test_run_refuses_the_blank_selector_before_any_database_access(
-    monkeypatch, descriptor, element, attribute, product
+    project_dir, monkeypatch, descriptor, element, attribute, product
 ):
     queries = _record_queries(monkeypatch)
-    error = _refusal(descriptor)
+    error = _refusal(project_dir, descriptor)
     assert error.issue_code is IssueCode.SOURCE_SELECTOR_BLANK
     assert error.location is not None
     assert (error.location.element_tag, error.location.attribute) == (element, attribute)
@@ -103,23 +104,24 @@ def test_dry_run_and_build_report_the_same_code(tmp_path, descriptor, element, a
     ]
 
 
-def test_a_blank_selector_on_a_file_source_is_the_database_only_misuse():
+def test_a_blank_selector_on_a_file_source_is_the_database_only_misuse(project_dir):
     # It used to raise a bare RuntimeError. Authoring lint refuses this model earlier with DM211.
-    assert _refusal("variable_blank_file_source.xml").issue_code is IssueCode.TASK_VARIABLE_SELECTOR_ONLY_DB
+    assert (
+        _refusal(project_dir, "variable_blank_file_source.xml").issue_code is IssueCode.TASK_VARIABLE_SELECTOR_ONLY_DB
+    )
 
 
-def test_a_padded_query_is_not_blank_and_reads_the_rows():
-    database = Path.cwd() / "db" / "blank_selector_items.sqlite"
+def test_a_padded_query_is_not_blank_and_reads_the_rows(project_dir):
+    database = project_dir / "db" / "blank_selector_items.sqlite"
     database.parent.mkdir(exist_ok=True)
-    database.unlink(missing_ok=True)
-    with sqlite3.connect(database) as connection:
+    with closing(sqlite3.connect(database)) as connection, connection:
         connection.execute("CREATE TABLE items (id INTEGER PRIMARY KEY)")
         connection.executemany("INSERT INTO items VALUES (?)", [(1,), (2,)])
-    engine = DataMimicTest(test_dir=_DIR, filename="generate_padded_selector.xml", capture_test_result=True)
+    engine = DataMimicTest(test_dir=project_dir, filename="generate_padded_selector.xml", capture_test_result=True)
     engine.test_with_timer()
     assert [row["id"] for row in engine.capture_result()["items_read"]] == [1, 2]
 
 
-def test_a_zero_width_selector_is_not_blank_and_fails_at_the_database():
+def test_a_zero_width_selector_is_not_blank_and_fails_at_the_database(project_dir):
     # str.isspace is false for U+200B, so the selector is a query; SQLite refuses it with a typed code.
-    assert _refusal("generate_zero_width.xml").issue_code is IssueCode.OPERATION_EXECUTION_FAILED
+    assert _refusal(project_dir, "generate_zero_width.xml").issue_code is IssueCode.OPERATION_EXECUTION_FAILED

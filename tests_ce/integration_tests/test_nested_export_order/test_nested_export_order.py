@@ -14,11 +14,9 @@ from pathlib import Path
 
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
-_TEST_DIR = Path(__file__).resolve().parent
 
-
-def _run(filename: str) -> dict:
-    engine = DataMimicTest(test_dir=_TEST_DIR, filename=filename, capture_test_result=True)
+def _run(project_dir: Path, filename: str) -> dict:
+    engine = DataMimicTest(test_dir=project_dir, filename=filename, capture_test_result=True)
     engine.test_with_timer()
     return engine.capture_result()
 
@@ -35,25 +33,25 @@ def _assert_users_and_orders(result: dict) -> None:
     assert [o["id"] for o in orders] == [uid * 10 + seq for uid in range(1, 9) for seq in (1, 2)]
 
 
-def test_insert_order_parent_before_child():
+def test_insert_order_parent_before_child(project_dir):
     """Plain nesting: <generate name="orders"> directly inside <generate name="users">."""
-    _assert_users_and_orders(_run("insert_order.xml"))
+    _assert_users_and_orders(_run(project_dir, "insert_order.xml"))
 
 
-def test_insert_order_parent_before_child_through_condition():
+def test_insert_order_parent_before_child_through_condition(project_dir):
     """Same proof with the nested <generate> wrapped in <condition><if condition="True">:
     exercises the CompositeStatement walk in export_order._export_nested_products_by_page."""
-    _assert_users_and_orders(_run("insert_order_condition.xml"))
+    _assert_users_and_orders(_run(project_dir, "insert_order_condition.xml"))
 
 
-def test_delete_order_children_before_parent():
+def test_delete_order_children_before_parent(project_dir):
     # Phase 1: seed users/orders (same db file phase 2 below reuses).
-    phase1 = _run("delete_order_phase1.xml")
+    phase1 = _run(project_dir, "delete_order_phase1.xml")
     assert len(phase1["check_users"]) == 8
     assert len(phase1["check_orders"]) == 16
 
     # Phase 2: delete both tables through target="db.delete" - del_users' own target is a
     # delete, so its nested del_orders must be exported (and thus deleted) first.
-    phase2 = _run("delete_order_phase2.xml")
+    phase2 = _run(project_dir, "delete_order_phase2.xml")
     assert phase2["check_users_after"] == []
     assert phase2["check_orders_after"] == []

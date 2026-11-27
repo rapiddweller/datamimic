@@ -8,19 +8,14 @@
 fixed-width demo descriptors. Self-describing: the file's first line is a '# name[width],...'
 column spec comment, so a plain <generate source="x.fcw"> needs no extra DSL attribute to read."""
 
-import shutil
-from pathlib import Path
-
 import pytest
 
 from datamimic_ce.engine.io.files.api import FileUtil
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
-_dir = Path(__file__).resolve().parent
 
-
-def test_fixed_width_read():
-    engine = DataMimicTest(_dir, "test_fixed_width_read.xml", capture_test_result=True)
+def test_fixed_width_read(project_dir):
+    engine = DataMimicTest(project_dir, "test_fixed_width_read.xml", capture_test_result=True)
     engine.test_with_timer()
     rows = engine.capture_result()["rows"]
     assert len(rows) == 2
@@ -31,28 +26,23 @@ def test_fixed_width_read():
     assert row["manufacturer"] == "Luxardo"
 
 
-def test_fixed_width_missing_header_raises():
-    engine = DataMimicTest(_dir, "test_fixed_width_malformed.xml", capture_test_result=True)
+def test_fixed_width_missing_header_raises(project_dir):
+    engine = DataMimicTest(project_dir, "test_fixed_width_malformed.xml", capture_test_result=True)
     with pytest.raises(ValueError, match=r"\[E006/I198\]"):
         engine.test_with_timer()
 
 
-def test_fixed_width_write_round_trip():
-    output_dir = _dir / "output"
-    shutil.rmtree(output_dir, ignore_errors=True)
-    try:
-        engine = DataMimicTest(_dir, "test_fixed_width_write.xml", capture_test_result=True)
-        engine.test_with_timer()
+def test_fixed_width_write_round_trip(project_dir):
+    engine = DataMimicTest(project_dir, "test_fixed_width_write.xml", capture_test_result=True)
+    engine.test_with_timer()
 
-        written = list(output_dir.rglob("*.fcw"))
-        assert len(written) == 1, f"expected exactly one .fcw output file, found {written}"
+    written = list((project_dir / "output").rglob("*.fcw"))
+    assert len(written) == 1, f"expected exactly one .fcw output file, found {written}"
 
-        content = written[0].read_text()
-        assert content.startswith("# id[8r0],name[10]\n"), content.splitlines()[0]
+    content = written[0].read_text()
+    assert content.startswith("# id[8r0],name[10]\n"), content.splitlines()[0]
 
-        rows = FileUtil.read_fixed_width_to_dict_list(written[0])
-        assert len(rows) == 3
-        assert {r["name"] for r in rows} <= {"Ann", "Bo", "Cy"}  # random pick, may repeat
-        assert {r["id"] for r in rows} == {"1", "2", "3"}
-    finally:
-        shutil.rmtree(output_dir, ignore_errors=True)
+    rows = FileUtil.read_fixed_width_to_dict_list(written[0])
+    assert len(rows) == 3
+    assert {r["name"] for r in rows} <= {"Ann", "Bo", "Cy"}  # random pick, may repeat
+    assert {r["id"] for r in rows} == {"1", "2", "3"}

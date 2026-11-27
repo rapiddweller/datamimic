@@ -6,7 +6,6 @@
 
 """Memstore API extensions unblocking the migrated memstore demo descriptor (migration parity)."""
 
-import shutil
 from pathlib import Path
 
 import pytest
@@ -36,25 +35,25 @@ def test_memstore_sum_skips_non_numeric_cells():
     assert engine.capture_result()["result"][0]["total"] == 12
 
 
-def test_memstore_accessible_by_id_before_and_after_execute():
+def test_memstore_accessible_by_id_before_and_after_execute(project_dir):
     """mem is bound into the script namespace at <memstore> registration time, not only inside
     <execute> - so a <key script="mem...."> resolves it whether it runs BEFORE or AFTER any
     <execute> statement in the descriptor (proves this isn't riding eval_namespace's diff-
     writeback side effect, which would only work in the "after" ordering)."""
-    engine = DataMimicTest(_dir, "test_memstore_variable_script_access.xml", capture_test_result=True)
+    engine = DataMimicTest(project_dir, "test_memstore_variable_script_access.xml", capture_test_result=True)
     engine.test_with_timer()
     result = engine.capture_result()
     assert result["before_execute"][0]["count"] == 5
     assert result["after_execute"][0]["count"] == 5
 
 
-def test_memstore_sum_feeds_a_subsequent_count():
+def test_memstore_sum_feeds_a_subsequent_count(project_dir):
     """mem.sumEntityColumn() inside <execute>, its result driving count="{totalCount}" on a later
     <generate>, and mem.entityCount() confirming it - the exact pipeline
     the migrated memstore demo uses. values="5,3,7" picks randomly per row (not one-of-each), so
     only the total's range is asserted, not an exact value - the point is internal consistency
     across the whole sum -> count -> generate -> recount pipeline."""
-    engine = DataMimicTest(_dir, "test_memstore_sum_and_count.xml", capture_test_result=True)
+    engine = DataMimicTest(project_dir, "test_memstore_sum_and_count.xml", capture_test_result=True)
     engine.test_with_timer()
     captured = engine.capture_result()
     row = captured["result"][0]
@@ -63,26 +62,14 @@ def test_memstore_sum_feeds_a_subsequent_count():
     assert len(captured["te"]) == row["totalCount"]
 
 
-def test_memstore_remove_not_existing_ids():
+def test_memstore_remove_not_existing_ids(project_dir):
     """mem.removeNotExistingIds('t','id','ref',db) inside <execute> - an inner-join filter
     against a real RDBMS table. ref has ids {1,3}; mem has ids {1,2,3} - only 2 should be
     removed."""
-    output_dir = _dir / "output"
-    # sqlite relative paths resolve against the process CWD, not the descriptor dir - clean up
-    # both the test's own dir (the documented convention elsewhere in this suite) and the repo
-    # root (where it actually lands when pytest's CWD is the repo root).
-    repo_root_db_dir = _dir.parents[2] / "db"
-    local_db_dir = _dir / "db"
-    for d in (output_dir, repo_root_db_dir, local_db_dir):
-        shutil.rmtree(d, ignore_errors=True)
-    try:
-        engine = DataMimicTest(_dir, "test_memstore_remove_not_existing_ids.xml", capture_test_result=True)
-        engine.test_with_timer()
-        row = engine.capture_result()["result"][0]
-        assert row["remaining_ids"] == [1, 3]
-    finally:
-        for d in (output_dir, repo_root_db_dir, local_db_dir):
-            shutil.rmtree(d, ignore_errors=True)
+    engine = DataMimicTest(project_dir, "test_memstore_remove_not_existing_ids.xml", capture_test_result=True)
+    engine.test_with_timer()
+    row = engine.capture_result()["result"][0]
+    assert row["remaining_ids"] == [1, 3]
 
 
 @pytest.mark.parametrize(
