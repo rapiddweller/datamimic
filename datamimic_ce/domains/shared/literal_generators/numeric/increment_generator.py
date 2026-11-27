@@ -30,7 +30,7 @@ class IncrementGenerator(BaseLiteralGenerator):
     def add_pagination(self, skip: int, limit: int) -> None:
         # Derive the window from the original bounds so repeated calls do not accumulate.
         self._start = self._base_start + skip * self._step
-        self._end = min(self._base_end, self._start + (limit - 1) * self._step)
+        self._end = min(self._base_end, self._start + limit * self._step)
         self._current = self._start
 
     def generate(self) -> int:
@@ -38,9 +38,10 @@ class IncrementGenerator(BaseLiteralGenerator):
         Generate current number of sequence
         :return:
         """
+        result = self._current
+        self._current += self._step
+
         if self._current > self._end:
             raise StopIteration("Generator reached the end")
 
-        result = self._current
-        self._current += self._step
         return result
