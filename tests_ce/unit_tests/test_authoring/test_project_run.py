@@ -590,7 +590,8 @@ def test_a_second_run_writes_a_second_record_and_build_ignores_both(tmp_path: Pa
     first = application.run_project(ProjectRunRequest(timeout_seconds=300))
     second = application.run_project(ProjectRunRequest(timeout_seconds=300))
 
-    assert first.record_path and second.record_path and first.record_path != second.record_path
+    diagnostics = f"first={first.model_dump_json(indent=2)}\nsecond={second.model_dump_json(indent=2)}"
+    assert first.record_path and second.record_path and first.record_path != second.record_path, diagnostics
     assert len(list((root / "docs" / "runs").iterdir())) == 2
     rebuilt = application.build()
     assert rebuilt.outcome == "ready", [str(item.code) for item in rebuilt.diagnostics]  # docs/ is no unread data
