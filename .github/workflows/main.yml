@@ -517,7 +517,8 @@ jobs:
 
   runtime_determinism_ubuntu:
     name: Seeded runtime determinism on ubuntu-22.04 (6 cells)
-    if: github.event_name != 'pull_request'
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
@@ -810,7 +811,6 @@ jobs:
           'tests_ce/scenarios/test_scenarios.py::test_negative_is_rejected_with_named_diagnostic[s01_flat_seeded/wrong_count]'
 
   functional_coverage_shard:
-    if: github.event_name != 'pull_request'
     runs-on: ubuntu-22.04
     needs: install_dependencies
     container: python:3.11-slim-bookworm
@@ -859,13 +859,18 @@ jobs:
           uv pip list | grep -iE 'click|typer'
         shell: bash
       - name: Run functional tests with coverage
+        if: github.event_name != 'pull_request'
         env:
           COVERAGE_FILE: .coverage.${{ matrix.shard }}
         run: |
           . .venv/bin/activate
           uv run coverage run --parallel-mode -m pytest ${{ matrix.args }} ${{ matrix.workers }} --cov --cov-report= --durations=20
         shell: bash
+      - name: Run functional and conformance tests
+        if: github.event_name == 'pull_request' && matrix.shard == 'functional'
+        run: uv run pytest ${{ matrix.args }} -n 0 --durations=20
       - name: Upload coverage data
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v6
         with:
           name: coverage-functional-data-${{ matrix.shard }}
