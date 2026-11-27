@@ -7,9 +7,10 @@ from __future__ import annotations
 
 import os
 from collections.abc import Iterator
-from contextlib import contextmanager
-from contextvars import ContextVar
+from contextlib import AbstractContextManager, contextmanager
+from contextvars import ContextVar, Token
 from dataclasses import dataclass
+from types import TracebackType
 from typing import overload
 
 from datamimic_ce.errors.base import (
@@ -62,10 +63,6 @@ from datamimic_ce.errors.formatters import (
     warning_message,
 )
 
-# task_warning is fire-and-forget + idempotent per rendered message → dedup here (parity with the
-# model-layer flood guard) so the same combination warns once, not once per re-parse/worker.
-_emitted_warnings: set[tuple[int, str]] = set()
-
 
 # The warnings of one run, for a caller that reports them by code and fields (authoring, #404), not as log text.
 @dataclass(frozen=True)
@@ -77,22 +74,55 @@ class CollectedWarning:
     line: int | None = None
 
 
-_collected_warnings: ContextVar[list[CollectedWarning] | None] = ContextVar("collected_warnings", default=None)
+@dataclass(frozen=True)
+class _WarningState:
+    emitted: set[tuple[int, str]]
+    collected: list[CollectedWarning] | None
+
+
+# Workers outside the runtime lifecycle retain process-local deduplication.
+_process_warning_state = _WarningState(set(), None)
+_warning_state: ContextVar[_WarningState | None] = ContextVar("warning_state", default=None)
+
+
+def _current_warning_state() -> _WarningState:
+    state = _warning_state.get()
+    return _process_warning_state if state is None else state
+
+
+class _TaskWarningScope(AbstractContextManager[None]):
+    def __init__(self, state: _WarningState) -> None:
+        self._state = state
+
+    def __enter__(self) -> None:
+        self._token: Token[_WarningState | None] = _warning_state.set(self._state)
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        _warning_state.reset(self._token)
+
+
+def task_warning_scope() -> AbstractContextManager[None]:
+    """Give each run its own warning history without rewriting frozen exceptions."""
+    return _TaskWarningScope(_WarningState(set(), _current_warning_state().collected))
 
 
 @contextmanager
 def collect_task_warnings() -> Iterator[list[CollectedWarning]]:
     """Collect each catalog warning emitted in this scope, also one that the log shows only once."""
     found: list[CollectedWarning] = []
-    token = _collected_warnings.set(found)
-    try:
+    with _TaskWarningScope(_WarningState(_current_warning_state().emitted, found)):
         yield found
-    finally:
-        _collected_warnings.reset(token)
 
 
 def task_warning(*, code: IssueCode, once: bool = True, **kwargs: object) -> None:
-    """Emit a catalog warning once per process and rendered message; once=False always emits.
+    """Emit a catalog warning once per rendered message in this run (or process outside a run).
+
+    ``once=False`` always emits.
 
     The warning analog of ``task_config_error`` — same catalog, same drift-gated templating, same
     maintenance — differing only in that a warning is logged, not raised (severity is data on the
@@ -107,7 +137,8 @@ def task_warning(*, code: IssueCode, once: bool = True, **kwargs: object) -> Non
 
     if get_issue_definition(code).severity is not IssueSeverity.WARNING:
         raise ValueError(f"{code} is not a WARNING-severity issue; raise it with the error factory instead.")
-    collected = _collected_warnings.get()
+    warning_state = _current_warning_state()
+    collected = warning_state.collected
     if collected is not None:
         script, line = kwargs.get("script"), kwargs.get("line")
         collected.append(
@@ -115,9 +146,10 @@ def task_warning(*, code: IssueCode, once: bool = True, **kwargs: object) -> Non
         )
     msg = warning_message(code=code, **kwargs)
     key = (os.getpid(), msg)
-    if not once or key not in _emitted_warnings:
+    emitted_warnings = warning_state.emitted
+    if not once or key not in emitted_warnings:
         if once:
-            _emitted_warnings.add(key)
+            emitted_warnings.add(key)
         logger.warning("%s", msg)
 
 

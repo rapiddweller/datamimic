@@ -1,6 +1,7 @@
 """Invalid descriptor input keeps portable error identity through runtime and CLI."""
 
 import json
+import logging
 from pathlib import Path
 
 import pytest
@@ -163,21 +164,18 @@ def test_execute_target_and_resource_errors_are_catalogued(
         assert isinstance(error.__cause__, FileNotFoundError)
 
 
-def test_bash_warning_is_catalogued_once_per_process(tmp_path: Path, caplog, monkeypatch) -> None:
-    import logging
-
-    from datamimic_ce.errors import factory
-
-    monkeypatch.setattr(factory, "_emitted_warnings", set())
+def test_duplicate_warning_is_logged_once_in_each_run(caplog, monkeypatch) -> None:
     logger = logging.getLogger("DATAMIMIC")
     monkeypatch.setattr(logger, "propagate", False)
     logger.addHandler(caplog.handler)
-    path = tmp_path / "model.xml"
-    path.write_text(
-        '<setup rngSeed="7"><execute type="bash">exit 0</execute><execute type="bash">exit 0</execute></setup>'
-    )
+    path = Path(__file__).with_name("warning_dedup.xml")
+    warnings_per_run = []
     try:
-        run(RunRequest(descriptor_path=path, test_mode=True))
+        with caplog.at_level(logging.WARNING, logger="DATAMIMIC"):
+            for _ in range(2):
+                caplog.clear()
+                run(RunRequest(descriptor_path=path, test_mode=True))
+                warnings_per_run.append(sum("[W002]" in record.getMessage() for record in caplog.records))
     finally:
         logger.removeHandler(caplog.handler)
-    assert sum("[W007]" in record.getMessage() for record in caplog.records) == 1
+    assert warnings_per_run == [1, 1]

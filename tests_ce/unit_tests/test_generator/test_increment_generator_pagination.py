@@ -47,6 +47,13 @@ def test_step_greater_than_one_pages_by_row() -> None:
     assert _page(2, 3, end=100, step=5) == [11, 16, 21]
 
 
+def test_step_greater_than_one_with_end_off_the_sequence_pages_by_row() -> None:
+    # (1,6,2) holds the rows 1,3,5. Negative control: the old rule dropped 5 from the last page.
+    assert _page(0, 2, end=6, step=2) == [1, 3]
+    assert _page(2, 2, end=6, step=2) == [5]
+    assert _page(4, 2, end=6, step=2) == []
+
+
 def test_repeated_pagination_does_not_accumulate() -> None:
     # Negative control: the old implementation shifted the start on every call and returned [].
     generator = IncrementGenerator(1, 10)
