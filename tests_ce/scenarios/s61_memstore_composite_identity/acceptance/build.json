@@ -1,0 +1,8 @@
+{
+  "version": "5.0",
+  "product_roles": [
+    {"product": "rooms", "field": "site", "role": {"kind": "identifier", "additional_fields": ["room"]}},
+    {"product": "rooms_copy", "field": "copied_room", "role": {"kind": "foreign_key", "parent_product": "rooms", "parent_field": "room"}},
+    {"product": "rooms_copy", "field": "copied_site", "role": {"kind": "foreign_key", "parent_product": "rooms", "parent_field": "site"}}
+  ]
+}

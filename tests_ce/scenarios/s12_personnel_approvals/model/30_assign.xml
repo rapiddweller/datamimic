@@ -6,7 +6,6 @@
         <variable name="policy" script="read_policy(policy_rows[0])"/>
         <variable name="people" source="mem" sourceEntity="people" storage="data" distribution="ordered"/>
         <variable name="result" script="assign_seats(positions, policy)"/>
-        <key name="assignment_id" script="1"/>
         <key name="outcome" script="result.outcome"/>
         <key name="nodes" script="result.nodes"/>
         <key name="backtracks" script="result.backtracks"/>

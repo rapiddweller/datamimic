@@ -24,7 +24,6 @@
         <key name="function_name" script="this.function_name"/>
     </generate>
     <generate name="employments" source="data/entity/employments.ent.csv" distribution="ordered" target="mem">
-        <key name="employment_id" script="this.employment_id"/>
         <key name="person_id" script="int(this.person_id)"/>
         <key name="company_id" script="this.company_id"/>
         <key name="function_id" script="this.function_id"/>
@@ -33,7 +32,6 @@
         <key name="license_type" script="this.license_type"/>
     </generate>
     <generate name="person_licenses" source="data/entity/person_licenses.ent.csv" distribution="ordered" target="mem">
-        <key name="person_license_id" script="this.person_license_id"/>
         <key name="person_id" script="int(this.person_id)"/>
         <key name="license_type" script="this.license_type"/>
         <key name="status" script="this.status"/>
@@ -44,7 +42,6 @@
         <key name="qualification_name" script="this.qualification_name"/>
     </generate>
     <generate name="person_qualifications" source="data/entity/person_qualifications.ent.csv" distribution="ordered" target="mem">
-        <key name="person_qualification_id" script="this.person_qualification_id"/>
         <key name="person_id" script="int(this.person_id)"/>
         <key name="qualification_id" script="this.qualification_id"/>
     </generate>

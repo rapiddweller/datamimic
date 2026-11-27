@@ -1,0 +1,61 @@
+{
+  "title": "Memstore readback proves a composite identity",
+  "proves": [
+    "neither business field is unique by itself; the combination is",
+    "consumer fields can have different names and their role order does not affect pairing",
+    "valid values in isolation cannot substitute for a correct combination"
+  ],
+  "products": {"rooms": 3, "rooms_copy": 3},
+  "equivalents": [
+    {
+      "name": "reverse_identity_fields",
+      "patch": {
+        "file": "acceptance/build.json",
+        "old": "\"field\": \"site\", \"role\": {\"kind\": \"identifier\", \"additional_fields\": [\"room\"]}",
+        "new": "\"field\": \"room\", \"role\": {\"kind\": \"identifier\", \"additional_fields\": [\"site\"]}"
+      }
+    }
+  ],
+  "negatives": [
+    {
+      "name": "duplicate_combination",
+      "diagnostic": "validation",
+      "message": "Memstore readback must preserve every producer identity exactly once",
+      "patch": {"file": "datamimic.xml", "old": "script=\"'B' if seq == 2 else 'A'\"", "new": "constant=\"A\""}
+    },
+    {
+      "name": "missing_producer_field",
+      "diagnostic": "input",
+      "message": "unknown field",
+      "patch": {"file": "acceptance/build.json", "old": "\"additional_fields\": [\"room\"]", "new": "\"additional_fields\": [\"missing\"]"}
+    },
+    {
+      "name": "missing_consumer_mapping",
+      "diagnostic": "input",
+      "message": "one distinct consumer foreign-key field per composite identity field",
+      "patch": {"file": "acceptance/build.json", "old": "\"parent_field\": \"room\"", "new": "\"parent_field\": \"site\""}
+    },
+    {
+      "name": "missing_captured_field",
+      "diagnostic": "validation",
+      "message": "Memstore readback must preserve every producer identity exactly once",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "<key name=\"copied_room\" script=\"this.room\"/>",
+        "new": "<condition><if condition=\"this.room == 'A'\"><key name=\"copied_room\" script=\"this.room\"/></if></condition>"
+      }
+    },
+    {
+      "name": "duplicate_declaration_field",
+      "diagnostic": "input",
+      "message": "must name distinct top-level fields",
+      "patch": {"file": "acceptance/build.json", "old": "\"additional_fields\": [\"room\"]", "new": "\"additional_fields\": [\"site\"]"}
+    },
+    {
+      "name": "wrong_combination",
+      "diagnostic": "validation",
+      "message": "Memstore readback must preserve every producer identity exactly once",
+      "patch": {"file": "datamimic.xml", "old": "script=\"this.site\"", "new": "script=\"'west' if this.room == 'B' else this.site\""}
+    }
+  ]
+}

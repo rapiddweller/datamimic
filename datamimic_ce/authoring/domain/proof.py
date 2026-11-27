@@ -16,20 +16,22 @@ from .expectations import ExpectationIntent
 
 
 class IdentifierRole(AuthoringModel):
-    """One field uniquely identifies rows across the complete product capture.
+    """The declared field identifies rows across the complete product capture.
 
     A local sequence repeated under different parents is not a product identifier.
-    Memstore readback proof requires exactly one producer identifier declaration.
+    For a Memstore readback, additional fields can form one composite identity
+    with the declared field. Individual components may repeat.
     """
 
     kind: Literal["identifier"] = "identifier"
+    additional_fields: tuple[NonEmptyStrictStr, ...] = ()
 
 
 class ForeignKeyRole(AuthoringModel):
     """One field references a parent product's field; this is not a multi-column join.
 
     Nested lineage must copy the actual immediate parent's field. Memstore
-    readback proof pairs one consumer role with the producer's identifier.
+    readback proof pairs one consumer role with each field of the producer's identifier.
     """
 
     kind: Literal["foreign_key"] = "foreign_key"

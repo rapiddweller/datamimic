@@ -90,6 +90,15 @@ entity that the step reads.
 }
 ```
 
+When a Memstore product has a composite identity, declare the first field as
+`field` and the remaining fields in `role.additional_fields`. On the readback,
+declare one `foreign_key` role per identity field, mapped by `parent_field`.
+Build checks the full combination for uniqueness and verifies every identity
+appears exactly once on both sides, regardless of row or role declaration order.
+Components can repeat and can be null, but each field must be present. This is
+only for Memstore readbacks; nested foreign-key roles are unchanged.
+See the [two-field example](../../tests_ce/scenarios/s61_memstore_composite_identity).
+
 ## Time series
 
 Two parallel series over three hourly points produce six rows. The end is

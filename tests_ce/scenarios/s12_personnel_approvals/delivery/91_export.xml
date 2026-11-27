@@ -1,6 +1,6 @@
 <setup>
     <!-- Export: read each product back from the store; write the eleven target tables to CSV, and the policy, the
-         counters and the trace to JSON. A key only names the id: every field of the stored row reaches the file (#420). -->
+         counters and the trace to JSON. The readback keys declare the identity that Build compares. -->
     <generate name="export_companies" source="mem" sourceEntity="companies" distribution="ordered" target="CSV" targetEntity="companies">
         <key name="company_id" script="this.company_id"/>
     </generate>
@@ -11,19 +11,23 @@
         <key name="function_id" script="this.function_id"/>
     </generate>
     <generate name="export_employments" source="mem" sourceEntity="employments" distribution="ordered" target="CSV" targetEntity="employments">
-        <key name="employment_id" script="this.employment_id"/>
+        <key name="person_id" script="this.person_id"/>
+        <key name="company_id" script="this.company_id"/>
     </generate>
     <generate name="export_licenses" source="mem" sourceEntity="licenses" distribution="ordered" target="CSV" targetEntity="licenses">
         <key name="license_type" script="this.license_type"/>
     </generate>
     <generate name="export_person_licenses" source="mem" sourceEntity="person_licenses" distribution="ordered" target="CSV" targetEntity="person_licenses">
-        <key name="person_license_id" script="this.person_license_id"/>
+        <key name="person_id" script="this.person_id"/>
+        <key name="license_type" script="this.license_type"/>
+        <key name="expires_on" script="this.expires_on"/>
     </generate>
     <generate name="export_qualifications" source="mem" sourceEntity="qualifications" distribution="ordered" target="CSV" targetEntity="qualifications">
         <key name="qualification_id" script="this.qualification_id"/>
     </generate>
     <generate name="export_person_qualifications" source="mem" sourceEntity="person_qualifications" distribution="ordered" target="CSV" targetEntity="person_qualifications">
-        <key name="person_qualification_id" script="this.person_qualification_id"/>
+        <key name="person_id" script="this.person_id"/>
+        <key name="qualification_id" script="this.qualification_id"/>
     </generate>
     <generate name="export_approvals" source="mem" sourceEntity="approvals" distribution="ordered" target="CSV" targetEntity="approvals">
         <key name="approval_id" script="this.approval_id"/>
@@ -41,7 +45,7 @@
         <key name="policy_id" script="this.policy_id"/>
     </generate>
     <generate name="export_assignment" source="mem" sourceEntity="assignment" distribution="ordered" target="JSON" targetEntity="assignment">
-        <key name="assignment_id" script="this.assignment_id"/>
+        <key name="outcome" script="this.outcome"/>
     </generate>
     <generate name="export_trace" source="mem" sourceEntity="trace" distribution="ordered" target="JSON" targetEntity="trace">
         <key name="decision_no" script="this.decision_no"/>

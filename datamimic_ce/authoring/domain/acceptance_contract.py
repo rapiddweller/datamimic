@@ -10,7 +10,7 @@ import ast
 from pathlib import PurePosixPath
 from typing import Literal
 
-from pydantic import model_validator
+from pydantic import Field, model_validator
 
 from .build_rules import catalog_diagnostic
 from .common import MAX_AUTHORING_MAX_COUNT, AuthoringModel, NonEmptyStrictStr, NonNegativeStrictInt
@@ -108,8 +108,7 @@ class AcceptanceCheckV1(AuthoringModel):
 class AcceptanceReadbackV1(AuthoringModel):
     producer: NonEmptyStrictStr
     consumer: NonEmptyStrictStr
-    producer_field: NonEmptyStrictStr
-    consumer_field: NonEmptyStrictStr
+    joins: tuple[AcceptanceJoinV1, ...] = Field(min_length=1)
     path: tuple[str | int, ...]
 
 
@@ -174,8 +173,10 @@ class AcceptanceSpecV1(AuthoringModel):
             if (
                 producer is None
                 or consumer is None
-                or readback.producer_field not in producer.fields
-                or readback.consumer_field not in consumer.fields
+                or any(
+                    join.parent_field not in producer.fields or join.child_field not in consumer.fields
+                    for join in readback.joins
+                )
             ):
                 raise ValueError("acceptance readback references an unknown product or field")
         for check in self.checks:
