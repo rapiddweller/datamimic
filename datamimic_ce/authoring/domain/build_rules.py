@@ -114,6 +114,15 @@ AUTHORING_RULE_CATALOG: tuple[RuleCatalogEntry, ...] = (
         remediation="Change the row condition or generation intent so every row satisfies it.",
     ),
     RuleCatalogEntry(
+        rule_id=ExpectationIntentKind.GROUP_SUM,
+        category="expectation",
+        severity="error",
+        description="Two captured numeric fields must sum to the same total in every observed group.",
+        applicability="Explicit group-sum expectations on a complete product capture.",
+        owner=RuleOwner.EXPECTATION,
+        remediation="Check the group key and amount fields, then correct the postings so each group balances.",
+    ),
+    RuleCatalogEntry(
         rule_id=AuthoringRuleId.MISSING_EXPECTATION,
         category="expectation",
         severity="error",
