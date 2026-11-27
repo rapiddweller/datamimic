@@ -58,9 +58,7 @@ class ProjectRunWorkflow:
                 message="Confirm the unverified run and allow side effects; nothing was run.",
             )
         execution = self._runner.run(request.params, request.timeout_seconds)
-        outcome: Literal["completed", "failed", "timeout"] = (
-            "timeout" if execution.timed_out else "completed" if execution.exit_code == 0 else "failed"
-        )
+        outcome = execution.outcome
         message = "Build was not run. Execution does not verify the project or its effects."
         if outcome != "completed":
             message += " Effects may have partially persisted. Inspect the target state independently before retrying."
@@ -102,9 +100,7 @@ class ProjectRunWorkflow:
         execution = self._runner.run(
             request.params, request.timeout_seconds, build.artifact, build_outcome=outcome_name
         )
-        outcome: Literal["completed", "failed", "timeout"] = (
-            "timeout" if execution.timed_out else "completed" if execution.exit_code == 0 else "failed"
-        )
+        outcome = execution.outcome
         diagnostics: tuple[Diagnostic, ...] = tuple(item for item in build.diagnostics if item.severity == "warning")
         if outcome != "completed":
             diagnostics += (
