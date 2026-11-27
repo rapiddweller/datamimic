@@ -149,6 +149,17 @@ def unseeded_replay_evidence() -> DeterministicReplayEvidence:
     )
 
 
+def replay_failure_reason(replay_run: BoundedExecutionEvidence, summary: str) -> str:
+    """Name why a replay child gave no usable evidence: its status, rows captured and the cause it reported
+    (timeout, exit code, engine error). The child's log is not kept, so the diagnostics are the whole cause."""
+
+    causes = "; ".join(item.message for item in replay_run.diagnostics if item.severity == "error")
+    rows = sum(len(product.rows) for product in replay_run.captured.products)
+    return f"{summary} (replay status {replay_run.status.value}, {rows} rows captured" + (
+        f": {causes})" if causes else ")"
+    )
+
+
 def replay_evidence(
     first_run: BoundedExecutionEvidence,
     replay_run: BoundedExecutionEvidence,
@@ -158,7 +169,7 @@ def replay_evidence(
     if not replay_run.base_run_ok:
         return DeterministicReplayEvidence(
             status=VerificationGateStatus.FAILED,
-            reason="The replay execution did not complete successfully",
+            reason=replay_failure_reason(replay_run, "The replay execution did not complete successfully"),
         )
     mismatches = compare_captures(first_run.captured, replay_run.captured)
     compared_products = len(first_run.captured.products)

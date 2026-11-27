@@ -1,0 +1,8 @@
+<setup rngSeed="7">
+    <generate name="postings" count="5" target="ConsoleExporter">
+        <variable name="index" generator="IncrementGenerator"/>
+        <key name="entry" script="('first', 'first', 2, 2, 'single')[index - 1]"/>
+        <key name="debit" script="(0.1, '0.2', 2, '3.00', 0.1)[index - 1]"/>
+        <key name="credit" script="(0, '0.30', 0.5, '4.5', '0.10')[index - 1]"/>
+    </generate>
+</setup>

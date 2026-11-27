@@ -1,0 +1,7 @@
+{
+  "version": "5.0",
+  "max_count": 5,
+  "expectations": [
+    {"kind": "group_sum", "subject": {"kind": "product", "product": "postings"}, "group_by": "entry", "field": "debit", "equals_field": "credit"}
+  ]
+}
