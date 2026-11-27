@@ -407,13 +407,14 @@ class GenerateTask(CommonSubTask):
 
                         _ray_mod = _ray
                         mp_worker = RayGenerateWorker()
-                        # Initialize Ray
-                        _ray_mod.init(
-                            ignore_reinit_error=True,
-                            local_mode=context.root.ray_debug,
-                            include_dashboard=False,
-                        )
-                        is_ray_initialized = True
+                        # A Ray the caller already started is theirs: use it, never shut it down.
+                        if not _ray_mod.is_initialized():
+                            _ray_mod.init(
+                                ignore_reinit_error=True,
+                                local_mode=context.root.ray_debug,
+                                include_dashboard=False,
+                            )
+                            is_ray_initialized = True
                     else:
                         raise task_config_error(
                             code=IssueCode.TASK_MP_PLATFORM_UNSUPPORTED,
@@ -465,7 +466,7 @@ class GenerateTask(CommonSubTask):
                 if outermost:
                     context.root.export_session = None
                     cleanup_exporter_chunks(context.root.descriptor_dir, context.root.task_id)
-                # Shutdown Ray if initialized
+                # Shut down only a Ray this call started
                 if is_ray_initialized and _ray_mod is not None:
                     _ray_mod.shutdown()
 

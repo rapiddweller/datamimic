@@ -240,6 +240,61 @@ class TestGenerateTask:
         assert caught.value.issue_code.value == "I848"
         assert "unknown" in str(caught.value)
 
+    @pytest.mark.parametrize(
+        ("caller_started_ray", "init_raises", "expect_init", "expect_shutdown"),
+        [
+            (True, False, False, False),  # caller-owned Ray: reuse, never stop
+            (False, False, True, True),  # DATAMIMIC starts Ray: it stops it
+            (False, True, True, False),  # init failed: nothing of ours to stop
+        ],
+    )
+    def test_ray_shutdown_only_when_this_call_started_ray(
+        self, generate_task, mock_context, mock_statement, caller_started_ray, init_raises, expect_init, expect_shutdown
+    ):
+        import sys
+        import types
+
+        mock_statement.mp_platform = "ray"
+        fake_ray = types.ModuleType("ray")
+        fake_ray.is_initialized = MagicMock(return_value=caller_started_ray)
+        fake_ray.init = MagicMock(side_effect=RuntimeError("init failed") if init_raises else None)
+        fake_ray.shutdown = MagicMock()
+        fake_worker_module = types.ModuleType("datamimic_ce.engine.runtime.tasks.generate.workers.ray_generate_worker")
+        fake_worker = MagicMock()
+        fake_worker.mp_process.return_value = {"test_full_name": []}
+        fake_worker_module.RayGenerateWorker = MagicMock(return_value=fake_worker)
+        mock_context.ray_debug = False
+
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "ray": fake_ray,
+                    "datamimic_ce.engine.runtime.tasks.generate.workers.ray_generate_worker": fake_worker_module,
+                },
+            ),
+            patch.object(generate_task, "_determine_count", return_value=2),
+            patch.object(generate_task, "_determine_num_workers", return_value=2),
+            patch.object(generate_task, "pre_execute"),
+            patch.object(generate_task, "_reject_positional_sequences_under_mp"),
+            patch.object(generate_task, "export_memstore"),
+            patch.object(generate_task, "finalize_temp_files_chunks"),
+            patch.object(generate_task, "export_artifact_files"),
+            patch(
+                "datamimic_ce.engine.runtime.tasks.generate.task.GenerateWorker.serialize_worker_context",
+                return_value={},
+            ),
+            patch("datamimic_ce.engine.runtime.tasks.generate.task.cleanup_exporter_chunks"),
+        ):
+            if init_raises:
+                with pytest.raises(RuntimeError, match="init failed"):
+                    generate_task.execute(mock_context)
+            else:
+                generate_task.execute(mock_context)
+
+        assert fake_ray.init.called is expect_init
+        assert fake_ray.shutdown.called is expect_shutdown
+
     def test_calculate_default_page_size(self, generate_task, mock_statement):
         """Test _calculate_default_page_size calculation."""
         # Test with entity count > 10000
