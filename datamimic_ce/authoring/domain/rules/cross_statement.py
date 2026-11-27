@@ -256,6 +256,24 @@ class DuplicateGenerateName(Rule):
                 seen.setdefault(name, child)
 
 
+class ClientMemstoreIdCollision(Rule):
+    definition = authoring_rule_definition("DM409")
+
+    def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
+        # One owner of id uniqueness: source and target readers resolve a bare id as a memstore
+        # or as a client in different orders, so an id shared by both kinds is refused here.
+        clients, _ = _declared_ids(ctx)
+        for element in ctx.iter(EL_MEMSTORE):
+            memstore_id = element.get("id")
+            if memstore_id and memstore_id in clients:
+                yield ctx.diag(
+                    ClientMemstoreIdCollision,
+                    element,
+                    evidence=f'<memstore id="{memstore_id}"> reuses the id of a declared client',
+                    fix_context=f'Rename the memstore or the client so "{memstore_id}" names only one of them.',
+                )
+
+
 class UnknownSource(Rule):
     definition = authoring_rule_definition("DM402")
 
@@ -305,4 +323,5 @@ RULES: tuple[type[Rule], ...] = (
     UnknownSource,
     MissingInclude,
     DuplicateGenerateName,
+    ClientMemstoreIdCollision,
 )
