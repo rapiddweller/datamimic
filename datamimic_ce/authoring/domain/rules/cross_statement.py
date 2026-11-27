@@ -262,15 +262,17 @@ class ClientMemstoreIdCollision(Rule):
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         # One owner of id uniqueness: source and target readers resolve a bare id as a memstore
         # or as a client in different orders, so an id shared by both kinds is refused here.
-        clients, _ = _declared_ids(ctx)
-        for element in ctx.iter(EL_MEMSTORE):
-            memstore_id = element.get("id")
-            if memstore_id and memstore_id in clients:
+        # Reported on the client, which lives in the entry; the memstores come from the whole project, so a
+        # memstore declared in an included step collides with it too.
+        _, memstores = _declared_ids(ctx)
+        for element in ctx.iter(EL_DATABASE, EL_MONGODB):
+            client_id = element.get("id")
+            if client_id and client_id in memstores:
                 yield ctx.diag(
                     ClientMemstoreIdCollision,
                     element,
-                    evidence=f'<memstore id="{memstore_id}"> reuses the id of a declared client',
-                    fix_context=f'Rename the memstore or the client so "{memstore_id}" names only one of them.',
+                    evidence=f'<{element.tag} id="{client_id}"> reuses the id of a declared memstore',
+                    fix_context=f'Rename the memstore or the client so "{client_id}" names only one of them.',
                 )
 
 
