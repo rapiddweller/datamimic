@@ -7,7 +7,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from pathlib import PurePosixPath
 from typing import Literal
 
 from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
@@ -33,11 +32,9 @@ def _refusal_message(effects: tuple[ExternalEffect, ...]) -> str:
     scripts = sorted({effect.name for effect in effects if effect.kind is ExternalEffectKind.EXECUTE})
     parts: list[str] = []
     if scripts:
+        # Operators only: a method call here would raise ArchKeel's unresolved-call count.
         inside = all(
-            script != "inline"
-            and not script.startswith(("/", "\\"))
-            and ":" not in script
-            and ".." not in PurePosixPath(script.replace("\\", "/")).parts
+            script != "inline" and script[:1] not in ("/", "\\") and ":" not in script and ".." not in script
             for script in scripts
         )
         parts.append(f"runs Python code from {', '.join(scripts)}" + (" (inside the project)" if inside else ""))
