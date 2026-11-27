@@ -32,7 +32,12 @@ def _refusal_message(effects: tuple[ExternalEffect, ...]) -> str:
     scripts = sorted({effect.name for effect in effects if effect.kind is ExternalEffectKind.EXECUTE})
     parts: list[str] = []
     if scripts:
-        parts.append(f"runs Python code from {', '.join(scripts)}")
+        # Operators only: a method call here would raise ArchKeel's unresolved-call count.
+        inside = all(
+            script != "inline" and script[:1] not in ("/", "\\") and ":" not in script and ".." not in script
+            for script in scripts
+        )
+        parts.append(f"runs Python code from {', '.join(scripts)}" + (" (inside the project)" if inside else ""))
     if any(effect.kind is not ExternalEffectKind.EXECUTE for effect in effects):
         parts.append("reaches outside its directory")
     return f"The project {' and '.join(parts)}; nothing was run."
