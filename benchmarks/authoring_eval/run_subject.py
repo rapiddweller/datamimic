@@ -31,7 +31,7 @@ from pathlib import Path
 from typing import Any
 
 from benchmarks.authoring_eval.audit_transcript import ALLOWED_TOOLS, audit, records, spellings, tool_calls
-from benchmarks.authoring_eval.oracle import CASES, REPO_ROOT, child_env, wait_then_kill_group
+from benchmarks.authoring_eval.oracle import CASES, REPO_ROOT, child_env, require_process_groups, wait_then_kill_group
 
 BRIEF = Path(__file__).with_name("brief.md")
 _TURN_LIMIT = 40
@@ -146,6 +146,7 @@ def isolation_problems(
 def _execute(command: list[str], cwd: Path, env: dict[str, str], out: Path, err: Path) -> int | None:
     """The exit code, or None on a timeout. The CLI and every process it started end with it: a Bash command
     of the subject must not outlive the run."""
+    require_process_groups()
     with out.open("w", encoding="utf-8") as stdout, err.open("w", encoding="utf-8") as stderr:
         process = subprocess.Popen(command, cwd=cwd, env=env, stdout=stdout, stderr=stderr, start_new_session=True)
         return wait_then_kill_group(process, _TIMEOUT_SECONDS)

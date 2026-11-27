@@ -31,12 +31,7 @@ Regenerate the committed models after adding/removing an entity::
 
 from __future__ import annotations
 
-import hashlib
-import json
-import os
 import re
-import subprocess
-import sys
 from pathlib import Path
 from typing import TypedDict
 
@@ -45,6 +40,7 @@ import pytest
 from datamimic_ce.domains.api import iter_generator_capabilities as domain_generator_capabilities
 from datamimic_ce.engine.runtime.api import iter_generator_capabilities as runtime_generator_capabilities
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
+from tests_ce.determinism_fixtures import _run_in_fresh_process, canonical_result_bytes
 from tests_ce.integration_tests.dsl_model_builder import build_all_entities_seeded_xml
 
 _TEST_DIR = Path(__file__).resolve().parent
@@ -196,56 +192,11 @@ def test_seeded_rejected_entropy_sources_fail_from_committed_models(filename: st
         _run(_TEST_DIR, filename)
 
 
-_REPO_ROOT = _TEST_DIR.parents[2]
-_RUN_IN_FRESH_PROCESS = """
-import json, sys
-from pathlib import Path
-from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
-engine = DataMimicTest(test_dir=Path(sys.argv[1]), filename=sys.argv[2], capture_test_result=True)
-engine.test_with_timer()
-result = json.dumps(engine.capture_result(), default=str, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
-print("RESULT" + result)
-"""
-
-
-def canonical_result_bytes(result: object) -> bytes:
-    serialized = json.dumps(result, default=str, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
-    return serialized.encode("utf-8")
-
-
-def _run_in_fresh_process(filename: str) -> dict[str, object]:
-    completed = subprocess.run(
-        [sys.executable, "-c", _RUN_IN_FRESH_PROCESS, str(_TEST_DIR), filename],
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        check=True,
-        cwd=_REPO_ROOT,
-        env={
-            **os.environ,
-            "PYTHONIOENCODING": "utf-8",
-            "PYTHONPATH": str(_REPO_ROOT),
-            "PYTHONUTF8": "1",
-        },
-    )
-    result_line = next(line for line in completed.stdout.splitlines() if line.startswith("RESULT"))
-    parsed: object = json.loads(result_line.removeprefix("RESULT"))
-    if not isinstance(parsed, dict):
-        raise ValueError("fresh process result must be a JSON object")
-    result: dict[str, object] = {}
-    for key, value in parsed.items():
-        if not isinstance(key, str):
-            raise ValueError("fresh process result keys must be strings")
-        result[key] = value
-    return result
-
-
 def test_replay_model_covers_every_literal_generator() -> None:
     model = (_TEST_DIR / "replay_all_seeded.xml").read_text(encoding="utf-8")
     used = set(re.findall(r'generator="([A-Za-z]+Generator)', model))
     available = {
-        capability.name
-        for capability in (*domain_generator_capabilities(), *runtime_generator_capabilities())
+        capability.name for capability in (*domain_generator_capabilities(), *runtime_generator_capabilities())
     }
     assert available - {"SequenceTableGenerator"} == used
 
@@ -257,10 +208,6 @@ def test_every_seeded_path_replays_across_processes() -> None:
     second = _run_in_fresh_process("replay_all_seeded.xml")
     assert first["literal"] and first["script"]
     assert canonical_result_bytes(first) == canonical_result_bytes(second)
-
-
-def seeded_model_hash(filename: str) -> str:
-    return hashlib.sha256(canonical_result_bytes(_run_in_fresh_process(filename))).hexdigest()
 
 
 if __name__ == "__main__":

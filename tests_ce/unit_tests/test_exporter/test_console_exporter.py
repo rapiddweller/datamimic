@@ -1,4 +1,5 @@
 import io
+import os
 import sys
 from pathlib import Path
 
@@ -34,7 +35,7 @@ def test_successful_page_reaches_buffered_stdout_before_return(
             ConsoleExporter().consume(("rows", rows))
 
         # Pool termination can bypass normal stream closure; bytes must already be visible.
-        assert output.read_bytes() == expected
+        assert output.read_bytes() == expected.replace(b"\n", os.linesep.encode())
         assert stream.flush_calls == 1
 
 

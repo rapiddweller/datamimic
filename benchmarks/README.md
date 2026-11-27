@@ -37,3 +37,21 @@ failure, not a model failure.
 The applicable Ollama protocol references are [tool calling](https://docs.ollama.com/capabilities/tool-calling),
 [thinking](https://docs.ollama.com/capabilities/thinking), and the
 [`/api/chat` request options](https://docs.ollama.com/api/chat).
+
+The authoring evaluation runner and oracle currently require POSIX process
+groups and refuse to start their subprocesses on Windows. Group cleanup does
+not reach a descendant that creates a new session, and a refused group signal
+does not establish descendant cleanup. Do not interpret the refusal as Windows
+sandbox support; a Windows implementation needs independently verified process
+tree containment, including descendants after their parent exits.
+
+The authoring evaluation suite lives in
+`tests_ce/nightly_tests/test_benchmarks/test_authoring_eval.py` and is
+POSIX-only: its CI lane runs on Ubuntu in `.github/workflows/benchmarks.yml`.
+Neither the unit nor integration CI shards see it, and `make test-benchmarks`
+runs it on its own. The module
+is marked `integration`, but the benchmark CI lane does not filter this marker.
+The separate `tests_ce/unit_tests/test_benchmarks/test_process_group_guard.py`
+runs on Windows and POSIX with the fast unit suite and checks that both
+subprocess entry points fail before starting a child when process-group cleanup
+is unavailable.

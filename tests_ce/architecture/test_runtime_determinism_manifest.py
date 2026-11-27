@@ -72,10 +72,7 @@ def test_missing_manifest_count_writes_failure_summary(tmp_path: Path, monkeypat
 def test_literal_replay_golden_covers_unique_draws_across_automatic_pages() -> None:
     import hashlib
 
-    from tests_ce.integration_tests.test_determinism_seed_scenarios.test_determinism_seed_scenarios import (
-        _run_in_fresh_process,
-        canonical_result_bytes,
-    )
+    from tests_ce.determinism_fixtures import _run_in_fresh_process, canonical_result_bytes
 
     result = _run_in_fresh_process("replay_all_seeded.xml")
     # The 41-column literal product automatically splits five rows into pages of three.

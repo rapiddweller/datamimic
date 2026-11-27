@@ -14,26 +14,22 @@
 #  with the terms of the license agreement you entered into with Rapiddweller Asia Co., Ltd.
 #
 
-from pathlib import Path
-
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 
 class TestConsumerXmlMinio:
-    _test_dir = Path(__file__).resolve().parent
-
-    def test_single_item_xml_with_source_sp(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_single_item_xml_with_source_sp.xml")
+    def test_single_item_xml_with_source_sp(self, project_dir):
+        engine = DataMimicTest(test_dir=project_dir, filename="test_single_item_xml_with_source_sp.xml")
         engine.test_with_timer()
 
-    def test_single_item_xml_with_source_mp(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_single_item_xml_with_source_mp.xml")
+    def test_single_item_xml_with_source_mp(self, project_dir):
+        engine = DataMimicTest(test_dir=project_dir, filename="test_single_item_xml_with_source_mp.xml")
         engine.test_with_timer()
 
-    def test_generate_single_item_xml(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_generate_single_item_xml.xml")
+    def test_generate_single_item_xml(self, project_dir):
+        engine = DataMimicTest(test_dir=project_dir, filename="test_generate_single_item_xml.xml")
         engine.test_with_timer()
 
-    def test_single_item_xml_source_scripted(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_single_item_xml_source_scripted.xml")
+    def test_single_item_xml_source_scripted(self, project_dir):
+        engine = DataMimicTest(test_dir=project_dir, filename="test_single_item_xml_source_scripted.xml")
         engine.test_with_timer()

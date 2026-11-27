@@ -40,58 +40,58 @@ REFERENCE_CASES = (
 )
 
 
-def _run(filename: str) -> list[dict]:
-    engine = DataMimicTest(test_dir=_TEST_DIR, filename=filename, capture_test_result=True)
+def _run(project_dir: Path, filename: str) -> list[dict]:
+    engine = DataMimicTest(test_dir=project_dir, filename=filename, capture_test_result=True)
     engine.test_with_timer()
     return engine.capture_result()["events"]
 
 
-def test_cyclic_reference_rotates_in_source_order():
-    ids = [r["fk"] for r in _run("ref_cyclic.xml")]
+def test_cyclic_reference_rotates_in_source_order(project_dir):
+    ids = [r["fk"] for r in _run(project_dir, "ref_cyclic.xml")]
     assert ids == [1, 2, 3, 4, 1, 2, 3, 4, 1, 2]  # stable fetch order, wrapped
-    assert ids == [r["fk"] for r in _run("ref_cyclic.xml")]  # seeded-reproducible
+    assert ids == [r["fk"] for r in _run(project_dir, "ref_cyclic.xml")]  # seeded-reproducible
 
 
-def test_ordered_reference_within_pool():
-    assert [r["fk"] for r in _run("ref_ordered.xml")] == [1, 2, 3]
+def test_ordered_reference_within_pool(project_dir):
+    assert [r["fk"] for r in _run(project_dir, "ref_ordered.xml")] == [1, 2, 3]
 
 
-def test_ordered_reference_exhausted_raises():
+def test_ordered_reference_exhausted_raises(project_dir):
     with pytest.raises(Exception, match=r"ordered.*only has|only 4|cyclic"):
-        _run("ref_ordered_exhausted.xml")
+        _run(project_dir, "ref_ordered_exhausted.xml")
 
 
-def test_cumulated_reference_bell_shaped_and_reproducible():
-    ids = [r["fk"] for r in _run("ref_cumulated.xml")]
+def test_cumulated_reference_bell_shaped_and_reproducible(project_dir):
+    ids = [r["fk"] for r in _run(project_dir, "ref_cumulated.xml")]
     assert len(ids) == 40
     assert set(ids) <= {1, 2, 3, 4}
     counts = Counter(ids)
     # Bell over indices 0..3 (mean 1.5): the middle rows must dominate the extremes combined-wise.
     assert counts[2] + counts[3] > counts[1] + counts[4]
-    assert ids == [r["fk"] for r in _run("ref_cumulated.xml")]  # seeded-reproducible
+    assert ids == [r["fk"] for r in _run(project_dir, "ref_cumulated.xml")]  # seeded-reproducible
 
 
-def test_random_reference_is_seeded_and_uses_only_source_keys():
-    ids = [row["fk"] for row in _run("ref_random.xml")]
+def test_random_reference_is_seeded_and_uses_only_source_keys(project_dir):
+    ids = [row["fk"] for row in _run(project_dir, "ref_random.xml")]
     assert len(ids) == 12
     assert set(ids) <= {1, 2, 3, 4}
-    assert ids == [row["fk"] for row in _run("ref_random.xml")]
+    assert ids == [row["fk"] for row in _run(project_dir, "ref_random.xml")]
 
 
-def test_unique_reference_selects_every_source_key_once():
-    ids = [row["fk"] for row in _run("ref_unique.xml")]
+def test_unique_reference_selects_every_source_key_once(project_dir):
+    ids = [row["fk"] for row in _run(project_dir, "ref_unique.xml")]
     assert sorted(ids) == [1, 2, 3, 4]
-    assert ids == [row["fk"] for row in _run("ref_unique.xml")]
+    assert ids == [row["fk"] for row in _run(project_dir, "ref_unique.xml")]
 
 
-def test_unique_with_cyclic_is_a_parse_error():
+def test_unique_with_cyclic_is_a_parse_error(project_dir):
     with pytest.raises(Exception, match=r"unique.*cyclic|cyclic.*unique"):
-        _run("ref_unique_cyclic_invalid.xml")
+        _run(project_dir, "ref_unique_cyclic_invalid.xml")
 
 
-def test_cyclic_reference_nested_in_condition_still_rotates():
+def test_cyclic_reference_nested_in_condition_still_rotates(project_dir):
     # Nested tasks get pagination=None: rotation must advance, not pin to row 0.
-    ids = [r["fk"] for r in _run("ref_cyclic_nested.xml")]
+    ids = [r["fk"] for r in _run(project_dir, "ref_cyclic_nested.xml")]
     assert ids == [1, 2, 3, 4, 1, 2]
 
 

@@ -6,6 +6,7 @@ import os
 import shutil
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from pydantic import ValidationError
@@ -23,7 +24,16 @@ from datamimic_ce.authoring.domain.project_run import (
     ProjectRunRequest,
     UnverifiedProjectRunResult,
 )
-from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, BuildArtifact, BuildResult, RejectedBuild
+from datamimic_ce.authoring.domain.requests import (
+    PROJECT_ENTRY_PATH,
+    BuildArtifact,
+    BuildResult,
+    ReadyBuild,
+    ReadyWithGapsBuild,
+    RejectedBuild,
+)
+from tests_ce.authoring_coverage_fixtures import coverage as _coverage
+from tests_ce.authoring_coverage_fixtures import ready_fields as _ready_fields
 
 FIXTURES = Path(__file__).parent / "project_run"
 EFFECT = ExternalEffect(kind=ExternalEffectKind.DATABASE, name="db", descriptor="datamimic.xml")
@@ -70,8 +80,18 @@ def workflow(build: BuildResult, effects: tuple[ExternalEffect, ...], runner: Fa
     return ProjectRunWorkflow(lambda: build, FakeEffects(effects), runner)
 
 
-def ready_build(tmp_path: Path):
-    return create_authoring_application(project(tmp_path, "customers"), descriptor_path=PROJECT_ENTRY_PATH).build()
+def ready_build() -> ReadyBuild:
+    """A validated Build result for workflow tests; real Build-to-run proofs are tested separately."""
+    return ReadyBuild(**_ready_fields(_coverage()))
+
+
+def gaps_build() -> ReadyWithGapsBuild:
+    coverage = _coverage(seeded=False)
+    return ReadyWithGapsBuild(
+        **_ready_fields(coverage),
+        action_required=coverage.action_required() or "",
+        diagnostics=coverage.warnings(),
+    )
 
 
 def test_rejected_build_stops_before_any_run(tmp_path: Path) -> None:
@@ -107,11 +127,8 @@ def test_unverified_result_rejects_inconsistent_execution() -> None:
         UnverifiedProjectRunResult(outcome="not_run", message="not verified", execution=execution())
 
 
-def test_a_build_with_open_coverage_gaps_still_runs(tmp_path: Path) -> None:
-    root = project(tmp_path, "customers")
-    entry = root / PROJECT_ENTRY_PATH
-    entry.write_text(entry.read_text(encoding="utf-8").replace(' rngSeed="7"', ""), encoding="utf-8")
-    build = create_authoring_application(root, descriptor_path=PROJECT_ENTRY_PATH).build()
+def test_a_build_with_open_coverage_gaps_still_runs() -> None:
+    build = gaps_build()
     runner = FakeRunner(execution())
 
     result = workflow(build, (), runner).execute(ProjectRunRequest())
@@ -125,11 +142,8 @@ def test_a_build_with_open_coverage_gaps_still_runs(tmp_path: Path) -> None:
     assert "seeded" in (result.action_required or "")
 
 
-def test_run_preserves_build_warning_diagnostics(tmp_path: Path) -> None:
-    root = project(tmp_path, "customers")
-    entry = root / PROJECT_ENTRY_PATH
-    entry.write_text(entry.read_text(encoding="utf-8").replace(' rngSeed="7"', ""), encoding="utf-8")
-    build = create_authoring_application(root, descriptor_path=PROJECT_ENTRY_PATH).build()
+def test_run_preserves_build_warning_diagnostics() -> None:
+    build = gaps_build()
     assert any(item.severity == "warning" for item in build.diagnostics)
 
     result = workflow(build, (), FakeRunner(execution())).execute(ProjectRunRequest())
@@ -138,8 +152,8 @@ def test_run_preserves_build_warning_diagnostics(tmp_path: Path) -> None:
     assert all(item in result.diagnostics for item in warnings)
 
 
-def test_a_clean_ready_run_carries_the_outcome_and_no_action(tmp_path: Path) -> None:
-    result = workflow(ready_build(tmp_path), (), FakeRunner(execution())).execute(ProjectRunRequest())
+def test_a_clean_ready_run_carries_the_outcome_and_no_action() -> None:
+    result = workflow(ready_build(), (), FakeRunner(execution())).execute(ProjectRunRequest())
 
     assert result.outcome == "completed"
     assert result.build_outcome == "ready"
@@ -147,9 +161,9 @@ def test_a_clean_ready_run_carries_the_outcome_and_no_action(tmp_path: Path) -> 
     assert result.action_required is None
 
 
-def test_effects_without_the_flag_are_listed_and_nothing_runs(tmp_path: Path) -> None:
+def test_effects_without_the_flag_are_listed_and_nothing_runs() -> None:
     runner = FakeRunner(execution())
-    result = workflow(ready_build(tmp_path), (EFFECT,), runner).execute(ProjectRunRequest())
+    result = workflow(ready_build(), (EFFECT,), runner).execute(ProjectRunRequest())
     assert result.outcome == "not_run" and result.required_side_effects == (EFFECT,)
     assert result.not_run_reason == "side_effects_not_allowed"
     assert result.diagnostics[0].code.value == "side_effect"
@@ -175,10 +189,8 @@ def test_effects_without_the_flag_are_listed_and_nothing_runs(tmp_path: Path) ->
         ((EFFECT,), "The project reaches outside its directory; nothing was run."),
     ],
 )
-def test_the_refusal_names_the_python_files_it_would_run(
-    tmp_path: Path, effects: tuple[ExternalEffect, ...], message: str
-) -> None:
-    result = workflow(ready_build(tmp_path), effects, FakeRunner(execution())).execute(ProjectRunRequest())
+def test_the_refusal_names_the_python_files_it_would_run(effects: tuple[ExternalEffect, ...], message: str) -> None:
+    result = workflow(ready_build(), effects, FakeRunner(execution())).execute(ProjectRunRequest())
     assert result.diagnostics[0].message == message
 
 
@@ -191,17 +203,17 @@ def test_a_hybrid_project_is_refused_with_its_lib_file_named(tmp_path: Path) -> 
     assert [effect.name for effect in result.required_side_effects] == ["lib/helpers.scr.py"]
 
 
-def test_allowed_effects_run_and_params_reach_the_runner(tmp_path: Path) -> None:
+def test_allowed_effects_run_and_params_reach_the_runner() -> None:
     runner = FakeRunner(execution())
     request = ProjectRunRequest(allow_side_effects=True, params=(ProjectParam(name="STAGE", value="test"),))
-    result = workflow(ready_build(tmp_path), (EFFECT,), runner).execute(request)
+    result = workflow(ready_build(), (EFFECT,), runner).execute(request)
     assert result.outcome == "completed" and result.exit_code == 0
     assert runner.calls == [(ProjectParam(name="STAGE", value="test"),)]
 
 
 @pytest.mark.parametrize("run,outcome", [(execution(3), "failed"), (execution(None, timed_out=True), "timeout")])
-def test_failed_and_timed_out_runs_carry_a_diagnostic(tmp_path: Path, run: ProjectRunExecution, outcome: str) -> None:
-    result = workflow(ready_build(tmp_path), (), FakeRunner(run)).execute(ProjectRunRequest())
+def test_failed_and_timed_out_runs_carry_a_diagnostic(run: ProjectRunExecution, outcome: str) -> None:
+    result = workflow(ready_build(), (), FakeRunner(run)).execute(ProjectRunRequest())
     assert result.outcome == outcome
     assert result.diagnostics[0].code.value == "child_execution"
     assert result.log_tail == ("done",)
@@ -358,7 +370,16 @@ def test_runner_stops_a_run_that_exceeds_the_timeout(tmp_path: Path, monkeypatch
         started.append(process.pid)
         return process
 
-    monkeypatch.setattr(project_runner.subprocess, "Popen", slow)
+    monkeypatch.setattr(
+        project_runner,
+        "subprocess",
+        SimpleNamespace(
+            Popen=slow,
+            DEVNULL=subprocess.DEVNULL,
+            STDOUT=subprocess.STDOUT,
+            TimeoutExpired=subprocess.TimeoutExpired,
+        ),
+    )
     run = project_runner.CeProjectRunner(AuthoringWorkspaceContext(root, PROJECT_ENTRY_PATH)).run((), 1)
     assert run.timed_out and run.exit_code is None
     assert run.log_tail == ("start",)
@@ -450,15 +471,11 @@ def test_cli_text_prints_build_diagnostics_when_project_is_rejected(tmp_path: Pa
     assert "parser validation" in result.output.lower()
 
 
-def test_project_run_result_validates_workflow_shapes_and_exit_fields(tmp_path: Path) -> None:
+def test_project_run_result_validates_workflow_shapes_and_exit_fields() -> None:
     from datamimic_ce.authoring.domain.project_run import ProjectRunResult
 
-    ready = ready_build(tmp_path)
-    gaps_root = tmp_path / "gaps"
-    shutil.copytree(FIXTURES / "customers", gaps_root)
-    gaps_entry = gaps_root / PROJECT_ENTRY_PATH
-    gaps_entry.write_text(gaps_entry.read_text(encoding="utf-8").replace(' rngSeed="7"', ""), encoding="utf-8")
-    gaps_build = create_authoring_application(gaps_root, descriptor_path=PROJECT_ENTRY_PATH).build()
+    ready = ready_build()
+    gaps = gaps_build()
     valid_results = (
         ProjectRunResult.from_input_error("bad params"),
         workflow(RejectedBuild.from_input_error("bad project"), (), FakeRunner(execution())).execute(
@@ -468,7 +485,7 @@ def test_project_run_result_validates_workflow_shapes_and_exit_fields(tmp_path: 
         workflow(ready, (), FakeRunner(execution())).execute(ProjectRunRequest()),
         workflow(ready, (), FakeRunner(execution(9))).execute(ProjectRunRequest()),
         workflow(ready, (), FakeRunner(execution(None, timed_out=True))).execute(ProjectRunRequest()),
-        workflow(gaps_build, (), FakeRunner(execution())).execute(ProjectRunRequest()),
+        workflow(gaps, (), FakeRunner(execution())).execute(ProjectRunRequest()),
     )
     for result in valid_results:
         ProjectRunResult.model_validate(result.model_dump(mode="json"))
@@ -556,10 +573,14 @@ def test_a_second_run_writes_a_second_record_and_build_ignores_both(tmp_path: Pa
 
 
 @pytest.mark.parametrize(
-    "script", ["import sys; print('boom'); sys.exit(3)", "import time; print('start', flush=True); time.sleep(60)"]
+    "script,expected_outcome,expected_exit",
+    [
+        ("import sys; print('boom'); sys.exit(3)", "failed", 3),
+        ("import time; print('start', flush=True); time.sleep(60)", "timeout", None),
+    ],
 )
 def test_a_failed_or_timed_out_run_still_gets_a_record(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, script: str
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, script: str, expected_outcome: str, expected_exit: int | None
 ) -> None:
     import subprocess
     import sys
@@ -568,26 +589,41 @@ def test_a_failed_or_timed_out_run_still_gets_a_record(
 
     root = project(tmp_path, "customers")
     real_popen = subprocess.Popen
+
+    def run_script(command, **kwargs):
+        return real_popen([sys.executable, "-c", script], **kwargs)
+
     monkeypatch.setattr(
-        project_runner.subprocess, "Popen", lambda command, **kw: real_popen([sys.executable, "-c", script], **kw)
+        project_runner,
+        "subprocess",
+        SimpleNamespace(
+            Popen=run_script,
+            DEVNULL=subprocess.DEVNULL,
+            STDOUT=subprocess.STDOUT,
+            TimeoutExpired=subprocess.TimeoutExpired,
+        ),
     )
 
     run = project_runner.CeProjectRunner(AuthoringWorkspaceContext(root, PROJECT_ENTRY_PATH)).run((), 1)
 
     record = _record(root, run.record_path)
-    assert record.exit_code == run.exit_code and record.proof is None
-    assert record.outcome == ("timeout" if run.timed_out else "failed")
+    assert record.exit_code == run.exit_code == expected_exit and record.proof is None
+    assert record.outcome == expected_outcome
+    assert run.timed_out is (expected_outcome == "timeout")
     assert (root / run.record_path / "run.log").read_text(encoding="utf-8").splitlines()[0] in {"boom", "start"}
 
 
 @pytest.mark.parametrize("blocker", ["file", "link_out"])
-def test_an_unwritable_record_folder_does_not_fail_the_run_and_says_so(tmp_path: Path, blocker: str) -> None:
+def test_an_unwritable_record_folder_does_not_fail_the_run_and_says_so(
+    tmp_path: Path, blocker: str, request: pytest.FixtureRequest
+) -> None:
     root = project(tmp_path, "customers")
     outside = tmp_path / "outside"
     outside.mkdir()
     if blocker == "file":
         (root / "docs").write_text("not a folder", encoding="utf-8")
     else:
+        request.getfixturevalue("require_symlinks")
         (root / "docs").symlink_to(outside, target_is_directory=True)
 
     result = create_authoring_application(root, descriptor_path=PROJECT_ENTRY_PATH).run_project(

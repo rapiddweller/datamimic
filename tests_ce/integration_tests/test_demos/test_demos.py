@@ -19,8 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class TestDemos:
-    _test_dir = Path(__file__).resolve().parent
-    _project_root = Path.cwd()
+    _project_root = Path(__file__).resolve().parents[3]
     _demos_dir = _project_root / "datamimic_ce" / "resources" / "demos"
 
     def setup_method(self):
@@ -34,7 +33,7 @@ class TestDemos:
                     logger.info(f"  - {item.name}")
             pytest.fail(f"Demos directory not found at {self._demos_dir}")
 
-    def _run_demo_test(self, demo_path):
+    def _run_demo_test(self, demo_path, copy_project):
         """Helper method to run a single demo test."""
         demo_name = demo_path.name
         datamimic_file = demo_path / "datamimic.xml"
@@ -48,7 +47,7 @@ class TestDemos:
         logger.info(f"Using datamimic file: {datamimic_file}")
 
         try:
-            test_engine = DataMimicTest(test_dir=demo_path, filename="datamimic.xml")
+            test_engine = DataMimicTest(test_dir=copy_project(demo_path), filename="datamimic.xml")
             test_engine.test_with_timer()
             logger.info(f"Demo {demo_name} completed successfully")
         except Exception as e:
@@ -58,26 +57,28 @@ class TestDemos:
             pytest.fail(error_msg)
 
     # Individual test methods for each demo
-    def test_demo_custom_components(self):
+    def test_demo_custom_components(self, copy_project):
         """Test the custom components demo."""
-        self._run_demo_test(self._demos_dir / "demo-custom-components")
+        self._run_demo_test(self._demos_dir / "demo-custom-components", copy_project)
 
-    def test_demo_database(self):
+    def test_demo_database(self, copy_project):
         """Test the database demo."""
-        self._run_demo_test(self._demos_dir / "demo-database")
+        self._run_demo_test(self._demos_dir / "demo-database", copy_project)
 
-    def test_demo_datetime(self):
+    def test_demo_datetime(self, copy_project):
         """Test the datetime demo."""
-        self._run_demo_test(self._demos_dir / "demo-datetime")
+        self._run_demo_test(self._demos_dir / "demo-datetime", copy_project)
 
-    def test_demo_db_mapping(self):
+    def test_demo_db_mapping(self, copy_project):
         """Test the db mapping demo."""
-        self._run_demo_test(self._demos_dir / "demo-db-mapping")
+        self._run_demo_test(self._demos_dir / "demo-db-mapping", copy_project)
 
-    def test_demo_condition(self):
+    def test_demo_condition(self, copy_project):
         """Test the condition demo."""
         engine = DataMimicTest(
-            test_dir=self._demos_dir / "demo-condition", filename="datamimic.xml", capture_test_result=True
+            test_dir=copy_project(self._demos_dir / "demo-condition"),
+            filename="datamimic.xml",
+            capture_test_result=True,
         )
         engine.test_with_timer()
         result = engine.capture_result()
@@ -101,50 +102,50 @@ class TestDemos:
 
         assert all(row["same_name"] == {"age": 35} for row in result["bike"])
 
-    def test_demo_healthcare(self):
+    def test_demo_healthcare(self, copy_project):
         """Test the healthcare demo."""
-        self._run_demo_test(self._demos_dir / "demo-healthcare")
+        self._run_demo_test(self._demos_dir / "demo-healthcare", copy_project)
 
-    def test_demo_json(self):
+    def test_demo_json(self, copy_project):
         """Test the JSON demo."""
-        self._run_demo_test(self._demos_dir / "demo-json")
+        self._run_demo_test(self._demos_dir / "demo-json", copy_project)
 
-    def test_demo_masking(self):
+    def test_demo_masking(self, copy_project):
         """Test the masking demo."""
-        self._run_demo_test(self._demos_dir / "demo-masking")
+        self._run_demo_test(self._demos_dir / "demo-masking", copy_project)
 
-    def test_demo_model(self):
+    def test_demo_model(self, copy_project):
         """Test the model demo."""
-        self._run_demo_test(self._demos_dir / "demo-model")
+        self._run_demo_test(self._demos_dir / "demo-model", copy_project)
 
-    def test_demo_postprocess(self):
+    def test_demo_postprocess(self, copy_project):
         """Test the postprocess demo."""
-        self._run_demo_test(self._demos_dir / "demo-postprocess")
+        self._run_demo_test(self._demos_dir / "demo-postprocess", copy_project)
 
-    def test_demo_py_scripting(self):
+    def test_demo_py_scripting(self, copy_project):
         """Test the Python scripting demo."""
-        self._run_demo_test(self._demos_dir / "demo-py-scripting")
+        self._run_demo_test(self._demos_dir / "demo-py-scripting", copy_project)
 
-    def test_demo_watermark(self):
+    def test_demo_watermark(self, copy_project):
         """Test the watermark demo."""
-        self._run_demo_test(self._demos_dir / "demo-watermark")
+        self._run_demo_test(self._demos_dir / "demo-watermark", copy_project)
 
-    def test_demo_xml(self):
+    def test_demo_xml(self, copy_project):
         """Test the XML demo."""
-        self._run_demo_test(self._demos_dir / "demo-xml")
+        self._run_demo_test(self._demos_dir / "demo-xml", copy_project)
 
-    def test_overview_converter(self):
+    def test_overview_converter(self, copy_project):
         """Test the overview converter demo."""
-        self._run_demo_test(self._demos_dir / "overview-converter")
+        self._run_demo_test(self._demos_dir / "overview-converter", copy_project)
 
-    def test_overview_generator(self):
+    def test_overview_generator(self, copy_project):
         """Test the overview generator demo."""
-        self._run_demo_test(self._demos_dir / "overview-generator")
+        self._run_demo_test(self._demos_dir / "overview-generator", copy_project)
 
-    def test_demo_insurance(self):
+    def test_demo_insurance(self, copy_project):
         """Test the insurance demo."""
-        self._run_demo_test(self._demos_dir / "demo-insurance")
+        self._run_demo_test(self._demos_dir / "demo-insurance", copy_project)
 
-    def test_demo_finance(self):
+    def test_demo_finance(self, copy_project):
         """Test the finance demo."""
-        self._run_demo_test(self._demos_dir / "demo-finance")
+        self._run_demo_test(self._demos_dir / "demo-finance", copy_project)

@@ -1,0 +1,28 @@
+name: Documentation examples
+on:
+  push:
+    paths:
+      - '**/*.md'
+      - 'docs/**'
+  pull_request:
+    paths:
+      - '**/*.md'
+      - 'docs/**'
+
+permissions:
+  contents: read
+
+jobs:
+  docs:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - uses: astral-sh/setup-uv@v8.1.0
+      - run: uv sync --python 3.11
+      - name: Run documentation tests and executable examples
+        run: >-
+          uv run pytest tests_ce/unit_tests/test_docs
+          tests_ce/nightly_tests/test_docs/test_agent_cli_documentation_contract.py -q
