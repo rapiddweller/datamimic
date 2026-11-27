@@ -30,6 +30,7 @@ class DummyRootGenStmt(GenerateStatement):
         self._type = type_
         self._count = count
         self._num_process = num_process
+        self.generation_plan = None
 
 
 class DummyStmt:

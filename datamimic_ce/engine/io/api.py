@@ -13,6 +13,8 @@ from datamimic_ce.engine.io.clients.operations import (
     is_database_client,
     planned_create_table_ddl,
     rdbms_client_dbms,
+    rdbms_get_current_sequence_number,
+    rdbms_increase_sequence_number,
     rdbms_reserve_sequence_block,
     uses_mysql_sequence_storage,
 )
@@ -140,6 +142,8 @@ __all__ = [
     "select_reference_rows",
     "select_row_iterator",
     "resolve_target_entity",
+    "rdbms_get_current_sequence_number",
+    "rdbms_increase_sequence_number",
     "rdbms_reserve_sequence_block",
     "smoke_export",
     "window_nested_key_rows",

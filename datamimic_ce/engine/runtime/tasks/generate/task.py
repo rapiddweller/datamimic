@@ -6,6 +6,7 @@
 
 import math
 from typing import Protocol
+from uuid import uuid4
 
 from datamimic_ce.engine.dsl.api import ATTR_WHERE, CompositeStatement, GenerateStatement, KeyStatement, Statement
 from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import ATTR_COUNT
@@ -322,6 +323,7 @@ class GenerateTask(CommonSubTask):
         self._assert_delete_selects_rows(context)
         self._assert_create_table_shape(context)
         outermost = self.is_outermost(context)
+        previous_plan = self.statement.generation_plan
         with gen_timer("process", context.root.report_logging, self.statement.full_name, not outermost) as timer_result:
             try:
                 # Mark Ray initialization status for shutdown at the end of execution
@@ -337,6 +339,7 @@ class GenerateTask(CommonSubTask):
                 # generators must reserve ranges for the worker count the scheduler will really use.
                 num_workers = self._determine_num_workers(context, self.statement)
                 self.statement.num_process = num_workers
+                self.statement.generation_plan = (str(uuid4()), count)
 
                 # Pre-execute sub-tasks before generating any data
                 self.pre_execute(context)
@@ -457,6 +460,7 @@ class GenerateTask(CommonSubTask):
                 return merged_result
 
             finally:
+                self.statement.generation_plan = previous_plan
                 # Clean temp directory on outermost gen_stmt
                 if outermost:
                     context.root.export_session = None

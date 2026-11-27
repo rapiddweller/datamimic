@@ -54,6 +54,8 @@ class GenerateStatement(CompositeStatement):
         self._start = model.start
         self._end = model.end
         self._interval = model.interval
+        # Runtime invocation ID and resolved row count; workers receive the same plan as their parent.
+        self.generation_plan: tuple[str, int] | None = None
         # Set only by bounded Authoring execution: runtime counts above it are refused, never truncated.
         self._bounded_count_limit: int | None = None
         # Rows the bounded run resolved for this statement, summed over its invocations (one per parent row).

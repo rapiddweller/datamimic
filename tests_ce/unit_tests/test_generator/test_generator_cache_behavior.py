@@ -16,8 +16,10 @@ from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.io.contracts import DataSourcePagination
 from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import TestResultExporter
+from datamimic_ce.engine.runtime.api import create_run_session
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
+from datamimic_ce.engine.runtime.contracts import RunRequest
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
 from datamimic_ce.engine.runtime.tasks.values.construction.factory import GeneratorUtil
 from datamimic_ce.engine.runtime.tasks.values.construction.global_increment import GlobalIncrementGenerator
@@ -29,6 +31,7 @@ class DummyRootGenStmt(GenerateStatement):
         self._type = type_
         self._count = count
         self._num_process = num_process
+        self.generation_plan = None
 
 
 class DummyStmt:
@@ -324,6 +327,7 @@ def test_sequence_table_generator_multi_process_partitions_non_overlapping():
     ctx1 = mk_ctx()
 
     root_gen = DummyRootGenStmt(type_="gen", count=10)
+    root_gen.generation_plan = ("parent-plan", 10)
     stmt0 = DummyStmt(name="id", parent_stmt=None, database="db1", root_gen=root_gen)
     # Each process pages with its chunk's global skip (chunks are (0, 5) and (5, 10))
     pagination0 = DataSourcePagination(skip=0, limit=4)
@@ -335,7 +339,8 @@ def test_sequence_table_generator_multi_process_partitions_non_overlapping():
     parent.pre_execute(ctx0)
     ctx1.generators["mp:seq"] = copy.deepcopy(parent)
     g0 = util0.create_generator("SequenceTableGenerator", stmt=stmt0, key="mp:seq", pagination=pagination0)
-    g1 = util1.create_generator("SequenceTableGenerator", stmt=stmt0, key="mp:seq", pagination=pagination1)
+    worker_stmt = copy.deepcopy(stmt0)  # Worker statements and cached generators travel separately.
+    g1 = util1.create_generator("SequenceTableGenerator", stmt=worker_stmt, key="mp:seq", pagination=pagination1)
     assert list(iter(g0.generate, None)) == list(range(1000, 1004))
     assert list(iter(g1.generate, None)) == list(range(1005, 1009))
     assert shared_client._seq == {"gen_id_seq": 1010}
@@ -516,3 +521,37 @@ def test_legacy_split_reservation_boundary_can_overlap(prepare):
     first = range(boundary - count, boundary)
     second = range(boundary - count + 1, boundary + 1)
     assert len(set(first) & set(second)) == count - 1
+
+
+@pytest.fixture()
+def run_with_sequence_counter(monkeypatch):
+    reservations = []
+    counter = DummyRdbmsClient()
+
+    def reserve(_client, sequence, count, table, column):
+        reservations.append(count)
+        return counter.reserve_sequence_block(sequence, count, table, column)
+
+    monkeypatch.setattr(RdbmsClient, "reserve_sequence_block", reserve)
+
+    def run(filename):
+        request = RunRequest(Path(__file__).with_name(filename), test_mode=True, profile_loader=lambda *_: {})
+        return create_run_session(request).execute().captured, reservations
+
+    return run
+
+
+def test_sequence_reserves_expanded_time_series_count(run_with_sequence_counter):
+    captured, reservations = run_with_sequence_counter("sequence_table_timeseries.xml")
+    assert reservations == [6]
+    assert [row["id"] for row in captured["readings"]] == list(range(1000, 1006))
+
+
+def test_lazy_sequence_reserves_once_per_nested_generate_invocation(run_with_sequence_counter):
+    captured, reservations = run_with_sequence_counter("sequence_table_nested.xml")
+    assert reservations == [3, 3]
+    assert captured["children"] == [
+        {"owner": owner, "id": identifier}
+        for owner, start in ((1, 1000), (2, 1003))
+        for identifier in range(start, start + 3)
+    ]

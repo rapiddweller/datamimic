@@ -5,10 +5,10 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from datamimic_ce.domains.api import BaseLiteralGenerator
-from datamimic_ce.engine.dsl.api import KeyStatement, VariableStatement, get_nearest_generate_statement
+from datamimic_ce.engine.dsl.api import KeyStatement, Statement, VariableStatement, get_nearest_generate_statement
 from datamimic_ce.engine.io.api import (
+    Client,
     DataSourcePagination,
-    RegisteredClient,
     rdbms_reserve_sequence_block,
     uses_mysql_sequence_storage,
 )
@@ -25,7 +25,8 @@ class SequenceTableGenerator(BaseLiteralGenerator):
     Separate runs may leave gaps, for example if a run fails after reserving its block.
 
     Direct generate keys reserve before workers start. Each page uses its global offset
-    in the shared block. Keys created only at execution time reserve their own block.
+    in the shared block of planned rows. Keys created only at execution time reserve
+    their own block for each invocation of the enclosing generate.
     """
 
     def __init__(
@@ -66,9 +67,9 @@ class SequenceTableGenerator(BaseLiteralGenerator):
         self._source_name: str = source_name
 
         rdbms_client = context.root.clients.get(self._source_name)
-        if rdbms_client is None:
+        if not isinstance(rdbms_client, Client):
             raise generator_config_error(reason="SequenceTableGenerator requires a configured database client")
-        self._initial_client: RegisteredClient | None = rdbms_client
+        self._initial_client: Client | None = rdbms_client
 
         # Get root generate statement safely (stashed: the root of a key/variable cannot change
         # over this instance's lifetime, so pre_execute reuses it instead of re-walking the tree)
@@ -76,6 +77,7 @@ class SequenceTableGenerator(BaseLiteralGenerator):
         if root_gen_stmt is None:
             raise generator_config_error(reason="Root generate statement is required")
         self._root_gen_stmt = root_gen_stmt
+        self._generation_plan = root_gen_stmt.generation_plan
 
         # Initialize sequence with process-safe range
         try:
@@ -88,10 +90,13 @@ class SequenceTableGenerator(BaseLiteralGenerator):
                         "set numProcess=1 because MySQL has no atomic native sequence reservation"
                     )
                 )
-            count = root_gen_stmt.count
-            if count is None:
-                raise generator_config_error(reason="SequenceTableGenerator requires a generate count")
-            total_count = int(count)
+            if self._generation_plan is not None:
+                _, total_count = self._generation_plan
+            else:
+                count = root_gen_stmt.count
+                if count is None:
+                    raise generator_config_error(reason="SequenceTableGenerator requires a generate count")
+                total_count = int(count)
 
             # Match the worker planner's uniform slices, including any unused part of the last one.
             per_process_count = (total_count + total_processes - 1) // total_processes
@@ -104,6 +109,10 @@ class SequenceTableGenerator(BaseLiteralGenerator):
                 reason=f"SequenceTableGenerator initialization failed ({type(e).__name__})"
             ) from e
 
+    def matches_invocation(self, stmt: Statement) -> bool:
+        generate = get_nearest_generate_statement(stmt)
+        return generate is not None and generate.generation_plan == self._generation_plan
+
     def _resolve_sequence_name(self) -> str:
         """Explicit sequence= name if given (e.g. a migrated legacy descriptor's DB sequence name,
         schema-qualified or not); otherwise the existing convention f"{type}_{name}_seq"."""
@@ -114,14 +123,14 @@ class SequenceTableGenerator(BaseLiteralGenerator):
     def pre_execute(self, context: Context) -> None:
         """Reserve a fresh block for this invocation, before worker context serialization."""
         rdbms_client = context.root.clients.get(self._source_name)
-        if rdbms_client is None:
+        if not isinstance(rdbms_client, Client):
             raise generator_config_error(reason="SequenceTableGenerator requires a configured database client")
         self._reserve(rdbms_client)
         self._page = None
         self._current = None
         self._end = None
 
-    def _reserve(self, client: RegisteredClient) -> None:
+    def _reserve(self, client: Client) -> None:
         self._start = (
             rdbms_reserve_sequence_block(
                 client,

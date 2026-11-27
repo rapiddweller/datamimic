@@ -135,8 +135,24 @@ def database_get_random_rows_by_columns(client: RegisteredClient | None, name: s
     return client.get_random_rows_by_columns(name, columns)
 
 
+def rdbms_get_current_sequence_number(
+    client: RegisteredClient, sequence: str, table: str | None, column: str | None
+) -> int:
+    if not isinstance(client, RdbmsClient):
+        raise TypeError("Client is not an RDBMS client")
+    return client.get_current_sequence_number(sequence, table, column)
+
+
+def rdbms_increase_sequence_number(
+    client: RegisteredClient, sequence: str, increment: int, table: str | None, column: str | None
+) -> None:
+    if not isinstance(client, RdbmsClient):
+        raise TypeError("Client is not an RDBMS client")
+    client.increase_sequence_number(sequence, increment, table, column)
+
+
 def rdbms_reserve_sequence_block(
-    client: RegisteredClient, sequence: str, count: int, table: str | None, column: str | None
+    client: Client, sequence: str, count: int, table: str | None, column: str | None
 ) -> int:
     if not isinstance(client, RdbmsClient):
         raise TypeError("Client is not an RDBMS client")
