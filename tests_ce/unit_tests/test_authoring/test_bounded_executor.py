@@ -355,7 +355,7 @@ def test_windows_process_cleanup_waits_for_descendants(monkeypatch, descendant_s
 
     worker = Mock()
     steps = Mock()
-    steps.process.return_value.children.return_value = [worker]
+    steps.process.children.return_value = [worker]
     steps.taskkill.return_value.returncode = 0
     steps.wait_descendants.return_value = ([], [worker]) if descendant_still_alive else ([worker], [])
     monkeypatch.setattr(bounded_executor, "os", SimpleNamespace(name="nt"))
@@ -372,7 +372,7 @@ def test_windows_process_cleanup_waits_for_descendants(monkeypatch, descendant_s
 
     assert steps.mock_calls == [
         call.process(321),
-        call.process().children(recursive=True),
+        call.process.children(steps.process.return_value, recursive=True),
         call.taskkill(["taskkill", "/PID", "321", "/T", "/F"], capture_output=True, timeout=2, check=False),
         call.wait_launcher(timeout=1),
         call.wait_descendants([worker], timeout=ANY),
