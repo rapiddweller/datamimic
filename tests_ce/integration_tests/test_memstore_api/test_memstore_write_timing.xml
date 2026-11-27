@@ -10,6 +10,7 @@
     <generate name="empty_count" count="1">
         <variable name="rows" source="mem" sourceEntity="empty" storage="data"/>
         <key name="n" script="len(rows)"/>
+        <key name="script_count" script="mem.entityCount('empty')"/>
     </generate>
     <!-- A nested producer reaches the store when its outermost generate ends, also inside a false condition. -->
     <generate name="outer" count="2">

@@ -5,6 +5,8 @@
 """createTable on <generate>: the static rules, the column types, the SQLite create and drift check, the single-process
 policy and the schema side effect. The end-to-end run and the Build rejections are scenario s59_create_table."""
 
+import sqlite3
+from contextlib import closing
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -148,6 +150,31 @@ def test_a_later_page_with_a_new_field_fails_instead_of_dropping_it(tmp_path, mo
         DataMimicTest(test_dir=tmp_path, filename="datamimic.xml").test_with_timer()
     assert caught.value.issue_code is IssueCode.OPERATION_TABLE_DRIFT
     assert "a later page writes the field(s) note" in str(caught.value)
+    assert "Table 'lines'" in str(caught.value)
+
+
+def test_a_later_page_field_of_an_existing_table_is_not_blamed_on_a_table_created_from_page_one(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "db").mkdir()
+    with closing(sqlite3.connect(tmp_path / "db" / "kept.sqlite")) as connection:
+        connection.execute("CREATE TABLE lines (line_id INTEGER PRIMARY KEY, audit_user TEXT)")
+        connection.commit()
+    (tmp_path / "datamimic.xml").write_text(
+        '<setup><database id="db" dbms="sqlite" database="kept"/>'
+        '<generate name="lines" count="4" pageSize="2" target="db" createTable="true">'
+        '<id name="line_id" generator="IncrementGenerator"/>'
+        '<key name="audit_user" constant="secret-value" condition="this.line_id &gt; 2"/></generate></setup>',
+        encoding="utf-8",
+    )
+    with pytest.raises(OperationError) as caught:
+        DataMimicTest(test_dir=tmp_path, filename="datamimic.xml").test_with_timer()
+    message = str(caught.value)
+    assert caught.value.issue_code is IssueCode.OPERATION_TABLE_DRIFT
+    assert "Table 'lines'" in message
+    assert "audit_user, which the first page did not write" in message
+    assert "whether it created the table or found it" in message
+    assert "table created from the first page does not have" not in message
+    assert "secret-value" not in message
 
 
 def test_a_field_in_every_page_passes_the_page_check(tmp_path, monkeypatch):
