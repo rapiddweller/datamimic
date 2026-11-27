@@ -1,0 +1,17 @@
+{
+  "title": "Group counts name every expected group, so a missing group counts 0",
+  "proves": ["A group holds exactly its declared number of rows. A listed group with 0 expected rows and no rows passes; string and integer group keys mix."],
+  "products": {"bookings": 3, "classes": 3},
+  "negatives": [
+    {"name": "wrong_count_for_one_group", "diagnostic": "group_count", "message": "1 group(s) whose row count differs", "patch": {"file": "datamimic.xml", "old": "(2, 1, 0)", "new": "(3, 1, 0)"}},
+    {"name": "missing_group", "diagnostic": "group_count", "message": "1 group(s) whose row count differs", "patch": {"file": "datamimic.xml", "old": "(2, 1, 0)", "new": "(2, 1, 1)"}},
+    {"name": "group_the_reference_does_not_list", "diagnostic": "group_count", "message": "does not list", "patch": {"file": "datamimic.xml", "old": "('A', 'A', 2)", "new": "('A', 'A', 4)"}},
+    {"name": "no_expected_groups", "diagnostic": "group_count", "message": "lists no expected groups", "patch": {"file": "datamimic.xml", "old": "name=\"classes\" count=\"3\"", "new": "name=\"classes\" count=\"0\""}},
+    {"name": "missing_count_field", "diagnostic": "input", "message": "unknown field", "patch": {"file": "datamimic.xml", "old": "name=\"seats\"", "new": "name=\"other_seats\""}},
+    {"name": "missing_group_field", "diagnostic": "input", "message": "unknown field", "patch": {"file": "datamimic.xml", "old": "name=\"booked_class\"", "new": "name=\"other_class\""}},
+    {"name": "duplicate_reference_key", "diagnostic": "group_count", "message": "unique string or integer group key", "patch": {"file": "datamimic.xml", "old": "('A', 2, 'C')", "new": "('A', 'A', 'C')"}},
+    {"name": "negative_count", "diagnostic": "group_count", "message": "whole number from 0", "patch": {"file": "datamimic.xml", "old": "(2, 1, 0)", "new": "(2, 1, -1)"}},
+    {"name": "text_count", "diagnostic": "group_count", "message": "whole number from 0", "patch": {"file": "datamimic.xml", "old": "(2, 1, 0)", "new": "(2, '1', 0)"}},
+    {"name": "boolean_group_key", "diagnostic": "group_count", "message": "requires a string or integer group key in 'booked_class'", "patch": {"file": "datamimic.xml", "old": "('A', 'A', 2)", "new": "('A', 'A', True)"}}
+  ]
+}

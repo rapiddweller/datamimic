@@ -69,8 +69,30 @@ def test_int_on_text_names_the_error_type_the_line_and_keeps_text_as_text() -> N
     assert "B01" not in diagnostic.message and "B01" not in (diagnostic.remediation or "")  # a value is never shown
     assert diagnostic.path == ("descriptor", "model.xml", "key", "script")
     assert diagnostic.location is not None and diagnostic.location.line == 4
-    assert "Keep a text key as text" in (diagnostic.remediation or "")
-    assert "cast: int(parent.col)" not in (diagnostic.remediation or "")
+    assert "rejected the value" in (diagnostic.remediation or "")
+    assert "cast" not in (diagnostic.remediation or "").lower()
+
+
+def test_a_value_error_that_is_no_conversion_gets_the_same_hint_without_the_value() -> None:
+    diagnostic = _failure(
+        """<setup rngSeed="1"><generate name="rows" count="2" target="CSV">
+        <variable name="branch" values="('B01', 'B02')"/>
+        <key name="n" script="[1, 2].index('x')"/></generate></setup>"""
+    )
+    remediation = diagnostic.remediation or ""
+    assert diagnostic.message.endswith("ValueError.")
+    assert "rejected the value" in remediation
+    assert "cast" not in remediation.lower() and "B01" not in remediation and "'x'" not in remediation
+
+
+def test_a_zero_division_gets_a_generic_hint_not_the_csv_cast_advice() -> None:
+    diagnostic = _failure(
+        """<setup rngSeed="1"><generate name="rows" count="2" target="CSV">
+        <key name="n" script="1/0"/></generate></setup>"""
+    )
+    remediation = diagnostic.remediation or ""
+    assert diagnostic.message.endswith("ZeroDivisionError.")
+    assert "cast" not in remediation.lower() and "arrive as strings" not in remediation
 
 
 def test_a_type_error_keeps_the_cast_remediation_that_fits_text_plus_number() -> None:
