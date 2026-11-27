@@ -295,15 +295,16 @@ def lint(
     try:
         logical_path = _descriptor_path(source, workspace_root, descriptor_path)
         request = LintRequest(xml=_read(source))
+        # Builds the application inside the handler: it rejects an invalid descriptor path.
+        application = create_authoring_application(
+            workspace_root=_workspace(source, workspace_root), descriptor_path=logical_path
+        )
     except (ValueError, ValidationError) as error:
         emit_authoring(
-            LintResult.from_input_error(_input_message(error, "Invalid or unreadable XML input.")),
+            LintResult.from_input_error(_input_message(error, "Invalid or unreadable XML input or descriptor path.")),
             output_format,
             exit_code=1,
         )
-    application = create_authoring_application(
-        workspace_root=_workspace(source, workspace_root), descriptor_path=logical_path
-    )
     result = application.lint(request)
     emit_authoring(result, output_format, exit_code=0 if result.ok else 1)
 

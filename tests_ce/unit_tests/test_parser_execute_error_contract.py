@@ -127,6 +127,16 @@ def test_cli_stdin_lint_and_dry_run_keep_the_declared_descriptor_path(tmp_path: 
         assert diagnostic["path"] == ["descriptor", "ide/buffer.xml", "iterate", "attribute", "source"]
 
 
+@pytest.mark.parametrize("command", ["lint", "dry-run", "run"])
+@pytest.mark.parametrize("override", ["/abs/model.xml", "../model.xml", "a/../../model.xml"])
+def test_cli_invalid_descriptor_path_is_a_structured_error(command: str, override: str) -> None:
+    args = ["authoring", command, "-", "--descriptor-path", override]
+    result = CliRunner().invoke(app, args, input="<setup/>")
+    assert result.exit_code == 1
+    assert isinstance(result.exception, SystemExit)  # no traceback
+    assert json.loads(result.stdout)["diagnostics"]
+
+
 @pytest.mark.parametrize(
     "body,issue,attribute",
     [
