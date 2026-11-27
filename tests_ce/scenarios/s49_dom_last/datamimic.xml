@@ -1,0 +1,34 @@
+<setup rngSeed="637">
+    <generate name="leap_feb" count="40">
+        <key name="d" generator="DateTimeGenerator(min='2024-02-01 00:00:00', max='2024-02-29 23:59:59', random=True, dom='1,15,last')"/>
+        <key name="day" script="d.day"/>
+    </generate>
+    <generate name="plain_feb" count="40">
+        <key name="d" generator="DateTimeGenerator(min='2023-02-01 00:00:00', max='2023-02-28 23:59:59', random=True, dom='1,15,last')"/>
+        <key name="day" script="d.day"/>
+    </generate>
+    <generate name="days30" count="40">
+        <key name="d" generator="DateTimeGenerator(min='2024-04-01 00:00:00', max='2024-04-30 23:59:59', random=True, dom='1,15,last')"/>
+        <key name="day" script="d.day"/>
+    </generate>
+    <generate name="days31" count="40">
+        <key name="d" generator="DateTimeGenerator(min='2024-01-01 00:00:00', max='2024-01-31 23:59:59', random=True, dom='1,15,last')"/>
+        <key name="day" script="d.day"/>
+    </generate>
+    <generate name="last_only" count="40">
+        <key name="d" generator="DateTimeGenerator(min='2024-02-01 00:00:00', max='2024-02-29 23:59:59', random=True, dom='last')"/>
+        <key name="day" script="d.day"/>
+    </generate>
+    <generate name="dup_last31" count="40">
+        <key name="d" generator="DateTimeGenerator(min='2024-01-01 00:00:00', max='2024-01-31 23:59:59', random=True, dom='31,last')"/>
+        <key name="day" script="d.day"/>
+    </generate>
+    <generate name="missing31" count="40">
+        <key name="d" generator="DateTimeGenerator(min='2024-04-01 00:00:00', max='2024-04-30 23:59:59', random=True, dom='31,last')"/>
+        <key name="day" script="d.day"/>
+    </generate>
+    <generate name="range_last" count="40">
+        <key name="d" generator="DateTimeGenerator(min='2024-04-01 00:00:00', max='2024-04-30 23:59:59', random=True, dom='3-4,last')"/>
+        <key name="day" script="d.day"/>
+    </generate>
+</setup>
