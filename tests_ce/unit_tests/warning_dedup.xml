@@ -1,0 +1,4 @@
+<setup rngSeed="7">
+    <echo>{missing_warning_scope_value}</echo>
+    <echo>{missing_warning_scope_value}</echo>
+</setup>

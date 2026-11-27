@@ -7,9 +7,10 @@ from __future__ import annotations
 
 import os
 from collections.abc import Iterator
-from contextlib import contextmanager
-from contextvars import ContextVar
+from contextlib import AbstractContextManager, contextmanager
+from contextvars import ContextVar, Token
 from dataclasses import dataclass
+from types import TracebackType
 from typing import overload
 
 from datamimic_ce.errors.base import (
@@ -62,9 +63,27 @@ from datamimic_ce.errors.formatters import (
     warning_message,
 )
 
-# task_warning is fire-and-forget + idempotent per rendered message → dedup here (parity with the
-# model-layer flood guard) so the same combination warns once, not once per re-parse/worker.
-_emitted_warnings: set[tuple[int, str]] = set()
+_run_warnings: ContextVar[set[tuple[int, str]] | None] = ContextVar("run_warnings", default=None)
+# Workers outside the runtime lifecycle retain process-local deduplication.
+_process_warnings: set[tuple[int, str]] = set()
+
+
+class _TaskWarningScope(AbstractContextManager[None]):
+    def __enter__(self) -> None:
+        self._token: Token[set[tuple[int, str]] | None] = _run_warnings.set(set())
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        _run_warnings.reset(self._token)
+
+
+def task_warning_scope() -> AbstractContextManager[None]:
+    """Give each run its own warning history without rewriting frozen exceptions."""
+    return _TaskWarningScope()
 
 
 # The warnings of one run, for a caller that reports them by code and fields (authoring, #404), not as log text.
@@ -92,7 +111,9 @@ def collect_task_warnings() -> Iterator[list[CollectedWarning]]:
 
 
 def task_warning(*, code: IssueCode, once: bool = True, **kwargs: object) -> None:
-    """Emit a catalog warning once per process and rendered message; once=False always emits.
+    """Emit a catalog warning once per rendered message in this run (or process outside a run).
+
+    ``once=False`` always emits.
 
     The warning analog of ``task_config_error`` — same catalog, same drift-gated templating, same
     maintenance — differing only in that a warning is logged, not raised (severity is data on the
@@ -115,9 +136,12 @@ def task_warning(*, code: IssueCode, once: bool = True, **kwargs: object) -> Non
         )
     msg = warning_message(code=code, **kwargs)
     key = (os.getpid(), msg)
-    if not once or key not in _emitted_warnings:
+    emitted_warnings = _run_warnings.get()
+    if emitted_warnings is None:
+        emitted_warnings = _process_warnings
+    if not once or key not in emitted_warnings:
         if once:
-            _emitted_warnings.add(key)
+            emitted_warnings.add(key)
         logger.warning("%s", msg)
 
 
