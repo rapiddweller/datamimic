@@ -28,6 +28,7 @@ from datamimic_ce.engine.runtime.storage.global_increment import GlobalIncrement
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
 from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task
 from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask, SetupSubTask
+from datamimic_ce.errors import MissingMemstoreProductError
 
 
 class SetupTask:
@@ -99,7 +100,11 @@ class SetupTask:
     def memstore_rows(self, memstore_id: str, entity: str) -> list[object] | None:
         if not self._memstore_manager.contain(memstore_id):
             return None
-        return self._memstore_manager.get_memstore(memstore_id).get_all_data_by_type(entity)
+        try:
+            return self._memstore_manager.get_memstore(memstore_id).get_all_data_by_type(entity)
+        except MissingMemstoreProductError:
+            # Build inspects declared targets, including stores that did not receive the product.
+            return []
 
     @staticmethod
     def execute_statements(setup_stmt: SetupStatement, root_context: SetupContext) -> None:
