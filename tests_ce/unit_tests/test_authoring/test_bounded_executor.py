@@ -343,6 +343,43 @@ def test_child_crash_is_typed_and_does_not_wait_for_timeout(tmp_path):
         assert "exit code 17" in result.diagnostics[0].message
 
 
+@pytest.mark.parametrize("descendant_still_alive", [False, True])
+def test_windows_process_cleanup_waits_for_descendants(monkeypatch, descendant_still_alive):
+    from contextlib import nullcontext
+    from types import SimpleNamespace
+    from unittest.mock import ANY, Mock, call
+
+    import psutil
+
+    from datamimic_ce.authoring.adapters import bounded_executor
+
+    worker = Mock()
+    steps = Mock()
+    steps.process.return_value.children.return_value = [worker]
+    steps.taskkill.return_value.returncode = 0
+    steps.wait_descendants.return_value = ([], [worker]) if descendant_still_alive else ([worker], [])
+    monkeypatch.setattr(bounded_executor, "os", SimpleNamespace(name="nt"))
+    monkeypatch.setattr(bounded_executor.subprocess, "run", steps.taskkill)
+    monkeypatch.setattr(psutil, "Process", steps.process)
+    monkeypatch.setattr(psutil, "wait_procs", steps.wait_descendants)
+    launcher = SimpleNamespace(pid=321, wait=steps.wait_launcher)
+
+    outcome = (
+        pytest.raises(OSError, match="bounded descendants did not stop") if descendant_still_alive else nullcontext()
+    )
+    with outcome:
+        bounded_executor._terminate_process_tree(launcher)
+
+    assert steps.mock_calls == [
+        call.process(321),
+        call.process().children(recursive=True),
+        call.taskkill(["taskkill", "/PID", "321", "/T", "/F"], capture_output=True, timeout=2, check=False),
+        call.wait_launcher(timeout=1),
+        call.wait_descendants([worker], timeout=ANY),
+    ]
+    assert 0 <= steps.wait_descendants.call_args.kwargs["timeout"] <= 1
+
+
 def test_process_cleanup_failure_blocks_success_after_actual_reap(tmp_path, monkeypatch):
     from datamimic_ce.authoring.adapters import bounded_executor
 
