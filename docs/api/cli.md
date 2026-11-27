@@ -289,3 +289,10 @@ its cause with `not_run_reason`: `input`, `build_rejected`, or
 `side_effects_not_allowed` (`null` when execution occurred). Build warning
 diagnostics, including open coverage gaps, are retained in the result. Review
 `build_outcome` and `action_required` before reporting a successful run.
+
+A passing Build puts its artifact in `build`, including the input digests in
+`build.files`. A rejected Build returns its rejection in `build` instead. Each
+listed output file carries its SHA-256 digest in `artifacts[].sha256` when readable.
+Before and after execution, the runner compares the Build files against their
+digests. `build_file_mismatches` lists any changed, missing or unreadable paths;
+`[]` means both checks matched and `null` means no comparison was made.

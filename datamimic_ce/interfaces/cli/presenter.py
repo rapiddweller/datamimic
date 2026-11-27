@@ -22,6 +22,7 @@ from datamimic_ce.authoring.domain.requests import (
     ReadyCompileDocument,
     ReadyDecompileDocument,
     ReadyWithGapsBuild,
+    RejectedBuild,
 )
 
 EXIT_FAILED = 1
@@ -157,11 +158,14 @@ def emit_authoring(
             typer.echo(f"Not run: {result.not_run_reason}")
         if result.build_outcome is not None:
             typer.echo(f"Build outcome: {result.build_outcome}")
+        if result.build_file_mismatches is not None:
+            mismatches = ", ".join(result.build_file_mismatches)
+            typer.echo(f"Build files: digest mismatch ({mismatches})" if mismatches else "Build files: digests match")
         if result.action_required is not None:
             typer.echo(f"Action required: {result.action_required}")
         for diagnostic in result.diagnostics:
             typer.echo(f"{diagnostic.severity}: {diagnostic.message}", err=True)
-        if result.not_run_reason == "build_rejected" and result.build is not None:
+        if isinstance(result.build, RejectedBuild):
             for diagnostic in result.build.diagnostics:
                 typer.echo(f"{diagnostic.severity}: {diagnostic.message}", err=True)
         typer.echo(f"Outcome: {result.outcome}")

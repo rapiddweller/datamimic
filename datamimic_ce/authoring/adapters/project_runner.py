@@ -86,11 +86,30 @@ def _log_tail(descriptor: int) -> tuple[str, ...]:
 
 class CeProjectRunner:
     def __init__(self, workspace: AuthoringWorkspaceContext, environment: Mapping[str, str] | None = None) -> None:
+        self._workspace = workspace
         self._root = workspace.root
         self._environment = {**os.environ, **(environment or {})}
 
+    def _mismatched_build_files(self, artifact: BuildArtifact) -> set[str]:
+        mismatches: set[str] = set()
+        for item in artifact.files:
+            try:
+                data = self._workspace.read_project_file(item.path)
+                digest = hashlib.sha256(data).hexdigest()
+            except (OSError, ValueError, RuntimeError):
+                # Path.resolve() may raise RuntimeError for a symlink loop on Python 3.11.
+                digest = None
+            if digest != item.sha256:
+                mismatches.add(str(item.path))
+        return mismatches
+
     def run(
-        self, params: tuple[ProjectParam, ...], timeout_seconds: int, proof: BuildArtifact | None = None
+        self,
+        params: tuple[ProjectParam, ...],
+        timeout_seconds: int,
+        proof: BuildArtifact | None = None,
+        *,
+        build_outcome: Literal["ready", "ready_with_gaps"] | None = None,
     ) -> ProjectRunExecution:
         # The task id names output/<task id>, so the record and the output files link to each other.
         task_id = uuid.uuid4().hex
@@ -105,6 +124,7 @@ class CeProjectRunner:
         descriptor, log_path = tempfile.mkstemp(prefix="datamimic-run-")
         try:
             try:
+                mismatches = self._mismatched_build_files(proof) if proof is not None else None
                 process = subprocess.Popen(  # noqa: S603 - fixed interpreter and arguments, no shell
                     command,
                     cwd=self._root,
@@ -126,6 +146,8 @@ class CeProjectRunner:
                         timed_out = True
                 if timed_out:
                     exit_code = None
+                if mismatches is not None and proof is not None:
+                    mismatches.update(self._mismatched_build_files(proof))
                 tail = _log_tail(descriptor)
             finally:
                 os.close(descriptor)
@@ -140,6 +162,7 @@ class CeProjectRunner:
                 "timeout" if timed_out else "completed" if exit_code == 0 else "failed"
             )
             ended_at = time.gmtime()
+            build_file_mismatches = tuple(sorted(mismatches)) if mismatches is not None else None
             record = ProjectRunRecord(
                 task_id=task_id,
                 actor=_actor(),
@@ -149,6 +172,8 @@ class CeProjectRunner:
                 python_version=platform.python_version(),
                 param_names=tuple(param.name for param in params),
                 proof=proof,
+                build_outcome=build_outcome,
+                build_file_mismatches=build_file_mismatches,
                 outcome=outcome,
                 exit_code=exit_code,
                 duration_seconds=round(duration, 3),
@@ -167,6 +192,7 @@ class CeProjectRunner:
             artifact_count=len(changed),
             log_tail=tail,
             record_path=record_path,
+            build_file_mismatches=build_file_mismatches,
         )
 
     def _write_record(self, record: ProjectRunRecord, started_at: time.struct_time, log: Path) -> str | None:

@@ -7,6 +7,7 @@ import shutil
 import sys
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Literal
 
 import pytest
 from pydantic import ValidationError
@@ -51,9 +52,16 @@ class FakeRunner:
         self.calls: list[tuple[ProjectParam, ...]] = []
 
     def run(
-        self, params: tuple[ProjectParam, ...], timeout_seconds: int, proof: BuildArtifact | None = None
+        self,
+        params: tuple[ProjectParam, ...],
+        timeout_seconds: int,
+        proof: BuildArtifact | None = None,
+        *,
+        build_outcome: Literal["ready", "ready_with_gaps"] | None = None,
     ) -> ProjectRunExecution:
         self.calls.append(params)
+        if proof is not None:
+            return self.execution.model_copy(update={"build_file_mismatches": ()})
         return self.execution
 
 
@@ -137,6 +145,7 @@ def test_a_build_with_open_coverage_gaps_still_runs() -> None:
     assert result.outcome == "completed"
     assert len(runner.calls) == 1
     assert result.build_outcome == "ready_with_gaps"
+    assert result.build == build.artifact
     assert result.coverage is not None and not result.coverage.seeded
     assert result.action_required == build.action_required
     assert "seeded" in (result.action_required or "")
@@ -166,6 +175,7 @@ def test_effects_without_the_flag_are_listed_and_nothing_runs() -> None:
     result = workflow(ready_build(), (EFFECT,), runner).execute(ProjectRunRequest())
     assert result.outcome == "not_run" and result.required_side_effects == (EFFECT,)
     assert result.not_run_reason == "side_effects_not_allowed"
+    assert isinstance(result.build, BuildArtifact) and result.build_file_mismatches is None
     assert result.diagnostics[0].code.value == "side_effect"
     assert runner.calls == []
 
@@ -474,6 +484,13 @@ def test_cli_text_prints_build_diagnostics_when_project_is_rejected(tmp_path: Pa
 def test_project_run_result_validates_workflow_shapes_and_exit_fields() -> None:
     from datamimic_ce.authoring.domain.project_run import ProjectRunResult
 
+    build_schema = ProjectRunResult.model_json_schema()["properties"]["build"]["anyOf"]
+    assert {arm.get("$ref", arm.get("type")) for arm in build_schema} == {
+        "#/$defs/BuildArtifact",
+        "#/$defs/RejectedBuild",
+        "null",
+    }
+
     ready = ready_build()
     gaps = gaps_build()
     valid_results = (
@@ -499,6 +516,9 @@ def test_project_run_result_validates_workflow_shapes_and_exit_fields() -> None:
         {**completed, "outcome": "timeout", "exit_code": 0},
         {**completed, "outcome": "failed", "exit_code": None},
         {**completed, "duration_seconds": None},
+        {**completed, "build": None},
+        {**completed, "build_file_mismatches": None},
+        {**completed, "build": rejected["build"]},
         {**input_error, "exit_code": 0},
         {**input_error, "duration_seconds": 0.1},
         {**input_error, "artifacts": [{"path": "out.csv", "bytes": 1}], "artifact_count": 1},
@@ -522,6 +542,7 @@ def test_cli_text_shows_gaps_build_outcome_and_action_required(tmp_path: Path) -
     result = CliRunner().invoke(app, ["authoring", "run-project", str(root), "--format", "text", "--timeout", "300"])
     assert result.exit_code == 0, result.output
     assert "Build outcome: ready_with_gaps" in result.output
+    assert "Build files: digests match" in result.output
     assert "Action required:" in result.output
 
 
@@ -552,6 +573,9 @@ def test_a_real_run_keeps_the_full_log_and_an_audit_record(tmp_path: Path, monke
     assert len(log) > len(result.log_tail) == 3 and tuple(log[-3:]) == result.log_tail
     assert any(f"Task ID: {record.task_id}" in line for line in log)
     assert record.proof == proof and record.outcome == "completed" and record.exit_code == 0
+    assert result.build == proof
+    assert record.build_outcome == result.build_outcome == "ready"
+    assert record.build_file_mismatches == result.build_file_mismatches == ()
     assert record.param_names == ("TOKEN",) and "s3cret" not in (root / result.record_path / "run.json").read_text()
     csv_file = next(artifact for artifact in record.outputs if artifact.path.endswith(".csv"))
     assert csv_file.path.startswith(f"output/{record.task_id}/")  # the output folder carries the task id of the record
@@ -608,6 +632,7 @@ def test_a_failed_or_timed_out_run_still_gets_a_record(
 
     record = _record(root, run.record_path)
     assert record.exit_code == run.exit_code == expected_exit and record.proof is None
+    assert record.build_outcome is None and record.build_file_mismatches is None
     assert record.outcome == expected_outcome
     assert run.timed_out is (expected_outcome == "timeout")
     assert (root / run.record_path / "run.log").read_text(encoding="utf-8").splitlines()[0] in {"boom", "start"}
