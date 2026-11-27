@@ -322,9 +322,7 @@ def test_mongo_driver_error_normalizes_vendor_details(monkeypatch):
         def __exit__(self, *args):
             return False
 
-    monkeypatch.setattr(
-        "datamimic_ce.engine.io.clients.mongodb_client.MongoClient", lambda **kwargs: FailedConnection()
-    )
+    monkeypatch.setattr("pymongo.MongoClient", lambda **kwargs: FailedConnection())
     client = MongoDBClient(MongoDBConnectionConfig(host="localhost", port=27017, database="test"))
     with pytest.raises(OperationError) as caught:
         client.get("find:'customers',filter:{}")

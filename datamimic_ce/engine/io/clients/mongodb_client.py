@@ -4,17 +4,15 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+from __future__ import annotations
+
 import json
 import logging
 import re
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from decimal import Decimal
-from typing import TypeGuard
-
-from bson.decimal128 import Decimal128
-from pymongo import MongoClient, UpdateOne
-from pymongo.errors import PyMongoError
+from typing import TYPE_CHECKING, TypeGuard
 
 from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import (
     META_SELECTOR,
@@ -26,6 +24,9 @@ from datamimic_ce.engine.io.clients.entity_serialization import stringify_entity
 from datamimic_ce.engine.io.connection_config.mongodb_connection_config import MongoDBConnectionConfig
 from datamimic_ce.engine.io.contracts import DataSourcePagination
 from datamimic_ce.errors import IssueCode, invalid_source_error, is_user_error, operation_error
+
+if TYPE_CHECKING:
+    from pymongo import MongoClient
 
 logger = logging.getLogger("DATAMIMIC")
 
@@ -56,6 +57,8 @@ class MongoDBClient(DatabaseClient):
         (MongoDB's native 128-bit decimal): lossless, unlike a float cast. Applied on every write so a
         DATAMIMIC ``type="decimal"`` field round-trips through mongo."""
         if isinstance(value, Decimal):
+            from bson.decimal128 import Decimal128
+
             return Decimal128(value)
         value = stringify_entity_value(value)  # whole entity bound to a field -> str(entity.to_dict())
         if isinstance(value, Mapping):
@@ -69,6 +72,8 @@ class MongoDBClient(DatabaseClient):
         """Inverse of ``_to_bson``: ``bson.Decimal128`` -> ``decimal.Decimal`` on read, so a script that
         does arithmetic on a stored decimal (``product.price * qty``) gets a Python Decimal, not a
         Decimal128 (which has no numeric operators)."""
+        from bson.decimal128 import Decimal128
+
         if isinstance(value, Decimal128):
             return value.to_decimal()
         if isinstance(value, Mapping):
@@ -118,6 +123,9 @@ class MongoDBClient(DatabaseClient):
 
     @contextmanager
     def _create_connection(self) -> Iterator[MongoClient]:
+        from pymongo import MongoClient
+        from pymongo.errors import PyMongoError
+
         ars = {
             "host": self._credential.host,
             "port": self._credential.port,
@@ -430,6 +438,8 @@ class MongoDBClient(DatabaseClient):
             with self._create_connection() as conn:
                 db = conn[self._credential.database]
                 collection = db[collection_name]
+                from pymongo import UpdateOne
+
                 operation = [UpdateOne({"_id": d["_id"]}, {"$set": self._to_bson(d)}) for d in data]
                 result = collection.bulk_write(operation)
                 return result.matched_count

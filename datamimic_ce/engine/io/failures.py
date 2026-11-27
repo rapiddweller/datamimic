@@ -5,13 +5,26 @@
 """Reduce driver and parser causes to passive facts only at the bounded IPC boundary."""
 
 import pickle
+import sys
 from zipfile import BadZipFile
 
 from lxml.etree import Error as LxmlError
-from pymongo.errors import PyMongoError
-from sqlalchemy.exc import SQLAlchemyError
 
 from datamimic_ce.errors import ExternalFailureCause
+
+
+def _is_driver_error(error: BaseException) -> bool:
+    # A native driver exception can only exist once its driver is already loaded.
+    if "sqlalchemy.exc" in sys.modules:
+        from sqlalchemy.exc import SQLAlchemyError
+
+        if isinstance(error, SQLAlchemyError):
+            return True
+    if "pymongo.errors" in sys.modules:
+        from pymongo.errors import PyMongoError
+
+        return isinstance(error, PyMongoError)
+    return False
 
 
 def _is_picklable(error: BaseException) -> bool:
@@ -34,7 +47,7 @@ def normalize_error_cause_for_transport(error: BaseException) -> None:
             return
         seen.add(id(cause))
         # lxml errors do not pickle; a BadZipFile from an invalid .xlsx is no passive value either.
-        if isinstance(cause, (SQLAlchemyError, PyMongoError, LxmlError, BadZipFile)) or not _is_picklable(cause):
+        if isinstance(cause, (LxmlError, BadZipFile)) or _is_driver_error(cause) or not _is_picklable(cause):
             cause_types: list[str] = []
             nested: BaseException | None = cause
             vendor_seen: set[int] = set()

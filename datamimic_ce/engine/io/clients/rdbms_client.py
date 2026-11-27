@@ -9,16 +9,12 @@ import logging
 import sys
 from collections.abc import Iterator
 from contextlib import contextmanager, suppress
-from datetime import date, datetime
-from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
 from typing import Protocol, runtime_checkable
 from urllib.parse import quote
 
-import oracledb
 import sqlalchemy
-from mysql.connector.errors import Error as MySqlError
 from sqlalchemy import (
     BigInteger,
     Boolean,
@@ -49,42 +45,14 @@ from datamimic_ce.engine.io.clients import sql_dialect
 from datamimic_ce.engine.io.clients.database_client import DatabaseClient
 from datamimic_ce.engine.io.clients.entity_serialization import stringify_entity_value
 from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig, sqlite_database_path
+from datamimic_ce.engine.io.contracts import ColumnKind as ColumnKind
 from datamimic_ce.engine.io.contracts import DataSourcePagination
+from datamimic_ce.engine.io.contracts import column_kind_of_type as column_kind_of_type
 from datamimic_ce.errors import IssueCode, NormalizedDbError, OperationError, client_config_error, operation_error
 
 logger = logging.getLogger("DATAMIMIC")
 
 _TRUNCATE_DIALECTS = frozenset({"postgresql", "mssql"})  # SQLAlchemy dialect names
-
-
-class ColumnKind(StrEnum):
-    """Column type of a table that ``createTable`` creates; the RDBMS client maps each kind to a SQLAlchemy type."""
-
-    TEXT = "text"
-    INTEGER = "integer"
-    FLOAT = "float"
-    DECIMAL = "decimal"
-    BOOLEAN = "boolean"
-    BINARY = "binary"
-    DATE = "date"
-    DATETIME = "datetime"
-
-
-# bool before int and datetime before date: each is a subclass of the type after it.
-_VALUE_KINDS: tuple[tuple[type, ColumnKind], ...] = (
-    (bool, ColumnKind.BOOLEAN),
-    (int, ColumnKind.INTEGER),
-    (float, ColumnKind.FLOAT),
-    (Decimal, ColumnKind.DECIMAL),
-    (datetime, ColumnKind.DATETIME),
-    (date, ColumnKind.DATE),
-    (str, ColumnKind.TEXT),
-)
-
-
-def column_kind_of_type(python_type: type) -> ColumnKind | None:
-    """The column kind of a Python value type; None for a type no kind covers (NoneType included)."""
-    return next((kind for covered, kind in _VALUE_KINDS if issubclass(python_type, covered)), None)
 
 
 # SQLAlchemy create_engine kwargs DATAMIMIC forwards (pooling/behavior). Anything else in the
@@ -275,6 +243,8 @@ class RdbmsClient(DatabaseClient):
 
             case Dbms.ORACLE:
                 # Set OracleDB version and import the necessary module
+                import oracledb
+
                 oracledb.version = "8.3.0"
                 sys.modules["cx_Oracle"] = oracledb
                 self._engine = create_sqlalchemy_engine(dbms, user, password, host, port, f"?service_name={db}")
@@ -1054,12 +1024,20 @@ def _database_error_facts(error: sqlalchemy.exc.SQLAlchemyError) -> NormalizedDb
     if isinstance(original, _HasSqliteCode):
         code = original.sqlite_errorcode
         return NormalizedDbError(str(code), _SQLITE_CATEGORIES.get(code & 0xFF), type(error).__name__)
-    if isinstance(original, MySqlError):
-        mysql_code = original.errno
-        return NormalizedDbError(str(mysql_code), _MYSQL_CATEGORIES.get(mysql_code), type(error).__name__)
-    if isinstance(original, oracledb.Error) and original.args and isinstance(original.args[0], _HasOracleCode):
-        oracle_code = original.args[0].code
-        return NormalizedDbError(f"ORA-{oracle_code:05d}", _ORACLE_CATEGORIES.get(oracle_code), type(error).__name__)
+    if "mysql.connector.errors" in sys.modules:
+        from mysql.connector.errors import Error as MySqlError
+
+        if isinstance(original, MySqlError):
+            mysql_code = original.errno
+            return NormalizedDbError(str(mysql_code), _MYSQL_CATEGORIES.get(mysql_code), type(error).__name__)
+    if "oracledb" in sys.modules:
+        from oracledb import Error as OracleError
+
+        if isinstance(original, OracleError) and original.args and isinstance(original.args[0], _HasOracleCode):
+            oracle_code = original.args[0].code
+            return NormalizedDbError(
+                f"ORA-{oracle_code:05d}", _ORACLE_CATEGORIES.get(oracle_code), type(error).__name__
+            )
     for value in (
         original.pgcode if isinstance(original, _HasPgCode) else None,
         original.sqlstate if isinstance(original, _HasSqlState) else None,

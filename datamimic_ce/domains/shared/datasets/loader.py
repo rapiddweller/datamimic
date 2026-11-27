@@ -3,12 +3,13 @@ from __future__ import annotations
 import random
 from collections.abc import Sequence
 from pathlib import Path
-from typing import TypeAlias, TypeGuard
-
-from pandas import DataFrame
+from typing import TYPE_CHECKING, TypeAlias, TypeGuard
 
 from datamimic_ce.domains.domain_core.datasets.path import dataset_path, packaged_domain_data_root
 from datamimic_ce.engine.io.files.api import FileContentStorage, FileUtil, JsonValue, packaged_dataset_scope
+
+if TYPE_CHECKING:
+    from pandas import DataFrame
 
 CsvRow: TypeAlias = tuple[str, ...]
 CsvRecord: TypeAlias = dict[str, str]

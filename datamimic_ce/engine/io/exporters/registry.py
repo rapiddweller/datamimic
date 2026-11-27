@@ -21,8 +21,7 @@ from datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants import (
 )
 from datamimic_ce.engine.dsl.vocabulary.enums.operation_enums import ExportOperation
 from datamimic_ce.engine.io.clients.client import RegisteredClient
-from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
-from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
+from datamimic_ce.engine.io.clients.operations import is_mongodb_client, is_rdbms_client
 from datamimic_ce.engine.io.contracts import Exporter, SmokeExportRequest
 from datamimic_ce.engine.io.exporters.core.exporter_config import ExporterConfig
 from datamimic_ce.engine.io.exporters.core.exporter_context import ExporterContext
@@ -112,13 +111,13 @@ def create_exporter_list(
 
 def _client_operations(client: RegisteredClient | None) -> tuple[ExportOperation, ...]:
     """The operations a client family accepts; an unknown client keeps the full set, its own error follows."""
-    return ExportOperation.for_rdbms() if isinstance(client, RdbmsClient) else ExportOperation.for_mongodb()
+    return ExportOperation.for_rdbms() if is_rdbms_client(client) else ExportOperation.for_mongodb()
 
 
 def _create_exporter_from_client(client: RegisteredClient | None, client_name: str) -> Exporter:
-    if isinstance(client, MongoDBClient):
+    if is_mongodb_client(client):
         return MongoDBExporter(client)
-    if isinstance(client, RdbmsClient):
+    if is_rdbms_client(client):
         return DatabaseExporter(client)
     raise export_config_error(
         code=IssueCode.EXPORT_TARGET_NOT_FOUND,

@@ -1,0 +1,5 @@
+<setup rngSeed="443" defaultSeparator=",">
+    <generate name="rows" count="3" target="CSV">
+        <key name="value" generator="IncrementGenerator"/>
+    </generate>
+</setup>
