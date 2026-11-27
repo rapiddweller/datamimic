@@ -107,7 +107,8 @@ def test_overlapping_table_creation(dbms):
         user=profile[prefix + "user"],
         password=profile[prefix + "password"],
         db_schema=None,
-        isolation_level="AUTOCOMMIT",
+        # PostgreSQL must open a real transaction for the advisory lock even on an autocommit engine.
+        isolation_level="AUTOCOMMIT" if dbms is Dbms.POSTGRESQL else None,
     )
     clients = [RdbmsClient(config), RdbmsClient(config)]
     table = "ce_create_" + uuid4().hex[:16]
