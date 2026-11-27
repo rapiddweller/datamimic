@@ -73,13 +73,20 @@ def test_memstore_remove_not_existing_ids(project_dir):
 
 
 @pytest.mark.parametrize(
-    "descriptor", ["test_memstore_read_unwritten_generate.xml", "test_memstore_read_unwritten_variable.xml"]
+    "descriptor",
+    [
+        "test_memstore_read_unwritten_generate.xml",
+        "test_memstore_read_unwritten_variable.xml",
+        "test_memstore_read_unwritten_full_pool.xml",
+        "test_memstore_count_unwritten.xml",
+    ],
 )
 def test_reading_a_memstore_entity_that_no_product_wrote_fails(descriptor: str) -> None:
-    """#422: a read of an entity that no product wrote used to log an ERROR and go on with zero rows."""
+    """All readers surface the missing-entity diagnostic for an unwritten entity."""
     engine = DataMimicTest(_dir, descriptor, capture_test_result=True)
-    with pytest.raises(MissingMemstoreProductError):
+    with pytest.raises(MissingMemstoreProductError) as caught:
         engine.test_with_timer()
+    assert caught.value.product_type == "slot"
 
 
 def test_a_sibling_read_of_a_nested_memstore_product_fails_with_guidance_that_names_the_timing() -> None:
@@ -98,7 +105,7 @@ def test_memstore_write_timing_classes() -> None:
     engine.test_with_timer()
     result = engine.capture_result()
     assert len(result.get("empty_reader", [])) == 0
-    assert result["empty_count"] == [{"n": 0}]
+    assert result["empty_count"] == [{"n": 0, "script_count": 0}]
     assert len(result["inner_reader"]) == 4
     assert len(result.get("skipped_reader", [])) == 0
 

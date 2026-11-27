@@ -121,9 +121,10 @@ neither registration nor seeded values change in this ownership step.
 
 The old `get_data_by_type(entity, pagination, cyclic)` call is removed. Use
 `get_data_by_type(entity)` for strict raw access: it returns the live stored
-list, raises `KeyError` for a missing entity, and returns `[]` for an existing
-empty entity. `get_all_data_by_type(entity)` is lenient and returns `[]` when
-the entity is missing. Scripts that need paging or cyclic reads should use the
+list, raises `MissingMemstoreProductError` (a `KeyError`) for an unwritten
+entity, and returns `[]` for an existing empty entity. `get_all_data_by_type(entity)`
+uses the same lookup, and `entityCount(entity)` uses it to count rows.
+Scripts that need paging or cyclic reads should use the
 DSL source path (`source="mem"`, `sourceEntity="…"`, with `pageSize` or `cyclic`) so IO
 owns selection; do not pass paging policy to the raw getter. `offset` remains
 file-only for Generate sources.
