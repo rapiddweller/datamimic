@@ -123,6 +123,17 @@ AUTHORING_RULE_CATALOG: tuple[RuleCatalogEntry, ...] = (
         remediation="Check the group key and amount fields, then correct the postings so each group balances.",
     ),
     RuleCatalogEntry(
+        rule_id=ExpectationIntentKind.GROUP_COUNT,
+        category="expectation",
+        severity="error",
+        description="Every group that a reference product lists holds its declared number of rows, and no group "
+        "outside the reference appears.",
+        applicability="Explicit group-count expectations on complete captures of the subject and the reference.",
+        owner=RuleOwner.EXPECTATION,
+        remediation="Check the group key and count fields, then correct the rows so each group has its declared "
+        "count; a group without rows counts 0.",
+    ),
+    RuleCatalogEntry(
         rule_id=AuthoringRuleId.MISSING_EXPECTATION,
         category="expectation",
         severity="error",

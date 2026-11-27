@@ -41,7 +41,9 @@ from sqlalchemy.schema import CreateTable
 from sqlalchemy.types import TypeEngine
 
 from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
-from datamimic_ce.engine.io.clients import sql_dialect
+
+# isort: split
+import datamimic_ce.engine.io.clients.sql_dialect as sql_dialect
 from datamimic_ce.engine.io.clients.database_client import DatabaseClient
 from datamimic_ce.engine.io.clients.entity_serialization import stringify_entity_value
 from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig, sqlite_database_path
@@ -242,12 +244,18 @@ class RdbmsClient(DatabaseClient):
                     )
 
             case Dbms.ORACLE:
-                # Set OracleDB version and import the necessary module
-                import oracledb
-
-                oracledb.version = "8.3.0"
-                sys.modules["cx_Oracle"] = oracledb
-                self._engine = create_sqlalchemy_engine(dbms, user, password, host, port, f"?service_name={db}")
+                # SQLAlchemy's oracledb dialect selects the python-oracledb driver itself.
+                try:
+                    self._engine = create_sqlalchemy_engine(
+                        "oracle+oracledb", user, password, host, port, f"?service_name={db}"
+                    )
+                except ImportError as error:
+                    raise client_config_error(
+                        code=IssueCode.CLIENT_PREFLIGHT_INVALID_CONFIGURATION,
+                        client_id="database",
+                        kind=dbms.value,
+                        reason="the python-oracledb driver is not installed",
+                    ) from error
 
             case _:
                 # For other DBMS types, use a generic method to get the driver and create the engine

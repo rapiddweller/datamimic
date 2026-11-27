@@ -1,0 +1,11 @@
+<setup rngSeed="7">
+    <generate name="classes" count="3" target="ConsoleExporter">
+        <variable name="index" generator="IncrementGenerator"/>
+        <key name="class_id" script="('A', 2, 'C')[index - 1]"/>
+        <key name="seats" script="(2, 1, 0)[index - 1]"/>
+    </generate>
+    <generate name="bookings" count="3" target="ConsoleExporter">
+        <variable name="index" generator="IncrementGenerator"/>
+        <key name="booked_class" script="('A', 'A', 2)[index - 1]"/>
+    </generate>
+</setup>

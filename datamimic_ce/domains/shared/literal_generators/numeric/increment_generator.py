@@ -20,14 +20,17 @@ class IncrementGenerator(BaseLiteralGenerator):
     def __init__(self, start: int = 1, end: int = 9223372036854775807, step: int = 1):
         if step <= 0:
             raise ValueError("Step must be a positive integer.")
+        self._base_start = start
+        self._base_end = end
         self._start = start
         self._end = end
         self._current = start
         self._step = step
 
     def add_pagination(self, skip: int, limit: int) -> None:
-        self._start += skip
-        self._end = min(self._end, self._start + limit)
+        # Derive the window from the original bounds so repeated calls do not accumulate.
+        self._start = self._base_start + skip * self._step
+        self._end = min(self._base_end, self._start + limit * self._step)
         self._current = self._start
 
     def generate(self) -> int:

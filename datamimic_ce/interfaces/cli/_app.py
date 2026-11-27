@@ -5,8 +5,8 @@ from typing import Annotated
 
 import typer
 
-from datamimic_ce.interfaces.cli import authoring as cli_authoring
-from datamimic_ce.interfaces.cli import runtime as cli_runtime
+import datamimic_ce.interfaces.cli.authoring as cli_authoring
+import datamimic_ce.interfaces.cli.runtime as cli_runtime
 from datamimic_ce.interfaces.demo import demo_autocomplete
 
 app = typer.Typer(

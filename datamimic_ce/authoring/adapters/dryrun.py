@@ -224,8 +224,14 @@ _SCOPE_HINT = (
 
 
 _VALUE_HINT = (
-    "A function rejected the value that the script read, for example int() or float() on text that is not a number. "
-    "Check the value the script reads. Keep a text key as text: cast only a value that holds a number."
+    "A function rejected the value that the script read. Check the value the script reads and the input that the "
+    "function accepts; the error type and line above name the failing call."
+)
+
+
+_SCRIPT_ERROR_HINT = (
+    "The script raised an error while it ran. The error type and line above name it; check the expression and the "
+    "values it reads."
 )
 
 
@@ -276,7 +282,12 @@ def _runtime_hint(err: Exception) -> str:
                 if isinstance(current.__cause__, ExternalFailureCause):
                     return _OWN_CODE_HINT
                 # A value the function rejects (int('B01')) is no scope problem, and a cast does not repair text.
-                return _VALUE_HINT if isinstance(current.__cause__, ValueError) else _SCOPE_HINT
+                if isinstance(current.__cause__, ValueError):
+                    return _VALUE_HINT
+                # Only a failed name lookup or a mistyped operand (text + number) fits the scope and cast advice.
+                if isinstance(current.__cause__, NameError | AttributeError | TypeError):
+                    return _SCOPE_HINT
+                return _SCRIPT_ERROR_HINT
             if isinstance(current, TaskConfigError) and current.kept_rows is not None:
                 return _KEPT_ROWS_HINT
             return issue.guidance or issue.resolution
@@ -1063,7 +1074,7 @@ def _decode_worker_payload(payload: bytes) -> object:
     from uuid import UUID
     from xml.parsers.expat import ExpatError
 
-    from datamimic_ce.errors import base as errors
+    import datamimic_ce.errors.base as errors
     from datamimic_ce.errors.codes import DomainErrorCode, ErrorCode, IssueCode
     from datamimic_ce.errors.context import DescriptorLocation
 
