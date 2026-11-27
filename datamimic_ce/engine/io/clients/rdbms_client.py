@@ -829,8 +829,19 @@ class RdbmsClient(DatabaseClient):
             params = {"schema": schema, "table": table_name}
             counter = connection.execute(counter_query, params).scalar_one_or_none()
             if counter is None:
-                raise ValueError("SequenceTableGenerator requires a MySQL table with an AUTO_INCREMENT column")
-            start = int(counter)
+                # Fresh InnoDB tables can report NULL until the default counter is initialized.
+                # Do not treat a missing counter on a populated table as the default start.
+                fresh = connection.execute(
+                    text(
+                        "SELECT EXISTS (SELECT 1 FROM information_schema.COLUMNS "
+                        "WHERE table_schema = :schema AND table_name = :table AND EXTRA = 'auto_increment') "
+                        f"AND NOT EXISTS (SELECT 1 FROM {table})"
+                    ),
+                    params,
+                ).scalar()
+                if not fresh:
+                    raise ValueError("SequenceTableGenerator could not read the MySQL AUTO_INCREMENT counter")
+            start = 1 if counter is None else int(counter)
             end = start + increment
             connection.execute(text(f"ALTER TABLE {table} AUTO_INCREMENT = {end}"))
             advanced = connection.execute(counter_query, params).scalar_one_or_none()

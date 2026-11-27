@@ -428,15 +428,17 @@ def test_sequence_key_task_repeated_invocation_of_the_same_page_reserves_a_new_b
 
 @pytest.mark.parametrize("prepare", [True, False])
 @pytest.mark.parametrize("honor_lock", [True, False], ids=["serialized", "negative-control"])
-@pytest.mark.parametrize("dbms", [Dbms.POSTGRESQL, Dbms.MYSQL])
-def test_sequence_reservation_under_forced_interleaving(setup_context, monkeypatch, prepare, honor_lock, dbms):
+@pytest.mark.parametrize(("dbms", "start_at"), [(Dbms.POSTGRESQL, 1020), (Dbms.MYSQL, 1020), (Dbms.MYSQL, 1)])
+def test_sequence_reservation_under_forced_interleaving(
+    setup_context, monkeypatch, prepare, honor_lock, dbms, start_at
+):
     second_context = copy.deepcopy(setup_context)
     first_read = Event()
     second_attempt = Event()
     lock = Lock()
     # One backend has already requested nextval() on a CACHE 20 sequence starting at 1000.
     # Its local cache is below the shared high-water mark, which is the only value we read.
-    next_value = 1020
+    next_value = start_at
 
     def run(context, first):
         client = object.__new__(RdbmsClient)
@@ -473,7 +475,9 @@ def test_sequence_reservation_under_forced_interleaving(setup_context, monkeypat
                     first_read.set()
                     assert second_attempt.wait(5)
                 result.one.return_value = (snapshot - 1, True)
-                result.scalar_one_or_none.return_value = snapshot
+                result.scalar_one_or_none.return_value = None if snapshot == 1 else snapshot
+            elif "information_schema.COLUMNS" in sql:
+                result.scalar.return_value = 1  # Uninitialized AUTO_INCREMENT on an empty table.
             elif "setval" in sql:
                 next_value = params["last_value"] + 1
             elif "ALTER TABLE" in sql:
@@ -505,8 +509,8 @@ def test_sequence_reservation_under_forced_interleaving(setup_context, monkeypat
         first = executor.submit(run, setup_context, True)
         assert first_read.wait(5)
         second = executor.submit(run, second_context, False)
-        assert first.result() == list(range(1020, 1025))
-        second_start = 1025 if honor_lock else 1020
+        assert first.result() == list(range(start_at, start_at + 5))
+        second_start = start_at + 5 if honor_lock else start_at
         assert second.result() == list(range(second_start, second_start + 5))
 
 
@@ -554,4 +558,13 @@ def test_lazy_sequence_reserves_once_per_nested_generate_invocation(run_with_seq
         {"owner": owner, "id": identifier}
         for owner, start in ((1, 1000), (2, 1003))
         for identifier in range(start, start + 3)
+    ]
+
+
+def test_sequence_reserves_each_nested_lists_own_cardinality(run_with_sequence_counter):
+    captured, reservations = run_with_sequence_counter("sequence_table_nested_list.xml")
+    assert reservations == [3, 3]
+    assert [[item["id"] for item in row["items"]] for row in captured["parents"]] == [
+        [1000, 1001, 1002],
+        [1003, 1004, 1005],
     ]

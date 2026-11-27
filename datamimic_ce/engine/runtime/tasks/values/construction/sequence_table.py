@@ -5,7 +5,13 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from datamimic_ce.domains.api import BaseLiteralGenerator
-from datamimic_ce.engine.dsl.api import KeyStatement, Statement, VariableStatement, get_nearest_generate_statement
+from datamimic_ce.engine.dsl.api import (
+    KeyStatement,
+    NestedKeyStatement,
+    Statement,
+    VariableStatement,
+    get_nearest_generate_statement,
+)
 from datamimic_ce.engine.io.api import (
     Client,
     DataSourcePagination,
@@ -34,6 +40,7 @@ class SequenceTableGenerator(BaseLiteralGenerator):
         context: Context,
         stmt: KeyStatement | VariableStatement,
         sequence: str | None = None,
+        pagination: DataSourcePagination | None = None,
     ):
         """
         Initialize the sequence table generator.
@@ -47,6 +54,7 @@ class SequenceTableGenerator(BaseLiteralGenerator):
                 sequence that doesn't exist is still auto-created starting at 1, so a typo'd
                 explicit name silently mints a fresh sequence instead of erroring - against a
                 live table with real rows that means duplicate keys.
+            pagination: The page, or the complete local window for a nestedKey child.
 
         Raises:
             ValueError: If required attributes are missing or invalid
@@ -78,6 +86,7 @@ class SequenceTableGenerator(BaseLiteralGenerator):
             raise generator_config_error(reason="Root generate statement is required")
         self._root_gen_stmt = root_gen_stmt
         self._generation_plan = root_gen_stmt.generation_plan
+        self._nested_window = pagination if isinstance(stmt.parent_stmt, NestedKeyStatement) else None
 
         # Initialize sequence with process-safe range
         try:
@@ -90,7 +99,10 @@ class SequenceTableGenerator(BaseLiteralGenerator):
                         "set numProcess=1 because MySQL has no atomic native sequence reservation"
                     )
                 )
-            if self._generation_plan is not None:
+            if self._nested_window is not None:
+                total_count = self._nested_window.limit
+                total_processes = 1
+            elif self._generation_plan is not None:
                 _, total_count = self._generation_plan
             else:
                 count = root_gen_stmt.count
@@ -109,7 +121,10 @@ class SequenceTableGenerator(BaseLiteralGenerator):
                 reason=f"SequenceTableGenerator initialization failed ({type(e).__name__})"
             ) from e
 
-    def matches_invocation(self, stmt: Statement) -> bool:
+    def matches_invocation(self, stmt: Statement, pagination: DataSourcePagination | None) -> bool:
+        # NestedKeyTask creates a fresh, unshared pagination object for each local window.
+        if isinstance(stmt.parent_stmt, NestedKeyStatement) and self._nested_window is not pagination:
+            return False
         generate = get_nearest_generate_statement(stmt)
         return generate is not None and generate.generation_plan == self._generation_plan
 

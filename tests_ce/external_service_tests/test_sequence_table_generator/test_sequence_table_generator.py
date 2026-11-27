@@ -70,10 +70,7 @@ def test_concurrent_sequence_reservations(dbms, cached):
     try:
         minimum = 1
         if dbms is Dbms.MYSQL:
-            writer.execute_sql_script(
-                f"CREATE TABLE {table} (id BIGINT AUTO_INCREMENT PRIMARY KEY) ENGINE=InnoDB AUTO_INCREMENT=500"
-            )
-            minimum = 500
+            writer.execute_sql_script(f"CREATE TABLE {table} (id BIGINT AUTO_INCREMENT PRIMARY KEY) ENGINE=InnoDB")
         elif cached:
             # This backend caches 500..563. Reuse the same pooled backend for a reservation
             # so a nextval()-based implementation would see 501, below the shared boundary.
