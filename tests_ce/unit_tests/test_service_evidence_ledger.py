@@ -336,3 +336,37 @@ def test_live_test_inventory_excludes_deleted_tracked_sources(tmp_path: Path, mo
     )
 
     assert service_inventory.tracked_test_sources() == [live_source]
+
+
+def test_build_report_reads_each_test_source_once_and_keeps_candidates(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from script.architecture_study import service_inventory
+
+    monkeypatch.setattr(service_inventory, "REPO", tmp_path)
+    records = []
+    for name in ("a.xml", "b.xml", "c.xml"):
+        (tmp_path / name).write_text("<setup><database system='sqlite'/></setup>", encoding="utf-8")
+        records.append({"path": name, "category": ["external-service"]})
+    mentions_a = tmp_path / "test_one.py"
+    mentions_a.write_text("run('a.xml')\n", encoding="utf-8")
+    mentions_ab = tmp_path / "test_two.py"
+    mentions_ab.write_text("run('a.xml'); run('b.xml')\n", encoding="utf-8")
+
+    reads: list[Path] = []
+    original = Path.read_text
+
+    def counting_read_text(self: Path, *args: object, **kwargs: object) -> str:
+        reads.append(self)
+        return original(self, *args, **kwargs)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(Path, "read_text", counting_read_text)
+
+    report = service_inventory.build_report(records, [mentions_a, mentions_ab])
+
+    assert sorted(reads) == sorted([mentions_a, mentions_ab])
+    assert {entry["path"]: entry["owner_candidates"] for entry in report["entries"]} == {
+        "a.xml": ["test_one.py", "test_two.py"],
+        "b.xml": ["test_two.py"],
+        "c.xml": [],
+    }
