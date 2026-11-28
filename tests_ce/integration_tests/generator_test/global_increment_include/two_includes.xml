@@ -1,0 +1,4 @@
+<setup>
+    <include uri="step.xml"/>
+    <include uri="step.xml"/>
+</setup>

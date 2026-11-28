@@ -1,0 +1,5 @@
+<setup>
+    <generate name="more" count="2" target="">
+        <key name="id" generator="counter"/>
+    </generate>
+</setup>

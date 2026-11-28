@@ -13,8 +13,8 @@ class GlobalIncrementGenerator(BaseLiteralGenerator):
     """Monotonic counter per qualified field within one root setup context.
 
     Nested parents and page rebuilds continue the same counter; distinct qualified
-    fields have separate counters starting at 1. Includes clone their root context
-    and retain independent counter state. CE executes a containing generate
+    fields have separate counters starting at 1. Includes share the counter of the
+    run that contains them. CE executes a containing generate
     in one process, overriding multiprocessing/Ray requests to prevent repeats.
     """
 
