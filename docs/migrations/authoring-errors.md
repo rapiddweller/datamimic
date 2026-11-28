@@ -56,9 +56,9 @@ derive the limit the same way.
 
 ### Failed assert (#420)
 
-A failed `<assert>` rejects Build with `assert_failed` at the assert line, keeps the
+A failed `<assert>` rejects Build with `I895` at the assert line, keeps the
 products that completed before it and lists the other checks as `not_executed`.
-`assert_failed` echoes only a literal message: text without `{`, `}` or `__`, at most
+`expected` carries only a literal assert message: text without `{`, `}` or `__`, at most
 200 characters. It is author text from the descriptor file, never a resolved value.
 `datamimic run` uses the same rule (#438). For any other message it prints
 "The message of the <assert> at line N is not shown" and the name of the descriptor file.
@@ -97,7 +97,7 @@ The model refuses `where`/`columns` without `source` (`DM214`) and `where` with 
 (`DM218`); lint, dry-run and Build report these central rules. `I199`, `I200` and `I209` are
 runtime refusals of the length pass, which runs before any read; lint does not open the
 file and does not report them. `datamimic run` reports all three. Dry-run and Build
-report `I200` and `I209` as `child_execution` with `ce_error.issue_code` (tested); a
+report `I200` and `I209` directly in `diagnostics[].code` (tested); a
 Build of a memstore read needs its producer and consumer roles first, so `I199` is
 tested with `datamimic run` only. Build counts the kept rows in its bounded run. A run that keeps more
 than `max_count` rows (default 10 for a file source without count) stops with `I800`
@@ -154,7 +154,7 @@ refused `min`/`max`/`granularity` next to `generator=` (`DM214`, `DM218`).
 A bound that is not a literal, or an unknown generator name with these attributes, gives `I436`
 (`GENERATOR_CREATE_FAILED`). The messages name the element tag (`<key>`, `<variable>`,
 `<element>`), the element name, the generator class and the attribute as written, never the value. These are runtime refusals: `datamimic run` reports them, and Build reports them
-as `child_execution` with `ce_error.issue_code` (tested). Lint does not report them.
+in `diagnostics[].code` (tested). Lint does not report them.
 
 ### Each included step has its own seeded stream (#463)
 
@@ -283,11 +283,10 @@ failed, with `child_execution` (`I830`) and the generic text "Use a supported so
 ### Engine warnings as authoring diagnostics (#404)
 
 `dry-run`, `run` and Build now show the catalog warnings `W007` (Bash execution) and `W008` (a seeded script draws
-while it loads) as diagnostics with `code: "engine_warning"`, `severity: "warning"` and `phase: "evidence"`. The
-message is the catalog title; for `W008` it adds the script file name and the line, and `path` is
-`["script", "<file>", "line", <n>]`. The remediation is the catalog resolution. `ce_error.issue_code` holds the
-`W` code, and `ce_error.error_code` is `null`, because a warning has no `E` code: consumers that read
-`ce_error.error_code` must accept `null`. A warning never rejects. Build shows `W008` next to the failed replay gate.
+while it loads) in `code`, with `severity: "warning"` and `phase: "evidence"`. For `W008`,
+`location.script_file` and `location.script_line` carry the position, and `path` is
+`["script", "<file>", "line", <n>]`. The remediation is the catalog resolution.
+A warning never rejects. Build shows `W008` next to the failed replay gate.
 `W002` (`<echo>`) is not shown, because its text can hold a property value. The bounded child collects the
 warnings with `collect_task_warnings` (`datamimic_ce.errors`); the log keeps one line for each message, as before.
 Cases: the negative `draw_while_loading` of `tests_ce/scenarios/s14_seeded_library_random` and
@@ -337,8 +336,9 @@ Build stays read-only and shows the planned statement in `planned_operations` (`
 
 Persist XML as the executable project. `DmJsonDocumentV1` is an in-memory agent
 representation of one XML file. Expectations and roles live in the project's
-`acceptance/build.json`, beside the XML they prove. `ee_version`, `ee_error`, `EeErrorIdentity` become `ce_version`,
-`ce_error`, `CeErrorIdentity`; producer and installed version identify CE.
+`acceptance/build.json`, beside the XML they prove. `ce_version` identifies the installed CE version.
+The diagnostic envelope uses `code` for the catalog issue, `rule` for the DM check,
+and `location` for the position; it has no `ce_error` field.
 
 | Old entry | Replacement / consumer | Verification to retain |
 |---|---|---|

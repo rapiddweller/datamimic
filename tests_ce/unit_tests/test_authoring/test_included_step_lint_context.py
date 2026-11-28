@@ -44,7 +44,7 @@ def test_dm409_sees_a_memstore_declared_in_an_included_step(tmp_path: Path, mems
     workspace = AuthoringWorkspaceContext(project, PurePosixPath("datamimic.xml"))
     # The entry alone: Build also lints the step, which already saw the client; plain lint of the entry did not.
     entry_lint = CeDescriptorValidator(workspace, profile_loader=workspace.load_connection_profile).validate(entry)
-    assert ("DM409" in [item.code for item in entry_lint.diagnostics]) is dm409, entry_lint.diagnostics
+    assert ("DM409" in [item.rule for item in entry_lint.diagnostics]) is dm409, entry_lint.diagnostics
     assert ("DM409" in [code for code, _ in _codes(project)]) is dm409
 
 
