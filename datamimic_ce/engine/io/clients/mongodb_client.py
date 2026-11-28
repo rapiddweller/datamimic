@@ -482,22 +482,16 @@ class MongoDBClient(DatabaseClient):
                 code=IssueCode.SOURCE_MONGO_SELECTOR_INVALID,
                 error=f"Syntax error: collection name '{collection_name}' not found",
             )
-        # Write new data to database in case no data found by query
-        if updated_data[0].get("_id") is None:
-            return self.insert(collection_name, updated_data, True)
-        # Update data in database
-        else:
-            with self._create_connection() as conn:
-                db = conn[self._credential.database]
-                collection = db[collection_name]
-                for doc in updated_data:
-                    filter = {"_id": doc["_id"]}
-                    update = {"$set": doc}
-                    collection.update_one(filter, update, upsert=True)
-                # Return updated data
-                return self._documents(
-                    self._from_bson(list(collection.find({"_id": {"$in": [doc["_id"] for doc in updated_data]}})))
-                )
+        # A document without _id is inserted, one with _id is upserted by it; decided per document.
+        fresh = [doc for doc in updated_data if doc.get("_id") is None]
+        keyed = [doc for doc in updated_data if doc.get("_id") is not None]
+        with self._create_connection() as conn:
+            collection = conn[self._credential.database][collection_name]
+            ids = collection.insert_many(fresh).inserted_ids if fresh else []
+            for doc in keyed:
+                collection.update_one({"_id": doc["_id"]}, {"$set": doc}, upsert=True)
+            ids += [doc["_id"] for doc in keyed]
+            return self._documents(self._from_bson(list(collection.find({"_id": {"$in": ids}}))))
 
     def _decompose_find_query(self, query: str) -> dict:
         """
