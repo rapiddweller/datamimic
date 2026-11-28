@@ -1,0 +1,9 @@
+<!-- Control: an inner read of a table that the outer statement fills page by page. Page 1 sees 2 rows, page 2 sees 4. -->
+<setup rngSeed="1">
+    <database id="db" dbms="sqlite" database="inner_table_grows"/>
+    <execute uri="items.scr.sql" target="db"/>
+    <generate name="p" count="4" pageSize="2" target="db" type="items">
+        <key name="id" script="100"/>
+        <generate name="rd" source="db" type="items" distribution="ordered"><key name="id" script="this.id"/></generate>
+    </generate>
+</setup>

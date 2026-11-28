@@ -19,6 +19,8 @@ from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFor
 from datamimic_ce.engine.io.data_sources import router as io_source_router
 from datamimic_ce.engine.io.files.api import FileUtil
 from datamimic_ce.engine.io.files.readers import load_source_rows
+from datamimic_ce.engine.runtime.contexts.context import SetupContext
+from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.tasks.sources.length import set_data_source_length
 from datamimic_ce.errors import InvalidSourceError, IssueCode
 
@@ -140,8 +142,30 @@ def test_supported_file_length_never_inspects_memstore_or_client(monkeypatch: py
     reader.assert_called_once_with(Path("/descriptor/rows.csv"), "|", SourceFileFormat.CSV)
 
 
-def test_cached_source_length_skips_reader(monkeypatch: pytest.MonkeyPatch) -> None:
+def _context_of(kind: type) -> tuple[Mock, Mock]:
     context, root = _context()
+    typed = Mock(spec=kind)
+    typed.root = root
+    if kind is SetupContext:
+        typed.within_generate = False
+    return typed, root
+
+
+def test_outermost_source_length_is_read_again_when_the_statement_runs(monkeypatch: pytest.MonkeyPatch) -> None:
+    context, root = _context_of(SetupContext)
+    statement = _statement(VariableStatement, "rows.csv", "rows")
+    root.data_source_len[("consumer", "rows.csv", None)] = 7
+    reader = Mock(return_value=[{}, {}])
+
+    monkeypatch.setattr(io_source_router, "load_source_rows", reader)
+    set_data_source_length(context, statement)
+
+    assert root.data_source_len == {("consumer", "rows.csv", None): 2}
+    reader.assert_called_once()
+
+
+def test_inner_source_length_keeps_the_first_row_count_and_skips_the_reader(monkeypatch: pytest.MonkeyPatch) -> None:
+    context, root = _context_of(GenIterContext)
     statement = _statement(VariableStatement, "rows.csv", "rows")
     root.data_source_len[("consumer", "rows.csv", None)] = 7
     reader = Mock()

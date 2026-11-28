@@ -268,6 +268,7 @@
       "inside": "docs/architecture/inner/runtime/tasks/sources/architecture-contract.json",
       "requires": [],
       "public": [
+        "datamimic_ce.engine.runtime.tasks.sources.length:forget_written_source_lengths",
         "datamimic_ce.engine.runtime.tasks.sources.length:data_source_cache_key",
         "datamimic_ce.engine.runtime.tasks.sources.length:set_data_source_length",
         "datamimic_ce.engine.runtime.tasks.sources.nested:load_nested_key_source",

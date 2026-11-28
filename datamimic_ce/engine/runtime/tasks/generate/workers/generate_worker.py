@@ -52,6 +52,7 @@ from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task
 from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask, GenSubTask
 from datamimic_ce.engine.runtime.tasks.generate.export_order import export_product_by_page
 from datamimic_ce.engine.runtime.tasks.sources.chunk_source_reader import ChunkSourceReader
+from datamimic_ce.engine.runtime.tasks.sources.length import forget_written_source_lengths
 from datamimic_ce.engine.runtime.tasks.values.construction.converters import create_converter_list
 from datamimic_ce.errors import IssueCode, operation_error
 
@@ -364,6 +365,7 @@ class GenerateWorker:
                     elif table_columns is not None:
                         GenerateWorker._assert_table_columns(stmt, table_columns, rows)
                     export_product_by_page(stmt, result_dict, export_session, root_context)
+                    forget_written_source_lengths(root_context, stmt.targets)
                 result.merge_exports(result_dict)
 
             # Collect result for later capturing (keep_keys None -> keep everything)

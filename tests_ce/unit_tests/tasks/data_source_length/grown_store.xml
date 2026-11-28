@@ -1,0 +1,8 @@
+<!-- The same read runs again after the memstore grew from 2 to 5 rows of "a". -->
+<setup rngSeed="1">
+    <memstore id="mem"/>
+    <generate name="a" count="2" target="mem"><key name="id" generator="IncrementGenerator"/></generate>
+    <generate name="rd" source="mem" sourceEntity="a" distribution="ordered"><key name="id" script="this.id"/></generate>
+    <generate name="a" count="3" target="mem"><key name="id" generator="IncrementGenerator"/></generate>
+    <generate name="rd" source="mem" sourceEntity="a" distribution="ordered"><key name="id" script="this.id"/></generate>
+</setup>
