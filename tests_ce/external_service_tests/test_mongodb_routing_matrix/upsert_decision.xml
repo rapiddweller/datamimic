@@ -1,0 +1,72 @@
+<!-- MongoDB upsert: one owner decides insert versus update.
+
+     Each class owns a collection (ud_*) and is read back by a check_* generate.
+       Target read:     "mongodb.upsert", "mongodb.upsert()" and "mongodb . upsert" all name the upsert operation
+                        the exporter registry dispatches; the count-0 rule (selector source) and the empty-source
+                        fallback (type source) must agree with it.
+       Insert or update: an empty source inserts one new document; existing documents are updated by _id.
+       Controls:        a delete target and a plain insert target never turn an empty source into one row.
+-->
+<setup rngSeed="5">
+    <mongodb id="mongodb"/>
+
+    <!-- insert of a new document: selector source, empty collection -->
+    <generate name="ud_new" source="mongodb" selector="find: 'ud_new', filter: {}" target="mongodb.delete"/>
+    <generate name="ud_new" source="mongodb" selector="find: 'ud_new', filter: {}" target="mongodb.upsert">
+        <key name="tag" constant="new"/>
+    </generate>
+    <generate name="check_new" source="mongodb" selector="find: 'ud_new', filter: {}" target=""/>
+
+    <!-- update of existing documents: matched by _id, none inserted -->
+    <generate name="ud_upd" source="mongodb" selector="find: 'ud_upd', filter: {}" target="mongodb.delete"/>
+    <generate name="ud_upd" target="mongodb" count="2">
+        <key name="_id" generator="IncrementGenerator"/>
+        <key name="tag" constant="seed"/>
+    </generate>
+    <generate name="ud_upd" source="mongodb" selector="find: 'ud_upd', filter: {}" target="mongodb.upsert">
+        <key name="tag" constant="updated"/>
+    </generate>
+    <generate name="check_upd" source="mongodb" selector="find: 'ud_upd', filter: {}" target=""/>
+
+    <!-- count-0 rule, selector source: call form and spaced form behave as the plain target -->
+    <generate name="ud_call_sel" source="mongodb" selector="find: 'ud_call_sel', filter: {}" target="mongodb.delete"/>
+    <generate name="ud_call_sel" source="mongodb" selector="find: 'ud_call_sel', filter: {}" target="mongodb.upsert()">
+        <key name="tag" constant="call"/>
+    </generate>
+    <generate name="check_call_sel" source="mongodb" selector="find: 'ud_call_sel', filter: {}" target=""/>
+
+    <generate name="ud_space_sel" source="mongodb" selector="find: 'ud_space_sel', filter: {}" target="mongodb.delete"/>
+    <generate name="ud_space_sel" source="mongodb" selector="find: 'ud_space_sel', filter: {}" target="mongodb . upsert">
+        <key name="tag" constant="space"/>
+    </generate>
+    <generate name="check_space_sel" source="mongodb" selector="find: 'ud_space_sel', filter: {}" target=""/>
+
+    <!-- empty-source fallback, type source: plain, call and spaced forms -->
+    <generate name="ud_plain_type" source="mongodb" selector="find: 'ud_plain_type', filter: {}" target="mongodb.delete"/>
+    <generate name="ud_plain_type" type="ud_plain_type" source="mongodb" target="mongodb.upsert">
+        <key name="tag" constant="plain"/>
+    </generate>
+    <generate name="check_plain_type" source="mongodb" selector="find: 'ud_plain_type', filter: {}" target=""/>
+
+    <generate name="ud_call_type" source="mongodb" selector="find: 'ud_call_type', filter: {}" target="mongodb.delete"/>
+    <generate name="ud_call_type" type="ud_call_type" source="mongodb" target="mongodb.upsert()">
+        <key name="tag" constant="call"/>
+    </generate>
+    <generate name="check_call_type" source="mongodb" selector="find: 'ud_call_type', filter: {}" target=""/>
+
+    <generate name="ud_space_type" source="mongodb" selector="find: 'ud_space_type', filter: {}" target="mongodb.delete"/>
+    <generate name="ud_space_type" type="ud_space_type" source="mongodb" target="mongodb . upsert">
+        <key name="tag" constant="space"/>
+    </generate>
+    <generate name="check_space_type" source="mongodb" selector="find: 'ud_space_type', filter: {}" target=""/>
+
+    <!-- controls: an empty source writes nothing for a delete target or a plain insert target -->
+    <generate name="ud_ctl_delete" source="mongodb" selector="find: 'ud_ctl_delete', filter: {}" target="mongodb.delete"/>
+    <generate name="check_ctl_delete" source="mongodb" selector="find: 'ud_ctl_delete', filter: {}" target=""/>
+
+    <generate name="ud_ctl_insert" source="mongodb" selector="find: 'ud_ctl_insert', filter: {}" target="mongodb.delete"/>
+    <generate name="ud_ctl_insert" type="ud_ctl_insert" source="mongodb" target="mongodb">
+        <key name="tag" constant="control"/>
+    </generate>
+    <generate name="check_ctl_insert" source="mongodb" selector="find: 'ud_ctl_insert', filter: {}" target=""/>
+</setup>
