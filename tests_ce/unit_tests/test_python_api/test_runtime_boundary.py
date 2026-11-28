@@ -23,6 +23,7 @@ from datamimic_ce.engine.runtime.contracts import (
 from datamimic_ce.engine.runtime.lifecycle import runner
 from datamimic_ce.engine.runtime.lifecycle.config import get_settings
 from datamimic_ce.engine.runtime.lifecycle.runner import RuntimeRunSession
+from datamimic_ce.errors import OperationError
 from datamimic_ce.interfaces.cli import runtime as cli_runtime
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 from datamimic_ce.interfaces.python.datamimic import DataMimic
@@ -243,9 +244,7 @@ def test_runtime_scripting_state_permissions_are_exact() -> None:
         for permission, entry in zip(permissions, allowed_positions, strict=True)
         if "native_mapping" in entry
     ] == [(api + "SetupContext.__init__", "generators", "", "dict | None", None)]
-    assert all(
-        entry["native_mapping"] is True for entry in allowed_positions if "native_mapping" in entry
-    )
+    assert all(entry["native_mapping"] is True for entry in allowed_positions if "native_mapping" in entry)
     assert all("*" not in permission[0] and "*" not in permission[2] for permission in permissions)
 
 
@@ -326,7 +325,7 @@ def test_runtime_session_captures_named_empty_product(tmp_path: Path) -> None:
     assert session.capture_test_result() is captured
 
 
-def test_runtime_session_accumulates_repeat_execution_without_replacing_prior_rows(tmp_path: Path) -> None:
+def test_runtime_session_rejects_repeat_execution_and_keeps_prior_rows(tmp_path: Path) -> None:
     descriptor = tmp_path / "descriptor.xml"
     descriptor.write_text(
         '<setup rngSeed="1"><generate name="rows" count="1">'
@@ -339,11 +338,11 @@ def test_runtime_session_accumulates_repeat_execution_without_replacing_prior_ro
     assert type(first) is dict
     first_row = first["rows"][0]
 
-    second = session.execute().captured
+    with pytest.raises(OperationError, match="executes once"):
+        session.execute()
 
-    assert second is first
-    assert len(second["rows"]) == 2
-    assert second["rows"][0] is first_row
+    assert session.capture_test_result() is first
+    assert first["rows"] == [first_row]
 
 
 def test_runtime_session_preserves_native_row_and_leaf_identity(tmp_path: Path) -> None:
@@ -387,9 +386,7 @@ def test_runtime_session_captures_explicit_and_lazy_scalar_rows_in_order(tmp_pat
         '<key name="#text" generator="IncrementGenerator"/></generate></setup>',
         encoding="utf-8",
     )
-    explicit_session = runner.create_run_session(
-        RunRequest(descriptor_path=explicit_descriptor, test_mode=True)
-    )
+    explicit_session = runner.create_run_session(RunRequest(descriptor_path=explicit_descriptor, test_mode=True))
 
     result = explicit_session.execute()
     explicit_capture = explicit_session.capture_test_result()

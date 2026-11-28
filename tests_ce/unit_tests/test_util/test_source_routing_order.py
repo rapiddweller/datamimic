@@ -678,7 +678,7 @@ def test_nested_key_dict_with_unknown_source_never_inspects_memstore() -> None:
 def test_nested_key_templates_before_distribution_seed_and_selection(monkeypatch: pytest.MonkeyPatch) -> None:
     timeline = Mock()
     root = SimpleNamespace(
-        default_source_scripted=False,
+        source_scripted=lambda explicit: bool(explicit),
         default_variable_prefix="{{",
         default_variable_suffix="}}",
         get_distribution_seed=timeline.seed,
@@ -712,7 +712,7 @@ def test_nested_key_templates_before_distribution_seed_and_selection(monkeypatch
 
 def test_chunk_random_source_loads_once_per_chunk_with_one_stable_seed(monkeypatch: pytest.MonkeyPatch) -> None:
     root = SimpleNamespace(
-        default_source_scripted=False,
+        source_scripted=lambda explicit: bool(explicit),
         default_separator="|",
         stable_distribution_seed=Mock(return_value=17),
     )
@@ -747,7 +747,7 @@ def test_chunk_random_source_loads_once_per_chunk_with_one_stable_seed(monkeypat
 
 def test_chunk_ordered_source_reads_each_page_without_stable_seed(monkeypatch: pytest.MonkeyPatch) -> None:
     root = SimpleNamespace(
-        default_source_scripted=False,
+        source_scripted=lambda explicit: bool(explicit),
         default_separator="|",
         stable_distribution_seed=Mock(),
     )
@@ -779,7 +779,9 @@ def test_chunk_ordered_where_source_filters_once_and_pages_in_file_order(
     monkeypatch: pytest.MonkeyPatch, cyclic: bool
 ) -> None:
     """A where= read loads the kept rows once per chunk (not once per page), keeps file order and draws no seed."""
-    root = SimpleNamespace(default_source_scripted=False, default_separator="|", stable_distribution_seed=Mock())
+    root = SimpleNamespace(
+        source_scripted=lambda explicit: bool(explicit), default_separator="|", stable_distribution_seed=Mock()
+    )
     statement = SimpleNamespace(
         source="rows.ent.csv",
         source_script=None,
@@ -807,7 +809,7 @@ def test_chunk_ordered_where_source_filters_once_and_pages_in_file_order(
 
 def test_chunk_cumulated_source_loads_once_and_slices_the_chunk_window(monkeypatch: pytest.MonkeyPatch) -> None:
     root = SimpleNamespace(
-        default_source_scripted=False,
+        source_scripted=lambda explicit: bool(explicit),
         default_separator="|",
         stable_distribution_seed=Mock(return_value=23),
     )
@@ -857,7 +859,7 @@ def test_chunk_unique_selection_overrides_distribution_and_retains_build_flag(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     root = SimpleNamespace(
-        default_source_scripted=False,
+        source_scripted=lambda explicit: bool(explicit),
         default_separator="|",
         stable_distribution_seed=Mock(return_value=5),
     )
@@ -891,7 +893,7 @@ def test_chunk_unique_selection_overrides_distribution_and_retains_build_flag(
 
 def test_chunk_unique_selection_fails_when_distinct_pool_is_too_small(monkeypatch: pytest.MonkeyPatch) -> None:
     root = SimpleNamespace(
-        default_source_scripted=False,
+        source_scripted=lambda explicit: bool(explicit),
         default_separator="|",
         stable_distribution_seed=Mock(return_value=5),
     )
@@ -1222,7 +1224,7 @@ def test_generate_unsupported_offset_fails_before_source_read(
 def test_chunk_source_reader_delegates_database_page_to_generate_source(monkeypatch: pytest.MonkeyPatch) -> None:
     client = object()
     context = _generate_source_context("db", client)
-    context.root.default_source_scripted = False
+    context.root.source_scripted = lambda explicit: bool(explicit)
     context.root.default_separator = "|"
     statement = _generate_source_statement(
         source="db", distribution=SourceDistribution.ORDERED, source_script=None, separator=None, unique=False

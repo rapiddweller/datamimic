@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import copy
+from uuid import uuid4
 
 from datamimic_ce.engine.dsl.api import DATA_TYPE_DICT, DATA_TYPE_LIST, NestedKeyStatement
 from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_NESTED_KEY
@@ -65,11 +66,15 @@ class NestedKeyTask(GenSubTask):
         condition = evaluate_condition_value(parent_context, self._statement.name, self._statement.condition)
         if isinstance(parent_context, GenIterContext):
             if condition:
-                # If both source and script are None, create new nestedkey instead of loading data from file
-                if self._statement.source is None and self._statement.script is None:
-                    self._execute_generate(parent_context)
-                else:
-                    self._execute_iterate(parent_context)
+                previous_plan = self._statement.generation_plan
+                try:
+                    # If both source and script are None, create new nestedkey instead of loading data from file
+                    if self._statement.source is None and self._statement.script is None:
+                        self._execute_generate(parent_context)
+                    else:
+                        self._execute_iterate(parent_context)
+                finally:
+                    self._statement.generation_plan = previous_plan
             elif self._default_value is not None:
                 # If condition false and default_value exist, assign default value to nestedKey
                 default_value = parent_context.evaluate_python_expression(self._default_value)
@@ -82,7 +87,8 @@ class NestedKeyTask(GenSubTask):
 
         :return:
         """
-        # Set pagination as length of list
+        # Branch keys are built without pagination and still need this local window.
+        self._statement.generation_plan = (str(uuid4()), nestedkey_length)
         self._sub_tasks = [
             create_task(
                 child_stmt,

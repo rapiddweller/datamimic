@@ -119,7 +119,7 @@ class TestCLI:
         assert "datamimic authoring build ." in hint and "datamimic run datamimic.xml" in hint
         assert "/tmp" not in hint and "my_project" not in hint
 
-    @pytest.mark.parametrize("init_args", [("init",), ("authoring", "init")])
+    @pytest.mark.parametrize("init_args", [("init",), ("authoring", "init", "--format", "text")])
     def test_init_hint_is_identical_and_run_writes_a_file_with_build_ready_around_it(
         self, init_args, tmp_path, monkeypatch
     ):
@@ -256,7 +256,7 @@ class TestCLI:
     def test_run_requires_valid_descriptor_path(self):
         result = runner.invoke(app, ["run", "invalid_descriptor.xml"])
         assert result.exit_code == 1
-        assert "Invalid descriptor file path:" in result.output
+        assert "[E011/I609]" in result.output
 
     def test_run_executes_with_valid_descriptor(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)

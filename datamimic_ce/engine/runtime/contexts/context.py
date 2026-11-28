@@ -41,7 +41,9 @@ from datamimic_ce.engine.runtime.contexts.demographic_context import Demographic
 from datamimic_ce.engine.runtime.contexts.products import TotalRowBudget
 from datamimic_ce.engine.runtime.contracts import StatementTransformer
 from datamimic_ce.engine.runtime.logging import logger
-from datamimic_ce.engine.runtime.scripting import evaluation
+
+# isort: split
+import datamimic_ce.engine.runtime.scripting.evaluation as evaluation
 from datamimic_ce.engine.runtime.scripting.expression_globals import expression_globals, rebind_seeded_script_names
 from datamimic_ce.engine.runtime.scripting.plugins import execute_script
 from datamimic_ce.engine.runtime.storage.global_increment import GlobalIncrementRegistry
@@ -723,6 +725,10 @@ class SetupContext(Context):
     @property
     def default_source_scripted(self) -> bool | None:
         return self._default_source_scripted
+
+    def source_scripted(self, explicit: bool | None) -> bool:
+        """A statement's own sourceScripted wins; without one the setup default applies."""
+        return explicit if explicit is not None else bool(self._default_source_scripted)
 
     @property
     def report_logging(self) -> bool:

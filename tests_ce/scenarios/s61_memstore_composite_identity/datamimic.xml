@@ -1,0 +1,12 @@
+<setup rngSeed="61">
+    <memstore id="mem"/>
+    <generate name="rooms" count="3" target="mem">
+        <variable name="seq" generator="IncrementGenerator"/>
+        <key name="site" script="'east' if seq &lt;= 2 else 'west'"/>
+        <key name="room" script="'B' if seq == 2 else 'A'"/>
+    </generate>
+    <generate name="rooms_copy" source="mem" sourceEntity="rooms" distribution="ordered">
+        <key name="copied_site" script="this.site"/>
+        <key name="copied_room" script="this.room"/>
+    </generate>
+</setup>

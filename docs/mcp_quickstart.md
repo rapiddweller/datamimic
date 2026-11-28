@@ -23,9 +23,24 @@ a project takes the required `project` argument: the absolute path of the direct
 that holds `datamimic.xml`. A relative, missing or unusable path returns an `input`
 diagnostic, not a tool error. `datamimic-mcp --workspace-root <dir>` only restricts
 which projects a call may name; without it any project can be named. A project's
-`.env` is read for that call only. `version`, `schema`, `capabilities` and
-`capability` need no project. `reference`, codec, lint and bounded-run requests use
-`{"request": {...}}` next to `project`. Follow each tool's advertised input schema.
+`.env` is read for that call only. `version`, `schema`, `capabilities`,
+`capability` and `reference` need no project.
+
+Pass tool arguments directly, for example
+`{"project": "/absolute/project", "xml": "<setup/>"}` for `datamimic_lint`.
+For one transition release, `reference`, `compile`, `decompile`, `lint`,
+`dry_run` and `run` also accept the old `request` wrapper, which is deprecated. Keep `project` at
+the top level: `{"project": "/absolute/project", "request": {"xml": "<setup/>"}}`.
+Use one form per call. With an older server, follow its advertised input schema.
+MCP argument schemas come from `tools/list`; `datamimic authoring export-contract`
+exports the live DSL and Authoring contracts.
+
+MCP and CLI JSON use the same diagnostics. `code` is an `Ixxx` error or `Wxxx`
+warning when the defect is catalogued. Uncatalogued failures use a transport or
+authoring code such as `child_execution` or `validation`. When a lint/check rule
+finds a defect, `rule` carries its `DMxxx` ID; otherwise it is null or omitted.
+Use `location` for the file position and include chain, and `remediation` for the
+repair. Do not parse positions from `message`.
 
 | MCP tool | CLI equivalent |
 |---|---|
@@ -99,7 +114,7 @@ claude mcp get datamimic_ce
 ```
 
 In either client, list tools and call `datamimic_reference` with
-`{"request": {"topic": "assembly", "name": "starter"}}` before authoring. For a
+`{"topic": "assembly", "name": "starter"}` before authoring. For a
 remote Platform project use its [HTTP/OAuth guide](https://docs.datamimic.io/advanced/connect-mcp-client/).
 
 ## SSE
@@ -114,12 +129,15 @@ for SSE. Stdio uses its owning process's access controls.
 A `datamimic_run_project` result keeps `outcome` and reports why no execution
 occurred in `not_run_reason` (`input`, `build_rejected`, or
 `side_effects_not_allowed`; `null` after a run). Build warning diagnostics remain
-in the result after execution.
+in the result after execution. Like the [CLI result](api/cli.md#authoring-run-project---prove-then-run-a-project),
+it gives the Build outcome and input digests, output SHA-256 digests, and any
+Build file mismatches.
 
 Every execution of the project entry also leaves an audit record beside the project:
 `docs/runs/<UTC start>_<task id>/` holds `run.json` (task id, actor, UTC start and end,
 CE and Python version, parameter names without their values, the Build proof digests of
-a verified run, outcome, exit code, written files) and `run.log` (the full log, not only
+a verified run in `proof.files`, `build_outcome`, `build_file_mismatches`, execution
+outcome, exit code, written files) and `run.log` (the full log, not only
 `log_tail`). The result names that folder in `record_path`; the task id is also the name
 of the `output/<task id>/` folder. `docs/` is no Build input, so a record never opens a
 coverage gap. `run.log` is the raw log, not redacted: an error message can quote a parameter value, so the file is created with mode 0600 and a project should not commit `docs/runs/`. When the record cannot be written, the run still ends normally, `record_path`

@@ -13,7 +13,8 @@ from anyio import to_thread
 from dotenv import dotenv_values
 from fastmcp import FastMCP
 from fastmcp.exceptions import ToolError
-from fastmcp.tools import ToolResult
+from fastmcp.exceptions import ValidationError as ToolValidationError
+from fastmcp.tools import FunctionTool, ToolResult
 from pydantic import Field, JsonValue, StrictBool, ValidationError
 from pydantic_core import to_json, to_jsonable_python
 from starlette.applications import Starlette
@@ -78,26 +79,76 @@ _P = ParamSpec("_P")
 _R = TypeVar("_R")
 MAX_RESULT_CHARACTERS = 60_000
 _PROJECT_ARGUMENT = "Absolute path of the directory that holds datamimic.xml."
+_XML_ARGUMENT_EXAMPLE = '{"project": "/absolute/project", "xml": "<setup/>"}'
 
 
-def _guarded(hint: str) -> Callable[[Callable[_P, Awaitable[_R]]], Callable[_P, Awaitable[ToolResult]]]:
+def _guarded(function: Callable[_P, Awaitable[_R]], hint: str) -> Callable[_P, Awaitable[ToolResult]]:
     """Refuse a result over the size limit and name the argument that narrows it."""
 
-    def decorate(function: Callable[_P, Awaitable[_R]]) -> Callable[_P, Awaitable[ToolResult]]:
-        @wraps(function)
-        async def guarded(*args: _P.args, **kwargs: _P.kwargs) -> ToolResult:
-            result = await function(*args, **kwargs)
-            # FastMCP 4 serializes JSON compactly, without ASCII escaping.
-            encoded: bytes = to_json(to_jsonable_python(result))
-            text = str(encoded, "utf-8")
-            size = len(text)
-            if size > MAX_RESULT_CHARACTERS:
-                raise ToolError(json.dumps({"error": "result_too_large", "size": size, "hint": hint}))
-            return ToolResult(content=[TextContent(type="text", text=text)])
+    @wraps(function)
+    async def guarded(*args: _P.args, **kwargs: _P.kwargs) -> ToolResult:
+        result = await function(*args, **kwargs)
+        # FastMCP 4 serializes JSON compactly, without ASCII escaping.
+        encoded: bytes = to_json(to_jsonable_python(result))
+        text = str(encoded, "utf-8")
+        size = len(text)
+        if size > MAX_RESULT_CHARACTERS:
+            raise ToolError(json.dumps({"error": "result_too_large", "size": size, "hint": hint}))
+        return ToolResult(content=[TextContent(type="text", text=text)])
 
-        return guarded
+    return guarded
 
-    return decorate
+
+class _CompatibleRequestTool(FunctionTool):
+    """Advertise flat arguments and adapt them to the existing typed request."""
+
+    flat_example: str = ""
+
+    async def run(self, arguments: dict[str, JsonValue]) -> ToolResult:
+        project = (
+            {"project": arguments["project"]}
+            if "project" in self.parameters["properties"] and "project" in arguments
+            else {}
+        )
+        request = {key: arguments[key] for key in arguments if key not in project}
+        if "request" in request and len(request) != 1:
+            raise ToolValidationError(f"Do not mix flat arguments with request. Use {self.flat_example}.")
+        wrapped = request if "request" in request else {"request": request}
+        try:
+            return await super().run({**project, **wrapped})
+        except ToolValidationError as exc:
+            raise ToolValidationError(f"Invalid arguments. Use {self.flat_example}.") from exc
+
+
+def _compatible_tool(function: Callable[_P, Awaitable[ToolResult]], name: str, flat_example: str) -> FunctionTool:
+    tool = _CompatibleRequestTool.from_function(function, name=name, output_schema=None)
+    assert isinstance(tool, _CompatibleRequestTool)
+    tool.flat_example = flat_example
+    schema = tool.parameters
+    properties = schema["properties"]
+    request = properties["request"]
+    # FastMCP can inline the request model or keep it in Pydantic's local $defs.
+    reference_prefix = "#/$defs/"
+    request_model = schema["$defs"][request["$ref"][len(reference_prefix) :]] if "$ref" in request else request
+    request_model = {"required": [], **request_model}
+    fields = request_model["properties"]
+    schema["required"] = [field for field in schema["required"] if field != "request"]
+    schema["properties"] = {
+        **properties,
+        **fields,
+        "request": {**request, "deprecated": True, "description": "Legacy wrapper for one release."},
+    }
+    schema["additionalProperties"] = False
+    schema["oneOf"] = [
+        {
+            "title": "Preferred: flat arguments",
+            "required": request_model["required"],
+            "not": {"required": ["request"]},
+        },
+        {"title": "Legacy: request wrapper", "required": ["request"], "properties": {field: False for field in fields}},
+    ]
+    tool.description = f"{tool.description} Prefer flat arguments: {flat_example}. The request wrapper is deprecated."
+    return tool
 
 
 def _project_root(project: str, workspace_root: Path | None, *, new: bool = False) -> Path | str:
@@ -127,11 +178,19 @@ def create_server(
         environment = {name: value for name, value in dotenv_values(root / ".env").items() if value is not None}
         return create_authoring_application(workspace_root=root, descriptor_path=path, environment=environment)
 
-    def tool(name: str, hint: str) -> Callable[[Callable[_P, Awaitable[_R]]], Callable[_P, Awaitable[_R]]]:
+    def tool(
+        name: str, hint: str, *, flat_example: str | None = None
+    ) -> Callable[[Callable[_P, Awaitable[_R]]], Callable[_P, Awaitable[_R]]]:
         """Register one tool whose result may not exceed the size limit."""
 
         def register(function: Callable[_P, Awaitable[_R]]) -> Callable[_P, Awaitable[_R]]:
-            server.tool(name, output_schema=None)(_guarded(hint)(function))
+            guarded = _guarded(function, hint)
+            definition = (
+                FunctionTool.from_function(guarded, name=name, output_schema=None)
+                if flat_example is None
+                else _compatible_tool(guarded, name, flat_example)
+            )
+            server.add_tool(definition)
             return function
 
         return register
@@ -160,12 +219,20 @@ def create_server(
         """Read one exact registered CE capability, or its typed not-found result."""
         return await to_thread.run_sync(catalog_application().capability, domain, name)
 
-    @tool("datamimic_reference", "Set request.name to read one named contract instead of the whole topic.")
+    @tool(
+        "datamimic_reference",
+        "Set name to read one named contract instead of the whole topic.",
+        flat_example='{"topic": "assembly", "name": "starter"}',
+    )
     async def datamimic_reference(request: ReferenceRequest) -> ReferenceResult:
         """Read one model-derived reference topic or named contract."""
         return await to_thread.run_sync(catalog_application().reference, request)
 
-    @tool("datamimic_compile", "Compile a smaller DM JSON document.")
+    @tool(
+        "datamimic_compile",
+        "Compile a smaller DM JSON document.",
+        flat_example='{"project": "/absolute/project", "document": {"root": {"kind": "setup"}}}',
+    )
     async def datamimic_compile(
         project: Annotated[str, Field(description=_PROJECT_ARGUMENT)], request: CompileDocumentRequest
     ) -> CompileDocumentResult:
@@ -175,7 +242,7 @@ def create_server(
             return RejectedCompileDocument.from_input_error(root)
         return await to_thread.run_sync(application(root, request.descriptor_path).compile_document, request)
 
-    @tool("datamimic_decompile", "Decompile a smaller descriptor.")
+    @tool("datamimic_decompile", "Decompile a smaller descriptor.", flat_example=_XML_ARGUMENT_EXAMPLE)
     async def datamimic_decompile(
         project: Annotated[str, Field(description=_PROJECT_ARGUMENT)], request: DecompileDocumentRequest
     ) -> DecompileDocumentResult:
@@ -260,7 +327,11 @@ def create_server(
             datamimic_run_project_unverified
         )
 
-    @tool("datamimic_lint", "Lint a smaller descriptor; split the model into included steps.")
+    @tool(
+        "datamimic_lint",
+        "Lint a smaller descriptor; split the model into included steps.",
+        flat_example=_XML_ARGUMENT_EXAMPLE,
+    )
     async def datamimic_lint(
         project: Annotated[str, Field(description=_PROJECT_ARGUMENT)], request: LintRequest
     ) -> LintResult:
@@ -270,7 +341,7 @@ def create_server(
             return LintResult.from_input_error(root)
         return await to_thread.run_sync(application(root).lint, request)
 
-    @tool("datamimic_dry_run", "Lower sample_rows or max_count.")
+    @tool("datamimic_dry_run", "Lower sample_rows or max_count.", flat_example=_XML_ARGUMENT_EXAMPLE)
     async def datamimic_dry_run(
         project: Annotated[str, Field(description=_PROJECT_ARGUMENT)], request: RunRequest
     ) -> RunResult:
@@ -280,7 +351,7 @@ def create_server(
             return RunResult.from_input_error(root, RunPhase.DRY_RUN)
         return await to_thread.run_sync(application(root, request.descriptor_path).dry_run, request)
 
-    @tool("datamimic_run", "Lower sample_rows or max_count.")
+    @tool("datamimic_run", "Lower sample_rows or max_count.", flat_example=_XML_ARGUMENT_EXAMPLE)
     async def datamimic_run(
         project: Annotated[str, Field(description=_PROJECT_ARGUMENT)], request: RunRequest
     ) -> RunResult:

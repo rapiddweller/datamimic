@@ -25,4 +25,4 @@ jobs:
       - name: Run documentation tests and executable examples
         run: >-
           uv run pytest tests_ce/unit_tests/test_docs
-          tests_ce/nightly_tests/test_docs/test_agent_cli_documentation_contract.py -q
+          tests_ce/nightly_tests/unit/test_docs -q

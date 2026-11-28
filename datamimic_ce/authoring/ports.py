@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import PurePosixPath
-from typing import Protocol
+from typing import Literal, Protocol
 
 from .domain.capabilities import DslCatalogSnapshot
 from .domain.diagnostics import Diagnostic
@@ -65,5 +65,10 @@ class ExternalEffectsDetector(Protocol):
 
 class ProjectRunner(Protocol):
     def run(
-        self, params: tuple[ProjectParam, ...], timeout_seconds: int, proof: BuildArtifact | None = None
+        self,
+        params: tuple[ProjectParam, ...],
+        timeout_seconds: int,
+        proof: BuildArtifact | None = None,
+        *,
+        build_outcome: Literal["ready", "ready_with_gaps"] | None = None,
     ) -> ProjectRunExecution: ...

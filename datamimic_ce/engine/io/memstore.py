@@ -23,7 +23,7 @@ class Memstore(Exporter):
         :param product_type:
         :return:
         """
-        return self._storage.get(product_type, [])
+        return self.get_data_by_type(product_type)
 
     def get_data_by_type(self, product_type: str | None):
         """
@@ -65,9 +65,8 @@ class Memstore(Exporter):
         return int(total) if total.is_integer() else total
 
     def entityCount(self, product_type: str) -> int:
-        """Row count for scripts (legacy camelCase naming); stays lenient for migration parity: 0 for an unwritten
-        entity."""
-        return len(self._storage.get(product_type, []))
+        """Row count for scripts (legacy camelCase naming)."""
+        return self.get_data_len_by_type(product_type)
 
     def removeNotExistingIds(self, product_type: str, id_col: str, ref_type: str, client) -> None:
         """Keep only the rows of `product_type` whose `id_col` value exists in `ref_type` as read

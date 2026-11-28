@@ -1,0 +1,5 @@
+<setup multiprocessing="0" defaultSeparator=",">
+    <generate name="rows" count="1" target="CSV">
+        <key name="value" script="int(np.sqrt(81))"/>
+    </generate>
+</setup>

@@ -28,7 +28,7 @@ def _project(tmp_path: Path, entry: str, step: str = _READBACK) -> Path:
 
 def _codes(project: Path) -> list[tuple[str, tuple[object, ...]]]:
     result = create_authoring_application(project, descriptor_path=PROJECT_ENTRY_PATH).build()
-    return [(item.code, item.path) for item in result.diagnostics]
+    return [(item.rule or item.code, item.path) for item in result.diagnostics]
 
 
 _STEP = (

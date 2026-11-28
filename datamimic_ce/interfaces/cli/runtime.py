@@ -15,8 +15,10 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from datamimic_ce.domains.api import get_datamimic_lib_version
 from datamimic_ce.engine.runtime.api import load_descriptor_properties, run
 from datamimic_ce.engine.runtime.contracts import PlatformConfiguration, RunRequest
-from datamimic_ce.errors import DomainError, UserErrorBase
-from datamimic_ce.interfaces.cli import presenter as cli_presenter
+from datamimic_ce.errors import DomainError, IssueCode, UserErrorBase, parser_validation_error
+
+# isort: split
+import datamimic_ce.interfaces.cli.presenter as cli_presenter
 from datamimic_ce.interfaces.cli.presenter import DemoInformation, DemoSummary, SystemInformation
 from datamimic_ce.interfaces.demo import handle_demo
 from datamimic_ce.interfaces.project import (
@@ -169,7 +171,8 @@ def execute_descriptor(
         cli_presenter.fail("--platform-configs must be a JSON object")
     descriptor = descriptor_path.resolve()
     if not descriptor.is_file():
-        cli_presenter.fail(f"Invalid descriptor file path: {descriptor}", code=1)
+        missing = parser_validation_error(code=IssueCode.PARSER_DESCRIPTOR_NOT_FOUND, name=str(descriptor))
+        cli_presenter.fail(str(missing), code=1)
     original_directory = Path.cwd()
     try:
         os.chdir(descriptor.parent)

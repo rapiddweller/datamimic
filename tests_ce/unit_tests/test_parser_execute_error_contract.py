@@ -1,6 +1,7 @@
 """Invalid descriptor input keeps portable error identity through runtime and CLI."""
 
 import json
+import logging
 from pathlib import Path
 
 import pytest
@@ -106,8 +107,35 @@ def test_cli_lint_keeps_the_source_attribute_repair_location(tmp_path: Path) -> 
     result = CliRunner().invoke(app, ["authoring", "lint", str(path)])
     assert result.exit_code == 1
     diagnostic = json.loads(result.stdout)["diagnostics"][0]
-    assert diagnostic["ce_error"] == {"error_code": "E011", "issue_code": "I605"}
+    assert diagnostic["code"] == "I605"
     assert diagnostic["path"] == ["descriptor", "model.xml", "iterate", "attribute", "source"]
+
+
+def test_cli_stdin_lint_and_dry_run_keep_the_declared_descriptor_path(tmp_path: Path) -> None:
+    (tmp_path / "steps").mkdir()
+    (tmp_path / "steps" / "part.xml").write_text('<setup><generate name="rows" count="1"/></setup>')
+    buffer = '<setup rngSeed="7"><include uri="part.xml"/></setup>'
+    base = ["authoring", "lint", "-", "--workspace-root", str(tmp_path)]
+    default = CliRunner().invoke(app, base, input=buffer)
+    declared = CliRunner().invoke(app, [*base, "--descriptor-path", "steps/model.xml"], input=buffer)
+    assert default.exit_code == 1  # include resolves against the default model.xml, not steps/
+    assert declared.exit_code == 0, declared.stdout
+    broken = '<setup><iterate name="rows" count="1"/></setup>'
+    for command in ("lint", "dry-run"):
+        args = ["authoring", command, "-", "--descriptor-path", "ide/buffer.xml"]
+        result = CliRunner().invoke(app, args, input=broken)
+        diagnostic = json.loads(result.stdout)["diagnostics"][0]
+        assert diagnostic["path"] == ["descriptor", "ide/buffer.xml", "iterate", "attribute", "source"]
+
+
+@pytest.mark.parametrize("command", ["lint", "dry-run", "run"])
+@pytest.mark.parametrize("override", ["/abs/model.xml", "../model.xml", "a/../../model.xml"])
+def test_cli_invalid_descriptor_path_is_a_structured_error(command: str, override: str) -> None:
+    args = ["authoring", command, "-", "--descriptor-path", override]
+    result = CliRunner().invoke(app, args, input="<setup/>")
+    assert result.exit_code == 1
+    assert isinstance(result.exception, SystemExit)  # no traceback
+    assert json.loads(result.stdout)["diagnostics"]
 
 
 @pytest.mark.parametrize(
@@ -136,21 +164,18 @@ def test_execute_target_and_resource_errors_are_catalogued(
         assert isinstance(error.__cause__, FileNotFoundError)
 
 
-def test_bash_warning_is_catalogued_once_per_process(tmp_path: Path, caplog, monkeypatch) -> None:
-    import logging
-
-    from datamimic_ce.errors import factory
-
-    monkeypatch.setattr(factory, "_emitted_warnings", set())
+def test_duplicate_warning_is_logged_once_in_each_run(caplog, monkeypatch) -> None:
     logger = logging.getLogger("DATAMIMIC")
     monkeypatch.setattr(logger, "propagate", False)
     logger.addHandler(caplog.handler)
-    path = tmp_path / "model.xml"
-    path.write_text(
-        '<setup rngSeed="7"><execute type="bash">exit 0</execute><execute type="bash">exit 0</execute></setup>'
-    )
+    path = Path(__file__).with_name("warning_dedup.xml")
+    warnings_per_run = []
     try:
-        run(RunRequest(descriptor_path=path, test_mode=True))
+        with caplog.at_level(logging.WARNING, logger="DATAMIMIC"):
+            for _ in range(2):
+                caplog.clear()
+                run(RunRequest(descriptor_path=path, test_mode=True))
+                warnings_per_run.append(sum("[W002]" in record.getMessage() for record in caplog.records))
     finally:
         logger.removeHandler(caplog.handler)
-    assert sum("[W007]" in record.getMessage() for record in caplog.records) == 1
+    assert warnings_per_run == [1, 1]

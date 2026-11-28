@@ -16,7 +16,7 @@ Under ``<setup rngSeed>`` no name reachable from a script expression may draw un
   ``os.environ``, ``"now"`` string literals (``np.datetime64("now")``, ``pd.to_datetime("now")``), and the
   iteration order of sets of strings across processes (``PYTHONHASHSEED``)
 
-Mirrors DATAMIMIC EE's per-request evaluation proxies (EE ADR-031). Unseeded runs keep the raw modules.
+Mirrors DATAMIMIC EE's per-request evaluation proxies (EE ADR-031). Unseeded runs don't override module attributes.
 A ``where=`` condition refuses every controlled and rejected name above, seeded or not (``row_expression_globals``).
 
 ``base64`` pairs a binary payload with its b64/hex form. ``__builtins__`` is an empty dict rather than
@@ -50,14 +50,86 @@ from random import Random
 from types import ModuleType
 from typing import NamedTuple, NoReturn, TypeVar
 
-import numpy as np
-import pandas as pd
-import requests
 from faker import Faker
 
 from datamimic_ce.domains.api import resolve_clock, uuid4_from_random
 from datamimic_ce.errors import IssueCode, task_config_error
 from datamimic_ce.randomness import RandomSource
+
+
+class _DeferredTarget(StrEnum):
+    """Expression dependencies that should load on first use."""
+
+    NUMPY = "numpy"
+    PANDAS = "pandas"
+    TIMESTAMP = "pandas.Timestamp"
+    REQUESTS = "requests"
+
+
+def _load_deferred_target(target: _DeferredTarget) -> ModuleType | type:
+    match target:
+        case _DeferredTarget.NUMPY:
+            import numpy
+
+            return numpy
+        case _DeferredTarget.PANDAS:
+            import pandas
+
+            return pandas
+        case _DeferredTarget.TIMESTAMP:
+            from pandas import Timestamp
+
+            return Timestamp
+        case _DeferredTarget.REQUESTS:
+            import requests
+
+            return requests
+
+
+class _EvalProxy:
+    """Stands in for a module or class a DSL expression knows by name: ``overrides`` win, every
+    other attribute and call goes to ``target``."""
+
+    def __init__(
+        self, target: ModuleType | type | RandomSource | _DeferredTarget, overrides: dict[str, object]
+    ) -> None:
+        self._target = target
+        self._overrides = overrides
+
+    def _resolve_target(self) -> ModuleType | type | RandomSource:
+        target = self._target
+        if isinstance(target, _DeferredTarget):
+            target = _load_deferred_target(target)
+            self._target = target
+        return target
+
+    def __getattr__(self, name: str) -> object:
+        # An unpickled copy has no state yet; its own fields must read as missing, not recurse.
+        if name in ("_target", "_overrides"):
+            raise AttributeError(name)
+        if name in self._overrides:
+            return self._overrides[name]
+        return getattr(self._resolve_target(), name)
+
+    def __call__(self, *args: object, **kwargs: object) -> object:
+        self._resolve_target()
+        if not callable(self._target):
+            raise TypeError(f"'{type(self._target).__name__}' object is not callable")
+        return self._target(*args, **kwargs)
+
+    # A proxied class stays a class for type checks: isinstance(x, datetime.datetime) must not change under a seed.
+    def __instancecheck__(self, instance: object) -> bool:
+        target = self._resolve_target()
+        return isinstance(target, type) and isinstance(instance, target)
+
+    def __subclasscheck__(self, subclass: type) -> bool:
+        target = self._resolve_target()
+        return isinstance(target, type) and issubclass(subclass, target)
+
+    # A copied proxy would fork or lose the run's stream; generator= keys deep-copy the script namespace.
+    def __deepcopy__(self, memo: dict[int, object]) -> _EvalProxy:
+        return self
+
 
 SAFE_GLOBALS: dict[str, object] = {
     "math": math,
@@ -66,15 +138,15 @@ SAFE_GLOBALS: dict[str, object] = {
     "uuid": uuid,
     "json": json,
     "os": os,
-    "pd": pd,
-    "np": np,
+    "pd": _EvalProxy(_DeferredTarget.PANDAS, {}),
+    "np": _EvalProxy(_DeferredTarget.NUMPY, {}),
     "re": re,
     "calendar": calendar,
     "itertools": itertools,
     "functools": functools,
     "collections": collections,
     "statistics": statistics,
-    "requests": requests,
+    "requests": _EvalProxy(_DeferredTarget.REQUESTS, {}),
     "fake": Faker(),
     "len": len,
     "range": range,
@@ -107,39 +179,6 @@ SAFE_GLOBALS: dict[str, object] = {
 }
 # A script that calls one of these Python builtins fails with I957 (SCRIPT_BUILTIN_NAMES are the offered ones).
 UNOFFERED_BUILTINS = frozenset(dir(builtins)) - SAFE_GLOBALS.keys()
-
-
-class _EvalProxy:
-    """Stands in for a module or class a DSL expression knows by name: ``overrides`` win, every
-    other attribute and call goes to ``target``."""
-
-    def __init__(self, target: ModuleType | type | RandomSource, overrides: dict[str, object]) -> None:
-        self._target = target
-        self._overrides = overrides
-
-    def __getattr__(self, name: str) -> object:
-        # An unpickled copy has no state yet; its own fields must read as missing, not recurse.
-        if name in ("_target", "_overrides"):
-            raise AttributeError(name)
-        if name in self._overrides:
-            return self._overrides[name]
-        return getattr(self._target, name)
-
-    def __call__(self, *args: object, **kwargs: object) -> object:
-        if not callable(self._target):
-            raise TypeError(f"'{type(self._target).__name__}' object is not callable")
-        return self._target(*args, **kwargs)
-
-    # A proxied class stays a class for type checks: isinstance(x, datetime.datetime) must not change under a seed.
-    def __instancecheck__(self, instance: object) -> bool:
-        return isinstance(self._target, type) and isinstance(instance, self._target)
-
-    def __subclasscheck__(self, subclass: type) -> bool:
-        return isinstance(self._target, type) and issubclass(subclass, self._target)
-
-    # A copied proxy would fork or lose the run's stream; generator= keys deep-copy the script namespace.
-    def __deepcopy__(self, memo: dict[int, object]) -> _EvalProxy:
-        return self
 
 
 class _Uncontrolled:
@@ -241,6 +280,11 @@ def _seeded_objects(
     def uuid4() -> uuid.UUID:
         return uuid.UUID(uuid4_from_random(rng))
 
+    def timestamp(value: datetime.datetime, tz: str | None = None) -> datetime.datetime:
+        from pandas import Timestamp
+
+        return Timestamp(value, tz=tz)
+
     random_overrides = {
         "seed": seed,
         "Random": random_constructor,
@@ -248,12 +292,13 @@ def _seeded_objects(
     }
     anchored_datetime = _EvalProxy(datetime.datetime, {"now": now, "utcnow": lambda: anchor, "today": lambda: anchor})
     anchored_date = _EvalProxy(datetime.date, {"today": anchor.date})
+
     anchored_timestamp = _EvalProxy(
-        pd.Timestamp,
+        _DeferredTarget.TIMESTAMP,
         {
-            "now": lambda tz=None: pd.Timestamp(now(tz)),
-            "utcnow": lambda: pd.Timestamp(anchor, tz="UTC"),
-            "today": lambda tz=None: pd.Timestamp(now(tz)),
+            "now": lambda tz=None: timestamp(now(tz)),
+            "utcnow": lambda: timestamp(anchor, tz="UTC"),
+            "today": lambda tz=None: timestamp(now(tz)),
         },
     )
     return _SeededObjects(
@@ -263,8 +308,8 @@ def _seeded_objects(
         datetime=_EvalProxy(datetime, {"datetime": anchored_datetime, "date": anchored_date}),
         anchored_datetime=anchored_datetime,
         anchored_date=anchored_date,
-        pd=_EvalProxy(pd, {"Timestamp": anchored_timestamp}),
-        np=_EvalProxy(np, {"random": _Uncontrolled("np.random")}),
+        pd=_EvalProxy(_DeferredTarget.PANDAS, {"Timestamp": anchored_timestamp}),
+        np=_EvalProxy(_DeferredTarget.NUMPY, {"random": _Uncontrolled("np.random")}),
         os=_EvalProxy(os, {"urandom": _Uncontrolled("os.urandom"), "getrandom": _Uncontrolled("os.getrandom")}),
         fake=_SeededFaker(rng, seeded_faker_supplier),
     )
@@ -341,6 +386,7 @@ def row_expression_globals() -> dict[str, object]:
     keys of the same run see."""
     refused = _RefusedDraws()
     no = _Uncontrolled("where", ROW_DRAW_REFUSED)
+
     return {
         **SAFE_GLOBALS,
         "random": _EvalProxy(
@@ -354,8 +400,11 @@ def row_expression_globals() -> dict[str, object]:
                 "date": _EvalProxy(datetime.date, {"today": no}),
             },
         ),
-        "pd": _EvalProxy(pd, {"Timestamp": _EvalProxy(pd.Timestamp, {"now": no, "utcnow": no, "today": no})}),
-        "np": _EvalProxy(np, {"random": no}),
+        "pd": _EvalProxy(
+            _DeferredTarget.PANDAS,
+            {"Timestamp": _EvalProxy(_DeferredTarget.TIMESTAMP, {"now": no, "utcnow": no, "today": no})},
+        ),
+        "np": _EvalProxy(_DeferredTarget.NUMPY, {"random": no}),
         "os": _EvalProxy(os, {"urandom": no, "getrandom": no}),
         "fake": no,
     }
@@ -398,8 +447,6 @@ def rebind_seeded_script_names(
         (datetime, seeded.datetime),
         (datetime.datetime, seeded.anchored_datetime),
         (datetime.date, seeded.anchored_date),
-        (pd, seeded.pd),
-        (np, seeded.np),
         (os, seeded.os),
         # Members imported by name are the module's own objects, so identity finds them too. One pair for each name
         # in random.__all__ (#391); test_every_public_random_member_imported_by_name_is_rebound fails when a Python
@@ -435,10 +482,17 @@ def rebind_seeded_script_names(
     )
     if sys.version_info >= (3, 12):
         counterparts += ((random.binomialvariate, seeded.random.binomialvariate),)
+    # Only a library the script already loaded can be bound in its namespace; this lookup never imports one (#443).
+    pandas_module = sys.modules.get("pandas")
+    numpy_module = sys.modules.get("numpy")
     for name, value in list(namespace.items()):
         for raw, stand_in in counterparts:
             if value is raw:
                 namespace[name] = stand_in
+        if pandas_module is not None and value is pandas_module:
+            namespace[name] = seeded.pd
+        if numpy_module is not None and value is numpy_module:
+            namespace[name] = seeded.np
     shared_with_expressions: tuple[tuple[str, object], ...] = (
         ("random", seeded.random),
         ("uuid", seeded.uuid),

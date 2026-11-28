@@ -114,6 +114,27 @@ AUTHORING_RULE_CATALOG: tuple[RuleCatalogEntry, ...] = (
         remediation="Change the row condition or generation intent so every row satisfies it.",
     ),
     RuleCatalogEntry(
+        rule_id=ExpectationIntentKind.GROUP_SUM,
+        category="expectation",
+        severity="error",
+        description="Each group total must equal another field's sum, or equal or stay at or below an amount declared "
+        "by a reference product.",
+        applicability="Explicit group-sum expectations on complete product captures.",
+        owner=RuleOwner.EXPECTATION,
+        remediation="Check the group key and amount fields, then correct the rows so each group meets its comparison.",
+    ),
+    RuleCatalogEntry(
+        rule_id=ExpectationIntentKind.GROUP_COUNT,
+        category="expectation",
+        severity="error",
+        description="Every group that a reference product lists holds its declared number of rows, and no group "
+        "outside the reference appears.",
+        applicability="Explicit group-count expectations on complete captures of the subject and the reference.",
+        owner=RuleOwner.EXPECTATION,
+        remediation="Check the group key and count fields, then correct the rows so each group has its declared "
+        "count; a group without rows counts 0.",
+    ),
+    RuleCatalogEntry(
         rule_id=AuthoringRuleId.MISSING_EXPECTATION,
         category="expectation",
         severity="error",
@@ -230,7 +251,7 @@ def catalog_diagnostic(
     """A catalog finding; ``remediation`` replaces the rule's generic fix when the caller knows the specific one."""
     rule = _RULES_BY_ID[rule_id]
     return Diagnostic(
-        code=rule.rule_id,
+        code=rule_id,
         message=message,
         phase=phase,
         path=path,

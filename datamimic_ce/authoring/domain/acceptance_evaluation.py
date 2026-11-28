@@ -11,6 +11,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
+from fractions import Fraction
 from typing import assert_never
 from uuid import UUID
 
@@ -42,6 +43,8 @@ from datamimic_ce.authoring.domain.expectations import (
     FieldPresentExpectation,
     FixedValueExpectation,
     ForeignKeyExpectation,
+    GroupCountExpectation,
+    GroupSumExpectation,
     PerParentCountExpectation,
     PerParentRowsSubject,
     ProductRowsSubject,
@@ -53,6 +56,8 @@ from datamimic_ce.authoring.domain.expectations import (
 )
 from datamimic_ce.authoring.domain.proof import AcceptanceOrigin
 from datamimic_ce.authoring.domain.row_conditions import (
+    MAX_DECIMAL_ADJUSTED_EXPONENT,
+    MAX_STRING_LENGTH,
     RowConditionError,
     RowConditionFailure,
     evaluate_row_condition,
@@ -230,6 +235,13 @@ def _duplicate_values(values: tuple[object, ...]) -> tuple[object, ...]:
     return tuple(duplicates)
 
 
+def _readback_identities(rows: tuple[Mapping[str, object], ...], fields: tuple[str, ...]) -> set[str] | None:
+    if any(field not in row for row in rows for field in fields):
+        return None
+    identities = {_display(tuple(row[field] for field in fields)) for row in rows}
+    return identities if len(identities) == len(rows) else None
+
+
 def _groups(
     spec: AcceptanceSpecV1,
     captured: CapturedRows,
@@ -257,14 +269,168 @@ def _groups(
     return {key: tuple(value) for key, value in groups.items()}
 
 
-def _decimal(value: object) -> Decimal | None:
+def _decimal(value: object, *, bounded: bool = False) -> Decimal | None:
+    if bounded and (
+        not isinstance(value, int | float | Decimal | str)
+        or (isinstance(value, str) and len(value) > MAX_STRING_LENGTH)
+    ):
+        return None
     try:
         if isinstance(value, bool):
             return None
         number = Decimal(str(value))
-        return number if number.is_finite() else None
     except (InvalidOperation, ValueError):
         return None
+    if not number.is_finite():
+        return None
+    if bounded and (
+        abs(Decimal.adjusted(number)) > MAX_DECIMAL_ADJUSTED_EXPONENT
+        or len(Decimal.as_tuple(number).digits) > MAX_STRING_LENGTH
+    ):
+        return None
+    return number
+
+
+def _check_group_count(
+    rows: tuple[Mapping[str, object], ...] | None,
+    reference: tuple[Mapping[str, object], ...] | None,
+    expectation: GroupCountExpectation,
+) -> _ExpectationFailure | None:
+    label = _subject_label(expectation.subject)
+    reference_label = _subject_label(expectation.reference)
+    if rows is None or reference is None:
+        return _ExpectationFailure(f"captured {label} or {reference_label} is incomplete", {})
+    if not reference:
+        return _ExpectationFailure(f"{reference_label} lists no expected groups for '{expectation.group_by}'", {})
+    keys = _values(rows, expectation.group_by)
+    reference_keys = _values(reference, expectation.reference_key)
+    reference_counts = _values(reference, expectation.count_field)
+    if keys is None or reference_keys is None or reference_counts is None:
+        return _ExpectationFailure(
+            f"{label} or {reference_label} is missing a group_count field: '{expectation.group_by}', "
+            f"'{expectation.reference_key}' or '{expectation.count_field}'",
+            {},
+        )
+    expected: dict[str | int, int] = {}
+    for reference_key, reference_count in zip(reference_keys, reference_counts, strict=True):
+        if not isinstance(reference_key, str | int) or isinstance(reference_key, bool) or reference_key in expected:
+            return _ExpectationFailure(
+                f"{reference_label} requires a unique string or integer group key in '{expectation.reference_key}'", {}
+            )
+        if not isinstance(reference_count, int) or isinstance(reference_count, bool) or reference_count < 0:
+            return _ExpectationFailure(
+                f"{reference_label} requires a whole number from 0 in '{expectation.count_field}'", {}
+            )
+        expected[reference_key] = reference_count
+    observed: dict[str | int, int] = {}
+    for key in keys:
+        if not isinstance(key, str | int) or isinstance(key, bool):
+            return _ExpectationFailure(
+                f"{label} requires a string or integer group key in '{expectation.group_by}'", {}
+            )
+        observed[key] = observed.get(key, 0) + 1
+    # A group that the reference does not list is expected to hold 0 rows; a listed group without rows holds 0.
+    mismatches = sum(observed.get(key, 0) != count for key, count in expected.items())
+    unexpected = sum(key not in expected for key in observed)
+    if mismatches or unexpected:
+        return _ExpectationFailure(
+            f"{label} has {mismatches} group(s) whose row count differs from '{expectation.count_field}' of "
+            f"{reference_label}, and {unexpected} group(s) that {reference_label} does not list, by "
+            f"'{expectation.group_by}'",
+            {"actual": mismatches + unexpected},
+        )
+    return None
+
+
+def _check_group_sum(
+    rows: tuple[Mapping[str, object], ...] | None,
+    reference_rows: tuple[Mapping[str, object], ...] | None,
+    expectation: GroupSumExpectation,
+) -> _ExpectationFailure | None:
+    label = _subject_label(expectation.subject)
+    equals_field = expectation.equals_field
+    if rows is None or (equals_field is not None and not rows):
+        return _ExpectationFailure(f"{label} has no groups captured by '{expectation.group_by}'", {})
+    keys = _values(rows, expectation.group_by)
+    left = _values(rows, expectation.field)
+    right = _values(rows, equals_field) if equals_field is not None else (0,) * len(rows)
+    amount_fields = f"'{expectation.field}'"
+    if equals_field is not None:
+        amount_fields += f" and '{equals_field}'"
+    if keys is None or left is None or right is None:
+        return _ExpectationFailure(
+            f"{label} is missing a group_sum field: '{expectation.group_by}', {amount_fields}", {}
+        )
+    balances: dict[str | int, Fraction] = {}
+    for key, left_value, right_value in zip(keys, left, right, strict=True):
+        if not isinstance(key, str | int) or isinstance(key, bool):
+            return _ExpectationFailure(
+                f"{label} requires a string or integer group key in '{expectation.group_by}'", {}
+            )
+        left_amount, right_amount = _decimal(left_value, bounded=True), _decimal(right_value, bounded=True)
+        if left_amount is None or right_amount is None:
+            return _ExpectationFailure(
+                f"{label} requires bounded finite numbers or decimal strings in {amount_fields}", {}
+            )
+        # Summing the exact difference avoids Decimal context rounding and retains a zero balance for each group.
+        delta = Fraction(left_amount) - Fraction(right_amount)
+        if key in balances:
+            delta += balances[key]
+        balances[key] = delta
+    if equals_field is None:
+        return _check_group_sum_reference(balances, reference_rows, expectation)
+    mismatches = sum(balances[key] != 0 for key in balances)
+    if mismatches:
+        return _ExpectationFailure(
+            f"{label} has {mismatches} unbalanced group(s) by '{expectation.group_by}': "
+            f"'{expectation.field}' and '{expectation.equals_field}' must have equal sums in each group",
+            {"actual": mismatches},
+        )
+    return None
+
+
+def _check_group_sum_reference(
+    totals: dict[str | int, Fraction],
+    rows: tuple[Mapping[str, object], ...] | None,
+    expectation: GroupSumExpectation,
+) -> _ExpectationFailure | None:
+    reference = expectation.reference
+    assert reference is not None
+    label = _subject_label(expectation.subject)
+    reference_label = _subject_label(reference.subject)
+    if not rows:
+        return _ExpectationFailure(f"{reference_label} lists no captured groups for '{expectation.group_by}'", {})
+    keys = _values(rows, reference.key)
+    amounts = _values(rows, reference.field)
+    if keys is None or amounts is None:
+        return _ExpectationFailure(
+            f"{reference_label} is missing a group_sum reference field: '{reference.key}' or '{reference.field}'",
+            {},
+        )
+    seen: set[str | int] = set()
+    mismatches = 0
+    for key, value in zip(keys, amounts, strict=True):
+        if not isinstance(key, str | int) or isinstance(key, bool) or key in seen:
+            return _ExpectationFailure(
+                f"{reference_label} requires a unique string or integer group key in '{reference.key}'", {}
+            )
+        target = _decimal(value, bounded=True)
+        if target is None:
+            return _ExpectationFailure(
+                f"{reference_label} requires a bounded finite number or decimal string in '{reference.field}'", {}
+            )
+        seen.add(key)
+        total = totals.get(key, 0)
+        mismatches += total != target if reference.comparison == "equal" else total > target
+    unexpected = sum(key not in seen for key in totals)
+    if mismatches or unexpected:
+        return _ExpectationFailure(
+            f"{label} has {mismatches} group(s) whose sum of '{expectation.field}' fails the '{reference.comparison}' "
+            f"comparison against '{reference.field}' of {reference_label}, and {unexpected} group(s) "
+            f"that {reference_label} does not list, by '{expectation.group_by}'",
+            {"actual": mismatches + unexpected},
+        )
+    return None
 
 
 def _check_expectation(
@@ -272,6 +438,19 @@ def _check_expectation(
     captured: CapturedRows,
     expectation: ExpectationIntent,
 ) -> _ExpectationFailure | None:
+    if isinstance(expectation, GroupSumExpectation):
+        reference = expectation.reference
+        return _check_group_sum(
+            _subject_rows(spec, captured, expectation.subject),
+            _subject_rows(spec, captured, reference.subject) if reference is not None else None,
+            expectation,
+        )
+    if isinstance(expectation, GroupCountExpectation):
+        return _check_group_count(
+            _subject_rows(spec, captured, expectation.subject),
+            _subject_rows(spec, captured, expectation.reference),
+            expectation,
+        )
     if isinstance(expectation, ExactCountExpectation):
         rows = _subject_rows(spec, captured, expectation.subject)
         if rows is None:
@@ -770,16 +949,13 @@ def evaluate_acceptance_with_results(
     for readback in spec.readbacks:
         if {readback.producer, readback.consumer} & not_run:
             continue
-        producer = _values(rows_by_name[readback.producer], readback.producer_field)
-        consumer = _values(rows_by_name[readback.consumer], readback.consumer_field)
-        if (
-            producer is None
-            or consumer is None
-            or len(producer) != len(consumer)
-            or _duplicate_values(producer)
-            or _duplicate_values(consumer)
-            or set(map(_display, producer)) != set(map(_display, consumer))
-        ):
+        producer = _readback_identities(
+            rows_by_name[readback.producer], tuple(join.parent_field for join in readback.joins)
+        )
+        consumer = _readback_identities(
+            rows_by_name[readback.consumer], tuple(join.child_field for join in readback.joins)
+        )
+        if producer is None or consumer is None or producer != consumer:
             diagnostics.append(
                 catalog_diagnostic(
                     AuthoringRuleId.VALIDATION,

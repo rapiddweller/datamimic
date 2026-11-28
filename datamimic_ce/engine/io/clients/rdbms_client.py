@@ -7,17 +7,14 @@
 import copy
 import logging
 import sys
-from contextlib import suppress
-from datetime import date, datetime
-from decimal import Decimal
+from collections.abc import Iterator
+from contextlib import contextmanager, suppress
 from enum import StrEnum
 from pathlib import Path
 from typing import Protocol, runtime_checkable
 from urllib.parse import quote
 
-import oracledb
 import sqlalchemy
-from mysql.connector.errors import Error as MySqlError
 from sqlalchemy import (
     BigInteger,
     Boolean,
@@ -36,7 +33,7 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.dialects import registry
-from sqlalchemy.engine import Dialect, Engine
+from sqlalchemy.engine import Connection, Dialect, Engine
 from sqlalchemy.engine.default import DefaultDialect
 from sqlalchemy.engine.row import Row
 from sqlalchemy.pool import QueuePool
@@ -44,46 +41,20 @@ from sqlalchemy.schema import CreateTable
 from sqlalchemy.types import TypeEngine
 
 from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
-from datamimic_ce.engine.io.clients import sql_dialect
+
+# isort: split
+import datamimic_ce.engine.io.clients.sql_dialect as sql_dialect
 from datamimic_ce.engine.io.clients.database_client import DatabaseClient
 from datamimic_ce.engine.io.clients.entity_serialization import stringify_entity_value
 from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig, sqlite_database_path
+from datamimic_ce.engine.io.contracts import ColumnKind as ColumnKind
 from datamimic_ce.engine.io.contracts import DataSourcePagination
+from datamimic_ce.engine.io.contracts import column_kind_of_type as column_kind_of_type
 from datamimic_ce.errors import IssueCode, NormalizedDbError, OperationError, client_config_error, operation_error
 
 logger = logging.getLogger("DATAMIMIC")
 
 _TRUNCATE_DIALECTS = frozenset({"postgresql", "mssql"})  # SQLAlchemy dialect names
-
-
-class ColumnKind(StrEnum):
-    """Column type of a table that ``createTable`` creates; the RDBMS client maps each kind to a SQLAlchemy type."""
-
-    TEXT = "text"
-    INTEGER = "integer"
-    FLOAT = "float"
-    DECIMAL = "decimal"
-    BOOLEAN = "boolean"
-    BINARY = "binary"
-    DATE = "date"
-    DATETIME = "datetime"
-
-
-# bool before int and datetime before date: each is a subclass of the type after it.
-_VALUE_KINDS: tuple[tuple[type, ColumnKind], ...] = (
-    (bool, ColumnKind.BOOLEAN),
-    (int, ColumnKind.INTEGER),
-    (float, ColumnKind.FLOAT),
-    (Decimal, ColumnKind.DECIMAL),
-    (datetime, ColumnKind.DATETIME),
-    (date, ColumnKind.DATE),
-    (str, ColumnKind.TEXT),
-)
-
-
-def column_kind_of_type(python_type: type) -> ColumnKind | None:
-    """The column kind of a Python value type; None for a type no kind covers (NoneType included)."""
-    return next((kind for covered, kind in _VALUE_KINDS if issubclass(python_type, covered)), None)
 
 
 # SQLAlchemy create_engine kwargs DATAMIMIC forwards (pooling/behavior). Anything else in the
@@ -121,6 +92,16 @@ _CONNECTION_IDENTITY = {
 
 # <execute> scripts are raw SQL: no bind parameters (":new" in a trigger) and no DBAPI percent formatting ("g % 3")
 _RAW_SCRIPT = {"no_parameters": True}
+
+
+@contextmanager
+def _normalize_database_errors(target: str) -> Iterator[list[OperationError]]:
+    """Normalize database failures without retaining their statements or driver messages."""
+    failures: list[OperationError] = []
+    try:
+        yield failures
+    except sqlalchemy.exc.SQLAlchemyError as error:
+        failures.append(_operation_failure(target, error))
 
 
 class RdbmsClient(DatabaseClient):
@@ -263,10 +244,18 @@ class RdbmsClient(DatabaseClient):
                     )
 
             case Dbms.ORACLE:
-                # Set OracleDB version and import the necessary module
-                oracledb.version = "8.3.0"
-                sys.modules["cx_Oracle"] = oracledb
-                self._engine = create_sqlalchemy_engine(dbms, user, password, host, port, f"?service_name={db}")
+                # SQLAlchemy's oracledb dialect selects the python-oracledb driver itself.
+                try:
+                    self._engine = create_sqlalchemy_engine(
+                        "oracle+oracledb", user, password, host, port, f"?service_name={db}"
+                    )
+                except ImportError as error:
+                    raise client_config_error(
+                        code=IssueCode.CLIENT_PREFLIGHT_INVALID_CONFIGURATION,
+                        client_id="database",
+                        kind=dbms.value,
+                        reason="the python-oracledb driver is not installed",
+                    ) from error
 
             case _:
                 # For other DBMS types, use a generic method to get the driver and create the engine
@@ -432,20 +421,23 @@ class RdbmsClient(DatabaseClient):
         """Rows of a table, ordered by its primary key, else by every column. For a stable snapshot that
         order keeps OFFSET pages disjoint across pages and workers, and keeps full reads that are sliced
         or shuffled per worker (random/cumulated/unique) identical in every worker."""
-        engine = self._create_engine()
+        with _normalize_database_errors("database read") as failures:
+            engine = self._create_engine()
 
-        with engine.connect() as conn:
-            actual_table_name = self._get_actual_table_name(table_name)
-            table = self._get_metadata(engine).tables[actual_table_name]
+            with engine.connect() as conn:
+                actual_table_name = self._get_actual_table_name(table_name)
+                table = self._get_metadata(engine).tables[actual_table_name]
 
-            query = select(table).order_by(*(table.primary_key.columns or table.c))
-            if pagination is None:
-                logger.info(f"page is None, get all data from table {actual_table_name}")
-            else:
-                query = query.offset(pagination.skip).limit(pagination.limit)
+                query = select(table).order_by(*(table.primary_key.columns or table.c))
+                if pagination is None:
+                    logger.info(f"page is None, get all data from table {actual_table_name}")
+                else:
+                    query = query.offset(pagination.skip).limit(pagination.limit)
 
-            result = conn.execute(query).fetchall()
-            return [dict(row._mapping) for row in result]
+                result = conn.execute(query).fetchall()
+                return [dict(row._mapping) for row in result]
+        if failures:
+            raise failures[0]
 
     def get_by_page_with_query(self, original_query: str, pagination: DataSourcePagination | None = None):
         """
@@ -497,18 +489,21 @@ class RdbmsClient(DatabaseClient):
         integrity. The reference task does the distinct/with-replacement sampling deterministically
         via runtime source selection / ctx.rng (so the full column set is returned, not a
         pre-limited slice)."""
-        engine = self._create_engine()
+        with _normalize_database_errors("database read") as failures:
+            engine = self._create_engine()
 
-        with engine.connect() as conn:
-            actual_table_name = self._get_actual_table_name(table_name)
-            table = self._get_metadata(engine).tables[actual_table_name]
-            columns = [table.c[name] for name in column_names]
-            # ORDER BY the selected columns (NOT random): a stable input order so the seeded
-            # shuffle is reproducible run-to-run. ORDER BY random() would
-            # destroy that reproducibility.
-            # fetch-all + sort suits reference/lookup tables; a huge source would want
-            # SELECT DISTINCT or DB-side sampling — an EE-scale concern, not CE's reference path.
-            return [tuple(row) for row in conn.execute(select(*columns).order_by(*columns)).fetchall()]
+            with engine.connect() as conn:
+                actual_table_name = self._get_actual_table_name(table_name)
+                table = self._get_metadata(engine).tables[actual_table_name]
+                columns = [table.c[name] for name in column_names]
+                # ORDER BY the selected columns (NOT random): a stable input order so the seeded
+                # shuffle is reproducible run-to-run. ORDER BY random() would
+                # destroy that reproducibility.
+                # fetch-all + sort suits reference/lookup tables; a huge source would want
+                # SELECT DISTINCT or DB-side sampling — an EE-scale concern, not CE's reference path.
+                return [tuple(row) for row in conn.execute(select(*columns).order_by(*columns)).fetchall()]
+        if failures:
+            raise failures[0]
 
     def insert(self, table_name: str, data_list: list):
         """
@@ -561,52 +556,61 @@ class RdbmsClient(DatabaseClient):
     def update(self, table_name: str, data_list: list) -> int:
         """UPDATE each record by primary key; returns the number of matched rows.
         Row-by-row statements: test-data volumes, not a bulk path."""
-        self._require_write("update")
-        if not data_list:
-            return 0
-        engine = self._create_engine()
-        table, pk = self._table_and_pk(engine, table_name)
-        matched = 0
-        with engine.begin() as connection:
-            for row in self._apply_global_json_config(data_list):
-                values = {k: v for k, v in row.items() if k not in pk}
-                if not values:
-                    raise ValueError(f"update on '{table_name}' has no non-key columns to set")
-                clause = self._pk_clause(table, row, pk, table_name, "update")
-                matched += connection.execute(table.update().where(*clause).values(**values)).rowcount
-        return matched
+        with _normalize_database_errors("database write") as failures:
+            self._require_write("update")
+            if not data_list:
+                return 0
+            engine = self._create_engine()
+            table, pk = self._table_and_pk(engine, table_name)
+            matched = 0
+            with engine.begin() as connection:
+                for row in self._apply_global_json_config(data_list):
+                    values = {k: v for k, v in row.items() if k not in pk}
+                    if not values:
+                        raise ValueError(f"update on '{table_name}' has no non-key columns to set")
+                    clause = self._pk_clause(table, row, pk, table_name, "update")
+                    matched += connection.execute(table.update().where(*clause).values(**values)).rowcount
+            return matched
+        if failures:
+            raise failures[0]
 
     def upsert(self, table_name: str, data_list: list) -> None:
         """UPDATE by primary key, INSERT the rows that matched nothing."""
-        self._require_write("upsert")
-        if not data_list:
-            return
-        engine = self._create_engine()
-        table, pk = self._table_and_pk(engine, table_name)
-        with engine.begin() as connection:
-            for row in self._apply_global_json_config(data_list):
-                clause = self._pk_clause(table, row, pk, table_name, "upsert")
-                values = {k: v for k, v in row.items() if k not in pk}
-                if values:
-                    exists = connection.execute(table.update().where(*clause).values(**values)).rowcount > 0
-                else:  # all-PK row: nothing to update, just ensure presence
-                    exists = connection.execute(select(table.c[pk[0]]).where(*clause)).first() is not None
-                if not exists:
-                    connection.execute(table.insert(), [row])
+        with _normalize_database_errors("database write") as failures:
+            self._require_write("upsert")
+            if not data_list:
+                return
+            engine = self._create_engine()
+            table, pk = self._table_and_pk(engine, table_name)
+            with engine.begin() as connection:
+                for row in self._apply_global_json_config(data_list):
+                    clause = self._pk_clause(table, row, pk, table_name, "upsert")
+                    values = {k: v for k, v in row.items() if k not in pk}
+                    if values:
+                        exists = connection.execute(table.update().where(*clause).values(**values)).rowcount > 0
+                    else:  # all-PK row: nothing to update, just ensure presence
+                        exists = connection.execute(select(table.c[pk[0]]).where(*clause)).first() is not None
+                    if not exists:
+                        connection.execute(table.insert(), [row])
+        if failures:
+            raise failures[0]
 
     def delete(self, table_name: str, data_list: list) -> int:
         """DELETE each record by primary key; returns the number of deleted rows."""
-        self._require_write("delete")
-        if not data_list:
-            return 0
-        engine = self._create_engine()
-        table, pk = self._table_and_pk(engine, table_name)
-        deleted = 0
-        with engine.begin() as connection:
-            for row in self._apply_global_json_config(data_list):
-                clause = self._pk_clause(table, row, pk, table_name, "delete")
-                deleted += connection.execute(table.delete().where(*clause)).rowcount
-        return deleted
+        with _normalize_database_errors("database write") as failures:
+            self._require_write("delete")
+            if not data_list:
+                return 0
+            engine = self._create_engine()
+            table, pk = self._table_and_pk(engine, table_name)
+            deleted = 0
+            with engine.begin() as connection:
+                for row in self._apply_global_json_config(data_list):
+                    clause = self._pk_clause(table, row, pk, table_name, "delete")
+                    deleted += connection.execute(table.delete().where(*clause)).rowcount
+            return deleted
+        if failures:
+            raise failures[0]
 
     def clear_table(self, table_name: str) -> None:
         """Remove every row and keep the table, its indexes and constraints (target="db.clear").
@@ -636,29 +640,67 @@ class RdbmsClient(DatabaseClient):
         """Create the table when no table of that name exists (createTable); never alter or drop one.
 
         An existing table must have every written column and the same primary key, else the run fails with I930. The
-        table name lookup ignores case, as the row writes do; column names compare exactly."""
-        self._require_write("createTable")
+        table name lookup ignores case, as the row writes do; column names compare exactly. PostgreSQL runs
+        serialize with other runs using this protocol; unrelated DDL does not take this lock."""
+        with _normalize_database_errors("rdbms.create_table") as failures:
+            self._require_write("createTable")
+            dbms = self._credential.dbms
+            schema = self._credential.db_schema
+            table = create_table_definition(entity, columns, primary_key, schema)
+            native_create = dbms in (Dbms.SQLITE, Dbms.MYSQL)
+            # Do not upgrade SQLite's lookup snapshot to a write after another run may have committed.
+            existing = self._find_table_name(entity) if native_create else None
+            with self._write_transaction() as connection:
+                if dbms is Dbms.POSTGRESQL:
+                    # IF NOT EXISTS alone can race on PostgreSQL catalog inserts.
+                    connection.execute(
+                        text(
+                            "SELECT pg_catalog.pg_advisory_xact_lock("
+                            "pg_catalog.hashtext('datamimic_table:' || "
+                            "CAST(COALESCE(CAST(:schema AS name), pg_catalog.current_schema()) AS text)), "
+                            "pg_catalog.hashtext(CAST(CAST(:entity AS name) AS text)))"
+                        ),
+                        {"schema": schema, "entity": entity.lower()},
+                    )
+                if not native_create:
+                    existing = self._find_table_name(entity, connection)
+                if existing is None and not native_create:
+                    table.create(connection, checkfirst=True)
+                    actual_name, action = table.fullname, "created"
+                else:
+                    action = "exists"
+                    if existing is None:
+                        connection.execute(_CreateTableIfNotExists(table))
+                        # The statement may have been a no-op; validate the actual winner.
+                        existing = self._find_table_name(entity, connection)
+                        if existing is None:
+                            raise sqlalchemy.exc.NoSuchTableError(table.fullname)
+                        action = "ensured"
+                    reflected = Table(existing, MetaData(), autoload_with=connection, schema=schema)
+                    actual_name = reflected.fullname
+                    difference = table_difference(table, reflected)
+                    if difference is not None:
+                        raise operation_error(
+                            code=IssueCode.OPERATION_TABLE_DRIFT, target=actual_name, difference=difference
+                        )
+            logger.info("OPERATION | rdbms.create_table | table=%s | action=%s", actual_name, action)
+        if failures:
+            raise failures[0]
+
+    @contextmanager
+    def _write_transaction(self) -> Iterator[Connection]:
         engine = self._create_engine()
-        schema = self._credential.db_schema
-        table = create_table_definition(entity, columns, primary_key, schema)
-        failure: OperationError | None = None
-        try:
-            existing = self._find_table_name(entity)
-            if existing is None:
-                table.create(engine, checkfirst=True)
-                logger.info("OPERATION | rdbms.create_table | table=%s | action=created", table.fullname)
-                return
-            reflected = Table(existing, MetaData(), autoload_with=engine, schema=schema)
-        except sqlalchemy.exc.SQLAlchemyError as error:
-            failure = _operation_failure("rdbms.create_table", error)
-        if failure is not None:
-            raise failure
-        difference = table_difference(table, reflected)
-        if difference is not None:
-            raise operation_error(
-                code=IssueCode.OPERATION_TABLE_DRIFT, target=reflected.fullname, difference=difference
-            )
-        logger.info("OPERATION | rdbms.create_table | table=%s | action=exists", reflected.fullname)
+        if self._credential.dbms is Dbms.POSTGRESQL:
+            # Hold advisory locks even when the engine uses AUTOCOMMIT. Reads after taking a lock
+            # must see changes committed by its previous holder.
+            with (
+                engine.connect() as connection,
+                connection.execution_options(isolation_level="READ COMMITTED").begin(),
+            ):
+                yield connection
+        else:
+            with engine.begin() as connection:
+                yield connection
 
     @staticmethod
     def _truncate_or_delete_all(engine, table) -> tuple[str, int | None]:
@@ -670,9 +712,9 @@ class RdbmsClient(DatabaseClient):
         with engine.begin() as connection:
             return "delete_all", connection.execute(table.delete()).rowcount
 
-    def _find_table_name(self, table_name: str) -> str | None:
+    def _find_table_name(self, table_name: str, connection: Connection | None = None) -> str | None:
         """The name of the table in the database that matches ``table_name`` without case; None when none does."""
-        inspector = inspect(self._create_engine())
+        inspector = inspect(connection if connection is not None else self._create_engine())
         tables_in_db = inspector.get_table_names(schema=self._credential.db_schema)
         return next((table for table in tables_in_db if table.lower() == table_name.lower()), None)
 
@@ -720,64 +762,8 @@ class RdbmsClient(DatabaseClient):
     def get_current_sequence_number(
         self, sequence_name: str, table_name: str | None = None, column_name: str | None = None
     ) -> int:
-        """
-        Get the current value of a database sequence: atomically advance it by 1 and return the
-        new value (same contract as Postgres nextval).
-
-        Supported for postgresql and mysql. mssql/oracle are not supported yet: prototyped with
-        native sequences, but SequenceTableGenerator is re-instantiated per page/scan-phase pass
-        (existing engine behavior) and each instantiation calls this side-effecting method, which
-        was observed to produce colliding id ranges against MSSQL non-deterministically - needs a
-        fix to that interaction, not just a dialect-specific SQL port.
-        :param sequence_name: Name of the sequence
-        :param table_name: MySQL only - the target table (convention case, unset for an explicit
-            sequence= name). MySQL has no freestanding sequence object, so it integrates directly
-            with the target table's own AUTO_INCREMENT counter instead - the only way a
-            MySQL-backed id column stays coherent with plain (non-generator) inserts into the
-            same table, mirroring why Postgres's native sequence already works this way.
-        :param column_name: MySQL only - the target column (paired with table_name).
-        :return: Current sequence number
-        """
-        self._require_write("get_current_sequence_number")
-        dbms = self._credential.dbms
-        with self._create_engine().connect() as connection:
-            transaction = connection.begin()
-            try:
-                if dbms is Dbms.POSTGRESQL:
-                    schema, seq = self._split_sequence_schema(sequence_name, self._credential.db_schema or "public")
-                    qualified_sequence = self._quoted_qualified_identifier(connection.dialect, schema, seq)
-                    exists = connection.execute(
-                        text(
-                            "SELECT EXISTS (SELECT 1 FROM pg_sequences "
-                            "WHERE schemaname = :schema AND sequencename = :seq_name)"
-                        ),
-                        {"schema": schema, "seq_name": seq},
-                    ).scalar()
-                    if not exists:
-                        connection.execute(text(f"CREATE SEQUENCE IF NOT EXISTS {qualified_sequence}"))
-                    current_value = connection.execute(
-                        text("SELECT nextval(CAST(:sequence_name AS regclass))"),
-                        {"sequence_name": qualified_sequence},
-                    ).scalar()
-                elif dbms is Dbms.MYSQL:
-                    current_value = self._advance_mysql_auto_increment(
-                        connection, sequence_name, table_name, column_name, 1
-                    )
-                else:
-                    # mssql/oracle: native-sequence support was prototyped and pulled - a
-                    # per-page/scan-phase re-instantiation of SequenceTableGenerator (existing
-                    # DATAMIMIC behavior, not new) calls this method multiple times per statement
-                    # with side-effecting advances, and the resulting id ranges were observed to
-                    # collide non-deterministically against MSSQL. Needs a fix to the range
-                    # arithmetic (or the scan-phase call pattern) before shipping, not just a
-                    # dialect-specific SQL port. See PR discussion.
-                    raise ValueError(f"SequenceTableGenerator is not supported for dbms '{dbms}'")
-                transaction.commit()
-                return current_value
-            except Exception as err:
-                transaction.rollback()
-                logger.error(f"Failed to get current sequence number for {sequence_name}: {err}")
-                raise
+        """Take one sequence value and return it."""
+        return self.reserve_sequence_block(sequence_name, 1, table_name, column_name)
 
     def increase_sequence_number(
         self,
@@ -786,71 +772,76 @@ class RdbmsClient(DatabaseClient):
         table_name: str | None = None,
         column_name: str | None = None,
     ) -> None:
-        """
-        Atomically advance the sequence by `increment` (a single atomic statement/lock-scoped
-        update per dialect - never a read-current-value-then-write-it-back-in-Python round trip,
-        which would race under the concurrent, multiprocess callers this generator exists for).
-        :param sequence_name: Name of the sequence
-        :param increment: Increment value
-        :param table_name: MySQL only - see get_current_sequence_number.
-        :param column_name: MySQL only - see get_current_sequence_number.
-        """
-        self._require_write("increase_sequence_number")
-        increment = int(increment)  # callers may pass a raw XML attribute string (e.g. count=)
-        dbms = self._credential.dbms
-        with self._create_engine().connect() as connection:
-            transaction = connection.begin()
-            try:
+        """Discard a block of sequence numbers (use reserve_sequence_block to receive its start)."""
+        self.reserve_sequence_block(sequence_name, increment, table_name, column_name)
+
+    def reserve_sequence_block(
+        self, sequence_name: str, count: int, table_name: str | None = None, column_name: str | None = None
+    ) -> int:
+        """Reserve count consecutive numbers and return the first, under a per-sequence database lock."""
+        with _normalize_database_errors("database sequence") as failures:
+            self._require_write("reserve_sequence_block")
+            count = int(count)
+            if count < 1:
+                raise ValueError("Sequence reservation count must be positive")
+            dbms = self._credential.dbms
+            if dbms not in (Dbms.POSTGRESQL, Dbms.MYSQL):
+                raise ValueError(f"SequenceTableGenerator is not supported for dbms '{dbms}'")
+            with self._write_transaction() as connection:
                 if dbms is Dbms.POSTGRESQL:
-                    schema, seq = self._split_sequence_schema(sequence_name, self._credential.db_schema or "public")
-                    qualified_sequence = self._quoted_qualified_identifier(connection.dialect, schema, seq)
-                    connection.execute(
-                        text(
-                            "SELECT setval(CAST(:sequence_name AS regclass), "
-                            "nextval(CAST(:sequence_name AS regclass)) + :increment)"
-                        ),
-                        {"sequence_name": qualified_sequence, "increment": increment},
-                    )
-                elif dbms is Dbms.MYSQL:
-                    self._advance_mysql_auto_increment(connection, sequence_name, table_name, column_name, increment)
-                else:
-                    # See get_current_sequence_number - mssql/oracle native-sequence support
-                    # pulled pending a fix to the scan-phase re-instantiation interaction.
-                    raise ValueError(f"SequenceTableGenerator is not supported for dbms '{dbms}'")
-                transaction.commit()
-            except Exception as err:
-                transaction.rollback()
-                logger.error(f"Failed to increase sequence number for {sequence_name}: {err}")
-                raise
+                    return self._reserve_postgresql_sequence(connection, sequence_name, count)
+                return self._advance_mysql_auto_increment(connection, sequence_name, table_name, column_name, count)
+        raise failures[0]
+
+    def _reserve_postgresql_sequence(self, connection: Connection, sequence_name: str, count: int) -> int:
+        schema, seq = self._split_sequence_schema(sequence_name, self._credential.db_schema or "public")
+        qualified_sequence = self._quoted_qualified_identifier(connection.dialect, schema, seq)
+        # Cast to name before hashing so aliases due to PostgreSQL identifier truncation lock together.
+        connection.execute(
+            text(
+                "SELECT pg_catalog.pg_advisory_xact_lock("
+                "pg_catalog.hashtext('datamimic_seq:' || CAST(CAST(:schema AS name) AS text)), "
+                "pg_catalog.hashtext(CAST(CAST(:seq AS name) AS text)))"
+            ),
+            {"schema": schema, "seq": seq},
+        )
+        params = {"sequence_name": qualified_sequence}
+        increment = connection.execute(
+            text(
+                "SELECT seqincrement FROM pg_catalog.pg_sequence "
+                "WHERE seqrelid = pg_catalog.to_regclass(:sequence_name)"
+            ),
+            params,
+        ).scalar_one_or_none()
+        if increment is None:
+            connection.execute(text(f"CREATE SEQUENCE IF NOT EXISTS {qualified_sequence}"))
+        elif increment != 1:
+            raise ValueError("SequenceTableGenerator requires PostgreSQL sequences with INCREMENT BY 1")
+
+        # Read the shared high-water mark, including all values cached by other backends.
+        # nextval() on a pooled connection could return a session-local cached value below it.
+        last_value, is_called = connection.execute(
+            text(f"SELECT last_value, is_called FROM {qualified_sequence}")
+        ).one()
+        start = int(last_value) + int(is_called)
+        connection.execute(
+            text("SELECT pg_catalog.setval(CAST(:sequence_name AS regclass), :last_value)"),
+            {**params, "last_value": start + count - 1},
+        )
+        return start
 
     def _advance_mysql_auto_increment(
-        self, connection, sequence_name: str, table_name: str | None, column_name: str | None, increment: int
+        self,
+        connection: Connection,
+        sequence_name: str,
+        table_name: str | None,
+        column_name: str | None,
+        increment: int,
     ) -> int:
-        """MySQL has no freestanding sequence object (pre-MariaDB) - AUTO_INCREMENT is a
-        per-table column property, not an independently nameable thing. The only way a
-        MySQL-backed id column stays coherent with OTHER, non-generator inserts into the same
-        table (the same guarantee Postgres's native sequence gives for free, since a generator
-        there advances the exact object the column's own DEFAULT already points at)
-        is to advance that table's real AUTO_INCREMENT counter directly - not a separate,
-        unrelated counter table, which two independent counters could never keep in sync.
+        """Return the table's previous AUTO_INCREMENT under its session advisory lock.
 
-        Only supported for the convention-derived case (table_name/column_name known - a bare
-        `generator="SequenceTableGenerator"`, no explicit sequence=): an explicit legacy
-        sequence= name has no MySQL object to bind to, so it's a clear error rather than a
-        silently-wrong separate counter.
-
-        `information_schema.TABLES.AUTO_INCREMENT` alone is NOT reliable: it's served from
-        InnoDB's persistent statistics cache, refreshed only every `innodb_stats_auto_recalc`
-        threshold or `information_schema_stats_expiry` seconds (default 86400 = 24h). A plain
-        INSERT elsewhere doesn't force a refresh, so a stale read can return a LOWER value than
-        the table's real counter - handing out ids that collide with rows already inserted
-        by other means. `SET SESSION information_schema_stats_expiry = 0` forces this session's
-        read to bypass the cache and reflect the live value; it's session-scoped, so it doesn't
-        need any privilege beyond what this connection already has and doesn't affect other
-        sessions. GET_LOCK/RELEASE_LOCK are session-scoped advisory locks, independent of
-        transactions/DDL (ALTER TABLE ... AUTO_INCREMENT=n is DDL, not itself atomic against a
-        concurrent read-then-write), so they serialize concurrent callers around the whole
-        read-then-ALTER round trip safely.
+        Disabling the information_schema statistics cache makes the reads see the live counter.
+        ALTER TABLE implicitly commits, so a session lock spans both reads and the update.
         """
         self._require_write("_advance_mysql_auto_increment")
         if table_name is None or column_name is None:
@@ -859,36 +850,49 @@ class RdbmsClient(DatabaseClient):
                 "freestanding sequence object to bind an explicit name to. Omit sequence= to use the target "
                 "table's own AUTO_INCREMENT column instead."
             )
-        schema = self._credential.db_schema
-        table = self._quoted_qualified_identifier(
-            connection.dialect,
-            *((schema, table_name) if schema else (table_name,)),
-        )
-        lock_name = f"datamimic_seq_{schema}_{table_name}_{column_name}"[:64]
-        acquired = connection.execute(text("SELECT GET_LOCK(:name, 30)"), {"name": lock_name}).scalar()
-        if acquired != 1:
-            raise RuntimeError(f"Could not acquire MySQL advisory lock for sequence '{sequence_name}' within 30s")
+        schema = self._credential.db_schema or self._credential.database
+        table = self._quoted_qualified_identifier(connection.dialect, schema, table_name)
+        # AUTO_INCREMENT is table-scoped. Case-fold the lock name so MySQL configurations with
+        # case-insensitive identifiers cannot take distinct locks on the same table.
+        lock_name = f"datamimic_seq_{schema.lower()}_{table_name.lower()}"[:64]
         try:
+            acquired = connection.execute(text("SELECT GET_LOCK(:name, 30)"), {"name": lock_name}).scalar()
+            if acquired != 1:
+                raise RuntimeError(f"Could not acquire MySQL advisory lock for sequence '{sequence_name}' within 30s")
             connection.execute(text("SET SESSION information_schema_stats_expiry = 0"))
-            next_value = connection.execute(
-                text(
-                    "SELECT AUTO_INCREMENT FROM information_schema.TABLES "
-                    "WHERE table_schema = :schema AND table_name = :table"
-                ),
-                {"schema": schema, "table": table_name},
-            ).scalar()
-            next_value = int(next_value or 1)
-            connection.execute(text(f"ALTER TABLE {table} AUTO_INCREMENT = {next_value + int(increment)}"))
-            return next_value
-        finally:
+            # Fresh InnoDB tables can report NULL until their default counter is initialized.
+            # A populated table with an unreadable counter must never be treated as fresh.
+            counter_query = text(
+                "SELECT CASE WHEN AUTO_INCREMENT IS NOT NULL THEN AUTO_INCREMENT "
+                "WHEN EXISTS (SELECT 1 FROM information_schema.COLUMNS "
+                "WHERE table_schema = :schema AND table_name = :table AND EXTRA = 'auto_increment') "
+                f"AND NOT EXISTS (SELECT 1 FROM {table}) THEN 1 END "
+                "FROM information_schema.TABLES "
+                "WHERE table_schema = :schema AND table_name = :table"
+            )
+            params = {"schema": schema, "table": table_name}
+            counter = connection.execute(counter_query, params).scalar_one_or_none()
+            if counter is None:
+                raise ValueError("SequenceTableGenerator could not read the MySQL AUTO_INCREMENT counter")
+            start = int(counter)
+            end = start + increment
+            connection.execute(text(f"ALTER TABLE {table} AUTO_INCREMENT = {end}"))
+            advanced = connection.execute(counter_query, params).scalar_one_or_none()
+            if advanced is None or int(advanced) < end:
+                raise ValueError("MySQL AUTO_INCREMENT counter could not reserve the requested sequence block")
+            released = connection.execute(text("SELECT RELEASE_LOCK(:name)"), {"name": lock_name}).scalar()
+        except BaseException:
+            # Discard the session on failure so its lock cannot survive in the pool.
+            # Avoid a second SQL call that could obscure the original database error.
             try:
-                connection.execute(text("SELECT RELEASE_LOCK(:name)"), {"name": lock_name})
-            except Exception as release_err:
-                # Never let a lock-release failure mask the original error (or a successful
-                # result) from the try block above - just log it. The advisory lock is
-                # session-scoped anyway, so it's released automatically once this connection
-                # closes even if RELEASE_LOCK itself fails here.
-                logger.error(f"Failed to release MySQL advisory lock '{lock_name}': {release_err}")
+                connection.invalidate()
+            except sqlalchemy.exc.SQLAlchemyError:
+                logger.error("Failed to discard the MySQL connection after a sequence reservation error")
+            raise
+        if released != 1:
+            connection.invalidate()
+            raise RuntimeError("Could not release MySQL sequence advisory lock")
+        return start
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self._engine:
@@ -1060,12 +1064,20 @@ def _database_error_facts(error: sqlalchemy.exc.SQLAlchemyError) -> NormalizedDb
     if isinstance(original, _HasSqliteCode):
         code = original.sqlite_errorcode
         return NormalizedDbError(str(code), _SQLITE_CATEGORIES.get(code & 0xFF), type(error).__name__)
-    if isinstance(original, MySqlError):
-        mysql_code = original.errno
-        return NormalizedDbError(str(mysql_code), _MYSQL_CATEGORIES.get(mysql_code), type(error).__name__)
-    if isinstance(original, oracledb.Error) and original.args and isinstance(original.args[0], _HasOracleCode):
-        oracle_code = original.args[0].code
-        return NormalizedDbError(f"ORA-{oracle_code:05d}", _ORACLE_CATEGORIES.get(oracle_code), type(error).__name__)
+    if "mysql.connector.errors" in sys.modules:
+        from mysql.connector.errors import Error as MySqlError
+
+        if isinstance(original, MySqlError):
+            mysql_code = original.errno
+            return NormalizedDbError(str(mysql_code), _MYSQL_CATEGORIES.get(mysql_code), type(error).__name__)
+    if "oracledb" in sys.modules:
+        from oracledb import Error as OracleError
+
+        if isinstance(original, OracleError) and original.args and isinstance(original.args[0], _HasOracleCode):
+            oracle_code = original.args[0].code
+            return NormalizedDbError(
+                f"ORA-{oracle_code:05d}", _ORACLE_CATEGORIES.get(oracle_code), type(error).__name__
+            )
     for value in (
         original.pgcode if isinstance(original, _HasPgCode) else None,
         original.sqlstate if isinstance(original, _HasSqlState) else None,
@@ -1102,6 +1114,14 @@ def create_table_definition(
         ),
         schema=schema,
     )
+
+
+class _CreateTableIfNotExists(CreateTable):
+    """Use SQLAlchemy's DDL flag, which the older sqlalchemy-stubs package omits."""
+
+    def __init__(self, table: Table) -> None:
+        CreateTable.__init__(self, table)
+        self.if_not_exists = True
 
 
 def create_table_ddl(table: Table, dbms: Dbms) -> str:

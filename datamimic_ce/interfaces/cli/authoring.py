@@ -27,7 +27,6 @@ from datamimic_ce.authoring.domain.requests import (
     ReadyDecompileDocument,
     ReferenceRequest,
     ReferenceTopic,
-    RejectedBuild,
     RejectedCompileDocument,
     RejectedDecompileDocument,
     RunPhase,
@@ -40,6 +39,13 @@ from datamimic_ce.interfaces.cli.presenter import NEXT_STEP_HINT, CliOutputForma
 app = typer.Typer(no_args_is_help=True, help="Compile, inspect and verify DATAMIMIC descriptors.")
 OutputFormat = Annotated[CliOutputFormat, typer.Option("--format", "-f")]
 Input = Annotated[str, typer.Argument(help="UTF-8 input file; '-' reads stdin.")]
+DescriptorPath = Annotated[
+    str | None,
+    typer.Option(
+        "--descriptor-path",
+        help="Workspace-relative path of the descriptor; default 'model.xml' for stdin, else the file's own path.",
+    ),
+]
 WorkspaceRoot = Annotated[
     Path | None,
     typer.Option(
@@ -67,21 +73,17 @@ def _read(source: str) -> str:
         raise _UnreadableInput(f"Input must be a readable UTF-8 file or '-': {Path(source).name}") from error
 
 
-def _input_message(error: Exception, fallback: str) -> str:
-    if isinstance(error, _UnreadableInput):
-        return str(error)
-    if isinstance(error, ValidationError):
-        # Reuse the Build request projection (location and reason, never the input value).
-        reasons = (item.message for item in RejectedBuild.from_model_validation(error).diagnostics[:3])
-        return " ".join((fallback, *reasons))
-    return fallback
+def _input_message(error: ValueError, fallback: str) -> str:
+    return str(error) if isinstance(error, _UnreadableInput) else fallback
 
 
 def _workspace(source: str, workspace_root: Path | None = None) -> Path:
     return workspace_root or (Path.cwd() if source == "-" else Path(source).resolve().parent)
 
 
-def _descriptor_path(source: str, workspace_root: Path | None) -> PurePosixPath:
+def _descriptor_path(source: str, workspace_root: Path | None, override: str | None = None) -> PurePosixPath:
+    if override is not None:
+        return PurePosixPath(override)
     if source == "-":
         return PurePosixPath("model.xml")
     return PurePosixPath(Path(source).resolve().relative_to(_workspace(source, workspace_root).resolve()).as_posix())
@@ -145,7 +147,13 @@ def compile_document(
     try:
         document = DmJsonDocumentV1.model_validate_json(_read(source))
         request = CompileDocumentRequest(document=document, descriptor_path=PurePosixPath(descriptor_path))
-    except (ValueError, ValidationError) as error:
+    except ValidationError as error:
+        emit_authoring(
+            RejectedCompileDocument.from_model_validation(error),
+            output_format,
+            exit_code=1,
+        )
+    except ValueError as error:
         emit_authoring(
             RejectedCompileDocument.from_input_error(
                 _input_message(error, "Invalid DM JSON input or descriptor path.")
@@ -163,16 +171,20 @@ def compile_document(
 @app.command("decompile", help="Decompile XML to DM JSON; this does not prove the project.")
 def decompile_document(
     source: Input,
-    descriptor_path: Annotated[str | None, typer.Option("--descriptor-path")] = None,
+    descriptor_path: DescriptorPath = None,
     workspace_root: WorkspaceRoot = None,
     output_format: OutputFormat = CliOutputFormat.JSON,
 ) -> None:
     try:
-        logical_path = (
-            PurePosixPath(descriptor_path) if descriptor_path is not None else _descriptor_path(source, workspace_root)
-        )
+        logical_path = _descriptor_path(source, workspace_root, descriptor_path)
         request = DecompileDocumentRequest(xml=_read(source), descriptor_path=logical_path)
-    except (ValueError, ValidationError) as error:
+    except ValidationError as error:
+        emit_authoring(
+            RejectedDecompileDocument.from_model_validation(error),
+            output_format,
+            exit_code=1,
+        )
+    except ValueError as error:
         emit_authoring(
             RejectedDecompileDocument.from_input_error(_input_message(error, "Invalid XML input or descriptor path.")),
             output_format,
@@ -267,13 +279,17 @@ def init(
         ProjectPattern,
         typer.Option("--pattern", help="Starter project; each one is ready as written."),
     ] = ProjectPattern.FLAT,
+    output_format: OutputFormat = CliOutputFormat.JSON,
 ) -> None:
     """Write a starter project (datamimic.xml and acceptance/build.json) that Build accepts. Never overwrites."""
     application = create_authoring_application()
     result = init_project(project, application.scaffold(pattern))
-    if result.outcome == "not_written":
+    exit_code = 1 if result.outcome == "not_written" else 0
+    if output_format is CliOutputFormat.JSON:
+        emit_authoring(result, output_format, exit_code=exit_code)
+    if exit_code:
         typer.echo(f"Init failed: {result.diagnostics[0].message}", err=True)
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=exit_code)
     typer.echo(f"Wrote the {pattern.value} project to {project}: {', '.join(result.files)}")
     typer.echo(NEXT_STEP_HINT)
 
@@ -281,21 +297,29 @@ def init(
 @app.command("lint", help="Validate an XML descriptor without executing it.")
 def lint(
     source: Input,
+    descriptor_path: DescriptorPath = None,
     workspace_root: WorkspaceRoot = None,
     output_format: OutputFormat = CliOutputFormat.JSON,
 ) -> None:
     try:
-        logical_path = _descriptor_path(source, workspace_root)
+        logical_path = _descriptor_path(source, workspace_root, descriptor_path)
         request = LintRequest(xml=_read(source))
-    except (ValueError, ValidationError) as error:
+        # Builds the application inside the handler: it rejects an invalid descriptor path.
+        application = create_authoring_application(
+            workspace_root=_workspace(source, workspace_root), descriptor_path=logical_path
+        )
+    except ValidationError as error:
         emit_authoring(
-            LintResult.from_input_error(_input_message(error, "Invalid or unreadable XML input.")),
+            LintResult.from_model_validation(error),
             output_format,
             exit_code=1,
         )
-    application = create_authoring_application(
-        workspace_root=_workspace(source, workspace_root), descriptor_path=logical_path
-    )
+    except ValueError as error:
+        emit_authoring(
+            LintResult.from_input_error(_input_message(error, "Invalid or unreadable XML input or descriptor path.")),
+            output_format,
+            exit_code=1,
+        )
     result = application.lint(request)
     emit_authoring(result, output_format, exit_code=0 if result.ok else 1)
 
@@ -308,11 +332,13 @@ def _run(
     sample_rows: int,
     timeout: int,
     allow_side_effects: bool,
+    descriptor_path: str | None,
     *,
     dry: bool,
 ) -> None:
+    phase = RunPhase.DRY_RUN if dry else RunPhase.RUN
     try:
-        logical_path = _descriptor_path(source, workspace_root)
+        logical_path = _descriptor_path(source, workspace_root, descriptor_path)
         request = RunRequest(
             xml=_read(source),
             descriptor_path=logical_path,
@@ -321,11 +347,17 @@ def _run(
             timeout_seconds=timeout,
             allow_side_effects=allow_side_effects,
         )
-    except (ValueError, ValidationError) as error:
+    except ValidationError as error:
+        emit_authoring(
+            RunResult.from_model_validation(error, phase),
+            output_format,
+            exit_code=1,
+        )
+    except ValueError as error:
         emit_authoring(
             RunResult.from_input_error(
                 _input_message(error, "Invalid XML input or bounded-run options."),
-                RunPhase.DRY_RUN if dry else RunPhase.RUN,
+                phase,
             ),
             output_format,
             exit_code=1,
@@ -343,6 +375,7 @@ def dry_run(
     max_count: Annotated[int, typer.Option("--max-count")] = 10,
     sample_rows: Annotated[int, typer.Option("--sample-rows")] = 5,
     timeout: Annotated[int, typer.Option("--timeout")] = 30,
+    descriptor_path: DescriptorPath = None,
     workspace_root: WorkspaceRoot = None,
     output_format: OutputFormat = CliOutputFormat.JSON,
 ) -> None:
@@ -351,7 +384,7 @@ def dry_run(
     The default --max-count is 10, independent of the project's Build limit.
     JSON output can include sample row values; do not share transcripts of real data.
     """
-    _run(source, workspace_root, output_format, max_count, sample_rows, timeout, False, dry=True)
+    _run(source, workspace_root, output_format, max_count, sample_rows, timeout, False, descriptor_path, dry=True)
 
 
 @app.command("run")
@@ -361,6 +394,7 @@ def bounded_run(
     sample_rows: Annotated[int, typer.Option("--sample-rows")] = 5,
     timeout: Annotated[int, typer.Option("--timeout")] = 30,
     allow_side_effects: Annotated[bool, typer.Option("--allow-side-effects")] = False,
+    descriptor_path: DescriptorPath = None,
     workspace_root: WorkspaceRoot = None,
     output_format: OutputFormat = CliOutputFormat.JSON,
 ) -> None:
@@ -369,7 +403,17 @@ def bounded_run(
     The default --max-count is 10, independent of the project's Build limit.
     JSON output can include sample row values; do not share transcripts of real data.
     """
-    _run(source, workspace_root, output_format, max_count, sample_rows, timeout, allow_side_effects, dry=False)
+    _run(
+        source,
+        workspace_root,
+        output_format,
+        max_count,
+        sample_rows,
+        timeout,
+        allow_side_effects,
+        descriptor_path,
+        dry=False,
+    )
 
 
 @app.command("export-contract", help="Write the authoring contract bundle to the specified path.")

@@ -247,8 +247,9 @@ def test_bounded_error_keeps_catalog_remediation_and_logical_field(tmp_path):
     )
     assert not result.ok
     diagnostic = result.diagnostics[0]
-    assert diagnostic.ce_error.issue_code.value == "I832"
-    assert "scope" in diagnostic.remediation
+    assert diagnostic.code.value == "I832"
+    assert "raised an error while it ran" in diagnostic.remediation  # 1/0 is no scope or cast problem (#705)
+    assert "cast" not in diagnostic.remediation
     assert "key" in diagnostic.path
     assert "script" in diagnostic.path
     assert str(tmp_path) not in diagnostic.model_dump_json()
@@ -396,7 +397,7 @@ def test_domain_failure_survives_real_bounded_child(tmp_path, monkeypatch, local
     assert len(decoded) == 1
     assert decoded[0].error.to_dict() == expected.value.to_dict()
     if locale:
-        assert result.diagnostics[0].ce_error.error_code.value == "E002"
+        assert result.diagnostics[0].code.value == "child_execution"
         assert isinstance(decoded[0].error.__cause__, ExternalFailureCause)
         assert decoded[0].error.__cause__.cause_types == (
             "datamimic_ce.domains.shared.datasets.locales.UnsupportedLocaleDatasetError",
@@ -432,9 +433,7 @@ def test_actual_bounded_sql_error_keeps_safe_portable_identity(tmp_path):
     )
     result = create_authoring_application(tmp_path).run(AuthoringRunRequest(xml=xml, allow_side_effects=True))
     assert not result.ok
-    assert result.diagnostics[0].code.value == "child_execution"
-    assert result.diagnostics[0].ce_error.error_code.value == "E014"
-    assert result.diagnostics[0].ce_error.issue_code.value == "I901"
+    assert result.diagnostics[0].code.value == "I901"
     assert "synthetic_private_value" not in result.model_dump_json()
 
 
@@ -470,9 +469,7 @@ def test_missing_static_properties_crosses_real_bounded_child(tmp_path):
         BoundedExecutionRequest(xml='<setup><include uri="missing.properties"/></setup>')
     )
     assert not result.ok
-    assert result.diagnostics[0].code.value == "child_execution"
-    assert result.diagnostics[0].ce_error.error_code.value == "E008"
-    assert result.diagnostics[0].ce_error.issue_code.value == "I201"
+    assert result.diagnostics[0].code.value == "I201"
     assert result.diagnostics[0].path[-2:] == ("include", "uri")
     assert str(tmp_path) not in result.diagnostics[0].model_dump_json()
 
@@ -565,7 +562,7 @@ def test_binary_constructor_reason_survives_actual_bounded_child(tmp_path):
         )
     )
     assert not result.ok
-    assert result.diagnostics[0].ce_error.error_code.value == "E009"
+    assert result.diagnostics[0].code.value == "child_execution"
     assert "Supported:" in result.diagnostics[0].message
     assert "generator parameters" in result.diagnostics[0].remediation
     assert "application/unknown" not in result.model_dump_json()

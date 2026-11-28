@@ -360,11 +360,24 @@ def project_acceptance(
                 )
     spec = AcceptanceSpecV1(products=tuple(entry.product for entry in entries), relationships=tuple(relationships))
     explicit_joins: dict[tuple[str, str], tuple[AcceptanceJoinV1, ...]] = {}
+    composite_identities: dict[str, tuple[str, ...]] = {}
     for index, declaration in enumerate(request.product_roles):
         path = ("product_roles", index)
         subject = ProductRowsSubject(product=declaration.product, list_field=declaration.list_field)
         validate_acceptance_subject(spec, subject, path, declaration.field)
         if isinstance(declaration.role, IdentifierRole):
+            if declaration.role.additional_fields:
+                fields = (declaration.field, *declaration.role.additional_fields)
+                if declaration.list_field is not None or len(set(fields)) != len(fields):
+                    _reject("A composite Memstore identity must name distinct top-level fields.", path)
+                if declaration.product in composite_identities or _identifier_fields(request, declaration.product):
+                    _reject("A composite Memstore identity must be the only top-level identifier on its product.", path)
+                for field_index, field_name in enumerate(declaration.role.additional_fields):
+                    validate_acceptance_subject(
+                        spec, subject, path + ("role", "additional_fields", field_index), field_name
+                    )
+                composite_identities[declaration.product] = fields
+                continue
             derive(
                 UniqueExpectation(
                     subject=subject,
@@ -423,7 +436,18 @@ def project_acceptance(
         )
         for index, item in enumerate(request.acceptance_requirements)
     )
-    readbacks = _readbacks(request, entries, canonical_document, included)
+    readbacks = _readbacks(request, entries, canonical_document, included, composite_identities)
+    readback_producers = {readback.producer for readback in readbacks}
+    for index, declaration in enumerate(request.product_roles):
+        if (
+            isinstance(declaration.role, IdentifierRole)
+            and declaration.role.additional_fields
+            and declaration.product not in readback_producers
+        ):
+            _reject(
+                "A composite identifier requires a <generate source> Memstore readback.",
+                ("product_roles", index),
+            )
     spec = AcceptanceSpecV1(products=spec.products, relationships=tuple(relationships), readbacks=readbacks)
     for check in checks:
         validate_acceptance_check(spec, check)
@@ -547,7 +571,10 @@ def _identifier_fields(request: BuildRequestV5, product: str) -> set[str]:
     return {
         role.field
         for role in request.product_roles
-        if role.product == product and role.list_field is None and isinstance(role.role, IdentifierRole)
+        if role.product == product
+        and role.list_field is None
+        and isinstance(role.role, IdentifierRole)
+        and not role.role.additional_fields
     }
 
 
@@ -679,11 +706,55 @@ def _writer(entries: tuple[_Product, ...], entity: object, store: str, path: tup
     return producers[0]
 
 
+def _readback_joins(
+    request: BuildRequestV5,
+    producer: _Product,
+    consumer: _Product,
+    source: str,
+    composite_fields: tuple[str, ...] | None,
+) -> tuple[AcceptanceJoinV1, ...]:
+    named = [
+        AcceptanceJoinV1(parent_field=declaration.role.parent_field, child_field=declaration.field)
+        for declaration in request.product_roles
+        if declaration.product == consumer.product.name
+        and declaration.list_field is None
+        and isinstance(declaration.role, ForeignKeyRole)
+        and declaration.role.parent_product == producer.product.name
+    ]
+    if composite_fields is not None:
+        joins = [join for join in named if join.parent_field in composite_fields]
+        by_parent = {join.parent_field: join for join in joins}
+        if (
+            len(joins) != len(composite_fields)
+            or set(by_parent) != set(composite_fields)
+            or len({join.child_field for join in joins}) != len(joins)
+        ):
+            _reject(
+                "Memstore readback requires one distinct consumer foreign-key field per composite identity field.",
+                consumer.path,
+                remediation=f"Map each producer field to one consumer field: {', '.join(composite_fields)}.",
+            )
+        return tuple(by_parent[field] for field in composite_fields)
+
+    identifiers = _identifier_fields(request, producer.product.name)
+    candidates = tuple(join for join in named if join.parent_field in identifiers)
+    if len(identifiers) != 1 or len(candidates) != 1:
+        _reject(
+            "Memstore completeness requires one producer identifier role and one matching consumer foreign-key role.",
+            consumer.path,
+            remediation=_role_pair_remediation(
+                producer, consumer, source, identifiers, tuple(join.parent_field for join in named), len(candidates) > 1
+            ),
+        )
+    return candidates
+
+
 def _readbacks(
     request: BuildRequestV5,
     entries: tuple[_Product, ...],
     document: DmJsonDocumentV1,
     included: tuple[tuple[str, DmJsonDocumentV1], ...],
+    composite_identities: dict[str, tuple[str, ...]],
 ) -> tuple[AcceptanceReadbackV1, ...]:
     documents = ((("document",), document), *((("include", uri), step) for uri, step in included))
     stores = {
@@ -710,34 +781,13 @@ def _readbacks(
                         "A same-name memstore readback field must read its current source field.",
                         consumer.path + ("children", index),
                     )
-        identifiers = _identifier_fields(request, producer.product.name)
-        named = [
-            role
-            for role in request.product_roles
-            if role.product == consumer.product.name
-            and role.list_field is None
-            and isinstance(role.role, ForeignKeyRole)
-            and role.role.parent_product == producer.product.name
-        ]
-        candidates = [
-            role for role in named if isinstance(role.role, ForeignKeyRole) and role.role.parent_field in identifiers
-        ]
-        if len(identifiers) != 1 or len(candidates) != 1:
-            parent_fields = tuple(role.role.parent_field for role in named if isinstance(role.role, ForeignKeyRole))
-            _reject(
-                "Memstore completeness requires one producer identifier role "
-                "and one matching consumer foreign-key role.",
-                consumer.path,
-                remediation=_role_pair_remediation(
-                    producer, consumer, source, identifiers, parent_fields, len(candidates) > 1
-                ),
-            )
         result.append(
             AcceptanceReadbackV1(
                 producer=producer.product.name,
                 consumer=consumer.product.name,
-                producer_field=next(iter(identifiers)),
-                consumer_field=candidates[0].field,
+                joins=_readback_joins(
+                    request, producer, consumer, source, composite_identities.get(producer.product.name)
+                ),
                 path=consumer.path,
             )
         )

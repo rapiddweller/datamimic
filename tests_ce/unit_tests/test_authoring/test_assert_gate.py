@@ -55,52 +55,53 @@ def test_the_failed_row_does_not_change_what_build_keeps(tmp_path: Path) -> None
 
     for other in others:
         assert [item.model_dump() for item in other.diagnostics] == [item.model_dump() for item in result.diagnostics]
-    assert _codes(result) == ["assert_failed", "not_executed"]
+    assert _codes(result) == ["I895", "not_executed"]
     assert [product.name for product in result.evidence] == ["items"]
     assert "Declared product capture is missing." not in result.model_dump_json()
-    [failed] = [item for item in result.diagnostics if str(item.code) == "assert_failed"]
+    [failed] = [item for item in result.diagnostics if item.code is IssueCode.TASK_ASSERT_FAILED]
     assert failed.path == ("descriptor", "datamimic.xml", "assert", "line", 11)
-    assert failed.message == "The <assert> in 'lines' failed: A line holds at most 4 items"
+    assert failed.message == "An <assert> failed."
+    assert failed.expected == "A line holds at most 4 items"
 
 
 def test_an_included_step_keeps_every_product_before_it(tmp_path: Path) -> None:
     result = _build(tmp_path, "fails_in_included_step")
 
-    [failed] = [item for item in result.diagnostics if str(item.code) == "assert_failed"]
+    [failed] = [item for item in result.diagnostics if item.code is IssueCode.TASK_ASSERT_FAILED]
     assert failed.path == ("include", "model/10_stock.xml", "assert", "line", 4)
     assert [product.name for product in result.evidence] == ["items", "lines", "parts"]
     # Only the two checks on the stock product stay unevaluated; the checks on the earlier products passed.
     assert len(_not_evaluated(result)) == 2
-    assert _codes(result) == ["assert_failed", "not_executed"]
+    assert _codes(result) == ["I895", "not_executed"]
 
 
 def test_a_nested_assert_names_its_generate_and_loses_the_whole_outer_product(tmp_path: Path) -> None:
     result = _build(tmp_path, "fails_in_nested_generate")
 
-    [failed] = [item for item in result.diagnostics if str(item.code) == "assert_failed"]
+    [failed] = [item for item in result.diagnostics if item.code is IssueCode.TASK_ASSERT_FAILED]
     assert failed.path == ("descriptor", "datamimic.xml", "assert", "line", 16)
-    assert "in 'parts'" in failed.message
+    assert failed.expected == "A line has at most 2 parts"
     assert [product.name for product in result.evidence] == ["items"]
 
 
 def test_an_assert_after_every_product_leaves_nothing_unevaluated(tmp_path: Path) -> None:
     result = _build(tmp_path, "fails_after_all_products")
 
-    assert _codes(result) == ["assert_failed"]
+    assert _codes(result) == ["I895"]
     assert [product.name for product in result.evidence] == ["items", "lines", "parts", "stock"]
 
 
 def test_an_unrelated_failing_expectation_is_still_reported(tmp_path: Path) -> None:
     result = _build(tmp_path, "assert_and_failing_expectation")
 
-    assert _codes(result) == ["assert_failed", "range", "not_executed"]
+    assert _codes(result) == ["I895", "range", "not_executed"]
 
 
 @pytest.mark.parametrize("negative", ["message_is_a_property", "message_has_braces", "message_has_dunder"])
 def test_a_message_that_can_hold_a_value_is_not_shown(tmp_path: Path, negative: str) -> None:
     result = _build(tmp_path, negative)
 
-    [failed] = [item for item in result.diagnostics if str(item.code) == "assert_failed"]
+    [failed] = [item for item in result.diagnostics if item.code is IssueCode.TASK_ASSERT_FAILED]
     assert failed.expected is None
     assert "is not shown" in failed.message
     serialized = result.model_dump_json()
@@ -112,7 +113,7 @@ def test_a_message_that_can_hold_a_value_is_not_shown(tmp_path: Path, negative: 
 def test_two_asserts_on_one_line_show_no_message(tmp_path: Path) -> None:
     result = _build(tmp_path, "asserts_share_a_line")
 
-    [failed] = [item for item in result.diagnostics if str(item.code) == "assert_failed"]
+    [failed] = [item for item in result.diagnostics if item.code is IssueCode.TASK_ASSERT_FAILED]
     assert failed.path == ("descriptor", "datamimic.xml", "assert", "line", 11)
     assert failed.expected is None
     assert "more than one <assert>" in failed.message
@@ -127,14 +128,14 @@ def test_authoring_dry_run_is_not_ok_and_shows_the_kept_products(tmp_path: Path)
     )
 
     assert result.ok is False
-    assert [str(item.code) for item in result.diagnostics if item.severity == "error"] == ["assert_failed"]
+    assert [item.code for item in result.diagnostics if item.severity == "error"] == [IssueCode.TASK_ASSERT_FAILED]
     assert [product.name for product in result.products] == ["items", "lines", "parts"]
 
 
 def test_an_assert_without_message_says_so(tmp_path: Path) -> None:
     result = _build(tmp_path, "assert_without_message")
 
-    [failed] = [item for item in result.diagnostics if str(item.code) == "assert_failed"]
+    [failed] = [item for item in result.diagnostics if item.code is IssueCode.TASK_ASSERT_FAILED]
     assert failed.expected is None
     assert "has no message" in failed.message
 
@@ -142,7 +143,7 @@ def test_an_assert_without_message_says_so(tmp_path: Path) -> None:
 def test_a_condition_that_raises_stays_a_broken_expression(tmp_path: Path) -> None:
     result = _build(tmp_path, "condition_raises")
 
-    assert _codes(result) == ["child_execution"]
+    assert _codes(result) == [IssueCode.TASK_EXPRESSION_EVAL_FAILED.value]
     assert result.evidence == ()
 
 
@@ -150,7 +151,7 @@ def test_a_kept_product_that_build_cannot_capture_leaves_every_check_unevaluated
     # items completes with an infinite qty; without the failed assert the same value gives child_execution.
     result = _build(tmp_path, "invalid_value_in_a_kept_product")
 
-    assert _codes(result) == ["assert_failed", "child_execution", "not_executed"]
+    assert _codes(result) == ["I895", "child_execution", "not_executed"]
     assert result.evidence == ()
     # The failure envelope, not the dropped capture, carries the read files.
     assert "data/entity/items.json" in _artifact(result)
@@ -165,7 +166,7 @@ def test_an_assert_in_the_first_product_keeps_a_valid_empty_capture(tmp_path: Pa
     # No product completed, so the empty stopped capture is valid: no child_execution may claim a lost capture.
     result = _build(tmp_path, "fails_in_first_product")
 
-    assert _codes(result) == ["assert_failed", "not_executed"]
+    assert _codes(result) == ["I895", "not_executed"]
     assert result.evidence == ()
     [skipped] = [item for item in result.diagnostics if str(item.code) == "not_executed"]
     assert skipped.message.startswith(
@@ -177,16 +178,16 @@ def test_an_assert_tag_over_several_lines_reports_the_line_where_it_ends(tmp_pat
     # libxml2 gives an element the line of its start tag's end; the runtime and Build both read that line.
     result = _build(tmp_path, "assert_tag_spans_lines")
 
-    [failed] = [item for item in result.diagnostics if str(item.code) == "assert_failed"]
+    [failed] = [item for item in result.diagnostics if item.code is IssueCode.TASK_ASSERT_FAILED]
     assert failed.path == ("descriptor", "datamimic.xml", "assert", "line", 13)
 
 
 def test_a_long_message_is_cut_to_200_characters_in_message_and_expected(tmp_path: Path) -> None:
     result = _build(tmp_path, "message_of_201_characters")
 
-    [failed] = [item for item in result.diagnostics if str(item.code) == "assert_failed"]
+    [failed] = [item for item in result.diagnostics if item.code is IssueCode.TASK_ASSERT_FAILED]
     assert isinstance(failed.expected, str) and len(failed.expected) == 200 and failed.expected.endswith("...")
-    assert failed.message == f"The <assert> in 'lines' failed: {failed.expected}"
+    assert failed.message == "An <assert> failed."
 
 
 def _project(tmp_path: Path, xml: str, acceptance: object) -> RejectedBuild:
@@ -226,7 +227,7 @@ def test_a_child_product_before_its_failed_parent_keeps_its_count_and_skips_its_
         },
     )
 
-    assert _codes(result) == ["assert_failed", "exact_count", "not_executed"]
+    assert _codes(result) == ["I895", "exact_count", "not_executed"]
     assert [product.name for product in result.evidence] == ["orders"]
     assert _not_evaluated(result) == {
         json.dumps(["document", "root", "children", 1]),
@@ -313,7 +314,7 @@ def test_a_stopped_run_lists_the_files_it_read_before_the_assert_and_not_after(t
     complete = create_authoring_application(project, descriptor_path=PROJECT_ENTRY_PATH).build()
 
     assert isinstance(result, RejectedBuild)
-    assert _codes(result) == ["assert_failed", "not_executed"]
+    assert _codes(result) == ["I895", "not_executed"]
     assert sorted(_artifact(result)) == [
         "acceptance/build.json",
         "data/a.json",
@@ -432,7 +433,7 @@ def test_an_assert_in_step_10_still_lists_every_check_it_could_not_evaluate(tmp_
     result = create_authoring_application(project, descriptor_path=PROJECT_ENTRY_PATH).build()
 
     assert isinstance(result, RejectedBuild)
-    assert _codes(result) == ["assert_failed", "not_executed"]
+    assert _codes(result) == ["I895", "not_executed"]
     assert [product.name for product in result.evidence] == [
         "approval_versions",
         "approvals",
@@ -446,7 +447,7 @@ def test_an_assert_in_step_10_still_lists_every_check_it_could_not_evaluate(tmp_
         "policy",
         "qualifications",
     ]
-    assert len(_not_evaluated(result)) == 73
+    assert len(_not_evaluated(result)) == 77
 
 
 def test_the_learning_reference_says_when_to_use_an_assert_or_an_expectation(tmp_path: Path) -> None:
@@ -456,6 +457,6 @@ def test_the_learning_reference_says_when_to_use_an_assert_or_an_expectation(tmp
 
     [entry] = result.entries or ()
     assert isinstance(entry, AuthoringLearningReference)
-    for fact in ("<assert>", "exit code 1", "assert_failed", "not_executed", "exits 0", "literal", "expectations"):
+    for fact in ("<assert>", "exit code 1", "I895", "not_executed", "exits 0", "literal", "expectations"):
         assert fact in entry.description
     assert (Path(__file__).resolve().parents[3] / entry.path).is_file()

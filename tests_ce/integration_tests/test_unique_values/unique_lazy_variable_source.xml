@@ -1,0 +1,9 @@
+<setup rngSeed="5" defaultSourceScripted="true">
+    <!-- A <variable source> expression that is no file, client or memstore is read lazily. unique= must draw it
+         from the whole pool without replacement, and the setup default sourceScripted must template every
+         drawn value ({10} becomes the number 10). -->
+    <generate name="people" count="6" target="">
+        <variable name="pick" source="['{10}', '{20}', '{30}', '{40}', '{50}', '{60}']" unique="true"/>
+        <key name="code" script="pick"/>
+    </generate>
+</setup>

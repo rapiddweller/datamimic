@@ -141,6 +141,26 @@ def test_a_differing_replay_stops_the_replays_and_names_a_possible_cause():
     assert ReplayCause.OTHER.failure_message() in [item.message for item in result.diagnostics]
 
 
+def test_an_aborted_replay_child_is_rejected_with_its_status_and_cause():
+    from datamimic_ce.authoring.domain.diagnostics import AuthoringSystemDiagnosticCode, Diagnostic, DiagnosticPhase
+
+    timeout = Diagnostic(
+        code=AuthoringSystemDiagnosticCode.TIMEOUT,
+        phase=DiagnosticPhase.EVIDENCE,
+        message="Bounded execution exceeded its timeout.",
+        remediation="Retry.",
+    )
+    aborted = BoundedExecutionEvidence(
+        status=BoundedExecutionStatus.FAILED, captured=CapturedProducts((), 10), diagnostics=(timeout,)
+    )
+    result = workflow(Executor([captured(), aborted])).execute()
+    assert result.outcome == "rejected"
+    replay = result.verification.deterministic_replay
+    assert replay.status.value == "failed"
+    assert "replay status failed, 0 rows captured: Bounded execution exceeded its timeout." in replay.reason
+    assert timeout.message in [item.message for item in result.diagnostics]
+
+
 def test_derived_count_cannot_be_omitted_by_caller():
     result = workflow(Executor([captured(rows=({"id": 1}, {"id": 2}))])).execute()
     assert result.outcome == "rejected"

@@ -2,11 +2,10 @@ import base64
 import json
 import logging
 import os
+import sys
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
-
-from bson import ObjectId
 
 from datamimic_ce.engine.io.exporters.core.exporter_config import ExporterConfig
 from datamimic_ce.engine.io.exporters.core.unified_buffered_exporter import UnifiedBufferedExporter
@@ -20,10 +19,15 @@ class DateTimeEncoder(json.JSONEncoder):
     def default(self, o: object) -> str:
         if isinstance(o, datetime | date):  # datetime is a date subclass; both isoformat
             return o.isoformat()
-        elif isinstance(o, Decimal | ObjectId):
+        if isinstance(o, Decimal):
             return str(o)
-        elif isinstance(o, bytes | bytearray):
+        if isinstance(o, bytes | bytearray):
             return base64.b64encode(o).decode("ascii")  # binary field -> base64 text
+        if "bson" in sys.modules:
+            from bson import ObjectId
+
+            if isinstance(o, ObjectId):
+                return str(o)
         return super().default(o)
 
 

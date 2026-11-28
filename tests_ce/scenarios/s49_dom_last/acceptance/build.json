@@ -1,0 +1,22 @@
+{
+  "version": "5.0",
+  "max_count": 320,
+  "expectations": [
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "leap_feb"}, "field": "day", "values": [1, 15, 29]},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "leap_feb"}, "count": 40},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "plain_feb"}, "field": "day", "values": [1, 15, 28]},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "plain_feb"}, "count": 40},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "days30"}, "field": "day", "values": [1, 15, 30]},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "days30"}, "count": 40},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "days31"}, "field": "day", "values": [1, 15, 31]},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "days31"}, "count": 40},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "last_only"}, "field": "day", "values": [29]},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "last_only"}, "count": 40},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "dup_last31"}, "field": "day", "values": [31]},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "dup_last31"}, "count": 40},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "missing31"}, "field": "day", "values": [30]},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "missing31"}, "count": 40},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "range_last"}, "field": "day", "values": [3, 4, 30]},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "range_last"}, "count": 40}
+  ]
+}

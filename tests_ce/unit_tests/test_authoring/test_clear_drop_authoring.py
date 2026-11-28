@@ -69,7 +69,7 @@ def test_lint_accepts_a_count_free_clear_and_drop(workspace: Path):
 def test_lint_knows_the_operations_of_each_client_family(workspace: Path):
     rdbms_drop = _setup('<generate name="drop_items" targetEntity="items" target="db.drop"/>')
     result = _app(workspace).lint(LintRequest(xml=rdbms_drop))
-    assert [item.code for item in result.diagnostics if item.severity == "error"] == ["DM401"]
+    assert [item.rule for item in result.diagnostics if item.severity == "error"] == ["DM401"]
     mongo = f'<setup rngSeed="1">{_MONGO}<generate name="c" targetEntity="d" target="mongo.drop"/></setup>'
     assert _app(workspace).lint(LintRequest(xml=mongo)).ok
 
@@ -100,7 +100,7 @@ def test_a_clear_with_a_wrong_shape_is_refused_with_i928_in_every_mode(workspace
         result = run(_request(xml=_setup(statement), allow_side_effects=run == _app(workspace).run))
         assert not result.ok
         (error,) = (item for item in result.diagnostics if item.severity == "error")
-        assert error.ce_error is not None and error.ce_error.issue_code == "I928"
+        assert error.code == "I928"
     assert _rows(workspace) == 2
 
 
@@ -152,7 +152,7 @@ def test_a_delete_of_a_whole_database_source_is_refused_with_i928_in_bounded_exe
     result = _app(workspace).dry_run(_request(xml=_setup(whole)))
     assert not result.ok
     (error,) = (item for item in result.diagnostics if item.severity == "error")
-    assert error.ce_error is not None and error.ce_error.issue_code == "I928"
+    assert error.code == "I928"
     assert _rows(workspace) == 2
 
 
@@ -165,7 +165,7 @@ def test_a_whole_source_delete_in_an_included_step_is_refused_in_dry_run_and_bui
     dry = _app(workspace).dry_run(_request(xml=xml))
     assert not dry.ok
     (error,) = (item for item in dry.diagnostics if item.severity == "error")
-    assert error.ce_error is not None and error.ce_error.issue_code == "I928"
+    assert error.code == "I928"
     built = build_project(
         workspace, xml, version="5.0", environment_bindings=[{"environment": "db", "family": "database"}]
     )
@@ -211,7 +211,7 @@ def test_build_of_a_project_that_only_cleans_up_has_no_product_to_prove_and_is_r
     assert _rows(workspace) == 2
 
 
-def test_a_skipped_clear_does_not_turn_a_zero_row_build_into_ready(workspace: Path):
+def test_a_skipped_clear_does_not_change_a_zero_row_build_outcome(workspace: Path):
     zero = '<generate name="rows" count="0"><key name="x" constant="1"/></generate>'
     expectations = [{"kind": "exact_count", "subject": {"kind": "product", "product": "rows"}, "count": 0}]
     bindings = [{"environment": "db", "family": "database"}]
@@ -221,7 +221,8 @@ def test_a_skipped_clear_does_not_turn_a_zero_row_build_into_ready(workspace: Pa
     with_clear = build_project(
         workspace, _setup(_CLEAR, zero), version="5.0", environment_bindings=bindings, expectations=expectations
     )
-    assert alone.outcome == with_clear.outcome == "rejected"
+    assert with_clear.outcome == alone.outcome
+    assert alone.outcome == "ready", alone.diagnostics
 
 
 def test_build_rejects_a_clear_that_would_not_run_as_written(workspace: Path):
@@ -233,7 +234,7 @@ def test_build_rejects_a_clear_that_would_not_run_as_written(workspace: Path):
         expectations=[{"kind": "exact_count", "subject": {"kind": "product", "product": "rows"}, "count": 2}],
     )
     assert result.outcome == "rejected"
-    assert any(item.ce_error is not None and item.ce_error.issue_code == "I928" for item in result.diagnostics)
+    assert any(item.code == "I928" for item in result.diagnostics)
     assert _rows(workspace) == 2
 
 

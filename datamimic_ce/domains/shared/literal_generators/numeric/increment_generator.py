@@ -10,7 +10,16 @@ from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralG
 
 class IncrementGenerator(BaseLiteralGenerator):
     """
-    Generate sequential number set
+    Generate sequential number set.
+
+    Parameters:
+        start: first value produced (default 1).
+        end: exclusive upper bound. A value is produced only while ``value < end``, for every step,
+            so ``end`` itself is never produced: ``IncrementGenerator(1, 5)`` yields 1, 2, 3, 4.
+        step: positive increment (default 1). ``IncrementGenerator(1, 5, 2)`` yields 1, 3, and
+            ``IncrementGenerator(1, 6, 2)`` yields 1, 3, 5.
+
+    Once the sequence reaches ``end`` it stays exhausted: ``generate`` raises ``StopIteration``.
     """
 
     # Do not cache increment generators globally as their state is usually
@@ -20,14 +29,19 @@ class IncrementGenerator(BaseLiteralGenerator):
     def __init__(self, start: int = 1, end: int = 9223372036854775807, step: int = 1):
         if step <= 0:
             raise ValueError("Step must be a positive integer.")
+        self._base_start = start
+        self._base_end = end
         self._start = start
         self._end = end
         self._current = start
         self._step = step
 
     def add_pagination(self, skip: int, limit: int) -> None:
-        self._start += skip
-        self._end = min(self._end, self._start + limit)
+        # Derive the window from the original bounds so repeated calls do not accumulate.
+        # Both bounds are exclusive (value < end): a page holds the rows skip .. skip + limit - 1,
+        # so consecutive pages neither overlap nor skip a value.
+        self._start = self._base_start + skip * self._step
+        self._end = min(self._base_end, self._start + limit * self._step)
         self._current = self._start
 
     def generate(self) -> int:
@@ -35,10 +49,9 @@ class IncrementGenerator(BaseLiteralGenerator):
         Generate current number of sequence
         :return:
         """
-        result = self._current
-        self._current += self._step
-
-        if self._current > self._end:
+        if self._current >= self._end:
             raise StopIteration("Generator reached the end")
 
+        result = self._current
+        self._current += self._step
         return result

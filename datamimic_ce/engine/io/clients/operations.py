@@ -1,30 +1,29 @@
 """Operations that runtime tasks may perform without depending on client classes."""
 
+from __future__ import annotations
+
 import copy
 import logging
-from typing import TypeGuard
-
-from sqlalchemy.exc import OperationalError, ProgrammingError
+from typing import TYPE_CHECKING, TypeGuard
 
 from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
 from datamimic_ce.engine.io.clients.client import Client, RegisteredClient
 from datamimic_ce.engine.io.clients.database_client import DatabaseClient
 from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
-from datamimic_ce.engine.io.clients.rdbms_client import (
-    ColumnKind,
-    RdbmsClient,
-    create_table_ddl,
-    create_table_definition,
-)
 from datamimic_ce.engine.io.connection_config.mongodb_connection_config import MongoDBConnectionConfig
 from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig
-from datamimic_ce.engine.io.contracts import DataSourcePagination, SqlScriptClient
+from datamimic_ce.engine.io.contracts import ColumnKind, DataSourcePagination, SqlScriptClient
 from datamimic_ce.errors import IssueCode, OperationError
+
+if TYPE_CHECKING:
+    from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 
 logger = logging.getLogger("DATAMIMIC")
 
 
 def create_rdbms_client(config: RdbmsConnectionConfig, task_id: str) -> Client:
+    from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
+
     return RdbmsClient(config, task_id)
 
 
@@ -33,7 +32,7 @@ def create_mongodb_client(config: MongoDBConnectionConfig) -> Client:
 
 
 def clone_client_for_include(client: RegisteredClient) -> RegisteredClient:
-    if isinstance(client, RdbmsClient):
+    if is_rdbms_client(client):
         memo = {id(client.engine): None} if client.engine is not None else {}
         return copy.deepcopy(client, memo)
     if isinstance(client, MongoDBClient):
@@ -49,16 +48,20 @@ def is_database_client(client: RegisteredClient | None) -> TypeGuard[DatabaseCli
     return isinstance(client, DatabaseClient)
 
 
-def is_mongodb_client(client: RegisteredClient | None) -> bool:
+def is_mongodb_client(client: RegisteredClient | None) -> TypeGuard[MongoDBClient]:
     return isinstance(client, MongoDBClient)
 
 
-def is_rdbms_client(client: RegisteredClient | None) -> bool:
+def is_rdbms_client(client: RegisteredClient | None) -> TypeGuard[RdbmsClient]:
+    if not isinstance(client, DatabaseClient) or is_mongodb_client(client):
+        return False
+    from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
+
     return isinstance(client, RdbmsClient)
 
 
 def rdbms_client_dbms(client: RegisteredClient | None) -> Dbms | None:
-    return client.dbms if isinstance(client, RdbmsClient) else None
+    return client.dbms if is_rdbms_client(client) else None
 
 
 def planned_create_table_ddl(
@@ -69,6 +72,8 @@ def planned_create_table_ddl(
     schema: str | None,
 ) -> str:
     """The CREATE TABLE statement that a run would execute, for Build, which creates nothing."""
+    from datamimic_ce.engine.io.clients.rdbms_client import create_table_ddl, create_table_definition
+
     return create_table_ddl(create_table_definition(entity, columns, primary_key, schema), dbms)
 
 
@@ -80,8 +85,10 @@ def count_query_length(client: RegisteredClient, query: str) -> int | None:
 
 def rdbms_count_source_query(client: RegisteredClient, query: str, source_str: str, query_label: str) -> int | None:
     """Return an RDBMS source count, logging query failures and returning None."""
-    if not isinstance(client, RdbmsClient):
+    if not is_rdbms_client(client):
         raise TypeError("Client is not an RDBMS client")
+    from sqlalchemy.exc import OperationalError, ProgrammingError
+
     try:
         return client.count_query_length(query=query)
     except (ProgrammingError, OperationalError, OperationError) as error:
@@ -130,15 +137,15 @@ def mongodb_count_collection(client: RegisteredClient, collection: str) -> int:
 
 
 def database_get_random_rows_by_columns(client: RegisteredClient | None, name: str, columns: list[str]) -> list[tuple]:
-    if not isinstance(client, RdbmsClient | MongoDBClient):
-        raise TypeError("Client does not support database column reads")
-    return client.get_random_rows_by_columns(name, columns)
+    if is_rdbms_client(client) or is_mongodb_client(client):
+        return client.get_random_rows_by_columns(name, columns)
+    raise TypeError("Client does not support database column reads")
 
 
 def rdbms_get_current_sequence_number(
     client: RegisteredClient, sequence: str, table: str | None, column: str | None
 ) -> int:
-    if not isinstance(client, RdbmsClient):
+    if not is_rdbms_client(client):
         raise TypeError("Client is not an RDBMS client")
     return client.get_current_sequence_number(sequence, table, column)
 
@@ -146,16 +153,24 @@ def rdbms_get_current_sequence_number(
 def rdbms_increase_sequence_number(
     client: RegisteredClient, sequence: str, increment: int, table: str | None, column: str | None
 ) -> None:
-    if not isinstance(client, RdbmsClient):
+    if not is_rdbms_client(client):
         raise TypeError("Client is not an RDBMS client")
     client.increase_sequence_number(sequence, increment, table, column)
 
 
+def rdbms_reserve_sequence_block(
+    client: Client, sequence: str, count: int, table: str | None, column: str | None
+) -> int:
+    if not is_rdbms_client(client):
+        raise TypeError("Client is not an RDBMS client")
+    return client.reserve_sequence_block(sequence, count, table, column)
+
+
 def dispose_client_engine(client: RegisteredClient) -> None:
-    if isinstance(client, RdbmsClient) and client.engine is not None:
+    if is_rdbms_client(client) and client.engine is not None:
         client.engine.dispose()
         client.engine = None
 
 
 def uses_mysql_sequence_storage(client: RegisteredClient) -> bool:
-    return isinstance(client, RdbmsClient) and client.credential.dbms is Dbms.MYSQL
+    return is_rdbms_client(client) and client.credential.dbms is Dbms.MYSQL

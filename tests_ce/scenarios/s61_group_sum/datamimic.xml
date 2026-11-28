@@ -1,0 +1,21 @@
+<setup rngSeed="7">
+    <generate name="postings" count="5" target="ConsoleExporter">
+        <variable name="index" generator="IncrementGenerator"/>
+        <key name="entry" script="('first', 'first', 2, 2, 'single')[index - 1]"/>
+        <key name="debit" script="(0.1, '0.2', 2, '3.00', 0.1)[index - 1]"/>
+        <key name="credit" script="(0, '0.30', 0.5, '4.5', '0.10')[index - 1]"/>
+    </generate>
+    <generate name="expected_totals" count="4" target="ConsoleExporter">
+        <variable name="index" generator="IncrementGenerator"/>
+        <key name="entry" script='("first", 2, "single", "unused")[index - 1]'/>
+        <key name="expected_amount" script="('0.300', 5, '0.100', '0.000')[index - 1]"/>
+    </generate>
+    <generate name="empty_postings" count="0" target="ConsoleExporter">
+        <key name="entry" constant="absent"/>
+        <key name="debit" script="0"/>
+    </generate>
+    <generate name="zero_totals" count="1" target="ConsoleExporter">
+        <key name="entry" constant="absent"/>
+        <key name="expected_amount" script="0"/>
+    </generate>
+</setup>

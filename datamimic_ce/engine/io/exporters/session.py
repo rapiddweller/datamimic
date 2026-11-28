@@ -8,8 +8,7 @@ import logging
 from typing import TypedDict
 
 from datamimic_ce.engine.dsl.vocabulary.enums.operation_enums import ExportOperation
-from datamimic_ce.engine.io.clients.rdbms_client import ColumnKind
-from datamimic_ce.engine.io.contracts import Exporter, ExportMetadata
+from datamimic_ce.engine.io.contracts import ColumnKind, Exporter, ExportMetadata
 from datamimic_ce.engine.io.exporters.core.exporter_context import ExporterContext
 from datamimic_ce.engine.io.exporters.core.exporter_state_manager import ExporterStateManager
 from datamimic_ce.engine.io.exporters.core.serialization import convert_xml_dict_to_json_dict

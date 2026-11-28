@@ -6,8 +6,8 @@ from pathlib import Path
 import pytest
 from sqlalchemy.exc import IntegrityError
 
-from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 from datamimic_ce.errors import IssueCode, OperationError
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 
 def _descriptor(tmp_path: Path, *, target: str, count: int = 1, email: str | None = None) -> list[dict[str, object]]:
@@ -106,7 +106,11 @@ def test_upsert_does_not_match_a_non_primary_unique_column(tmp_path: Path, monke
             "INSERT INTO patients (patient_id, status, email) VALUES ('existing-id', 'existing', 'same@example.test')"
         )
 
-    with pytest.raises(IntegrityError, match="UNIQUE constraint failed"):
+    with pytest.raises(OperationError) as rejected:
         _descriptor(tmp_path, target="db.upsert", email="same@example.test")
+    assert rejected.value.issue_code is IssueCode.OPERATION_EXECUTION_FAILED
+    assert isinstance(rejected.value.__cause__, IntegrityError)
+    assert rejected.value.__cause__.statement is None
+    assert str(rejected.value.__cause__.orig) == "IntegrityError"
 
     assert _stored_rows(database) == [("existing-id", "existing", "same@example.test")]

@@ -8,7 +8,16 @@
 from pathlib import PurePosixPath
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, ValidatorFunctionWrapHandler, WrapValidator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    SerializerFunctionWrapHandler,
+    StrictInt,
+    StrictStr,
+    ValidatorFunctionWrapHandler,
+    WrapValidator,
+)
 
 MAX_AUTHORING_MAX_COUNT = 2000
 
@@ -38,6 +47,15 @@ WorkspaceDescriptorPath = Annotated[PurePosixPath, WrapValidator(_workspace_path
 
 class AuthoringModel(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True, validate_default=True, allow_inf_nan=False)
+
+
+def serialize_omitting_field(
+    model: AuthoringModel, handler: SerializerFunctionWrapHandler, omitted_field: str | None
+) -> dict[str, object]:
+    value = handler(model)
+    if omitted_field is not None:
+        value.pop(omitted_field, None)
+    return value
 
 
 # Float-backed decimal range proof retains the previous authoring precision limit.

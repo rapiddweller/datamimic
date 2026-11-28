@@ -284,7 +284,7 @@ def test_missing_memstore_product_remains_keyerror_and_structured_across_child(t
     xml = '<setup><memstore id="mem"/><generate name="rows" source="mem" type="missing" count="1"/></setup>'
     result = CeBoundedExecutor(AuthoringWorkspaceContext(tmp_path)).execute(BoundedExecutionRequest(xml=xml))
     assert not result.ok
-    assert result.diagnostics[0].ce_error.error_code is ErrorCode.INVALID_SOURCE
+    assert result.diagnostics[0].code is AuthoringSystemDiagnosticCode.CHILD_EXECUTION
     assert "missing" not in result.diagnostics[0].message
 
 
@@ -311,7 +311,7 @@ def test_bounded_transformer_forces_read_only_after_profile_resolution(tmp_path)
 
 def test_real_sqlite_source_failure_keeps_ce_identity_in_private_child(tmp_path):
     import sqlite3
-    from datamimic_ce.errors.codes import ErrorCode, IssueCode
+    from datamimic_ce.errors.codes import IssueCode
 
     (tmp_path / "db").mkdir()
     connection = sqlite3.connect(tmp_path / "db" / "database.sqlite")
@@ -320,9 +320,7 @@ def test_real_sqlite_source_failure_keeps_ce_identity_in_private_child(tmp_path)
     xml = '<setup><database id="db" dbms="sqlite" database="database"/><generate name="rows" source="db" count="1" selector="SELECT private_column FROM absent"/></setup>'
     result = CeBoundedExecutor(AuthoringWorkspaceContext(tmp_path)).execute(BoundedExecutionRequest(xml=xml))
     assert not result.ok
-    assert result.diagnostics[0].code is AuthoringSystemDiagnosticCode.CHILD_EXECUTION
-    assert result.diagnostics[0].ce_error.error_code is ErrorCode.OPERATION_ERROR
-    assert result.diagnostics[0].ce_error.issue_code is IssueCode.OPERATION_EXECUTION_FAILED
+    assert result.diagnostics[0].code is IssueCode.OPERATION_EXECUTION_FAILED
     assert "private_column" not in result.diagnostics[0].message
     assert str(tmp_path) not in result.diagnostics[0].message
 
@@ -340,7 +338,118 @@ def test_child_crash_is_typed_and_does_not_wait_for_timeout(tmp_path):
     expected = AuthoringSystemDiagnosticCode.CLEANUP if os.name == "nt" else AuthoringSystemDiagnosticCode.CHILD_CRASH
     assert result.diagnostics[0].code is expected
     if os.name != "nt":
-        assert "exit code 17" in result.diagnostics[0].message
+        assert result.diagnostics[0].actual["exit_code"] == 17
+
+
+@pytest.mark.skipif(os.name == "nt", reason="Windows reports the cleanup diagnostic for a crashed child")
+def test_child_crash_names_what_the_child_wrote_to_stderr(monkeypatch):
+    import subprocess
+
+    from datamimic_ce.authoring.adapters import bounded_executor
+
+    # The child suppresses fd 2 while it runs a descriptor, so a crash outside that scope is simulated.
+    crash = "import sys; sys.stderr.write('boom: cannot open table\\n'); sys.exit(1)"
+    popen = subprocess.Popen
+    monkeypatch.setattr(
+        bounded_executor.subprocess, "Popen", lambda command, **kwargs: popen([sys.executable, "-c", crash], **kwargs)
+    )
+    result = CeBoundedExecutor().execute(BoundedExecutionRequest(xml=_XML))
+    assert result.diagnostics[0].code is AuthoringSystemDiagnosticCode.CHILD_CRASH
+    assert "boom: cannot open table" in result.diagnostics[0].actual["stderr_tail"]
+
+
+@pytest.mark.parametrize(
+    ("content", "expected"),
+    [
+        (b"", ""),
+        (b"short failure\n", "short failure"),
+        (b"first\n" + b"x" * 10_000 + b"\nlast line\n", "last line"),
+        (b"bad \xff\xfe byte\x1b[31m red\n", "bad"),
+    ],
+    ids=["empty", "short", "longer-than-limit", "non-utf8-and-control"],
+)
+def test_stderr_excerpt_is_bounded_and_decoded_safely(tmp_path, content, expected):
+    from datamimic_ce.authoring.adapters.bounded_executor import _STDERR_EXCERPT_CHARS, _stderr_excerpt
+
+    path = tmp_path / "stderr.log"
+    path.write_bytes(content)
+    excerpt = _stderr_excerpt(path)
+    assert expected in excerpt
+    assert len(excerpt) < _STDERR_EXCERPT_CHARS + 100
+    assert "\x1b" not in excerpt
+    assert "first" not in excerpt
+    assert _stderr_excerpt(tmp_path / "missing.log") == ""
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "",
+        "plain",
+        "\n\n  lead",
+        "trail \n\x1b\n",
+        "\x00\n \x7f\x9f",
+        "in\x1bner\nkept",
+        "\n a \x1b b \n",
+        " nbsp",
+        "a" + "\x1b" * 4000 + "b",
+    ],
+    ids=[
+        "empty",
+        "none",
+        "leading",
+        "trailing",
+        "controls-only",
+        "inner",
+        "both-edges",
+        "latin1-space",
+        "long-inner-run",
+    ],
+)
+def test_edge_strip_matches_the_original_anchored_alternation(text):
+    import re
+
+    from datamimic_ce.authoring.adapters.bounded_executor import _CONTROL_CHARACTERS
+
+    alternation = r"\A[\x00-\x20\x7f-\x9f]+|[\x00-\x20\x7f-\x9f]+\Z"
+    assert text.strip(_CONTROL_CHARACTERS) == re.sub(alternation, "", text)
+
+
+@pytest.mark.parametrize("descendant_still_alive", [False, True])
+def test_windows_process_cleanup_waits_for_descendants(monkeypatch, descendant_still_alive):
+    from contextlib import nullcontext
+    from types import SimpleNamespace
+    from unittest.mock import ANY, Mock, call
+
+    import psutil
+
+    from datamimic_ce.authoring.adapters import bounded_executor
+
+    worker = Mock()
+    steps = Mock()
+    steps.process.children.return_value = [worker]
+    steps.taskkill.return_value.returncode = 0
+    steps.wait_descendants.return_value = ([], [worker]) if descendant_still_alive else ([worker], [])
+    monkeypatch.setattr(bounded_executor, "os", SimpleNamespace(name="nt"))
+    monkeypatch.setattr(bounded_executor.subprocess, "run", steps.taskkill)
+    monkeypatch.setattr(psutil, "Process", steps.process)
+    monkeypatch.setattr(psutil, "wait_procs", steps.wait_descendants)
+    launcher = SimpleNamespace(pid=321, wait=steps.wait_launcher)
+
+    outcome = (
+        pytest.raises(OSError, match="bounded descendants did not stop") if descendant_still_alive else nullcontext()
+    )
+    with outcome:
+        bounded_executor._terminate_process_tree(launcher)
+
+    assert steps.mock_calls == [
+        call.process(321),
+        call.process.children(steps.process.return_value, recursive=True),
+        call.taskkill(["taskkill", "/PID", "321", "/T", "/F"], capture_output=True, timeout=2, check=False),
+        call.wait_launcher(timeout=1),
+        call.wait_descendants([worker], timeout=ANY),
+    ]
+    assert 0 <= steps.wait_descendants.call_args.kwargs["timeout"] <= 1
 
 
 def test_process_cleanup_failure_blocks_success_after_actual_reap(tmp_path, monkeypatch):
@@ -373,9 +482,29 @@ def test_workspace_cleanup_failure_blocks_success_after_actual_removal(monkeypat
     assert result.diagnostics[0].code is AuthoringSystemDiagnosticCode.CLEANUP
 
 
+def test_workspace_cleanup_failure_names_the_locked_path_and_the_os_error(monkeypatch):
+    import tempfile
+
+    import shutil
+
+    created = []
+
+    def locked(directory):
+        created.append(directory.name)
+        raise PermissionError(13, "The process cannot access the file", str(Path(directory.name) / "locked.txt"))
+
+    monkeypatch.setattr(tempfile.TemporaryDirectory, "cleanup", locked)
+    result = CeBoundedExecutor().execute(BoundedExecutionRequest(xml=_XML))
+    for name in created:
+        shutil.rmtree(name, ignore_errors=True)
+    [diagnostic] = result.diagnostics
+    assert diagnostic.code is AuthoringSystemDiagnosticCode.CLEANUP
+    assert diagnostic.location is not None and diagnostic.location.file == "locked.txt"
+    assert diagnostic.actual == {"errno": 13, "type": "PermissionError", "reason": "The process cannot access the file"}
+
+
 def test_unique_reference_exhaustion_keeps_category_in_private_child(tmp_path):
     import sqlite3
-    from datamimic_ce.errors import ErrorCode
 
     (tmp_path / "db").mkdir()
     with sqlite3.connect(tmp_path / "db" / "database.sqlite") as connection:
@@ -391,9 +520,6 @@ def test_unique_reference_exhaustion_keeps_category_in_private_child(tmp_path):
     assert not result.ok
     diagnostic = result.diagnostics[0]
     assert diagnostic.code is AuthoringSystemDiagnosticCode.CHILD_EXECUTION
-    assert diagnostic.ce_error is not None
-    assert diagnostic.ce_error.error_code is ErrorCode.TASK_CONFIG
-    assert diagnostic.ce_error.issue_code is None
 
 
 @pytest.mark.parametrize("primary", [RuntimeError("primary failure"), KeyboardInterrupt()])

@@ -83,7 +83,10 @@ declared total (at most 2000). For a file source without count, a script count o
 (`minCount`/`maxCount`), set it to the total rows of all products.
 Never inject or change a runtime count just to satisfy the proof budget.
 
-Inspect `outcome`, `phase`, diagnostics and complete acceptance/evidence. On a
+Inspect `outcome`, `phase`, diagnostics and complete acceptance/evidence. A
+diagnostic `code` identifies the catalog issue (`Ixxx` or `Wxxx`) or an
+uncatalogued failure. `rule` identifies the `DMxxx` lint/check when present.
+Follow `location`, `path` and `remediation` to repair the reported defect. On a
 rejection, repair its reported path using the code/remediation; preserve the
 original requirements and relative resource paths. `outcome: "ready"` is the
 stopping condition. `artifact.files` lists every project file the proof read
@@ -150,11 +153,15 @@ original file intact. Raw XML inspection uses `authoring lint` then
 `authoring dry-run`; normal execution uses `datamimic run model.xml`.
 Dry-run does not read `acceptance/build.json`; its `--max-count` defaults to 10.
 
-The connected `datamimic_*` tools run the same operations: follow their input schemas,
-including `request` wrappers, and pass the absolute `project` directory on every
-project tool; the server needs no workspace option. `authoring run-project` builds
+The connected `datamimic_*` tools run the same operations. Pass arguments directly,
+for example `{"topic": "assembly", "name": "starter"}` to `datamimic_reference`.
+Pass the absolute `project` directory at the top level on every project tool.
+The `request` wrapper is deprecated; if an older server advertises it as required, nest the other
+arguments inside it. `authoring run-project` builds
 the project first and then produces the real data; it refuses external targets
 unless `allow_side_effects` is true, which needs the user's confirmation of the
 named targets. Local `output/` files can be written without that opt-in.
 `run-project` can exit code 0 when `build_outcome` is `ready_with_gaps`; inspect
 `action_required` and fix the gaps before reporting a clean proof.
+Use `build.files` to identify the Build proof and check `build_file_mismatches`
+even when `build_outcome` is `ready`: a listed path failed the digest check before or after execution.

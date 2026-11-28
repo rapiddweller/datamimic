@@ -49,12 +49,24 @@ def test_build_rejects_duplicate_expectations(tmp_path: Path) -> None:
     assert "unique" in result.diagnostics[0].message
 
 
-def test_role_and_caller_origin_survive_transport() -> None:
+@pytest.mark.parametrize(
+    ("role", "serialized_role"),
+    [
+        ({"kind": "identifier"}, {"kind": "identifier"}),
+        ({"kind": "identifier", "additional_fields": []}, {"kind": "identifier"}),
+        (
+            {"kind": "identifier", "additional_fields": ["region"]},
+            {"kind": "identifier", "additional_fields": ["region"]},
+        ),
+    ],
+    ids=("single-field", "empty-additional-fields", "multi-field"),
+)
+def test_role_and_caller_origin_survive_transport(role: dict, serialized_role: dict) -> None:
     from datamimic_ce.authoring.domain.requests import BuildRequestV5
 
     request = BuildRequestV5.model_validate(
         {
-            "product_roles": [{"product": "cities", "field": "id", "role": {"kind": "identifier"}}],
+            "product_roles": [{"product": "cities", "field": "id", "role": role}],
             "acceptance_requirements": [
                 {
                     "origin": "caller",
@@ -67,8 +79,8 @@ def test_role_and_caller_origin_survive_transport() -> None:
             ],
         }
     )
-    payload = request.model_dump(mode="json")
-    assert payload["product_roles"][0]["role"] == {"kind": "identifier"}
+    payload = request.model_dump(mode="json", warnings="error")
+    assert payload["product_roles"][0]["role"] == serialized_role
     assert payload["acceptance_requirements"][0]["origin"] == "caller"
 
 

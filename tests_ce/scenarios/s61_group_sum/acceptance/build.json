@@ -1,0 +1,8 @@
+{
+  "version": "5.0",
+  "expectations": [
+    {"kind": "group_sum", "subject": {"kind": "product", "product": "postings"}, "group_by": "entry", "field": "debit", "equals_field": "credit"},
+    {"kind": "group_sum", "subject": {"kind": "product", "product": "postings"}, "group_by": "entry", "field": "debit", "reference": {"subject": {"kind": "product", "product": "expected_totals"}, "key": "entry", "field": "expected_amount"}},
+    {"kind": "group_sum", "subject": {"kind": "product", "product": "empty_postings"}, "group_by": "entry", "field": "debit", "reference": {"subject": {"kind": "product", "product": "zero_totals"}, "key": "entry", "field": "expected_amount"}}
+  ]
+}

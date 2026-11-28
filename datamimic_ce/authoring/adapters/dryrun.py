@@ -13,6 +13,7 @@ Smoke exporters consume the same validated full capture before projection.
 import io
 import os
 import pickle
+import sys
 import tempfile
 import uuid
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
@@ -21,7 +22,6 @@ from dataclasses import replace
 from enum import StrEnum
 from pathlib import Path, PurePosixPath
 
-from bson import ObjectId
 from lxml import etree
 from pydantic import ConfigDict, StrictBool, StrictStr, TypeAdapter, ValidationError
 from pydantic.dataclasses import dataclass
@@ -40,13 +40,18 @@ from datamimic_ce.authoring.domain.capture import (
     validate_capture_values,
 )
 from datamimic_ce.authoring.domain.common import NonEmptyStrictStr, NonNegativeStrictInt, PositiveStrictInt
-from datamimic_ce.authoring.domain.rule_catalog import RuleSeverity
-from datamimic_ce.authoring.domain.xml_diagnostics import Diagnostic
+from datamimic_ce.authoring.domain.diagnostics import (
+    AuthoringSystemDiagnosticCode,
+    Diagnostic,
+    DiagnosticPhase,
+    diagnostic_location,
+)
 from datamimic_ce.engine.dsl.api import (
     ATTR_WHERE,
     NAME_SEPARATOR,
     CompositeStatement,
     Dbms,
+    DTDForbiddenError,
     GenerateStatement,
     NestedKeyStatement,
     capture_product_name,
@@ -57,21 +62,23 @@ from datamimic_ce.engine.io.contracts import SmokeExportRequest
 from datamimic_ce.errors import (
     GUIDANCE_COUNT_SCOPE,
     GUIDANCE_WHERE_SCOPE,
+    DescriptorLocation,
     DomainError,
     ErrorCode,
     ExternalFailureCause,
     GeneratorConfigError,
+    IncludeError,
     MissingMemstoreProductError,
     TaskConfigError,
     UserErrorBase,
+    include_error,
     is_user_error,
     operation_error,
+    parser_validation_error,
 )
 from datamimic_ce.errors.catalog import get_issue_definition
 from datamimic_ce.errors.codes import IssueCode
-from datamimic_ce.errors.context.descriptor_identity import descriptor_scope
-
-RULE_RUNTIME_ERROR = "DM002"
+from datamimic_ce.errors.context.descriptor_identity import descriptor_scope, get_descriptor_name
 
 
 @dataclass(frozen=True, config=ConfigDict(extra="forbid", strict=True, revalidate_instances="always"))
@@ -193,11 +200,13 @@ class _BoundedPolicyRefusal(ValueError):
         *,
         script_file: str | None = None,
         script_line: int | None = None,
+        remediation: str | None = None,
     ) -> None:
         ValueError.__init__(self, message)
         self.path = path
         self.script_file = script_file
         self.script_line = script_line
+        self.remediation = remediation
 
 
 class _IncludeBudgetExceeded(_BoundedPolicyRefusal):
@@ -205,10 +214,10 @@ class _IncludeBudgetExceeded(_BoundedPolicyRefusal):
 
 
 class _InvalidIncludedXml(ValueError):
-    def __init__(self, chain: tuple[str, ...], error: etree.XMLSyntaxError) -> None:
+    def __init__(self, chain: tuple[str, ...], error: etree.XMLSyntaxError | DTDForbiddenError) -> None:
         ValueError.__init__(self, "Included step is not well-formed XML")
         self.chain = chain
-        self.position = error.position
+        self.position = error.position if isinstance(error, etree.XMLSyntaxError) else (None, None)
 
 
 _WorkerMessage = _WorkerSuccess | _WorkerFailure
@@ -224,8 +233,14 @@ _SCOPE_HINT = (
 
 
 _VALUE_HINT = (
-    "A function rejected the value that the script read, for example int() or float() on text that is not a number. "
-    "Check the value the script reads. Keep a text key as text: cast only a value that holds a number."
+    "A function rejected the value that the script read. Check the value the script reads and the input that the "
+    "function accepts; the error type and line above name the failing call."
+)
+
+
+_SCRIPT_ERROR_HINT = (
+    "The script raised an error while it ran. The error type and line above name it; check the expression and the "
+    "values it reads."
 )
 
 
@@ -276,7 +291,12 @@ def _runtime_hint(err: Exception) -> str:
                 if isinstance(current.__cause__, ExternalFailureCause):
                     return _OWN_CODE_HINT
                 # A value the function rejects (int('B01')) is no scope problem, and a cast does not repair text.
-                return _VALUE_HINT if isinstance(current.__cause__, ValueError) else _SCOPE_HINT
+                if isinstance(current.__cause__, ValueError):
+                    return _VALUE_HINT
+                # Only a failed name lookup or a mistyped operand (text + number) fits the scope and cast advice.
+                if isinstance(current.__cause__, NameError | AttributeError | TypeError):
+                    return _SCOPE_HINT
+                return _SCRIPT_ERROR_HINT
             if isinstance(current, TaskConfigError) and current.kept_rows is not None:
                 return _KEPT_ROWS_HINT
             return issue.guidance or issue.resolution
@@ -422,10 +442,8 @@ def _refuse_unbounded_execute(
             return  # the runtime reports the missing or unreadable script itself
         except ValueError as error:  # the contained reader refuses paths outside the private workspace
             raise _BoundedPolicyRefusal("Python library uri must name a file inside the workspace") from error
-        origin = Path(uri).name
     else:
         raw = inline or ""
-        origin = "inline <execute>"
     # Check exactly what ExecuteTask will run: it normalizes file and inline code alike.
     refusal = python_library_refusal(ExecuteStatement.normalize_python_source(raw), seeded=seeded)
     if refusal is not None:
@@ -434,9 +452,10 @@ def _refuse_unbounded_execute(
             p: PurePosixPath = PurePosixPath(uri)
             script_file = p.name if PurePosixPath.is_absolute(p) or ".." in p.parts else uri
         raise _BoundedPolicyRefusal(
-            f"{origin}: {refusal.message()}. {refusal.remediation()}",
+            refusal.message(),
             script_file=script_file,
-            script_line=refusal.line if script_file is not None else None,
+            script_line=refusal.line,
+            remediation=refusal.remediation(),
         )
 
 
@@ -445,7 +464,11 @@ _MAX_INCLUDE_GRAPH_BYTES = 64 * 1024 * 1024
 
 
 def literal_include_graph(
-    entry: etree._Element, entry_path: Path, *, chains: list[tuple[str, ...]] | None = None
+    entry: etree._Element,
+    entry_path: Path,
+    *,
+    logical_entry: str | None = None,
+    chains: list[tuple[str, ...]] | None = None,
 ) -> tuple[tuple[str, bytes], ...]:
     """The entry's literal include graph in execution order: (workspace-relative uri, file bytes) per ``.xml``
     step; ``.properties`` files are read for containment but not retained. Nested uris resolve against the entry
@@ -479,7 +502,21 @@ def literal_include_graph(
             if suffix not in {".xml", ".properties"}:
                 raise _BoundedPolicyRefusal("Unsupported bounded include dependency type")
             dependency = descriptor_dir / uri
-            data = read_resource_bytes(dependency)
+            try:
+                data = read_resource_bytes(dependency)
+            except FileNotFoundError as error:
+                root = logical_entry or get_descriptor_name() or entry_path.name
+                raise include_error(
+                    code=IssueCode.INCLUDE_FILE_NOT_FOUND,
+                    uri=dependency.name,
+                    location=DescriptorLocation(
+                        "include",
+                        attribute="uri",
+                        descriptor_path=chain[-1] if chain else root,
+                        line=node.sourceline,
+                        include_chain=(root, *chain[:-1]) if chain else (),
+                    ),
+                ) from error
             total += len(data)
             if total > _MAX_INCLUDE_GRAPH_BYTES:
                 raise _IncludeBudgetExceeded("XML include dependency graph exceeds the aggregate byte budget")
@@ -494,7 +531,7 @@ def literal_include_graph(
                 active.append(identity)
                 try:
                     child = parse_xml_source(data)
-                except etree.XMLSyntaxError as error:
+                except (etree.XMLSyntaxError, DTDForbiddenError) as error:
                     raise _InvalidIncludedXml((*chain, uri), error) from error
                 visit(child, (*chain, uri))
                 active.pop()
@@ -524,8 +561,20 @@ def _validate_bounded_includes(
         return set(), None
     try:
         graph = literal_include_graph(root, path)
-    except _BoundedPolicyRefusal:
+    except (_BoundedPolicyRefusal, IncludeError):
         raise
+    except _InvalidIncludedXml as error:
+        raise parser_validation_error(
+            code=IssueCode.PARSER_DESCRIPTOR_INVALID_XML,
+            reason="syntax error" if error.position[0] is not None else "forbidden DTD declaration",
+            location=DescriptorLocation(
+                "setup",
+                descriptor_path=error.chain[-1],
+                line=error.position[0],
+                column=error.position[1],
+                include_chain=(get_descriptor_name() or path.name, *error.chain[:-1]),
+            ),
+        ) from error
     except (OSError, ValueError) as error:
         # Every step is checked before any runs, so a missing file stops the whole graph.
         raise _BoundedPolicyRefusal("An included file is missing or lies outside the workspace") from error
@@ -1000,6 +1049,7 @@ def _smoke_exporter(
 ) -> Diagnostic | None:
     from datamimic_ce.engine.io.api import smoke_export
 
+    path = ("product", full_name)
     try:
         written_rows = smoke_export(
             SmokeExportRequest(
@@ -1017,34 +1067,30 @@ def _smoke_exporter(
         if written_rows == len(rows):
             return None
         return Diagnostic(
-            rule=RULE_RUNTIME_ERROR,
-            severity=RuleSeverity.ERROR,
-            message=(
-                f"{exporter_name} smoke export wrote {written_rows} of {len(rows)} captured rows for '{full_name}'"
-            ),
-            fix_hint=(
-                f"The {exporter_name} exporter did not write every captured row. "
-                "Check its write path before using this target."
-            ),
-            element="generate",
-            path="/setup",
-            name=full_name,
+            code=AuthoringSystemDiagnosticCode.CHILD_EXECUTION,
+            phase=DiagnosticPhase.EVIDENCE,
+            message="The requested file-export smoke check wrote an unexpected number of rows.",
+            remediation="Repair the file exporter configuration or generated value types.",
+            path=path,
+            expected=len(rows),
+            actual=written_rows,
         )
     except Exception as err:
-        return Diagnostic(
-            rule=RULE_RUNTIME_ERROR,
-            severity=RuleSeverity.ERROR,
-            message=f"{exporter_name} smoke export failed for '{full_name}': {err}",
-            fix_hint=(
-                f"A generated value cannot be written by the {exporter_name} exporter "
-                "(the error names the offending type). Cast the field in the DSL "
-                f'(e.g. type="string" or script="str(...)"), or drop {exporter_name} '
-                "from target=."
-            ),
-            element="generate",
-            path="/setup",
-            name=full_name,
-        )
+        if isinstance(err, UserErrorBase) and err.issue_code is not None:
+            return Diagnostic.from_issue(
+                err.issue_code,
+                phase=DiagnosticPhase.EVIDENCE,
+                remediation=_runtime_hint(err),
+                location=diagnostic_location(err.location),
+                path=path,
+            )
+    return Diagnostic(
+        code=AuthoringSystemDiagnosticCode.CHILD_EXECUTION,
+        phase=DiagnosticPhase.EVIDENCE,
+        message="A captured row failed the requested file-export smoke check.",
+        remediation="Repair the file exporter configuration or generated value types.",
+        path=path,
+    )
 
 
 _CapturedRows = dict[NonEmptyStrictStr, tuple[dict[StrictStr, CaptureValue], ...]]
@@ -1063,7 +1109,7 @@ def _decode_worker_payload(payload: bytes) -> object:
     from uuid import UUID
     from xml.parsers.expat import ExpatError
 
-    from datamimic_ce.errors import base as errors
+    import datamimic_ce.errors.base as errors
     from datamimic_ce.errors.codes import DomainErrorCode, ErrorCode, IssueCode
     from datamimic_ce.errors.context import DescriptorLocation
 
@@ -1168,13 +1214,18 @@ def _project_capture_object_ids(value: object) -> object:
     """Copy bounded capture containers, projecting only native BSON identifiers."""
     remaining = MAX_CAPTURE_ITEMS
     ancestors: set[int] = set()
+    object_id_type = None
+    if "bson" in sys.modules:
+        from bson import ObjectId
+
+        object_id_type = ObjectId
 
     def project(current: object, depth: int) -> object:
         nonlocal remaining
         remaining -= 1
         if remaining < 0 or depth > MAX_CAPTURE_DEPTH:
             raise ValueError("capture exceeds its item or depth budget")
-        if type(current) is ObjectId:
+        if type(current) is object_id_type:
             return CapturedObjectId(value=str(current))
         if not isinstance(current, dict | list | tuple):
             return current
@@ -1283,14 +1334,14 @@ def _validated_worker_success(message: _WorkerSuccess, max_count: int | None = N
         raise ValueError("inconsistent smoke-export counters")
     if not smoke.requested and (any(counters) or message.smoke_diagnostics):
         raise ValueError("unrequested smoke-export contains execution facts")
-    for diagnostic in message.smoke_diagnostics:
-        Diagnostic.model_validate(diagnostic)
     return message
 
 
 def _export_capture_value(value: CaptureValue) -> object:
     """Restore native exporter inputs only after the complete capture is validated."""
     if isinstance(value, CapturedObjectId):
+        from bson import ObjectId
+
         return ObjectId(value.value)
     if isinstance(value, dict):
         return {key: _export_capture_value(item) for key, item in value.items()}
@@ -1597,7 +1648,7 @@ def _run_engine_capture(
             message = _WorkerFailure(
                 stopped_capture=stopped_capture,
                 message=str(err) or type(err).__name__,
-                fix_hint=_runtime_hint(err),
+                fix_hint=(err.remediation if isinstance(err, _BoundedPolicyRefusal) else None) or _runtime_hint(err),
                 error=err if is_user_error(err) else None,
                 policy_refusal=isinstance(err, _BoundedPolicyRefusal),
                 policy_path=err.path if isinstance(err, _BoundedPolicyRefusal) else (),

@@ -36,7 +36,7 @@ def _remediations(tmp_path: Path, old: str, new: str) -> dict[str, str]:
     descriptor.write_text(text.replace(old, new), encoding="utf-8")
     built = create_authoring_application(project, descriptor_path=PROJECT_ENTRY_PATH).build()
     assert isinstance(built, RejectedBuild)
-    return {str(item.code): str(item.remediation) for item in built.diagnostics}
+    return {item.rule or str(item.code): str(item.remediation) for item in built.diagnostics}
 
 
 def test_the_builtin_guidance_lists_exactly_the_builtins_in_the_script_globals() -> None:

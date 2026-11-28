@@ -1,0 +1,6 @@
+<setup rngSeed="443" defaultSeparator=",">
+    <database id="db" dbms="sqlite" database="lazy_imports"/>
+    <generate name="rows" count="1" target="CSV,db.upsert" createTable="true">
+        <id name="value" generator="IncrementGenerator"/>
+    </generate>
+</setup>

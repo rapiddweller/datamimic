@@ -10,7 +10,6 @@ import pytest
 
 from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.adapters.bounded_executor import CeBoundedExecutor
-from datamimic_ce.authoring.domain.diagnostics import AuthoringSystemDiagnosticCode
 from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, BoundedExecutionRequest, LintRequest
 from datamimic_ce.errors.codes import IssueCode
 
@@ -18,7 +17,7 @@ from datamimic_ce.errors.codes import IssueCode
 def _failure(xml: str):
     evidence = CeBoundedExecutor().execute(BoundedExecutionRequest(xml=xml, max_count=20))
     (diagnostic,) = evidence.diagnostics
-    assert diagnostic.code is AuthoringSystemDiagnosticCode.CHILD_EXECUTION
+    assert isinstance(diagnostic.code, IssueCode)
     return diagnostic
 
 
@@ -36,7 +35,7 @@ def test_unique_values_pool_names_the_key_the_count_and_the_line() -> None:
 </setup>"""
     )
     assert "<key 'color' unique> exhausted: only 3 distinct values" in diagnostic.message
-    assert diagnostic.ce_error is not None and diagnostic.ce_error.issue_code is IssueCode.TASK_KEY_UNIQUE_EXHAUSTED
+    assert diagnostic.code is IssueCode.TASK_KEY_UNIQUE_EXHAUSTED
     assert diagnostic.path == ("descriptor", "model.xml", "key", "unique")
     assert diagnostic.location is not None and diagnostic.location.line == 3
 
@@ -69,8 +68,30 @@ def test_int_on_text_names_the_error_type_the_line_and_keeps_text_as_text() -> N
     assert "B01" not in diagnostic.message and "B01" not in (diagnostic.remediation or "")  # a value is never shown
     assert diagnostic.path == ("descriptor", "model.xml", "key", "script")
     assert diagnostic.location is not None and diagnostic.location.line == 4
-    assert "Keep a text key as text" in (diagnostic.remediation or "")
-    assert "cast: int(parent.col)" not in (diagnostic.remediation or "")
+    assert "rejected the value" in (diagnostic.remediation or "")
+    assert "cast" not in (diagnostic.remediation or "").lower()
+
+
+def test_a_value_error_that_is_no_conversion_gets_the_same_hint_without_the_value() -> None:
+    diagnostic = _failure(
+        """<setup rngSeed="1"><generate name="rows" count="2" target="CSV">
+        <variable name="branch" values="('B01', 'B02')"/>
+        <key name="n" script="[1, 2].index('x')"/></generate></setup>"""
+    )
+    remediation = diagnostic.remediation or ""
+    assert diagnostic.message.endswith("ValueError.")
+    assert "rejected the value" in remediation
+    assert "cast" not in remediation.lower() and "B01" not in remediation and "'x'" not in remediation
+
+
+def test_a_zero_division_gets_a_generic_hint_not_the_csv_cast_advice() -> None:
+    diagnostic = _failure(
+        """<setup rngSeed="1"><generate name="rows" count="2" target="CSV">
+        <key name="n" script="1/0"/></generate></setup>"""
+    )
+    remediation = diagnostic.remediation or ""
+    assert diagnostic.message.endswith("ZeroDivisionError.")
+    assert "cast" not in remediation.lower() and "arrive as strings" not in remediation
 
 
 def test_a_type_error_keeps_the_cast_remediation_that_fits_text_plus_number() -> None:
@@ -101,15 +122,15 @@ def test_mistyped_element_with_open_and_close_tag_is_named_by_dm101(tmp_path: Pa
 </setup>""",
     )
     first = result.diagnostics[0]
-    assert first.code == "DM101"
+    assert first.rule == "DM101"
     assert first.location is not None and (first.location.element, first.location.line) == ("generat", 2)
     assert first.remediation is not None and "Did you mean <generate>?" in first.remediation
-    assert [item.code for item in result.diagnostics][-1] == "descriptor"
+    assert result.diagnostics[-1].code is IssueCode.PARSER_INVALID_CHILD
 
 
 def test_a_forbidden_dtd_still_reports_the_parser_refusal_only(tmp_path: Path) -> None:
     result = _lint(tmp_path, '<!DOCTYPE setup [<!ENTITY x "y">]><setup rngSeed="1"/>')
-    assert [item.code for item in result.diagnostics] == ["descriptor"]
+    assert [item.code for item in result.diagnostics] == [IssueCode.PARSER_DESCRIPTOR_INVALID_XML]
 
 
 def test_invalid_type_lists_the_valid_types_in_allowed_values_and_remediation(tmp_path: Path) -> None:
@@ -118,7 +139,7 @@ def test_invalid_type_lists_the_valid_types_in_allowed_values_and_remediation(tm
         '<setup rngSeed="1"><generate name="rows" count="2" target="CSV">'
         '<key name="id" type="integer"/></generate></setup>',
     )
-    dm105 = next(item for item in result.diagnostics if item.code == "DM105")
+    dm105 = next(item for item in result.diagnostics if item.rule == "DM105")
     assert dm105.allowed_values == ("binary", "bool", "decimal", "float", "int", "string")
     assert (
         dm105.remediation is not None and "Use one of: binary, bool, decimal, float, int, string." in dm105.remediation
@@ -133,6 +154,6 @@ def test_an_unrelated_element_name_gets_the_known_elements_not_a_wrong_suggestio
         f'<setup rngSeed="1"><generate name="rows" count="2"><{tag} name="x"/></generate></setup>',
     )
 
-    first = next(item for item in result.diagnostics if item.code == "DM101")
+    first = next(item for item in result.diagnostics if item.rule == "DM101")
     assert first.remediation is not None
     assert "Did you mean" not in first.remediation and "Known elements:" in first.remediation

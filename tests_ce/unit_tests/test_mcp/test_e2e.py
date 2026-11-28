@@ -2,16 +2,22 @@
 
 import json
 import threading
+from pathlib import Path
 
 import pytest
+from jsonschema import Draft202012Validator
 
 fastmcp_client = pytest.importorskip("fastmcp.client")
 Client = fastmcp_client.Client
+
+from fastmcp.exceptions import ToolError  # noqa: E402
 
 import datamimic_ce.interfaces.mcp.server as mcp_server  # noqa: E402
 from datamimic_ce.authoring.domain.requests import LintResult  # noqa: E402
 from datamimic_ce.interfaces.mcp.server import create_server  # noqa: E402
 from tests_ce.authoring_project import write_project  # noqa: E402
+
+DESCRIPTOR = Path(__file__).resolve().parents[2] / "scenarios" / "s01_flat_seeded" / "datamimic.xml"
 
 
 @pytest.fixture
@@ -42,30 +48,81 @@ async def test_exact_authoring_tool_surface_and_no_resources(anyio_backend: str)
         assert all(tool.description for tool in tools)
         build = next(tool for tool in tools if tool.name == "datamimic_build")
         # Build takes only the project: its acceptance/build.json is the only acceptance input.
-        assert set(build.inputSchema["properties"]) == {"project"}
-        assert build.inputSchema["required"] == ["project"]
+        assert set(build.input_schema["properties"]) == {"project"}
+        assert build.input_schema["required"] == ["project"]
         version = json.loads((await client.call_tool("datamimic_version", {})).content[0].text)
         assert version["build_protocol"] == "5.0"
+        capabilities = await client.call_tool("datamimic_capabilities", {})
+        assert "setup" in json.loads(capabilities.content[0].text)["element"]
 
 
 @pytest.mark.anyio
-async def test_codec_lint_and_reference_use_canonical_contracts(anyio_backend: str, tmp_path) -> None:
-    project = str(tmp_path)
+async def test_flat_and_legacy_arguments_use_the_same_authoring_contracts(anyio_backend: str, tmp_path) -> None:
+    project = {"project": str(tmp_path)}
+    xml = {"xml": DESCRIPTOR.read_text(encoding="utf-8")}
     async with Client(create_server()) as client:
-        compiled = await client.call_tool(
-            "datamimic_compile", {"project": project, "request": {"document": {"root": {"kind": "setup"}}}}
-        )
-        compiled_payload = json.loads(compiled.content[0].text)
-        assert compiled_payload["outcome"] == "ready"
-        xml = compiled_payload["artifact"]["compiled_xml"]
-        decompiled = await client.call_tool("datamimic_decompile", {"project": project, "request": {"xml": xml}})
-        assert json.loads(decompiled.content[0].text)["document"] == compiled_payload["artifact"]["document"]
-        checked = await client.call_tool("datamimic_lint", {"project": project, "request": {"xml": xml}})
-        assert json.loads(checked.content[0].text)["ok"] is True
-        reference = await client.call_tool("datamimic_reference", {"request": {"topic": "overview"}})
-        assert json.loads(reference.content[0].text)["topic"] == "overview"
-        capabilities = await client.call_tool("datamimic_capabilities", {})
-        assert "setup" in json.loads(capabilities.content[0].text)["element"]
+        tools = {tool.name: tool for tool in await client.list_tools()}
+
+        async def compare(tool: str, project_args: dict, fields: dict) -> dict:
+            name = f"datamimic_{tool}"
+            schema = tools[name].input_schema
+            assert schema["properties"]["request"]["deprecated"] is True
+            assert schema["oneOf"][0]["title"] == "Preferred: flat arguments"
+            flat = {**project_args, **fields}
+            legacy = {**project_args, "request": fields}
+            mixed = {**flat, "request": fields}
+            validator = Draft202012Validator(schema)
+            validator.validate(flat)
+            validator.validate(legacy)
+            assert not validator.is_valid(mixed)
+            flat_result = await client.call_tool(name, flat)
+            legacy_result = await client.call_tool(name, legacy)
+            payload = json.loads(flat_result.content[0].text)
+            assert payload == json.loads(legacy_result.content[0].text)
+            with pytest.raises(ToolError, match=r"Do not mix flat arguments with request\. Use \{"):
+                await client.call_tool(name, mixed)
+            return payload
+
+        decompiled = await compare("decompile", project, xml)
+        compiled = await compare("compile", project, {"document": decompiled["document"]})
+        assert compiled["outcome"] == "ready"
+        assert compiled["artifact"]["document"] == decompiled["document"]
+        assert (await compare("lint", project, xml))["ok"] is True
+        run_fields = {**xml, "max_count": 10, "sample_rows": 2}
+        dry = await compare("dry_run", project, run_fields)
+        run = await compare("run", project, run_fields)
+        assert dry["ok"] is run["ok"] is True
+        assert dry["phase"] == "dry_run"
+        assert run["phase"] == "run"
+        assert dry["products"] == run["products"]
+        reference = await compare("reference", {}, {"topic": "assembly", "name": "starter"})
+        assert reference["topic"] == "assembly"
+        default = await client.call_tool("datamimic_reference", {})
+        legacy_default = await client.call_tool("datamimic_reference", {"request": {}})
+        assert default.content == legacy_default.content
+        assert json.loads(default.content[0].text)["topic"] == "overview"
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        {},
+        {"xml": "<setup/>"},
+        {"project": ".", "xml": ""},
+        {"project": ".", "xml": 1},
+        {"project": ".", "request": None},
+        {"project": ".", "request": {}},
+        {"request": {"project": ".", "xml": "<setup/>"}},
+        {"project": ".", "unknown": "<setup/>"},
+    ],
+)
+async def test_invalid_arguments_show_the_preferred_example(anyio_backend: str, arguments) -> None:
+    async with Client(create_server()) as client:
+        with pytest.raises(
+            ToolError, match=r'Invalid arguments\. Use \{"project": "/absolute/project", "xml": "<setup/>"\}'
+        ):
+            await client.call_tool("datamimic_lint", arguments)
 
 
 @pytest.mark.anyio
@@ -121,22 +178,6 @@ async def test_build_matches_cli_and_preserves_caller_requirement_rejections(any
         payload = json.loads(rejected.content[0].text)
         assert payload["outcome"] == "rejected"
         assert any(item["path"][:2] == ["acceptance_requirements", 0] for item in payload["diagnostics"])
-
-
-@pytest.mark.anyio
-async def test_bounded_run_tools_preserve_distinct_phases(anyio_backend: str, tmp_path) -> None:
-    xml = (
-        '<setup rngSeed="7"><generate name="rows" count="2">'
-        '<key name="id" generator="IncrementGenerator"/></generate></setup>'
-    )
-    async with Client(create_server()) as client:
-        dry = await client.call_tool("datamimic_dry_run", {"project": str(tmp_path), "request": {"xml": xml}})
-        run = await client.call_tool("datamimic_run", {"project": str(tmp_path), "request": {"xml": xml}})
-        dry_payload, run_payload = json.loads(dry.content[0].text), json.loads(run.content[0].text)
-        assert dry_payload["ok"] is run_payload["ok"] is True
-        assert dry_payload["phase"] == "dry_run"
-        assert run_payload["phase"] == "run"
-        assert dry_payload["products"] == run_payload["products"]
 
 
 @pytest.mark.anyio

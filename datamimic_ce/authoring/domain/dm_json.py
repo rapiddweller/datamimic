@@ -32,7 +32,7 @@ from pydantic_core import PydanticCustomError
 from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_SETUP
 from datamimic_ce.engine.dsl.vocabulary.contracts.dsl_element import ElementContentModeKind
 
-from .common import AuthoringModel, NonEmptyStrictStr
+from .common import AuthoringModel, NonEmptyStrictStr, serialize_omitting_field
 
 DmJsonScalar = StrictStr | StrictInt | StrictFloat | StrictBool
 DM_JSON_TRAVERSAL_COUNT: Final = "traversal_count"
@@ -113,10 +113,7 @@ class DmJsonNodeV1(AuthoringModel):
 
     @model_serializer(mode="wrap")
     def serialize_node(self, handler: SerializerFunctionWrapHandler) -> dict[str, object]:
-        value = handler(self)
-        if self.comment is None:
-            value.pop("comment", None)
-        return value
+        return serialize_omitting_field(self, handler, "comment" if self.comment is None else None)
 
     @field_serializer("properties")
     def serialize_properties(self, value: Mapping[str, DmJsonScalar]) -> dict[str, DmJsonScalar]:

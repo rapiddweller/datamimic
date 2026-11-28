@@ -4,14 +4,19 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-import sys
-
 from datamimic_ce.domains.api import BaseLiteralGenerator
-from datamimic_ce.engine.dsl.api import KeyStatement, VariableStatement, get_nearest_generate_statement
+from datamimic_ce.engine.dsl.api import (
+    GenerateStatement,
+    KeyStatement,
+    NestedKeyStatement,
+    Statement,
+    VariableStatement,
+    get_nearest_generate_statement,
+)
 from datamimic_ce.engine.io.api import (
+    Client,
     DataSourcePagination,
-    rdbms_get_current_sequence_number,
-    rdbms_increase_sequence_number,
+    rdbms_reserve_sequence_block,
     uses_mysql_sequence_storage,
 )
 from datamimic_ce.engine.runtime.contexts.context import Context
@@ -19,46 +24,16 @@ from datamimic_ce.errors import DomainError, UserErrorBase, generator_config_err
 
 
 class SequenceTableGenerator(BaseLiteralGenerator):
-    """
-    Generate sequential number set based on database sequence.
+    """Generate increasing integers from blocks allocated to cooperating DATAMIMIC runs.
 
-    This generator manages sequence numbers for database tables, handling pagination
-    and sequential number generation for key statements. It is compatible with SQLAlchemy 2.x.
-    One block of per_process_count * numProcess numbers is reserved; a page's rows are the
-    block offsets [skip, skip + limit), where skip is the global row index of the page, so
-    every worker's chunk maps onto its own slice of the block.
+    PostgreSQL uses an ascending, unit-increment sequence; MySQL uses the target table's
+    AUTO_INCREMENT counter and runs with one worker. Other dialects are unsupported.
+    Clients that bypass DATAMIMIC's reservation lock are outside the collision guarantee.
+    Separate runs may leave gaps, for example if a run fails after reserving its block.
 
-    Multiprocess safety here is client-side range math (each worker computes its own offset,
-    not a server-side atomic block reservation): DATAMIMIC EE's equivalent generator instead
-    declares itself __parallel_safe__ = False outright ("reserves DB sequence ranges per
-    process") rather than relying on this pattern for ANY dialect - i.e. EE's own engineering
-    judgment is that per-process client-side range math isn't worth trusting for its multiprocess
-    guarantees. CE's per-dialect reality, verified empirically this session, does NOT uniformly
-    match that pessimism:
-
-    - Postgres: rdbms_client.get_current_sequence_number/increase_sequence_number use the
-      dialect's own nextval/setval, single atomic server-side statements with no client-side
-      read-then-write round trip - genuinely safe under concurrent workers (confirmed 8/8
-      consecutive real-multiprocess runs of the uneven count/numProcess regression test, see
-      test_sequence_table_generator_postgres_uneven_multiprocess).
-    - MySQL: has no native sequence object, so increase_sequence_number emulates one via a
-      GET_LOCK-guarded read-AUTO_INCREMENT-then-ALTER-TABLE critical section
-      (_advance_mysql_auto_increment). This is exactly the class of client-side range math EE
-      opted out of, and it shows: reproduced as real duplicate-key collisions in ~2/3 of
-      isolated real-multiprocess runs of the uneven-ratio case (the regression now asserts that
-      test_sequence_table_generator_mysql_uneven_multiprocess is rejected before execution). MySQL
-      sequence generation is rejected when numProcess is greater than one in CE, matching EE's
-      judgment for this dialect.
-    - MSSQL/Oracle: native-sequence support was prototyped and pulled (see
-      get_current_sequence_number's docstring) - unsupported regardless of process count.
-
-    Attributes:
-        _stmt: The statement (KeyStatement or VariableStatement) containing sequence configuration
-        _source_name: Name of the database source
-        _start: First number of the reserved block (immutable; pages are offsets from it)
-        _current: Current sequence number
-        _end: End sequence number (used for pagination)
-        _page: (skip, limit) of the page the generator is currently positioned on
+    Direct generate keys reserve before workers start. Each page uses its global offset
+    in the shared block of planned rows. Keys created only at execution time reserve
+    their own block for each invocation of the enclosing generate or nested key.
     """
 
     def __init__(
@@ -85,6 +60,7 @@ class SequenceTableGenerator(BaseLiteralGenerator):
             AttributeError: If database client is not properly configured
         """
         self._stmt = stmt
+        self._start: int | None = None
         self._page: tuple[int, int] | None = None
         self._current: int | None = None
         self._end: int | None = None
@@ -98,8 +74,9 @@ class SequenceTableGenerator(BaseLiteralGenerator):
         self._source_name: str = source_name
 
         rdbms_client = context.root.clients.get(self._source_name)
-        if rdbms_client is None:
+        if not isinstance(rdbms_client, Client):
             raise generator_config_error(reason="SequenceTableGenerator requires a configured database client")
+        self._initial_client: Client | None = rdbms_client
 
         # Get root generate statement safely (stashed: the root of a key/variable cannot change
         # over this instance's lifetime, so pre_execute reuses it instead of re-walking the tree)
@@ -107,6 +84,8 @@ class SequenceTableGenerator(BaseLiteralGenerator):
         if root_gen_stmt is None:
             raise generator_config_error(reason="Root generate statement is required")
         self._root_gen_stmt = root_gen_stmt
+        scope = self._generation_scope(stmt)
+        self._generation_plan = None if scope is None else scope.generation_plan
 
         # Initialize sequence with process-safe range
         try:
@@ -119,36 +98,19 @@ class SequenceTableGenerator(BaseLiteralGenerator):
                         "set numProcess=1 because MySQL has no atomic native sequence reservation"
                     )
                 )
-            count = root_gen_stmt.count
-            if count is None:
-                raise generator_config_error(reason="SequenceTableGenerator requires a generate count")
-            total_count = int(count)
+            if self._generation_plan is not None:
+                _, total_count = self._generation_plan
+                if isinstance(scope, NestedKeyStatement):
+                    total_processes = 1
+            else:
+                count = root_gen_stmt.count
+                if count is None:
+                    raise generator_config_error(reason="SequenceTableGenerator requires a generate count")
+                total_count = int(count)
 
-            # Calculate per-process count
+            # Match the worker planner's uniform slices, including any unused part of the last one.
             per_process_count = (total_count + total_processes - 1) // total_processes
-            # Every worker is allocated a UNIFORM per_process_count-sized slice (chunk skip
-            # below), even when total_count doesn't divide evenly - e.g. count=13, numProcess=4
-            # gives per_process_count=4, i.e. a reserved block of 4*4=16, 3 more than the 13
-            # actually needed. pre_execute() must reserve that same rounded-up block (not raw
-            # total_count), or the last worker's assumed range overlaps the next run's - this
-            # wastes a few sequence values on the excess but keeps the per-process arithmetic
-            # simple and collision-free, rather than special-casing the uneven last chunk.
-            reserved_count = per_process_count * total_processes
-
-            # Get current sequence and calculate process-specific range
-            current_seq = rdbms_get_current_sequence_number(
-                rdbms_client,
-                self._resolve_sequence_name(),
-                None if self._explicit_sequence_name else self._root_gen_stmt.type,
-                None if self._explicit_sequence_name else self._stmt.name,
-            )
-
-            # Pagination skips are global row indices (chunk starts already encode the worker's
-            # slice), so the block start carries no per-process offset.
-            self._start = current_seq - reserved_count
-
-            self._total_processes = total_processes
-            self._per_process_count = per_process_count
+            self._reserved_count = per_process_count * total_processes
 
         except (UserErrorBase, DomainError):
             raise
@@ -156,6 +118,21 @@ class SequenceTableGenerator(BaseLiteralGenerator):
             raise generator_config_error(
                 reason=f"SequenceTableGenerator initialization failed ({type(e).__name__})"
             ) from e
+
+    @staticmethod
+    def _generation_scope(stmt: Statement) -> GenerateStatement | NestedKeyStatement | None:
+        scope = stmt.parent_stmt
+        while scope is not None:
+            if isinstance(scope, GenerateStatement) or (
+                isinstance(scope, NestedKeyStatement) and scope.generation_plan is not None
+            ):
+                return scope
+            scope = scope.parent_stmt
+        return None
+
+    def matches_invocation(self, stmt: Statement) -> bool:
+        scope = self._generation_scope(stmt)
+        return scope is not None and scope.generation_plan == self._generation_plan
 
     def _resolve_sequence_name(self) -> str:
         """Explicit sequence= name if given (e.g. a migrated legacy descriptor's DB sequence name,
@@ -165,87 +142,49 @@ class SequenceTableGenerator(BaseLiteralGenerator):
         return f"{self._root_gen_stmt.type}_{self._stmt.name}_seq"
 
     def pre_execute(self, context: Context) -> None:
-        """
-        Increase the sequence number in the database before execution.
-        Each process will update its own range of sequence numbers.
-
-        Args:
-            context: Context object containing configuration and state
-
-        Raises:
-            ValueError: If required statements or attributes are missing
-        """
+        """Reserve a fresh block for this invocation, before worker context serialization."""
         rdbms_client = context.root.clients.get(self._source_name)
-        if rdbms_client is None:
+        if not isinstance(rdbms_client, Client):
             raise generator_config_error(reason="SequenceTableGenerator requires a configured database client")
+        self._reserve(rdbms_client)
+        self._page = None
+        self._current = None
+        self._end = None
 
-        # Reserve the SAME rounded-up block __init__ assumed (per_process_count * total_processes,
-        # not the raw statement count) - keeps this in sync with the per-process offset arithmetic
-        # above for an uneven count/numProcess ratio (see the comment in __init__).
-        reserved_count = self._per_process_count * self._total_processes
-        rdbms_increase_sequence_number(
-            rdbms_client,
-            self._resolve_sequence_name(),
-            reserved_count,
-            None if self._explicit_sequence_name else self._root_gen_stmt.type,
-            None if self._explicit_sequence_name else self._stmt.name,
-        )
-        # The block just reserved is the one ending at the next number: re-anchor on it so every
-        # worker inheriting this instance shares one block start (each read advances the sequence).
+    def _reserve(self, client: Client) -> None:
         self._start = (
-            rdbms_get_current_sequence_number(
-                rdbms_client,
+            rdbms_reserve_sequence_block(
+                client,
                 self._resolve_sequence_name(),
+                self._reserved_count,
                 None if self._explicit_sequence_name else self._root_gen_stmt.type,
                 None if self._explicit_sequence_name else self._stmt.name,
             )
-            - reserved_count
+            if self._reserved_count
+            else 0
         )
-        # A new block invalidates the positioned page: the next add_pagination re-positions on it.
-        self._page = None
+        # A prepared worker needs only the block and offsets, not another client connection.
+        self._initial_client = None
 
     def add_pagination(self, pagination: DataSourcePagination | None = None) -> None:
-        """
-        Position the generator on a page: rows [skip, skip + limit) of the reserved block.
-
-        Derived from the immutable block start, so applying a new page to a cached instance
-        replaces the previous page; re-applying the page already in use keeps the position.
-
-        Args:
-            pagination: Optional pagination configuration
-        """
-        if pagination is None:
-            self._page = None
-            self._end = sys.maxsize
-            self._current = self._start + 1
-            return
-
-        page = (pagination.skip, pagination.limit)
+        """Position on a page within the block. Reapplying the same page keeps the cursor."""
+        if self._initial_client is not None:
+            self._reserve(self._initial_client)
+        assert self._start is not None
+        page = (pagination.skip, pagination.limit) if pagination else (0, self._reserved_count)
         if page == self._page:
             return
         self._page = page
-        self._current = self._start + pagination.skip
-        self._end = self._current + pagination.limit
+        skip, limit = page
+        self._current = self._start + max(0, skip)
+        self._end = min(self._current + limit, self._start + self._reserved_count)
 
     def generate(self) -> int:
-        """
-        Generate current number of sequence.
-
-        Returns:
-            int: The next sequence number
-
-        Raises:
-            StopIteration: When sequence generation is complete or invalid
-        """
-        if self._current is None:
-            raise StopIteration("Generator cannot generate value: sequence not initialized")
-        if self._end is None:
-            raise StopIteration("Generator cannot generate value: end sequence not set")
-
+        if self._page is None:
+            self.add_pagination()
+        assert self._current is not None and self._end is not None
+        if self._current >= self._end:
+            raise StopIteration("Generator reached the end of sequence")
         result = self._current
         self._current += 1
-
-        if self._current > self._end:
-            raise StopIteration("Generator reached the end of sequence")
-
         return result

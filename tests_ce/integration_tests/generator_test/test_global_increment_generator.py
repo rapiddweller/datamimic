@@ -122,18 +122,36 @@ def test_global_increment_xml_attributes_continue_across_pages(tmp_path):
     assert [row["value"]["@id"] for row in captured["rows"]] == list(range(1, 9))
 
 
-def test_repeated_includes_keep_independent_counter_contexts(tmp_path):
-    (tmp_path / "included.xml").write_text('''<setup multiprocessing="True" numProcess="2">
-        <generate name="rows" count="2" pageSize="1" target="">
-            <key name="id" generator="GlobalIncrementGenerator"/>
-        </generate>
-    </setup>''')
-    (tmp_path / "includes.xml").write_text('''<setup>
-        <include uri="included.xml"/>
-        <include uri="included.xml"/>
-    </setup>''')
-    engine = DataMimicTest(test_dir=tmp_path, filename="includes.xml", capture_test_result=True)
+_INCLUDE_DIR = Path(__file__).resolve().parent / "global_increment_include"
+
+
+def _include_ids(filename):
+    engine = DataMimicTest(test_dir=_INCLUDE_DIR, filename=filename, capture_test_result=True)
     engine.test_with_timer()
-    # Includes clone their owning root setup context; they do not share a
-    # descriptor-wide counter just because the qualified field names match.
-    assert [row["id"] for row in engine.capture_result()["rows"]] == [1, 2, 1, 2]
+    return [row["id"] for row in engine.capture_result()["rows"]]
+
+
+@pytest.mark.parametrize(
+    ("filename", "expected"),
+    [
+        ("one_include.xml", [1, 2]),
+        ("two_includes.xml", [1, 2, 3, 4]),
+        ("nested_include.xml", [1, 2, 3, 4]),
+    ],
+)
+def test_includes_share_the_global_counter_of_the_run(filename, expected):
+    assert _include_ids(filename) == expected
+
+
+def test_include_after_first_use_continues_the_counter_of_a_declared_generator():
+    # The parent has already used `counter` when the include copies its cached generators.
+    engine = DataMimicTest(test_dir=_INCLUDE_DIR, filename="alias_include.xml", capture_test_result=True)
+    engine.test_with_timer()
+    captured = engine.capture_result()
+    assert [row["id"] for row in captured["rows"]] == [1, 2]
+    assert [row["id"] for row in captured["more"]] == [3, 4]
+
+
+def test_global_counter_restarts_in_the_next_run_of_the_same_process():
+    assert _include_ids("two_includes.xml") == [1, 2, 3, 4]
+    assert _include_ids("two_includes.xml") == [1, 2, 3, 4]

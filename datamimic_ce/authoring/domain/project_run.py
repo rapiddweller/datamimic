@@ -16,12 +16,17 @@ from .build_rules import catalog_diagnostic
 from .common import AuthoringModel, NonEmptyStrictStr, NonNegativeStrictInt
 from .coverage import BuildCoverage
 from .diagnostics import AuthoringRuleId, Diagnostic, DiagnosticPhase
-from .requests import BuildArtifact, BuildResult
+from .requests import BuildArtifact, RejectedBuild
 
 MAX_PROJECT_RUN_SECONDS = 840
 MAX_LISTED_ARTIFACTS = 200
 LOG_TAIL_LINES = 50
 _PARAM_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+
+
+def run_outcome(exit_code: int | None) -> Literal["completed", "failed", "timeout"]:
+    """The one outcome rule: no exit code means the run was stopped at its timeout."""
+    return "timeout" if exit_code is None else "completed" if exit_code == 0 else "failed"
 
 
 class ExternalEffectKind(StrEnum):
@@ -63,10 +68,16 @@ class ProjectRunRequest(AuthoringModel):
     timeout_seconds: Annotated[StrictInt, Field(ge=1, le=MAX_PROJECT_RUN_SECONDS)] = 600
 
 
+ProjectRunBuild = Annotated[
+    RejectedBuild | BuildArtifact | None,
+    Field(description="The Build artifact, or the full rejection if Build did not pass."),
+]
+
+
 class ProjectRunResult(AuthoringModel):
     outcome: Literal["completed", "failed", "timeout", "not_run"]
     not_run_reason: Literal["input", "build_rejected", "side_effects_not_allowed"] | None = None
-    build: BuildResult | None = None
+    build: ProjectRunBuild = None
     build_outcome: Literal["ready", "ready_with_gaps"] | None = Field(
         default=None, description="The outcome of the Build that preceded the run; absent when Build rejected."
     )
@@ -75,6 +86,11 @@ class ProjectRunResult(AuthoringModel):
     )
     action_required: str | None = Field(
         default=None, description="Set when the Build had open coverage gaps; do not report success until fixed."
+    )
+    build_file_mismatches: tuple[NonEmptyStrictStr, ...] | None = Field(
+        default=None,
+        description="Build paths missing, unreadable or with different digests before or after execution. "
+        "Empty means all digests matched at both checks; null means no comparison.",
     )
     required_side_effects: tuple[ExternalEffect, ...] = ()
     exit_code: StrictInt | None = None
@@ -97,6 +113,7 @@ class ProjectRunResult(AuthoringModel):
                 bool(self.artifacts),
                 self.artifact_count != 0,
                 bool(self.log_tail),
+                self.build_file_mismatches is not None,
             )
         )
         if self.outcome == "not_run":
@@ -110,8 +127,7 @@ class ProjectRunResult(AuthoringModel):
                 )
             elif self.not_run_reason == "build_rejected":
                 valid = (
-                    self.build is not None
-                    and self.build.outcome == "rejected"
+                    isinstance(self.build, RejectedBuild)
                     and self.build_outcome is None
                     and self.coverage is None
                     and not self.required_side_effects
@@ -120,7 +136,7 @@ class ProjectRunResult(AuthoringModel):
             else:
                 valid = (
                     self.not_run_reason == "side_effects_not_allowed"
-                    and self.build is None
+                    and isinstance(self.build, BuildArtifact)
                     and self.build_outcome is not None
                     and self.coverage is not None
                     and bool(self.required_side_effects)
@@ -129,16 +145,13 @@ class ProjectRunResult(AuthoringModel):
         else:
             valid = (
                 self.not_run_reason is None
-                and self.build is None
+                and isinstance(self.build, BuildArtifact)
                 and self.build_outcome is not None
+                and self.build_file_mismatches is not None
                 and self.coverage is not None
                 and not self.required_side_effects
                 and self.duration_seconds is not None
-                and (
-                    (self.outcome == "completed" and self.exit_code == 0)
-                    or (self.outcome == "failed" and self.exit_code is not None and self.exit_code != 0)
-                    or (self.outcome == "timeout" and self.exit_code is None)
-                )
+                and self.outcome == run_outcome(self.exit_code)
             )
         if (self.action_required is not None) != (self.build_outcome == "ready_with_gaps"):
             valid = False
@@ -162,6 +175,17 @@ class ProjectRunExecution(AuthoringModel):
     artifact_count: NonNegativeStrictInt
     log_tail: tuple[StrictStr, ...]
     record_path: NonEmptyStrictStr | None = None
+    build_file_mismatches: tuple[NonEmptyStrictStr, ...] | None = None
+
+    @model_validator(mode="after")
+    def timeout_has_no_exit_code(self) -> ProjectRunExecution:
+        if self.timed_out != (self.exit_code is None):
+            raise ValueError("A run timed out exactly when it has no exit code")
+        return self
+
+    @property
+    def outcome(self) -> Literal["completed", "failed", "timeout"]:
+        return run_outcome(self.exit_code)
 
 
 class ProjectRunRecord(AuthoringModel):
@@ -176,6 +200,8 @@ class ProjectRunRecord(AuthoringModel):
     python_version: NonEmptyStrictStr
     param_names: tuple[StrictStr, ...] = Field(description="The names only: a value can be a secret.")
     proof: BuildArtifact | None = Field(description="The Build proof the run used; absent in an unverified run.")
+    build_outcome: Literal["ready", "ready_with_gaps"] | None = None
+    build_file_mismatches: tuple[NonEmptyStrictStr, ...] | None = None
     outcome: Literal["completed", "failed", "timeout"]
     exit_code: StrictInt | None
     duration_seconds: float = Field(ge=0)
@@ -195,14 +221,8 @@ class UnverifiedProjectRunResult(AuthoringModel):
     def consistent_execution(self) -> UnverifiedProjectRunResult:
         if self.outcome == "not_run":
             valid = self.execution is None
-        elif self.execution is None:
-            valid = False
-        elif self.outcome == "timeout":
-            valid = self.execution.timed_out and self.execution.exit_code is None
-        elif self.outcome == "completed":
-            valid = not self.execution.timed_out and self.execution.exit_code == 0
         else:
-            valid = not self.execution.timed_out and self.execution.exit_code not in (None, 0)
+            valid = self.execution is not None and self.execution.outcome == self.outcome
         if not valid:
             raise ValueError("Unverified run outcome contradicts its execution")
         return self

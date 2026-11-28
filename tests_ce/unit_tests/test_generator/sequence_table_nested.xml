@@ -1,0 +1,14 @@
+<setup numProcess="1">
+    <database id="sourceDB" dbms="postgresql" database="test" />
+    <generate name="parents" count="2">
+        <key name="id" generator="IncrementGenerator" />
+        <generate name="children" count="3" pageSize="2">
+            <key name="owner" script="parent.id" />
+            <condition>
+                <if condition="True">
+                    <key name="id" type="int" database="sourceDB" generator="SequenceTableGenerator" />
+                </if>
+            </condition>
+        </generate>
+    </generate>
+</setup>

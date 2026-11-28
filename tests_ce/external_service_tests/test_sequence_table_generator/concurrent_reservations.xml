@@ -1,0 +1,19 @@
+<setup numProcess="1">
+    <database id="sourceDB" system="reservation" />
+
+    <generate name="empty" type="{sequence_table}" count="0">
+        <key name="id" type="int" database="sourceDB" generator="SequenceTableGenerator" />
+    </generate>
+
+    <generate name="prepared" type="{sequence_table}" count="13" pageSize="3">
+        <key name="id" type="int" database="sourceDB" generator="SequenceTableGenerator" />
+    </generate>
+
+    <generate name="lazy" type="{sequence_table}" count="5" pageSize="2">
+        <condition>
+            <if condition="True">
+                <key name="id" type="int" database="sourceDB" generator="SequenceTableGenerator" />
+            </if>
+        </condition>
+    </generate>
+</setup>

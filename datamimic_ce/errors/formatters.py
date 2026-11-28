@@ -318,11 +318,15 @@ def runtime_config_message(*, code: IssueCode, guidance: str | None = None, **kw
     return f"{code_prefix(ErrorCode.RUNTIME_CONFIG, code)}{message}"
 
 
-def task_config_message(*, code: IssueCode, guidance: str | None = None, **kwargs: object) -> str:
+def task_config_message(
+    *, code: IssueCode, guidance: str | None = None, issue_only: bool = False, **kwargs: object
+) -> str:
+    issue = _format_issue(issue_text(code, **kwargs))
+    if issue_only:
+        return issue
     template = ERROR_TEMPLATES[ErrorCode.TASK_CONFIG]
-    issue = issue_text(code, **kwargs)
     guidance = _resolve_guidance(code, guidance)
-    message = template.format(issue=_format_issue(issue), guidance=_format_guidance(guidance))
+    message = template.format(issue=issue, guidance=_format_guidance(guidance))
     return f"{code_prefix(ErrorCode.TASK_CONFIG, code)}{message}"
 
 

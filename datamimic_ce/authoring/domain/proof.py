@@ -9,27 +9,33 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Annotated, Literal
 
-from pydantic import Field, StrictBool, model_validator
+from pydantic import Field, SerializerFunctionWrapHandler, StrictBool, model_serializer, model_validator
 
-from .common import AuthoringModel, NonEmptyStrictStr, NonNegativeStrictInt
+from .common import AuthoringModel, NonEmptyStrictStr, NonNegativeStrictInt, serialize_omitting_field
 from .expectations import ExpectationIntent
 
 
 class IdentifierRole(AuthoringModel):
-    """One field uniquely identifies rows across the complete product capture.
+    """The declared field identifies rows across the complete product capture.
 
     A local sequence repeated under different parents is not a product identifier.
-    Memstore readback proof requires exactly one producer identifier declaration.
+    For a Memstore readback, additional fields can form one composite identity
+    with the declared field. Individual components may repeat.
     """
 
     kind: Literal["identifier"] = "identifier"
+    additional_fields: tuple[NonEmptyStrictStr, ...] = ()
+
+    @model_serializer(mode="wrap")
+    def _serialize_identifier(self, handler: SerializerFunctionWrapHandler) -> dict[str, object]:
+        return serialize_omitting_field(self, handler, None if self.additional_fields else "additional_fields")
 
 
 class ForeignKeyRole(AuthoringModel):
     """One field references a parent product's field; this is not a multi-column join.
 
     Nested lineage must copy the actual immediate parent's field. Memstore
-    readback proof pairs one consumer role with the producer's identifier.
+    readback proof pairs one consumer role with each field of the producer's identifier.
     """
 
     kind: Literal["foreign_key"] = "foreign_key"

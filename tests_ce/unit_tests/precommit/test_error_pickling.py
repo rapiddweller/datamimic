@@ -4,6 +4,8 @@
 
 import pickle
 
+import pytest
+
 import datamimic_ce.errors as package_errors
 from datamimic_ce.errors import DomainError, DomainErrorCode, ErrorCode, InvalidLocaleError
 from datamimic_ce.errors.base import PICKLE_RESTORERS, UserRuntimeError
@@ -29,7 +31,7 @@ def test_package_error_exports_keep_their_defining_objects() -> None:
     assert package_errors.invalid_locale_error is invalid_locale_error
 
 
-def test_domain_error_round_trip_keeps_legacy_empty_string() -> None:
+def test_domain_error_round_trip_keeps_message_text() -> None:
     error = DomainError(
         code=DomainErrorCode.INVALID_REQUEST,
         message="invalid input",
@@ -42,8 +44,31 @@ def test_domain_error_round_trip_keeps_legacy_empty_string() -> None:
     restored = pickle.loads(pickle.dumps(error))
 
     assert type(restored) is DomainError
-    assert str(restored) == ""
+    assert str(restored) == "invalid input"
     assert restored.to_dict() == error.to_dict()
+
+
+@pytest.mark.parametrize(
+    ("message", "expected_text"),
+    [
+        ("invalid input", "invalid input"),  # valid: a non-empty message is the text
+        ("", "DomainError"),  # empty: the class name stands in, so the log line is never blank
+    ],
+)
+def test_domain_error_str_is_message_or_class_name(message: str, expected_text: str) -> None:
+    error = DomainError(
+        code=DomainErrorCode.INVALID_REQUEST,
+        message=message,
+        hint=None,
+        path="/field",
+        request_hash="request-hash",
+    )
+
+    assert str(error) == expected_text
+    assert f"failed: {error}" == f"failed: {expected_text}"
+    restored = pickle.loads(pickle.dumps(error))
+    assert str(restored) == expected_text
+    assert restored.message == message
 
 
 def test_invalid_locale_error_round_trip_keeps_typed_fields_and_message() -> None:

@@ -32,7 +32,12 @@ def _refusal_message(effects: tuple[ExternalEffect, ...]) -> str:
     scripts = sorted({effect.name for effect in effects if effect.kind is ExternalEffectKind.EXECUTE})
     parts: list[str] = []
     if scripts:
-        parts.append(f"runs Python code from {', '.join(scripts)}")
+        # Operators only: a method call here would raise ArchKeel's unresolved-call count.
+        inside = all(
+            script != "inline" and script[:1] not in ("/", "\\") and ":" not in script and ".." not in script
+            for script in scripts
+        )
+        parts.append(f"runs Python code from {', '.join(scripts)}" + (" (inside the project)" if inside else ""))
     if any(effect.kind is not ExternalEffectKind.EXECUTE for effect in effects):
         parts.append("reaches outside its directory")
     return f"The project {' and '.join(parts)}; nothing was run."
@@ -53,9 +58,7 @@ class ProjectRunWorkflow:
                 message="Confirm the unverified run and allow side effects; nothing was run.",
             )
         execution = self._runner.run(request.params, request.timeout_seconds)
-        outcome: Literal["completed", "failed", "timeout"] = (
-            "timeout" if execution.timed_out else "completed" if execution.exit_code == 0 else "failed"
-        )
+        outcome = execution.outcome
         message = "Build was not run. Execution does not verify the project or its effects."
         if outcome != "completed":
             message += " Effects may have partially persisted. Inspect the target state independently before retrying."
@@ -78,6 +81,7 @@ class ProjectRunWorkflow:
             return ProjectRunResult(
                 outcome="not_run",
                 not_run_reason="side_effects_not_allowed",
+                build=build.artifact,
                 build_outcome=outcome_name,
                 coverage=build.coverage,
                 action_required=action_required,
@@ -93,10 +97,10 @@ class ProjectRunWorkflow:
                     *tuple(item for item in build.diagnostics if item.severity == "warning"),
                 ),
             )
-        execution = self._runner.run(request.params, request.timeout_seconds, build.artifact)
-        outcome: Literal["completed", "failed", "timeout"] = (
-            "timeout" if execution.timed_out else "completed" if execution.exit_code == 0 else "failed"
+        execution = self._runner.run(
+            request.params, request.timeout_seconds, build.artifact, build_outcome=outcome_name
         )
+        outcome = execution.outcome
         diagnostics: tuple[Diagnostic, ...] = tuple(item for item in build.diagnostics if item.severity == "warning")
         if outcome != "completed":
             diagnostics += (
@@ -121,7 +125,9 @@ class ProjectRunWorkflow:
             outcome=outcome,
             exit_code=execution.exit_code,
             duration_seconds=execution.duration_seconds,
+            build=build.artifact,
             build_outcome=outcome_name,
+            build_file_mismatches=execution.build_file_mismatches,
             coverage=build.coverage,
             action_required=action_required,
             artifacts=execution.artifacts,
