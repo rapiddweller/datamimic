@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 import pickle
+import re
 import signal
 import stat
 import subprocess
@@ -67,6 +68,39 @@ _MAX_WORKSPACE_FILES = 2_000
 _MAX_WORKSPACE_ENTRIES = 4_000
 _MAX_WORKSPACE_DEPTH = 64
 _MAX_REPLY_BYTES = dryrun._MAX_WORKER_REPLY_BYTES
+
+
+_STDERR_READ_BYTES = 4096
+_STDERR_EXCERPT_CHARS = 800
+_CONTROL_RUNS = r"[\x00-\x1f\x7f-\x9f]+"
+_CONTROL_EDGES = r"\A[\x00-\x20\x7f-\x9f]+|[\x00-\x20\x7f-\x9f]+\Z"
+
+
+def _stderr_excerpt(path: Path) -> str:
+    """The sanitized end of the child's stderr, or "" when there is none.
+
+    Only the last bytes of the file are read. The excerpt is what the child itself printed: nothing is added,
+    but a child that prints a secret or an input value passes it on, so the text is shown as written.
+    """
+    try:
+        descriptor = os.open(path, os.O_RDONLY)
+    except OSError:
+        return ""
+    try:
+        size = os.fstat(descriptor).st_size
+        os.lseek(descriptor, max(0, size - _STDERR_READ_BYTES), os.SEEK_SET)
+        data = os.read(descriptor, _STDERR_READ_BYTES)
+    except OSError:
+        return ""
+    finally:
+        os.close(descriptor)
+    text = str(data, "utf-8", "replace")
+    # Runs of line breaks and control characters become one " | " separator, so the excerpt is one line.
+    trimmed = re.sub(_CONTROL_EDGES, "", text)
+    excerpt = re.sub(_CONTROL_RUNS, " | ", trimmed)
+    if len(excerpt) > _STDERR_EXCERPT_CHARS:
+        excerpt = "..." + excerpt[-_STDERR_EXCERPT_CHARS:]
+    return f" Child stderr (last lines): {excerpt}" if excerpt else ""
 
 
 def _failure(code: AuthoringSystemDiagnosticCode, message: str, max_count: int) -> BoundedExecutionEvidence:
@@ -678,15 +712,21 @@ class CeBoundedExecutor:
             str(reply_file),
             str(workspace),
         ]
+        stderr_file = reply_file.parent / "stderr.log"
         try:
-            process = subprocess.Popen(
-                command,
-                env=_child_environment(environment, request.hash_seed),
-                stdin=subprocess.DEVNULL,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                start_new_session=os.name == "posix",
-            )
+            # A file, not a pipe: the child never blocks on a full pipe and this process buffers nothing.
+            stderr_descriptor = os.open(stderr_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
+            try:
+                process = subprocess.Popen(
+                    command,
+                    env=_child_environment(environment, request.hash_seed),
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL,
+                    stderr=stderr_descriptor,
+                    start_new_session=os.name == "posix",
+                )
+            finally:
+                os.close(stderr_descriptor)
         except OSError:
             return _failure(
                 AuthoringSystemDiagnosticCode.CHILD_CRASH, "Bounded child could not start.", request.max_count
@@ -698,7 +738,8 @@ class CeBoundedExecutor:
                 if process.poll() is not None:
                     result = _failure(
                         AuthoringSystemDiagnosticCode.CHILD_CRASH,
-                        f"Bounded child exited without evidence (exit code {process.returncode}).",
+                        f"Bounded child exited without evidence (exit code {process.returncode})."
+                        + _stderr_excerpt(stderr_file),
                         request.max_count,
                     )
                     break
