@@ -178,7 +178,9 @@ def test_catalog_projects_live_xml_and_build_rules_without_losing_metadata() -> 
         assert entry.advisory_severity == (definition.advisory_severity.value if definition.advisory_severity else None)
         assert RuleCatalogEntry.model_validate_json(entry.model_dump_json()) == entry
         assert application.reference(ReferenceRequest(topic=ReferenceTopic.RULES, name=definition.id)).rules == (entry,)
-    assert application.reference(ReferenceRequest(topic=ReferenceTopic.RULES, name="missing")).rules == ()
+    miss = application.reference(ReferenceRequest(topic=ReferenceTopic.RULES, name="missing"))
+    assert not miss.ok and miss.error == "reference_not_found"
+    assert miss.available_names == tuple(str(rule.rule_id) for rule in listing.rules)
     cli_result = CliRunner().invoke(app, ["authoring", "reference", "--topic", "rules", "--name", "DM315"])
     assert cli_result.exit_code == 0
     import json

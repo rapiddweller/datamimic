@@ -2150,38 +2150,6 @@
         ]
       }
     ],
-    "measurement_budgets": [
-      {
-        "name": "cycle_edges",
-        "provenance": [
-          "docs/architecture/refactoring-study/experiment-2/protocol.md"
-        ]
-      },
-      {
-        "name": "private_crossings",
-        "provenance": [
-          "docs/architecture/refactoring-study/experiment-2/protocol.md"
-        ]
-      },
-      {
-        "name": "typing_positions",
-        "provenance": [
-          "docs/architecture/refactoring-study/experiment-2/protocol.md"
-        ]
-      },
-      {
-        "name": "calls_unresolved",
-        "provenance": [
-          "docs/architecture/refactoring-study/experiment-2/protocol.md"
-        ]
-      },
-      {
-        "name": "untyped_private_accesses",
-        "provenance": [
-          "docs/architecture/refactoring-study/experiment-2/protocol.md"
-        ]
-      }
-    ],
     "modules": [
       {
         "path": "datamimic_ce/__init__.py",
