@@ -1288,7 +1288,8 @@
         "docs/architecture/refactoring-study/experiment-2/amendment-209-native-variable-return.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-210-nested-json-root.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-211-nested-native-map-arms.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-213-native-open-payloads.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-213-native-open-payloads.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-217-remaining-io-types.md"
       ],
       "decided_by": "agent",
       "allowed_positions": [
@@ -1347,26 +1348,26 @@
           "qualified_name": "datamimic_ce.engine.io.api.MemstoreSource.get_all_data_by_type",
           "position": "return",
           "field_path": "",
-          "annotation": "list[dict[str, object]]"
+          "annotation": "list[MemstoreRow]"
         },
         {
           "qualified_name": "datamimic_ce.engine.io.api.MemstoreSource.get_all_data_by_type",
           "position": "return",
           "field_path": "",
-          "annotation": "list[dict[str, object]]",
+          "annotation": "list[MemstoreRow]",
           "container_depth": 2
         },
         {
           "qualified_name": "datamimic_ce.engine.io.api.MemstoreSource.get_data_by_type",
           "position": "return",
           "field_path": "",
-          "annotation": "list[dict[str, object]]"
+          "annotation": "list[MemstoreRow]"
         },
         {
           "qualified_name": "datamimic_ce.engine.io.api.MemstoreSource.get_data_by_type",
           "position": "return",
           "field_path": "",
-          "annotation": "list[dict[str, object]]",
+          "annotation": "list[MemstoreRow]",
           "container_depth": 2
         },
         {
@@ -1544,6 +1545,45 @@
           "field_path": "rows",
           "annotation": "list[dict]",
           "native_mapping": true
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.Memstore.get_all_data_by_type",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[MemstoreRow]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.Memstore.get_all_data_by_type",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[MemstoreRow]",
+          "container_depth": 2
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.Memstore.get_data_by_type",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[MemstoreRow]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.Memstore.get_data_by_type",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[MemstoreRow]",
+          "container_depth": 2
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.RdbmsConnectionConfig.get_connection_config",
+          "position": "return",
+          "field_path": "",
+          "annotation": "RdbmsConnectionValues"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.RdbmsConnectionConfig.get_connection_config",
+          "position": "return",
+          "field_path": "",
+          "annotation": "RdbmsConnectionValues",
+          "container_depth": 1
         }
       ]
     },

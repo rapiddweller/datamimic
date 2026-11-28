@@ -18,7 +18,7 @@ from datamimic_ce.engine.io.api import (
 from datamimic_ce.engine.io.api import (
     is_database_client as direct_is_database_client,
 )
-from datamimic_ce.engine.io.contracts import SmokeExportRequest
+from datamimic_ce.engine.io.contracts import MemstoreRow, SmokeExportRequest
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -206,8 +206,8 @@ def test_smoke_export_open_values_keep_their_container_shapes() -> None:
 def test_io_native_payload_permissions_keep_exact_shapes_and_depths() -> None:
     assert get_type_hints(io_api.read_variable_query)["return"] == list[dict[str, object]]
     assert get_type_hints(io_api.TestResultExporter.get_result)["return"] == dict[str, list[object]]
-    assert get_type_hints(io_api.MemstoreSource.get_all_data_by_type)["return"] == list[dict[str, object]]
-    assert get_type_hints(io_api.MemstoreSource.get_data_by_type)["return"] == list[dict[str, object]]
+    assert get_type_hints(io_api.MemstoreSource.get_all_data_by_type)["return"] == list[MemstoreRow]
+    assert get_type_hints(io_api.MemstoreSource.get_data_by_type)["return"] == list[MemstoreRow]
     assert get_type_hints(io_api.read_generate_memstore_source)["return"] == list[dict[str, object]]
     assert get_type_hints(io_api.ChunkSourceWindow.__init__)["pool"] == list[dict[str, object]]
     assert get_type_hints(io_api.ChunkSourceWindow.read_page)["return"] == list[dict[str, object]]
@@ -260,8 +260,8 @@ def test_io_native_payload_permissions_keep_exact_shapes_and_depths() -> None:
     ]
     for name, position, annotation in [
         ("TestResultExporter.get_result", "return", "dict[str, list[object]]"),
-        ("MemstoreSource.get_all_data_by_type", "return", "list[dict[str, object]]"),
-        ("MemstoreSource.get_data_by_type", "return", "list[dict[str, object]]"),
+        ("MemstoreSource.get_all_data_by_type", "return", "list[MemstoreRow]"),
+        ("MemstoreSource.get_data_by_type", "return", "list[MemstoreRow]"),
         ("read_generate_memstore_source", "return", "list[dict[str, object]]"),
         ("ChunkSourceWindow.__init__", "pool", "list[dict[str, object]]"),
         ("ChunkSourceWindow.read_page", "return", "list[dict[str, object]]"),
@@ -340,6 +340,18 @@ def test_io_native_payload_permissions_keep_exact_shapes_and_depths() -> None:
             "native_mapping": True,
         },
     ])
+    for name, annotation, depth in (
+        ("Memstore.get_all_data_by_type", "list[MemstoreRow]", 2),
+        ("Memstore.get_data_by_type", "list[MemstoreRow]", 2),
+        ("RdbmsConnectionConfig.get_connection_config", "RdbmsConnectionValues", 1),
+    ):
+        selector = {
+            "qualified_name": f"datamimic_ce.engine.io.api.{name}",
+            "position": "return",
+            "field_path": "",
+            "annotation": annotation,
+        }
+        expected.extend([selector, {**selector, "container_depth": depth}])
     assert rule["allowed_positions"] == expected
     assert (
         "docs/architecture/refactoring-study/experiment-2/amendment-203-variable-query-rows.md"

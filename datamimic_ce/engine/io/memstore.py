@@ -4,7 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from datamimic_ce.engine.io.contracts import Exporter
+from datamimic_ce.engine.io.contracts import Exporter, MemstoreRow
 from datamimic_ce.errors import missing_memstore_product_error
 
 
@@ -17,20 +17,12 @@ class Memstore(Exporter):
     def __init__(self, memstore_id: str):
         self._storage: dict = {}
 
-    def get_all_data_by_type(self, product_type: str):
-        """
-        Get all data in memstore by data type
-        :param product_type:
-        :return:
-        """
+    def get_all_data_by_type(self, product_type: str) -> list[MemstoreRow]:
+        """Return the live row list for the product, which a write or reconciliation may replace."""
         return self.get_data_by_type(product_type)
 
-    def get_data_by_type(self, product_type: str | None):
-        """
-        Get raw data in memstore by data type.
-        :param product_type:
-        :return:
-        """
+    def get_data_by_type(self, product_type: str | None) -> list[MemstoreRow]:
+        """Return the live row list for the product, which a write or reconciliation may replace."""
         try:
             return self._storage[product_type]
         except KeyError as e:
@@ -68,6 +60,7 @@ class Memstore(Exporter):
         """Row count for scripts (legacy camelCase naming)."""
         return self.get_data_len_by_type(product_type)
 
+    # Client typing waits for https://github.com/rapiddweller/archkeel/issues/2220.
     def removeNotExistingIds(self, product_type: str, id_col: str, ref_type: str, client) -> None:
         """Keep only the rows of `product_type` whose `id_col` value exists in `ref_type` as read
         from an RDBMS `client` (migration parity: an inner-join filter). Replaces the outer stored list;

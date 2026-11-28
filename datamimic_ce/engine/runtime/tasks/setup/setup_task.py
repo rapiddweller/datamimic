@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import copy
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from contextlib import suppress
 from pathlib import Path
 from typing import Literal
@@ -97,7 +97,7 @@ class SetupTask:
 
         self.execute_statements(self._setup_stmt, root_context)
 
-    def memstore_rows(self, memstore_id: str, entity: str) -> list[object] | None:
+    def memstore_rows(self, memstore_id: str, entity: str) -> Sequence[object] | None:
         if not self._memstore_manager.contain(memstore_id):
             return None
         try:

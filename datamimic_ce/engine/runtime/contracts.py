@@ -1,7 +1,7 @@
 """Typed inputs and outputs for a runtime descriptor execution."""
 
 import logging
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
@@ -70,5 +70,5 @@ class RunSession(Protocol):
 
     def capture_test_result(self) -> dict[str, list[object]] | None: ...
 
-    def memstore_rows(self, memstore_id: str, entity: str) -> list[object] | None:
+    def memstore_rows(self, memstore_id: str, entity: str) -> Sequence[object] | None:
         """The rows one memstore holds for one entity now; None when the run declares no such memstore."""

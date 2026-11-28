@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import os
 import uuid
+from collections.abc import Sequence
 
 # Must be set before importing Ray through runtime tasks.
 os.environ["RAY_DEDUP_LOGS"] = "0"
@@ -130,7 +131,7 @@ class RuntimeRunSession:
             return self._test_result_storage.get_result()
         raise ValueError("Cannot capture test result in non-test mode") from None
 
-    def memstore_rows(self, memstore_id: str, entity: str) -> list[object] | None:
+    def memstore_rows(self, memstore_id: str, entity: str) -> Sequence[object] | None:
         return None if self._setup_task is None else self._setup_task.memstore_rows(memstore_id, entity)
 
 

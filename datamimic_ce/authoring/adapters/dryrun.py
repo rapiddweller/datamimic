@@ -1435,7 +1435,7 @@ def _check_memstore_rows(
     budgets: _ProductBudgets,
     statements: dict[str, GenerateStatement],
     captured: dict[str, list[object]],
-    memstore_rows: Callable[[str, str], list[object] | None],
+    memstore_rows: Callable[[str, str], Sequence[object] | None],
 ) -> None:
     """A script can change a memstore after the product wrote its rows (consume, removeNotExistingIds). A reader then
     sees rows that Build did not capture, so the capture of the product proves nothing about them. Both mutators only
@@ -1444,7 +1444,12 @@ def _check_memstore_rows(
         entity = GenerateStatement.memstore_entity(stmt.target_entity, stmt.name)
         # Only the first memstore target of a product receives its rows; a store that never got them is not a change.
         held = {store: rows for store in sorted(stmt.targets) if (rows := memstore_rows(store, entity)) is not None}
-        if held and captured.get(name, []) not in held.values():
+        expected = captured.get(name, [])
+        if held and not any(
+            len(rows) == len(expected)
+            and all(stored is row or stored == row for stored, row in zip(rows, expected, strict=True))
+            for rows in held.values()
+        ):
             store = next(iter(held))
             budgets[name] = replace(
                 budgets[name],

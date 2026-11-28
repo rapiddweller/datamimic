@@ -71,6 +71,45 @@ def test_valid_worker_capture_keeps_every_row() -> None:
     assert result.captured == {"items": ({"id": 1},)}
 
 
+@pytest.mark.parametrize(
+    ("captured", "first", "second", "unchanged"),
+    [
+        pytest.param([{"id": 1}, {"id": 2}], ({"id": 1}, {"id": 2}), None, True, id="matching-tuple"),
+        pytest.param([{"id": 1}, {"id": 2}], ({"id": 2}, {"id": 1}), None, False, id="different-order"),
+        pytest.param([{"id": 1}], ({"id": 1}, {"id": 2}), None, False, id="extra-row"),
+        pytest.param([{"id": 1}], (), None, False, id="empty-store"),
+        pytest.param([], (), None, True, id="matching-empty"),
+        pytest.param([{"id": 1}], None, None, True, id="no-store"),
+        pytest.param([{"id": 1}], (), ({"id": 1},), True, id="one-matching-target"),
+    ],
+)
+def test_memstore_readback_compares_ordered_sequences(tmp_path, captured, first, second, unchanged) -> None:
+    from datamimic_ce.engine.dsl.api import DescriptorParser
+
+    setup = DescriptorParser.parse_xml(
+        '<setup><memstore id="first"/><memstore id="second"/>'
+        '<generate name="items" count="1" target="first,second"><key name="id" constant="1"/></generate></setup>',
+        tmp_path / "model.xml",
+        None,
+        "production",
+        profile_loader=lambda *_: {},
+    )
+    statement = setup.sub_statements[-1]
+    stored_rows = {"first": first, "second": second}
+    original = _budget()
+    budgets = {"items": original}
+
+    dryrun._check_memstore_rows(
+        budgets, {"items": statement}, {"items": captured}, lambda store, _entity: stored_rows[store]
+    )
+
+    if unchanged:
+        assert budgets["items"] == original
+    else:
+        assert not budgets["items"].bounded_without_cap
+        assert "a script changed memstore 'first'" in budgets["items"].reason
+
+
 @pytest.mark.parametrize("rows", [(1,), ({"id": 1}, 2)])
 def test_parent_rejects_malformed_rows_before_any_consumer(rows) -> None:
     message = dryrun._WorkerSuccess(

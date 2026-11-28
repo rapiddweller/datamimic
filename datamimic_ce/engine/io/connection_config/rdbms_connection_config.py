@@ -6,11 +6,14 @@
 
 
 from pathlib import Path
+from typing import TypeAlias
 
 from pydantic import BaseModel, ConfigDict
 
 from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
 from datamimic_ce.engine.io.connection_config.connection_config_base import ConnectionConfig
+
+RdbmsConnectionValues: TypeAlias = dict[str, object]
 
 
 class RdbmsConnectionConfig(ConnectionConfig, BaseModel):
@@ -29,7 +32,7 @@ class RdbmsConnectionConfig(ConnectionConfig, BaseModel):
 
     model_config = ConfigDict(extra="allow")
 
-    def get_connection_config(self):
+    def get_connection_config(self) -> RdbmsConnectionValues:
         return BaseModel.model_dump(self)
 
     def check_connection_config(self) -> bool:

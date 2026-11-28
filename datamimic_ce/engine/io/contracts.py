@@ -7,7 +7,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
-from typing import Protocol, TypedDict
+from typing import Protocol, TypeAlias, TypedDict
 
 
 class Exporter:
@@ -71,12 +71,19 @@ class DataSourcePagination:
         return self._limit
 
 
+MemstoreRow: TypeAlias = dict[str, object]
+
+
 class MemstoreSource(Protocol):
-    """The read-only memstore surface consumed by data-source routing."""
+    """The read-only memstore surface consumed by data-source routing.
 
-    def get_all_data_by_type(self, product_type: str) -> list[dict[str, object]]: ...
+    A returned row list is live at the time of the read. A write or
+    reconciliation may replace the stored list.
+    """
 
-    def get_data_by_type(self, product_type: str | None) -> list[dict[str, object]]: ...
+    def get_all_data_by_type(self, product_type: str) -> list[MemstoreRow]: ...
+
+    def get_data_by_type(self, product_type: str | None) -> list[MemstoreRow]: ...
 
     def get_data_len_by_type(self, entity_name: str | None) -> int: ...
 
@@ -107,6 +114,7 @@ __all__ = [
     "DataSourcePagination",
     "EntityValue",
     "ExportMetadata",
+    "MemstoreRow",
     "MemstoreSource",
     "SqlScriptClient",
     "SmokeExportRequest",
