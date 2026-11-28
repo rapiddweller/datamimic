@@ -43,6 +43,7 @@ from datamimic_ce.engine.runtime.tasks.values.construction.factory import (
 from datamimic_ce.errors import (
     DescriptorLocation,
     IssueCode,
+    OperationError,
     UserErrorBase,
     datetime_conversion_error,
     is_user_error,
@@ -150,11 +151,18 @@ class KeyVariableTask(Task):
                     key=f"{self._statement.full_name}|{self._generator_expression}",
                 )
                 self._mode = self.Mode.GENERATOR
-            # Only a name that exists per row (generator="IntegerGenerator(max=this.n)") cannot resolve against
-            # the setup context: defer that one to the first execution, where the row context binds it. Every
-            # other init failure (bad argument, syntax, unknown class) surfaces now with its own typed error.
+            # Two cases wait for the first execution, where the row context binds them or the database may
+            # answer again; every other init failure (bad argument, syntax, unknown class) surfaces now with
+            # its own typed error:
+            # - a name that exists per row (generator="IntegerGenerator(max=this.n)") cannot resolve against
+            #   the setup context;
+            # - SequenceTableGenerator reserves its block while it is built for a page, and a database failure
+            #   there (OperationError) is retried once on the first row.
             except UserErrorBase as error:
-                if not isinstance(error.__cause__, (NameError, AttributeError)):
+                if not (
+                    isinstance(error.__cause__, (NameError, AttributeError))
+                    or (isinstance(error, OperationError) and self._is_sequence_table_generator())
+                ):
                     raise
                 self._mode = self.Mode.LAZY_GENERATOR
         elif self._statement.source is not None:
@@ -200,6 +208,9 @@ class KeyVariableTask(Task):
             raise task_config_error(
                 code=IssueCode.TASK_GENERATION_MODE_UNKNOWN, element_tag=self._element_tag, name=self._statement.name
             )
+
+    def _is_sequence_table_generator(self) -> bool:
+        return (self._generator_expression or "").split("(", 1)[0].strip() == "SequenceTableGenerator"
 
     def _generator_call(self, ctx: SetupContext, generator: str) -> str:
         """``<key generator="IntegerGenerator" min="1" max="9"/>`` -> ``IntegerGenerator(min=1, max=9)``: the
