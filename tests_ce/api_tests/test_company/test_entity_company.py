@@ -105,7 +105,7 @@ class TestEntityCompany:
         self._test_single_company(company)
 
     def test_not_supported_dataset(self):
-        random_dataset = "XX"
+        random_dataset = "CN"
         # Fallback to US dataset with a single warning log; should not raise
         company_service = CompanyService(dataset=random_dataset)
         company = company_service.generate()

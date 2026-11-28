@@ -88,7 +88,7 @@ class TestEntityMedicalDevice:
         self._test_single_medical_device(medical_device)
 
     def test_not_supported_dataset(self):
-        random_dataset = "XX"
+        random_dataset = "CN"
         # Fallback to US dataset with a single warning log; should not raise
         medical_device_service = MedicalDeviceService(dataset=random_dataset)
         medical_device = medical_device_service.generate()

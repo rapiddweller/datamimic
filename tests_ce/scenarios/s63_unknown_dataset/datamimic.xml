@@ -1,0 +1,7 @@
+<setup rngSeed="63">
+    <generate name="cities" count="5">
+        <variable name="place" entity="City" dataset="US"/>
+        <key name="name" script="place.name"/>
+        <key name="postal_code" script="place.postal_code"/>
+    </generate>
+</setup>

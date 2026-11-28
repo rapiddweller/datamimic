@@ -94,7 +94,7 @@ class TestEntityPatient:
         self._test_single_patient(patient)
 
     def test_not_supported_dataset(self):
-        random_dataset = "XX"
+        random_dataset = "CN"
         # Fallback to US dataset with a single warning log; should not raise
         patient_service = PatientService(dataset=random_dataset)
         patient = patient_service.generate()

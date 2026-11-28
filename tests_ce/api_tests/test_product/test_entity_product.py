@@ -3,8 +3,6 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
-import random
-import string
 
 import pytest
 
@@ -91,9 +89,7 @@ class TestEntityProduct:
         self._check_product_data(product)
 
     def test_not_supported_dataset(self):
-        random_dataset = "".join(random.choices(string.ascii_uppercase, k=2))
-        while random_dataset in self._supported_datasets:
-            random_dataset = "".join(random.choices(string.ascii_uppercase, k=2))
+        random_dataset = "CN"
         product_service = ProductService(dataset=random_dataset)
         product = product_service.generate()
         # Fallback to US dataset with a single warning log; should not raise
