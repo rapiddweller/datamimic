@@ -212,24 +212,19 @@ class TestXMLExporter(unittest.TestCase):
         with self.assertRaises(etree.XMLSyntaxError):
             self.exporter.count_buffered_rows(1)
 
-    def test_xml_finalize_failure_is_the_core_exporter_error(self):
-        # Negative control for #724: a shadowing XML ExporterError would not match the core class.
-        with self.assertRaises(ExporterError):
-            self.exporter._finalize_buffer_file(self.tmp_dir_path / "missing.xml")
-
     def test_descriptor_unknown_encoding_keeps_the_core_error_chain(self):
-        # Checked-in descriptor: the XML write path raises the core ExporterError; the runtime wraps it.
-        descriptor = Path(__file__).parent / "descriptors" / "xml_unknown_encoding.xml"
+        # Checked-in descriptor; the core ExporterError is the cause the runtime wraps (NEGATIVE CONTROL: #724).
         with tempfile.TemporaryDirectory() as work:
-            Path(work, "descriptor.xml").write_text(descriptor.read_text(encoding="utf-8"), encoding="utf-8")
-            engine = DataMimicTest(test_dir=Path(work), filename="descriptor.xml", capture_test_result=True)
+            Path(work, "descriptor.xml").write_bytes(
+                (Path(__file__).parent / "descriptors" / "xml_unknown_encoding.xml").read_bytes()
+            )
             with self.assertRaises(ValueError) as caught:
-                engine.test_with_timer()
-        buffer_error = caught.exception.__cause__
-        self.assertIs(type(buffer_error), BufferFileError)
-        exporter_error = buffer_error.__cause__
-        self.assertIs(type(exporter_error), ExporterError)
-        self.assertIsInstance(exporter_error.__cause__, LookupError)
+                DataMimicTest(
+                    test_dir=Path(work), filename="descriptor.xml", capture_test_result=True
+                ).test_with_timer()
+        self.assertIs(type(caught.exception.__cause__), BufferFileError)
+        self.assertIs(type(caught.exception.__cause__.__cause__), ExporterError)
+        self.assertIsInstance(caught.exception.__cause__.__cause__.__cause__, LookupError)
 
 
 if __name__ == "__main__":
