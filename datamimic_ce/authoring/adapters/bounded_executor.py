@@ -23,6 +23,7 @@ from pathlib import Path, PurePosixPath
 
 import psutil
 from lxml import etree
+from pydantic import JsonValue
 
 import datamimic_ce.authoring.adapters.dryrun as dryrun
 from datamimic_ce.authoring.adapters.windows_snapshot import WindowsSnapshotRoot
@@ -37,7 +38,6 @@ from datamimic_ce.authoring.domain.common import MAX_AUTHORING_MAX_COUNT
 from datamimic_ce.authoring.domain.diagnostics import (
     AuthoringRuleId,
     AuthoringSystemDiagnosticCode,
-    CeErrorIdentity,
     Diagnostic,
     DiagnosticLocation,
     DiagnosticPhase,
@@ -60,7 +60,6 @@ from datamimic_ce.errors import (
     UserErrorBase,
 )
 from datamimic_ce.errors.catalog import get_issue_definition
-from datamimic_ce.errors.codes import ErrorCode
 
 _MAX_WORKSPACE_BYTES = 256 * 1024 * 1024
 _MAX_WORKSPACE_FILE_BYTES = MAX_RESOURCE_BYTES
@@ -111,14 +110,23 @@ def _stderr_excerpt(path: Path) -> str:
     excerpt = re.sub(_CONTROL_RUNS, " | ", trimmed)
     if len(excerpt) > _STDERR_EXCERPT_CHARS:
         excerpt = "..." + excerpt[-_STDERR_EXCERPT_CHARS:]
-    return f" Child stderr (last lines): {excerpt}" if excerpt else ""
+    return excerpt
 
 
-def _failure(code: AuthoringSystemDiagnosticCode, message: str, max_count: int) -> BoundedExecutionEvidence:
+def _failure(
+    code: AuthoringSystemDiagnosticCode,
+    message: str,
+    max_count: int,
+    *,
+    actual: JsonValue | None = None,
+    location: DiagnosticLocation | None = None,
+) -> BoundedExecutionEvidence:
     diagnostic = Diagnostic(
         code=code,
         phase=DiagnosticPhase.EVIDENCE,
         message=message,
+        actual=actual,
+        location=location,
         remediation="Repair the bounded descriptor or its workspace resources, then retry.",
     )
     return BoundedExecutionEvidence(
@@ -272,17 +280,17 @@ def _read_file_digests(
 
 
 def _warning_diagnostics(warnings: tuple[dryrun._EngineWarning, ...]) -> tuple[Diagnostic, ...]:
-    """Catalog warnings of the run (#404): the title and the static resolution, never the log text."""
+    """Project the catalog warnings of the run (#404) with their structured positions."""
     return tuple(
-        Diagnostic(
-            code=AuthoringSystemDiagnosticCode.ENGINE_WARNING,
+        Diagnostic.from_issue(
+            warning.code,
             phase=DiagnosticPhase.EVIDENCE,
-            severity="warning",
-            message=get_issue_definition(warning.code).title
-            + ("." if warning.location is None else f": script '{warning.location[0]}', line {warning.location[1]}."),
-            remediation=get_issue_definition(warning.code).resolution,
-            ce_error=CeErrorIdentity(error_code=None, issue_code=warning.code),
             path=() if warning.location is None else ("script", warning.location[0], "line", warning.location[1]),
+            location=(
+                None
+                if warning.location is None
+                else DiagnosticLocation(script_file=warning.location[0], script_line=warning.location[1])
+            ),
         )
         for warning in warnings
     )
@@ -302,34 +310,24 @@ def _failed_assert(
     path: tuple[str | int, ...] = ("descriptor", entry) if file == entry else ("include", file)
     line: tuple[str | int, ...] = () if location.line is None else ("line", location.line)
     private = AuthoringWorkspaceContext(workspace, request.descriptor_path)
-    # (message attribute, name of the enclosing generate or nestedKey) of each assert on the reported line
-    found: list[tuple[str | None, str | None]] = []
-    owners: list[str | None] = []
     try:
         root = parse_xml_source(request.xml if file == entry else private.read_project_file(PurePosixPath(file)))
-        for event, item in etree.iterwalk(root, events=("start", "end")):
-            if item.tag in ("generate", "nestedKey"):
-                owners = [*owners, item.get("name")] if event == "start" else owners[:-1]
-            elif event == "start" and item.tag == "assert" and item.sourceline == location.line:
-                found.append((item.get("message"), owners[-1] if owners else None))
+        found = [item.get("message") for item in root.iter("assert") if item.sourceline == location.line]
     except (OSError, ValueError, etree.XMLSyntaxError):
         found = []
     if len(found) != 1 or location.line is None:
-        shared = "An <assert> on this line failed. The line holds more than one <assert>, so Build shows no message."
+        shared = "An <assert> failed. The reported position matches more than one <assert>."
         return (*path, "assert", *line), shared if len(found) > 1 else "An <assert> failed.", None
-    raw, owner = found[0]
-    where = "under <setup>" if owner is None else f"in '{owner}'"
+    raw = found[0]
     rule = AssertStatement.literal_message(raw)
-    # Build shows the rule twice (message and expected); a cap keeps a long message from doubling the result size.
     if rule is not None and len(rule) > _SHOWN_MESSAGE_LENGTH:
         rule = rule[: _SHOWN_MESSAGE_LENGTH - 3] + "..."
     message = (
-        f"The <assert> {where} failed: {rule}"
+        "An <assert> failed."
         if rule is not None
-        else f"The <assert> {where} failed. It has no message; a message names the rule."
+        else "An <assert> failed. It has no message; add one to name the expected condition."
         if raw is None
-        else f"The <assert> {where} failed. Its message is not shown: it contains {{, }} or __ and can hold a "
-        "property value."
+        else "An <assert> failed. Its message is not shown: it contains {, } or __ and can hold a property value."
     )
     return (*path, "assert", *line), message, rule
 
@@ -338,19 +336,11 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
     try:
         message = dryrun._decode_worker_message(payload, max_count=request.max_count)
         if isinstance(message, dryrun._WorkerFailure):
-            identity = None
-            if isinstance(message.error, (UserErrorBase, DomainError)) and isinstance(message.error.code, ErrorCode):
-                identity = CeErrorIdentity(
-                    error_code=message.error.code,
-                    issue_code=message.error.issue_code if isinstance(message.error, UserErrorBase) else None,
-                )
-            location = message.error.location if isinstance(message.error, UserErrorBase) else None
+            user_error = message.error if isinstance(message.error, UserErrorBase) else None
+            issue_code = None if user_error is None else user_error.issue_code
+            location = None if user_error is None else user_error.location
             entry = request.descriptor_path.as_posix()
-            if (
-                location is not None
-                and isinstance(message.error, UserErrorBase)
-                and message.error.issue_code is IssueCode.TASK_ASSERT_FAILED
-            ):
+            if location is not None and issue_code is IssueCode.TASK_ASSERT_FAILED:
                 assert_path, text, rule = _failed_assert(location, request, entry, workspace)
                 return BoundedExecutionEvidence(
                     status=BoundedExecutionStatus.STOPPED_BY_ASSERT,
@@ -360,13 +350,12 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
                         else CapturedProducts((), request.max_count)
                     ),
                     diagnostics=(
-                        Diagnostic(
-                            code=AuthoringSystemDiagnosticCode.ASSERT_FAILED,
+                        Diagnostic.from_issue(
+                            issue_code,
                             phase=DiagnosticPhase.EVIDENCE,
                             message=text,
                             remediation="Change the data or the model so that every row meets the condition, or "
                             "correct the condition. The run stops at the first failed <assert>, as datamimic run does.",
-                            ce_error=identity,
                             location=diagnostic_location(location),
                             path=assert_path,
                             expected=rule,
@@ -394,11 +383,7 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
                     ),
                     files=_read_file_digests(message.read_files, request, workspace),
                 )
-            definition = (
-                get_issue_definition(message.error.issue_code)
-                if isinstance(message.error, UserErrorBase) and message.error.issue_code is not None
-                else None
-            )
+            definition = get_issue_definition(issue_code) if issue_code is not None else None
             path: tuple[str, ...] = message.policy_path or ("descriptor", entry)
             if location is not None:
                 # A failure inside an included step names that step (its literal workspace uri), not the entry.
@@ -411,10 +396,7 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
                 message.error.constructor_reason if isinstance(message.error, GeneratorConfigError) else None
             )
             # The limit is Build's own number, so the message can name it.
-            over_limit = (
-                isinstance(message.error, UserErrorBase)
-                and message.error.issue_code is IssueCode.TASK_TOTAL_ROW_BUDGET_EXCEEDED
-            )
+            over_limit = issue_code is IssueCode.TASK_TOTAL_ROW_BUDGET_EXCEEDED
             reason = (
                 f"The generated rows of all products together exceed the Build limit {request.max_count}; the Build "
                 f"ceiling is {MAX_AUTHORING_MAX_COUNT}."
@@ -426,14 +408,17 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
                 else None
             )
             diagnostic = Diagnostic(
-                code=AuthoringRuleId.SIDE_EFFECT
-                if message.policy_refusal
-                else AuthoringSystemDiagnosticCode.CHILD_EXECUTION,
+                code=issue_code
+                or (
+                    AuthoringRuleId.SIDE_EFFECT
+                    if message.policy_refusal
+                    else AuthoringSystemDiagnosticCode.CHILD_EXECUTION
+                ),
                 phase=DiagnosticPhase.POLICY if message.policy_refusal else DiagnosticPhase.EVIDENCE,
                 message=(
                     reason
                     if reason is not None
-                    else f"{definition.title} at {'/'.join(path)}."
+                    else definition.cause
                     if definition is not None
                     else message.message
                     if message.policy_refusal
@@ -447,10 +432,9 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
                     # The worker's hint for an untyped error is static text chosen by its type.
                     else message.fix_hint
                 ),
-                ce_error=identity,
                 location=(
                     DiagnosticLocation(script_file=message.script_file, script_line=message.script_line)
-                    if message.script_file is not None
+                    if message.script_line is not None
                     else diagnostic_location(location)
                 ),
                 path=path,
@@ -470,16 +454,7 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
         if not isinstance(message, dryrun._WorkerSuccess):
             raise ValueError("unknown worker response")
         captured = dryrun._captured_products(message, request.max_count)
-        diagnostics = tuple(
-            Diagnostic(
-                code=AuthoringSystemDiagnosticCode.CHILD_EXECUTION,
-                phase=DiagnosticPhase.EVIDENCE,
-                message="A captured row failed the requested file-export smoke check.",
-                remediation="Repair the file exporter configuration or generated value types.",
-                path=("descriptor", request.descriptor_path.as_posix()),
-            )
-            for _ in message.smoke_diagnostics
-        )
+        diagnostics = tuple(Diagnostic.model_validate(item) for item in message.smoke_diagnostics)
         # A product that asked for 0 rows ran and holds none, which an exact_count 0 expectation proves. A product
         # that asked for more rows and got none did not run.
         base_run_ok = any(
@@ -697,12 +672,12 @@ class CeBoundedExecutor:
             try:
                 temporary.cleanup()
             except OSError as error:
-                # A Windows file lock shows here; the path and the OS error say which file and why.
                 result = _failure(
                     AuthoringSystemDiagnosticCode.CLEANUP,
-                    f"Private bounded workspace could not be removed: {error.filename or temporary.name} "
-                    f"({type(error).__name__}: {error.strerror or error})",
+                    "Private bounded workspace could not be removed.",
                     request.max_count,
+                    actual={"errno": error.errno, "type": type(error).__name__, "reason": error.strerror},
+                    location=DiagnosticLocation(file=Path(error.filename).name) if error.filename else None,
                 )
         return result
 
@@ -749,9 +724,9 @@ class CeBoundedExecutor:
                 if process.poll() is not None:
                     result = _failure(
                         AuthoringSystemDiagnosticCode.CHILD_CRASH,
-                        f"Bounded child exited without evidence (exit code {process.returncode})."
-                        + _stderr_excerpt(stderr_file),
+                        "Bounded child exited without evidence.",
                         request.max_count,
+                        actual={"exit_code": process.returncode, "stderr_tail": _stderr_excerpt(stderr_file)},
                     )
                     break
                 if time.monotonic() >= deadline:

@@ -457,7 +457,7 @@ ISSUES: list[IssueDefinition] = [
         title="Captured Value Is Not a Finite Number",
         template="A generated row holds a number that is not finite (NaN or infinity).",
         cause=(
-            "A source file or a script gave NaN, Infinity or a number above the largest float. "
+            "A source file or script produced a non-finite number. "
             "Bounded execution cannot hold such a value as evidence."
         ),
         resolution=(
