@@ -303,6 +303,36 @@ def test_dm401_dm402_hints_show_the_memstore_declaration() -> None:
     assert '<memstore id="mem"/>' in diag.fix_hint
 
 
+_DB = '<database id="{id}" dbms="sqlite" url="sqlite:///a.db"/>'
+_MONGO = '<mongodb id="{id}"/>'
+_MEM = '<memstore id="{id}"/>'
+
+
+@pytest.mark.parametrize(
+    ("declarations", "fires"),
+    [
+        pytest.param(_DB.format(id="x") + _MEM.format(id="x"), True, id="database-and-memstore-share-id"),
+        pytest.param(_MEM.format(id="x") + _DB.format(id="x"), True, id="memstore-declared-first"),
+        pytest.param(_MONGO.format(id="x") + _MEM.format(id="x"), True, id="mongodb-and-memstore-share-id"),
+        pytest.param(_MEM.format(id="x") + _MEM.format(id="x"), False, id="two-memstores-same-id-not-this-rule"),
+        pytest.param(_DB.format(id="db") + _MEM.format(id="mem"), False, id="distinct-ids"),
+        pytest.param(_MEM.format(id="x"), False, id="memstore-only"),
+    ],
+)
+def test_dm409_rejects_one_id_declared_as_client_and_memstore(declarations: str, fires: bool) -> None:
+    """#712: generate and variable resolve a bare id in opposite orders, so lint refuses the shared id."""
+    from datamimic_ce.authoring.adapters.linter import lint_source
+
+    xml = (
+        f'<setup rngSeed="1">{declarations}<generate name="g" count="1" target="ConsoleExporter">'
+        '<key name="k" constant="1"/></generate></setup>'
+    )
+    found = [d for d in lint_source(xml).diagnostics if d.rule == "DM409"]
+    assert bool(found) is fires
+    if fires:
+        assert 'id="x"' in found[0].message and "Rename" in found[0].fix_hint
+
+
 def test_dm401_uses_adapter_exporter_names_and_reports_parse_errors() -> None:
     from datamimic_ce.authoring.adapters.linter import lint_source
     from datamimic_ce.engine.io.api import buffered_exporter_names

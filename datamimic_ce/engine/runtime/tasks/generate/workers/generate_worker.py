@@ -460,9 +460,7 @@ class GenerateWorker:
         source_data, build_from_source = source_reader.read_page(page_start, page_end)
 
         # Used below to lazily evaluate scripted source templates after sub-tasks ran
-        source_scripted = (
-            stmt.source_script if stmt.source_script is not None else bool(root_context.default_source_scripted)
-        )
+        source_scripted = root_context.source_scripted(stmt.source_script)
 
         # Store temp result
         product_holder = GenerationResult()

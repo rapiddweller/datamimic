@@ -482,13 +482,17 @@ def rebind_seeded_script_names(
     )
     if sys.version_info >= (3, 12):
         counterparts += ((random.binomialvariate, seeded.random.binomialvariate),)
-    for module_name, module_proxy in (("pandas", seeded.pd), ("numpy", seeded.np)):
-        if (loaded := sys.modules.get(module_name)) is not None:
-            counterparts += ((loaded, module_proxy),)
+    # Only a library the script already loaded can be bound in its namespace; this lookup never imports one (#443).
+    pandas_module = sys.modules.get("pandas")
+    numpy_module = sys.modules.get("numpy")
     for name, value in list(namespace.items()):
         for raw, stand_in in counterparts:
             if value is raw:
                 namespace[name] = stand_in
+        if pandas_module is not None and value is pandas_module:
+            namespace[name] = seeded.pd
+        if numpy_module is not None and value is numpy_module:
+            namespace[name] = seeded.np
     shared_with_expressions: tuple[tuple[str, object], ...] = (
         ("random", seeded.random),
         ("uuid", seeded.uuid),

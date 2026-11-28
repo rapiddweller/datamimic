@@ -96,3 +96,12 @@ def test_ean_generator_unique_forwarding():
     assert len(rows) == 5
     eans = [r["ean"] for r in rows]
     assert len(set(eans)) == 5, f"unique must produce distinct EANs, got: {eans}"
+
+
+def test_unique_variable_on_a_lazy_source_draws_the_whole_pool_and_templates_it():
+    # source is an expression (no file, client or memstore), so the variable is planned lazily. The setup default
+    # sourceScripted ({10} -> 10) and unique= both reach it through the shared rules.
+    codes = _run("unique_lazy_variable_source.xml")
+    assert sorted(codes) == [10, 20, 30, 40, 50, 60]  # templated, each exactly once
+    assert codes != [10, 20, 30, 40, 50, 60]  # drawn from the shuffled pool, not paged in source order
+    assert _run("unique_lazy_variable_source.xml") == codes  # seed-reproducible

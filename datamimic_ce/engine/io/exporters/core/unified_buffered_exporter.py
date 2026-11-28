@@ -57,6 +57,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
         self._chunk_size = config.chunk_size  # Max entities per chunk
         # exportUri: a validated output-directory prefix; falls back to the task_id dir when unset.
         self._export_uri = config.export_uri
+        self._finalized_buffer_files: set[Path] = set()  # finalize runs once per buffer file
         # Same-named products in conditional branches may write to different destinations.
         suffix = hashlib.sha256(config.export_uri.encode()).hexdigest()[:16] if config.export_uri else None
         self._buffer_product_name = f"{self.product_name}_uri_{suffix}" if suffix else self.product_name
@@ -97,6 +98,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
     def _write_batch_with_retry(self, batch: list[dict], worker_id: int, chunk_idx: int) -> None:
         """Write a batch of data with retry mechanism."""
         buffer_file: Path = self._get_buffer_file(worker_id, chunk_idx)
+        self._finalized_buffer_files.discard(buffer_file)  # new rows reopen the file
         original_size = buffer_file.stat().st_size if buffer_file.exists() else None
         for attempt in range(self.MAX_RETRIES):
             try:
@@ -216,7 +218,10 @@ class UnifiedBufferedExporter(Exporter, ABC):
         try:
             pattern = f"*.{self.get_file_extension()}"
             for buffer_file in self._get_buffer_tmp_dir(worker_id).glob(pattern):
+                if buffer_file in self._finalized_buffer_files:
+                    continue
                 self._finalize_buffer_file(buffer_file)
+                self._finalized_buffer_files.add(buffer_file)
         except Exception as e:
             if is_user_error(e):
                 raise
