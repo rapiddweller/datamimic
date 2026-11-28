@@ -3,7 +3,7 @@
 # This software is licensed under the MIT License. See LICENSE.
 """The MongoDB upsert descriptor of the external shard, run here against an in-memory collection.
 
-Same XML and same per-class assertions as ``test_mongodb_upsert_decision`` in the external-service shard."""
+Same XML and same per-class assertions as ``test_upsert_decision`` in the external-service shard."""
 
 import importlib.util
 from collections.abc import Iterator
@@ -15,11 +15,11 @@ import pytest
 from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
-_DIR = Path(__file__).resolve().parents[1] / "external_service_tests" / "test_mongodb_upsert_decision"
+_DIR = Path(__file__).resolve().parents[1] / "external_service_tests" / "test_mongodb_routing_matrix"
 
 
 def _shared_checks():
-    spec = importlib.util.spec_from_file_location("upsert_decision_checks", _DIR / "test_mongodb_upsert_decision.py")
+    spec = importlib.util.spec_from_file_location("upsert_decision_checks", _DIR / "test_upsert_decision.py")
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
