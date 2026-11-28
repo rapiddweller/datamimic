@@ -71,6 +71,12 @@ class LintResult(AuthoringModel):
     ok: StrictBool
     diagnostics: tuple[Diagnostic, ...] = ()
 
+    @staticmethod
+    def from_model_validation(error: ValidationError) -> LintResult:
+        from .validation import validation_diagnostics
+
+        return LintResult(ok=False, diagnostics=validation_diagnostics(error))
+
     @classmethod
     def from_input_error(cls, message: str) -> LintResult:
         from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
@@ -201,6 +207,12 @@ class RunResult(AuthoringModel):
     products: tuple[ProductEvidence, ...] = ()
     diagnostics: tuple[Diagnostic, ...] = ()
 
+    @staticmethod
+    def from_model_validation(error: ValidationError, phase: RunPhase) -> RunResult:
+        from .validation import validation_diagnostics
+
+        return RunResult(ok=False, phase=phase, diagnostics=validation_diagnostics(error))
+
     @classmethod
     def from_input_error(cls, message: str, phase: RunPhase) -> RunResult:
         from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
@@ -251,6 +263,13 @@ class RejectedCompileDocument(AuthoringModel):
     phase: Literal[DiagnosticPhase.COMPILE, DiagnosticPhase.XML]
     diagnostics: tuple[Diagnostic, ...] = Field(min_length=1)
 
+    @staticmethod
+    def from_model_validation(error: ValidationError) -> RejectedCompileDocument:
+        from .validation import validation_diagnostics
+
+        phase: Literal[DiagnosticPhase.COMPILE] = DiagnosticPhase.COMPILE
+        return RejectedCompileDocument(phase=phase, diagnostics=validation_diagnostics(error, phase=phase))
+
     @classmethod
     def from_input_error(cls, message: str) -> RejectedCompileDocument:
         from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
@@ -280,6 +299,13 @@ class RejectedDecompileDocument(AuthoringModel):
     outcome: Literal["rejected"] = "rejected"
     phase: Literal[DiagnosticPhase.XML, DiagnosticPhase.DECOMPILE]
     diagnostics: tuple[Diagnostic, ...] = Field(min_length=1)
+
+    @staticmethod
+    def from_model_validation(error: ValidationError) -> RejectedDecompileDocument:
+        from .validation import validation_diagnostics
+
+        phase: Literal[DiagnosticPhase.DECOMPILE] = DiagnosticPhase.DECOMPILE
+        return RejectedDecompileDocument(phase=phase, diagnostics=validation_diagnostics(error, phase=phase))
 
     @classmethod
     def from_input_error(cls, message: str) -> RejectedDecompileDocument:

@@ -46,15 +46,14 @@ def _rejected(tmp_path: Path, key: str) -> RejectedBuild:
 def test_build_remediation_names_the_attributes(tmp_path: Path, key: str, code: str, hint: str) -> None:
     result = _rejected(tmp_path, key)
 
-    remediations = [str(item.remediation) for item in result.diagnostics if str(item.code) == code]
+    remediations = [str(item.remediation) for item in result.diagnostics if item.rule == code]
     assert any(text.endswith(hint) for text in remediations), remediations
 
 
-def test_the_named_rule_comes_before_the_generic_parser_failure(tmp_path: Path) -> None:
+def test_the_named_rule_carries_the_catalogued_attribute_failure(tmp_path: Path) -> None:
     result = _rejected(tmp_path, '<key name="price" type="int" minimum="50" max="900"/>')
 
-    assert str(result.diagnostics[0].code) == "DM103"
-    assert "descriptor" in [str(item.code) for item in result.diagnostics]
+    assert (result.diagnostics[0].code, result.diagnostics[0].rule) == ("I605", "DM103")
 
 
 def test_a_value_never_reaches_the_remediation(tmp_path: Path) -> None:
@@ -110,7 +109,7 @@ def test_bounds_written_as_attributes_beside_a_generator_name_the_working_form(
     """The campaign at 89f304b9: agents read the generator parameters min and max and wrote them as attributes
     (8 of 50 first Builds). The remediation names the working form for the element."""
     diagnostics = _rejected(tmp_path, element).diagnostics
-    remediations = [str(item.remediation) for item in diagnostics if str(item.code) == code]
+    remediations = [str(item.remediation) for item in diagnostics if item.rule == code]
 
     assert any(form in text for text in remediations), remediations
 
@@ -126,7 +125,7 @@ def test_a_bound_value_beside_a_generator_never_reaches_the_remediation(tmp_path
 def test_an_unknown_attribute_that_is_no_bound_keeps_the_valid_attribute_list(tmp_path: Path) -> None:
     """Only a bound written as an attribute gets the call form; another unknown attribute keeps the list."""
     result = _rejected(tmp_path, '<variable name="v" generator="IntegerGenerator" method="x"/>')
-    [remediation] = [str(item.remediation) for item in result.diagnostics if str(item.code) == "DM103"]
+    [remediation] = [str(item.remediation) for item in result.diagnostics if item.rule == "DM103"]
 
     assert "Valid attributes:" in remediation and _CALL_FORM not in remediation
 

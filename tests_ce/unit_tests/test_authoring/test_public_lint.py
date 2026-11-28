@@ -10,7 +10,7 @@ def test_public_validator_retains_raw_rule_advisories_without_workspace_writes(t
         '<setup><generate name="rows" count="2"><key name="id" constant="1"/></generate></setup>'
     )
     assert result.ok
-    assert any(item.code == "DM303" and item.severity != "error" for item in result.diagnostics)
+    assert any(item.rule == "DM303" and item.severity != "error" for item in result.diagnostics)
     assert all(item.path[:2] == ("descriptor", "draft.xml") for item in result.diagnostics)
     assert list(tmp_path.iterdir()) == []
 
