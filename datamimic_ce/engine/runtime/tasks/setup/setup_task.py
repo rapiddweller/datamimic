@@ -24,6 +24,7 @@ from datamimic_ce.engine.io.api import (
 )
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.contracts import StatementTransformer
+from datamimic_ce.engine.runtime.storage.global_increment import GlobalIncrementRegistry
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
 from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task
 from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask, SetupSubTask
@@ -169,7 +170,13 @@ class SetupTask:
             for token, (client_ref, config) in enumerate(parent_context._descriptor_client_history)
             if (client := client_ref()) is not None
         )
+        # One run, one global counter: an include continues the parent's count. Cached generators
+        # copied below must reference this registry, not a copy of it.
+        counters = parent_context.global_increment_registry
+        if counters is None:
+            counters = parent_context.global_increment_registry = GlobalIncrementRegistry()
         memo: dict[int, object] = {
+            id(counters): counters,
             id(parent_context._descriptor_client_history): parent_context._descriptor_client_history,
             # Same-process includes allocate in the parent run; ordinary worker copies stay isolated.
             id(parent_context.domain_identifier_registry): parent_context.domain_identifier_registry,
@@ -184,6 +191,7 @@ class SetupTask:
             if id(client) not in descriptor_ids:
                 memo[id(client)] = client
         child = copy.deepcopy(parent_context, memo)
+        child.global_increment_registry = counters
         child.enter_step(uri, parent_context)
         token_map: dict[int, int] = {}
         for token, _client, config in descriptor_clients:
