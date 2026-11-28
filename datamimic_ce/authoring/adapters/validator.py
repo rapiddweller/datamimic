@@ -110,7 +110,7 @@ class CeDescriptorValidator:
                     # XML namespace URIs are values, while the local name identifies the attribute.
                     attribute = location[0] if len(location) == 1 else None
                     if isinstance(attribute, str):
-                        attribute = attribute.rpartition("}")[2]
+                        attribute = re.sub(r"^\{.*\}", "", attribute)
                         location = (attribute,)
                     if (
                         "type" in detail

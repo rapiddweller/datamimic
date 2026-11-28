@@ -145,9 +145,8 @@ class Diagnostic(AuthoringModel):
     severity: Literal["error", "warning", "info"] = "error"
     remediation: NonEmptyStrictStr | None = None
 
-    @classmethod
+    @staticmethod
     def from_issue(
-        cls,
         code: IssueCode,
         *,
         phase: DiagnosticPhase,
@@ -160,7 +159,7 @@ class Diagnostic(AuthoringModel):
     ) -> Diagnostic:
         """Project a catalog issue without rendering exception text or location into the message."""
         definition = get_issue_definition(code)
-        return cls(
+        return Diagnostic(
             code=code,
             phase=phase,
             message=message or definition.cause,
@@ -172,9 +171,8 @@ class Diagnostic(AuthoringModel):
             actual=actual,
         )
 
-    @classmethod
+    @staticmethod
     def from_rule(
-        cls,
         definition: RuleDefinition,
         *,
         phase: DiagnosticPhase,
@@ -186,7 +184,7 @@ class Diagnostic(AuthoringModel):
     ) -> Diagnostic:
         """Project a DM rule, using the engine issue identity when it owns the same defect."""
         severity = severity or definition.severity
-        return cls(
+        return Diagnostic(
             code=definition.issue_code
             if definition.issue_code and severity is RuleSeverity.ERROR
             else AuthoringRuleId.VALIDATION,
