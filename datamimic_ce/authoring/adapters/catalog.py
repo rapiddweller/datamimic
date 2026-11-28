@@ -446,8 +446,8 @@ class CeDslCatalog:
                             "are the fields of the written rows; a key's type= sets the column type, else the type "
                             "of the non-null values does. Set type= on a key whose values are all null "
                             '(script="None"), of mixed types or of another type than str, int, float, bool, Decimal, '
-                            "date or datetime, else I929. The run never alters a table: an existing table that "
-                            "lacks a written column or has another primary key fails with I930 (extra columns are "
+                            "date or datetime, else I984. The run never alters a table: an existing table that "
+                            "lacks a written column or has another primary key fails with I985 (extra columns are "
                             "allowed), and so does a later page with a field that the first page lacks. "
                             "Use ledger.upsert so that a second run does not fail on the primary "
                             "key. Build creates nothing and shows the CREATE TABLE in planned_operations; "

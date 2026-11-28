@@ -470,7 +470,7 @@ def test_build_rejects_create_table_without_a_database_target_with_i929(tmp_path
     built = create_authoring_application(tmp_path, descriptor_path=PROJECT_ENTRY_PATH).build()
     assert isinstance(built, RejectedBuild)
     issues = [str(item.code) for item in built.diagnostics if isinstance(item.code, IssueCode)]
-    assert issues == ["I929"], [(str(item.code), item.message) for item in built.diagnostics]
+    assert issues == ["I984"], [(str(item.code), item.message) for item in built.diagnostics]
 
 
 def test_build_plans_a_composite_key_and_derives_no_per_field_unique(tmp_path, monkeypatch):

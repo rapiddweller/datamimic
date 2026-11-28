@@ -298,22 +298,22 @@ a composite key. The table name is `targetEntity` (else `type`, else `name`).
 The columns are the fields of the written rows. A key's `type=` sets the column
 type. Without `type=`, the non-null values in the first page set it: `str`,
 `int`, `float`, `bool`, `Decimal`, `date` or `datetime`. A column with only null
-values, with mixed value types (for example `10` and `10.5`), or with another value type, fails with `I929`
+values, with mixed value types (for example `10` and `10.5`), or with another value type, fails with `I984`
 and asks for `type=`.
 The run creates the table once, before the first row. It never alters or drops a
 table. A second run finds the table and upserts. An existing table that
-lacks a written column or has another primary key fails with `I930` and the difference. Extra columns are allowed. A
+lacks a written column or has another primary key fails with `I985` and the difference. Extra columns are allowed. A
 later page that writes a field the first page did not write (for example a key with a
-`condition` that is false in the whole first page) also fails with `I930`, even when
+`condition` that is false in the whole first page) also fails with `I985`, even when
 an existing table has that column: only the first page is checked against the table.
 Write each field in the first page.
 
-`createTable="true"` needs at least one direct-child `<id>` (`I929`). Without
+`createTable="true"` needs at least one direct-child `<id>` (`I984`). Without
 `createTable`, or with `createTable="false"`, an `<id>` is a plain `<key>`. Build
 derives a `unique` check on a single `<id>`; a composite key derives none, because
 a `unique` expectation names one field. The generate needs a
 `<database>` target with `dbms="sqlite"` or `dbms="postgresql"`, plain or with
-`.upsert`; other dbms, `.update` and `.delete` fail with `I929`. It must be a root
+`.upsert`; other dbms, `.update` and `.delete` fail with `I984`. It must be a root
 generate, and `createTable` is not allowed with `clear` or
 `drop`. The generate runs in one process. Build creates nothing: it shows the
 CREATE TABLE statement in `planned_operations`, typed from the rows it captured

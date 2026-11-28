@@ -3,7 +3,7 @@
   "proves": [
     "a MongoDB project has no createTable and no DDL step: the first write creates the collection dm_s54_lines",
     "the clear step makes a second run give the same 5 documents",
-    "createTable on a MongoDB target is refused with I929: MongoDB has no table to create",
+    "createTable on a MongoDB target is refused with I984: MongoDB has no table to create",
     "this project needs the MongoDB service: it runs in the external-service test job"
   ],
   "products": {
@@ -19,7 +19,7 @@
     {
       "name": "create_table_on_mongodb",
       "diagnostic": "child_execution",
-      "issue": "I929",
+      "issue": "I984",
       "patch": {
         "file": "datamimic.xml",
         "old": "<generate name=\"dm_s54_lines\" count=\"5\" target=\"mongodb\">",
