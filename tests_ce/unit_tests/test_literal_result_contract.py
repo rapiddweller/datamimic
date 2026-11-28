@@ -37,7 +37,7 @@ def _task(generator: NativeGenerator, mode: str) -> KeyTask:
     return task
 
 
-@pytest.mark.parametrize("mode", [KeyTask._GENERATOR_MODE, KeyTask._LAZY_GENERATOR_MODE])
+@pytest.mark.parametrize("mode", [KeyTask.Mode.GENERATOR, KeyTask.Mode.LAZY_GENERATOR])
 @pytest.mark.parametrize("value", [object(), None, {"cells": [object(), None]}], ids=["sentinel", "none", "native-map"])
 def test_native_generator_value_path_preserves_identity_and_one_call(
     monkeypatch: pytest.MonkeyPatch, mode: str, value: object
@@ -49,10 +49,10 @@ def test_native_generator_value_path_preserves_identity_and_one_call(
     assert task._generate_value(SimpleNamespace()) is value
     assert generator.calls == 1
     assert task._generator is generator
-    assert task._mode == KeyTask._GENERATOR_MODE
+    assert task._mode == KeyTask.Mode.GENERATOR
 
 
-@pytest.mark.parametrize("mode", [KeyTask._GENERATOR_MODE, KeyTask._LAZY_GENERATOR_MODE])
+@pytest.mark.parametrize("mode", [KeyTask.Mode.GENERATOR, KeyTask.Mode.LAZY_GENERATOR])
 def test_native_generator_value_path_keeps_exception_identity_and_one_call(
     monkeypatch: pytest.MonkeyPatch, mode: str
 ) -> None:
@@ -74,7 +74,7 @@ def test_native_generator_value_path_keeps_exception_identity_and_one_call(
 def test_generator_branch_keeps_numpy_boolean_normalization() -> None:
     generator = NativeGenerator(numpy.bool_(True))
 
-    assert _task(generator, KeyTask._GENERATOR_MODE)._generate_value(SimpleNamespace()) is True
+    assert _task(generator, KeyTask.Mode.GENERATOR)._generate_value(SimpleNamespace()) is True
     assert generator.calls == 1
 
 
