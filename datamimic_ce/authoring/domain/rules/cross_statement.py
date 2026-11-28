@@ -256,6 +256,26 @@ class DuplicateGenerateName(Rule):
                 seen.setdefault(name, child)
 
 
+class ClientMemstoreIdCollision(Rule):
+    definition = authoring_rule_definition("DM409")
+
+    def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
+        # One owner of id uniqueness: source and target readers resolve a bare id as a memstore
+        # or as a client in different orders, so an id shared by both kinds is refused here.
+        # Reported on the client, which lives in the entry; the memstores come from the whole project, so a
+        # memstore declared in an included step collides with it too.
+        _, memstores = _declared_ids(ctx)
+        for element in ctx.iter(EL_DATABASE, EL_MONGODB):
+            client_id = element.get("id")
+            if client_id and client_id in memstores:
+                yield ctx.diag(
+                    ClientMemstoreIdCollision,
+                    element,
+                    evidence=f'<{etree.QName(element).localname} id="{client_id}"> reuses a declared memstore id',
+                    fix_context=f'Rename the memstore or the client so "{client_id}" names only one of them.',
+                )
+
+
 class UnknownSource(Rule):
     definition = authoring_rule_definition("DM402")
 
@@ -305,4 +325,5 @@ RULES: tuple[type[Rule], ...] = (
     UnknownSource,
     MissingInclude,
     DuplicateGenerateName,
+    ClientMemstoreIdCollision,
 )

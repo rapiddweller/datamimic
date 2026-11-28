@@ -392,15 +392,16 @@ class GenerateWorker:
 
     @staticmethod
     def _assert_table_columns(stmt: GenerateStatement, table_columns: frozenset[str], rows: list[dict[str, object]]):
-        """Fail with I930 when a later page writes a field that the table created from the first page lacks: the
-        insert would drop it without an error."""
+        """Fail with I930 when a later page writes a field that the first page did not write: only the first page's
+        fields were checked against the table (created or existing), so the later field is unproven."""
         extra = sorted({field for row in rows for field in row} - table_columns)
         if extra:
             raise operation_error(
                 code=IssueCode.OPERATION_TABLE_DRIFT,
                 target=resolve_target_entity(stmt.target_entity, stmt.type, stmt.name),
-                difference=f"a later page writes the field(s) {', '.join(extra)}, which the table created from the "
-                "first page does not have; write each field in the first page, for example with a default value",
+                difference=f"a later page writes the field(s) {', '.join(extra)}, which the first page did not write; "
+                "createTable checks the table against the first page only, whether it created the table or found it, "
+                "so write each field in the first page, for example with a default value",
             )
 
     @staticmethod

@@ -1,0 +1,6 @@
+<setup rngSeed="1">
+    <memstore id="mem"/>
+    <generate name="result" count="1">
+        <key name="n" script="mem.entityCount('slot')"/>
+    </generate>
+</setup>
