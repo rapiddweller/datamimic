@@ -55,6 +55,9 @@ class ProjectRunWorkflow:
         if confirm_unverified is not True or not request.allow_side_effects:
             return UnverifiedProjectRunResult(
                 outcome="not_run",
+                not_run_reason="confirmation_required"
+                if confirm_unverified is not True
+                else "side_effects_not_allowed",
                 message="Confirm the unverified run and allow side effects; nothing was run.",
             )
         execution = self._runner.run(request.params, request.timeout_seconds)

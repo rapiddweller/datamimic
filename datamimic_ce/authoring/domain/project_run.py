@@ -107,9 +107,19 @@ ProjectRunBuild = Annotated[
 ]
 
 
+# Spelled out in both results: ArchKeel decides an inline Literal, not an alias, as an API type.
+# A test holds the two enums equal.
+_NOT_RUN_REASON_DESCRIPTION = (
+    "Why nothing ran: input (invalid project or options), build_rejected, side_effects_not_allowed, "
+    "or confirmation_required (an unverified run that was not confirmed); null after a run."
+)
+
+
 class ProjectRunResult(AuthoringModel):
     outcome: Literal["completed", "failed", "timeout", "not_run"]
-    not_run_reason: Literal["input", "build_rejected", "side_effects_not_allowed"] | None = None
+    not_run_reason: Literal["input", "build_rejected", "side_effects_not_allowed", "confirmation_required"] | None = (
+        Field(default=None, description=_NOT_RUN_REASON_DESCRIPTION)
+    )
     build: ProjectRunBuild = None
     build_outcome: Literal["ready", "ready_with_gaps"] | None = Field(
         default=None, description="The outcome of the Build that preceded the run; absent when Build rejected."
@@ -246,6 +256,9 @@ class ProjectRunRecord(AuthoringModel):
 class UnverifiedProjectRunResult(AuthoringModel):
     verification: Literal["not_verified"] = "not_verified"
     outcome: Literal["not_run", "completed", "failed", "timeout"]
+    not_run_reason: Literal["input", "build_rejected", "side_effects_not_allowed", "confirmation_required"] | None = (
+        Field(default=None, description=_NOT_RUN_REASON_DESCRIPTION)
+    )
     message: StrictStr
     execution: ProjectRunExecution | None = None
     details_truncated: StrictBool = False
@@ -253,9 +266,20 @@ class UnverifiedProjectRunResult(AuthoringModel):
     @model_validator(mode="after")
     def consistent_execution(self) -> UnverifiedProjectRunResult:
         if self.outcome == "not_run":
-            valid = self.execution is None
+            # Build never runs here, so a rejected Build is no cause of this result.
+            valid = self.execution is None and self.not_run_reason in (
+                "input",
+                "confirmation_required",
+                "side_effects_not_allowed",
+            )
         else:
-            valid = self.execution is not None and self.execution.outcome == self.outcome
+            valid = (
+                self.not_run_reason is None and self.execution is not None and self.execution.outcome == self.outcome
+            )
         if not valid:
             raise ValueError("Unverified run outcome contradicts its execution")
         return self
+
+    @classmethod
+    def from_input_error(cls, message: str) -> UnverifiedProjectRunResult:
+        return UnverifiedProjectRunResult(outcome="not_run", not_run_reason="input", message=message)

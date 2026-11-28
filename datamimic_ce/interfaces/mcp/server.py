@@ -304,7 +304,7 @@ def create_server(
         """Run without Build or acceptance checks. Require user approval for all effects, including partial effects."""
         root = _project_root(project, workspace_root)
         if isinstance(root, str):
-            return UnverifiedProjectRunResult(outcome="not_run", message=root)
+            return UnverifiedProjectRunResult.from_input_error(root)
         values = params or {}
         try:
             request = ProjectRunRequest(
@@ -313,7 +313,7 @@ def create_server(
                 timeout_seconds=timeout_seconds,
             )
         except ValidationError:
-            return UnverifiedProjectRunResult(outcome="not_run", message="Run options are invalid.")
+            return UnverifiedProjectRunResult.from_input_error("Run options are invalid.")
         result = await to_thread.run_sync(
             application(root, PROJECT_ENTRY_PATH).run_project_unverified, request, confirm_unverified
         )
