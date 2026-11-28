@@ -38,7 +38,9 @@ def test_json_syntax_error_names_the_file_with_line_and_column(tmp_path: Path) -
     [diagnostic] = _build(tmp_path, "{oops").diagnostics
 
     assert diagnostic.path == (_FILE,)
-    assert "line 1 column 2" in diagnostic.message
+    assert diagnostic.message == "Input is not valid JSON."
+    assert diagnostic.location is not None
+    assert (diagnostic.location.file, diagnostic.location.line, diagnostic.location.column) == (_FILE, 1, 2)
     assert _FILE in str(diagnostic.remediation)
     assert "reported path" not in str(diagnostic.remediation)
 

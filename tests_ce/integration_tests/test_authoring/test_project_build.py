@@ -115,7 +115,9 @@ def test_build_refuses_a_non_literal_or_uncontained_include(tmp_path: Path, uri:
     )
     result = _build(project)
     assert result.outcome == "rejected"
-    assert any(item.code in {AuthoringRuleId.INCLUDE, "DM405"} for item in result.diagnostics), result.diagnostics
+    assert any(item.code == AuthoringRuleId.INCLUDE or item.rule == "DM405" for item in result.diagnostics), (
+        result.diagnostics
+    )
 
 
 def test_delivery_rule_spans_the_project(tmp_path: Path) -> None:
@@ -129,7 +131,7 @@ def test_delivery_rule_spans_the_project(tmp_path: Path) -> None:
     result = _build(project)
     assert result.outcome == "rejected"
     assert any(
-        item.code == "DM407" and item.path[:2] == ("include", "model/20_orders.xml") for item in result.diagnostics
+        item.rule == "DM407" and item.path[:2] == ("include", "model/20_orders.xml") for item in result.diagnostics
     ), result.diagnostics
 
 
@@ -153,7 +155,7 @@ def test_step_is_linted_in_the_entry_context_and_findings_name_the_step(tmp_path
     result = _build(project)
     assert result.outcome == "rejected"
     step_findings = [item for item in result.diagnostics if item.path[0] == "include"]
-    assert [(item.code, item.path) for item in step_findings] == [
+    assert [(item.rule, item.path) for item in step_findings] == [
         ("DM401", ("include", "model/20_orders.xml", "/setup/generate", "line", 2))
     ], result.diagnostics
 
@@ -205,7 +207,7 @@ def test_an_unseeded_project_reports_the_missing_seed_once(tmp_path: Path) -> No
     entry = project / "datamimic.xml"
     entry.write_text(entry.read_text(encoding="utf-8").replace(' rngSeed="7"', ""), encoding="utf-8")
     result = _build(project)
-    assert [item.path[:2] for item in result.diagnostics if item.code == "DM303"] == [("descriptor", "datamimic.xml")]
+    assert [item.path[:2] for item in result.diagnostics if item.rule == "DM303"] == [("descriptor", "datamimic.xml")]
 
 
 def test_an_unreadable_graph_is_reported_instead_of_undeclared_ids(tmp_path: Path) -> None:
@@ -227,7 +229,7 @@ def test_an_unreadable_graph_is_reported_instead_of_undeclared_ids(tmp_path: Pat
     result = _build(project)
     assert result.outcome == "rejected"
     errors = [item.code for item in result.diagnostics if item.severity == "error"]
-    assert errors == [AuthoringRuleId.INCLUDE], result.diagnostics
+    assert errors == ["I610"], result.diagnostics
 
 
 def test_lint_does_not_let_the_entry_see_a_client_a_step_declares(tmp_path: Path) -> None:
@@ -239,7 +241,7 @@ def test_lint_does_not_let_the_entry_see_a_client_a_step_declares(tmp_path: Path
     entry = (project / "datamimic.xml").read_text(encoding="utf-8")
     entry = entry.replace("</setup>", '    <generate name="probe" count="1" target="db"/>\n</setup>')
     result = create_authoring_application(project, descriptor_path=PROJECT_ENTRY_PATH).lint(LintRequest(xml=entry))
-    assert any(item.code == "DM401" for item in result.diagnostics), result.diagnostics
+    assert any(item.rule == "DM401" for item in result.diagnostics), result.diagnostics
 
 
 def test_ready_binds_every_file_the_run_read_and_nothing_else() -> None:
