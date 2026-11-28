@@ -114,50 +114,6 @@ ADMITTED_IMPORT_ROOTS = frozenset(
 ADMITTED_PACKAGES = ("datamimic_ce.domains",)
 
 
-def _is_refused_name(name: object) -> bool:
-    # Aliases such as `write = open` reach builtins too. Even an imported `compile` can fall back to
-    # the builtin after `del` or a failed import, so only the qualified `re.compile` is admitted.
-    # Refuse computed attribute access too: aliases defeat a narrower rule.
-    return type(name) is str and name in {
-        "open",
-        "exec",
-        "eval",
-        "compile",
-        "__import__",
-        "__builtins__",
-        "globals",
-        "locals",
-        "vars",
-        "getattr",
-        "setattr",
-        "delattr",
-    }
-
-
-def _is_refused_attribute(name: object) -> bool:
-    # Introspection can lead back to the builtins, running code or the file loader. Builtins can also
-    # be reached as attributes of the builtins module (print.__self__.open). Keep re.compile admitted.
-    return type(name) is str and name in {
-        "__builtins__",
-        "__globals__",
-        "__code__",
-        "__subclasses__",
-        "__loader__",
-        "__spec__",
-        "__getattribute__",
-        "__self__",
-        "__import__",
-        "open",
-        "exec",
-        "eval",
-    }
-
-
-def _is_refused_constant(value: object) -> bool:
-    # Covers the literal key in module.__dict__["__builtins__"].
-    return type(value) is str and value in {"__builtins__"}
-
-
 class LibraryRefusalReason(StrEnum):
     IMPORT_NOT_ADMITTED = "import_not_admitted"
     FILE_OR_DYNAMIC_CODE_BUILTIN = "file_or_dynamic_code_builtin"
@@ -381,10 +337,50 @@ def python_library_refusal(source: str, *, seeded: bool) -> LibraryRefusal | Non
                 refusals.append(LibraryRefusal(LibraryRefusalReason.IMPORT_NOT_ADMITTED, node.lineno))
             elif seeded and id(node) in nested_imports:
                 refusals.append(LibraryRefusal(LibraryRefusalReason.IMPORT_INSIDE_BODY_UNDER_SEED, node.lineno))
-        elif (
-            (isinstance(node, ast.Name) and _is_refused_name(node.id))
-            or (isinstance(node, ast.Attribute) and _is_refused_attribute(node.attr))
-            or (isinstance(node, ast.Constant) and _is_refused_constant(node.value))
-        ):
+            continue
+        if isinstance(node, ast.Name):
+            # Aliases reach builtins too. Even an imported `compile` can fall back to the builtin
+            # after `del` or a failed import, so only the qualified `re.compile` is admitted.
+            # Refuse computed attribute access too: aliases defeat a narrower rule.
+            name = node.id
+            refused = type(name) is str and name in {
+                "open",
+                "exec",
+                "eval",
+                "compile",
+                "__import__",
+                "__builtins__",
+                "globals",
+                "locals",
+                "vars",
+                "getattr",
+                "setattr",
+                "delattr",
+            }
+        elif isinstance(node, ast.Attribute):
+            # Introspection can reach the builtins, running code or the file loader.
+            # Builtins can also be reached as attributes (print.__self__.open). Keep re.compile admitted.
+            name = node.attr
+            refused = type(name) is str and name in {
+                "__builtins__",
+                "__globals__",
+                "__code__",
+                "__subclasses__",
+                "__loader__",
+                "__spec__",
+                "__getattribute__",
+                "__self__",
+                "__import__",
+                "open",
+                "exec",
+                "eval",
+            }
+        elif isinstance(node, ast.Constant):
+            # Covers the literal key in module.__dict__["__builtins__"].
+            value = node.value
+            refused = type(value) is str and value in {"__builtins__"}
+        else:
+            continue
+        if refused:
             refusals.append(LibraryRefusal(LibraryRefusalReason.FILE_OR_DYNAMIC_CODE_BUILTIN, node.lineno))
     return min(refusals, key=lambda refusal: refusal.line) if refusals else None
