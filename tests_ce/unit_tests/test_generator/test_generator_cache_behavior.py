@@ -158,24 +158,18 @@ def test_sequence_table_generator_uses_cache_key(setup_context: SetupContext):
     assert "SequenceTableGenerator" not in setup_context.generators
 
 
-@pytest.mark.parametrize("recover", [False, True])
-def test_sequence_key_task_reconstruction_preserves_paginated_generation(setup_context: SetupContext, recover: bool):
-    class RecoveringClient(DummyRdbmsClient):
-        attempts = 0
-
-        def reserve_sequence_block(self, sequence_name, count, table_name=None, column_name=None):
-            self.attempts += 1
-            if recover and self.attempts == 1:
-                raise RuntimeError("sequence temporarily unavailable")
-            return super().reserve_sequence_block(sequence_name, count, table_name, column_name)
-
-    client = RecoveringClient()
+def _sequence_key(setup_context: SetupContext, client: DummyRdbmsClient) -> KeyStatement:
     setup_context.clients["db1"] = client
     generate = GenerateStatement(GenerateModel(name="orders", count="5", type="orders"), None)
     key = KeyStatement(KeyModel(name="id", type="int", generator="SequenceTableGenerator", database="db1"), generate)
     generate.sub_statements = [key]
     key.sub_statements = []
-    task = KeyTask(setup_context, key, DataSourcePagination(skip=0, limit=5))
+    return key
+
+
+def test_sequence_key_task_preserves_paginated_generation(setup_context: SetupContext):
+    client = DummyRdbmsClient()
+    task = KeyTask(setup_context, _sequence_key(setup_context, client), DataSourcePagination(skip=0, limit=5))
     context = GenIterContext(setup_context, "orders")
 
     values = []
@@ -184,8 +178,21 @@ def test_sequence_key_task_reconstruction_preserves_paginated_generation(setup_c
         values.append(context.current_product["id"])
 
     assert values == list(range(1000, 1005))
-    assert client.attempts == (2 if recover else 1)
     assert client._seq == {"orders_id_seq": 1005}
+
+
+def test_sequence_key_task_surfaces_a_failed_reservation_at_construction(setup_context: SetupContext):
+    """The bare retry on the first row is gone: a reservation that fails stops the task at init, reserves
+    nothing and caches no half-built generator."""
+
+    class UnavailableClient(DummyRdbmsClient):
+        def reserve_sequence_block(self, sequence_name, count, table_name=None, column_name=None):
+            raise RuntimeError("sequence temporarily unavailable")
+
+    key = _sequence_key(setup_context, UnavailableClient())
+    with pytest.raises(RuntimeError, match="sequence temporarily unavailable"):
+        KeyTask(setup_context, key, DataSourcePagination(skip=0, limit=5))
+    assert not setup_context.generators
 
 
 def test_sequence_table_generator_unpaginated_instance_is_repositioned_by_the_first_page(
