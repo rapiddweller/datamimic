@@ -35,8 +35,7 @@ def test_a_non_finite_number_in_a_captured_row_has_a_catalog_code(tmp_path: Path
 
     assert not result.ok
     (diagnostic,) = result.diagnostics
-    assert diagnostic.ce_error is not None
-    assert diagnostic.ce_error.issue_code is IssueCode.TASK_CAPTURE_VALUE_NOT_FINITE
+    assert diagnostic.code is IssueCode.TASK_CAPTURE_VALUE_NOT_FINITE
     assert not any(text in diagnostic.message.lower() for text in ("nan", "inf", "1e309"))
 
 

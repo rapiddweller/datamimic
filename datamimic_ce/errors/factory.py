@@ -405,11 +405,11 @@ def task_config_error(
     script_error = code == IssueCode.TASK_SCRIPT_ERROR
     if script_error:
         kwargs["descriptor"] = descriptor_hint(ctx, descriptor_name) or kwargs.get("descriptor", "")
-    plain = task_config_message(code=code, guidance=guidance, **kwargs)
+    plain = task_config_message(code=code, guidance=guidance, issue_only=False, **kwargs)
     msg = plain if script_error else _append_descriptor_hint(plain, ctx, descriptor_name)
     error = TaskConfigError(msg, issue_code=code, location=location)
     if shown_in_build:
-        error.build_reason = plain
+        error.build_reason = task_config_message(code=code, guidance=None, issue_only=True, **kwargs)
     return error
 
 

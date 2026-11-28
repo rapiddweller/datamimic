@@ -190,6 +190,7 @@ class UnknownAttribute(Rule):
                         evidence=f"attribute '{attr_name}' appears on <{tag}>",
                         fix_context=f"Attribute '{attr_name}' is unknown on <{tag}>. {hint}",
                         names_only=True,
+                        attribute=attr_name,
                     )
 
 
@@ -211,6 +212,8 @@ class MissingRequiredAttribute(Rule):
                         element,
                         evidence=f"<{tag}> is missing '{spec.name}'",
                         fix_context=f'Add {spec.name}="..." to <{tag}>.',
+                        names_only=True,
+                        attribute=spec.name,
                     )
 
 
