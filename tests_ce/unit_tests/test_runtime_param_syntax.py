@@ -1,3 +1,7 @@
+# DATAMIMIC
+# Copyright (c) 2023-2026 Rapiddweller Asia Co., Ltd.
+# This software is licensed under the MIT License. See LICENSE.
+
 """One owner for the NAME=VALUE syntax and the name rule of `run --param` and `authoring run-project --param`."""
 
 import json
