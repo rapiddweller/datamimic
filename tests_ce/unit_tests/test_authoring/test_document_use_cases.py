@@ -37,6 +37,22 @@ def test_compile_decompile_hashes_preserve_canonical_semantics(tmp_path):
     assert list(tmp_path.iterdir()) == []
 
 
+def test_canonical_hash_ignores_line_endings_of_the_source_xml(tmp_path):
+    codec = CeDmJsonCodec()
+    use_case = DecompileDocumentUseCase(codec, validator(tmp_path))
+    lf = (
+        '<setup rngSeed="7">\n    <generate name="rows" count="2">\n'
+        '        <key name="id" constant="1"/>\n    </generate>\n</setup>\n'
+    )
+    crlf = lf.replace("\n", "\r\n")
+    from_lf = use_case.execute(DecompileDocumentRequest(xml=lf))
+    from_crlf = use_case.execute(DecompileDocumentRequest(xml=crlf))
+    assert from_lf.outcome == from_crlf.outcome == "ready"
+    assert from_crlf.canonical_xml_sha256 == from_lf.canonical_xml_sha256
+    assert from_crlf.semantic_sha256 == from_lf.semantic_sha256
+    assert from_crlf.source_xml_sha256 != from_lf.source_xml_sha256
+
+
 def test_compile_codec_failure_and_parser_failure_have_distinct_phases(tmp_path):
     usecase = CompileDocumentUseCase(CeDmJsonCodec(), validator(tmp_path))
     unknown = DmJsonDocumentV1(root=DmJsonNodeV1(kind="setup", children=(DmJsonNodeV1(kind="unknown"),)))

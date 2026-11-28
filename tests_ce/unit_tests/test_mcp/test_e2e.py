@@ -104,6 +104,20 @@ async def test_flat_and_legacy_arguments_use_the_same_authoring_contracts(anyio_
 
 
 @pytest.mark.anyio
+async def test_reference_unknown_name_is_a_typed_miss_and_known_name_a_hit(anyio_backend: str) -> None:
+    async with Client(create_server()) as client:
+        miss = json.loads(
+            (await client.call_tool("datamimic_reference", {"topic": "rules", "name": "DM0"})).content[0].text
+        )
+        hit = json.loads(
+            (await client.call_tool("datamimic_reference", {"topic": "rules", "name": "DM401"})).content[0].text
+        )
+    assert (miss["ok"], miss["error"], miss["content"]) == (False, "reference_not_found", "No matching rule.")
+    assert "DM401" in miss["available_names"]
+    assert hit["ok"] is True
+
+
+@pytest.mark.anyio
 @pytest.mark.parametrize(
     "arguments",
     [
