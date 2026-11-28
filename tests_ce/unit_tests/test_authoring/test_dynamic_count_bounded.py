@@ -90,6 +90,5 @@ def test_count_above_bounded_limit_is_refused_not_truncated() -> None:
     result = _bounded("fx_dynamic_child_count_above_limit.xml")
     assert not result.ok
     diagnostic = result.diagnostics[0]
-    assert diagnostic.ce_error is not None
-    assert diagnostic.ce_error.issue_code is IssueCode.TASK_COUNT_ABOVE_BOUNDED_LIMIT
+    assert diagnostic.code is IssueCode.TASK_COUNT_ABOVE_BOUNDED_LIMIT
     assert diagnostic.path[-2:] == ("generate", "count")

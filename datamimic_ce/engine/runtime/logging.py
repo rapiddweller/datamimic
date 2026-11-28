@@ -4,6 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import copy
 import logging
 import os
 import platform
@@ -26,6 +27,14 @@ _LINE_BREAKS = r"[\n\v\f\x1c\x1d\x1e\x85\u2028\u2029]"
 _DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 _TIMESTAMP = "%(asctime)s,%(msecs)03d"
 
+_LEVEL_NAMES = {
+    logging.DEBUG: "DEBUG",
+    logging.INFO: "INFO ",
+    logging.WARNING: "WARN ",
+    logging.ERROR: "ERROR",
+    logging.CRITICAL: "CRTCL",
+}
+
 
 class _SingleLineFormatter(logging.Formatter):
     """A record is one physical line: descriptor text may hold line breaks, and a continuation line that starts
@@ -33,6 +42,9 @@ class _SingleLineFormatter(logging.Formatter):
     and stay multi-line."""
 
     def formatMessage(self, record: logging.LogRecord) -> str:
+        # The padded names belong to DATAMIMIC lines: a copy keeps other handlers and loggers on the standard names.
+        record = copy.copy(record)
+        record.levelname = _LEVEL_NAMES.get(record.levelno, record.levelname)
         line = logging.Formatter.formatMessage(self, record)
         return re.sub(_LINE_BREAKS, r"\\n", re.sub(r"\r", r"\\r", line))
 
@@ -50,11 +62,6 @@ def control_value(text: str) -> str:
 
 def setup_logger(logger_name: str, worker_name: str, level=logging.INFO):
     current_logger = logging.getLogger(logger_name)
-    logging.addLevelName(logging.DEBUG, "DEBUG")
-    logging.addLevelName(logging.INFO, "INFO ")
-    logging.addLevelName(logging.WARNING, "WARN ")
-    logging.addLevelName(logging.ERROR, "ERROR")
-    logging.addLevelName(logging.CRITICAL, "CRTCL")
 
     if worker_name == "MAIN":
         formatter = _SingleLineFormatter(

@@ -4,6 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import os
 from functools import lru_cache
 from typing import Literal
 
@@ -24,5 +25,10 @@ class Settings(BaseSettings):
 
 
 @lru_cache(maxsize=1)
-def get_settings() -> Settings:
+def _settings_for(_environment: tuple[str | None, ...]) -> Settings:
     return Settings()  # pyright: ignore
+
+
+def get_settings() -> Settings:
+    """The settings for the environment as it is now: a changed variable is read, an unchanged one is reused."""
+    return _settings_for(tuple(os.environ.get(name) for name in Settings.model_fields))

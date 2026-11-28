@@ -71,6 +71,20 @@ class ReferenceResult(AuthoringModel):
     entries: tuple[ReferenceEntry, ...] | None = None
 
 
+class ReferenceNotFound(AuthoringModel):
+    """A named reference that the topic does not hold; ``content`` is the human hint."""
+
+    ok: Literal[False] = False
+    error: Literal["reference_not_found"] = "reference_not_found"
+    topic: ReferenceTopic
+    name: NonEmptyStrictStr
+    content: NonEmptyStrictStr
+    available_names: tuple[str, ...]
+
+
+ReferenceLookupResult = Annotated[ReferenceResult | ReferenceNotFound, Field(discriminator="ok")]
+
+
 class AuthoringContractSchemas(AuthoringModel):
     dm_json_document_v1: dict[str, JsonValue]
     dm_json_node_v1: dict[str, JsonValue]

@@ -39,4 +39,4 @@ def test_file_delivery_requires_a_target_on_each_product():
     task = document([{"kind": "generate", "properties": {"name": "parents", "count": 1, "target": "JSON"}, "children": [
         {"kind": "generate", "properties": {"name": "children", "count": 1}}]}])
     findings = CeBoundedExecutionPolicy().diagnostics(task)
-    assert any(item.code == "DM407" for item in findings)
+    assert any(item.rule == "DM407" for item in findings)
