@@ -112,20 +112,50 @@ ADMITTED_IMPORT_ROOTS = frozenset(
     }
 )
 ADMITTED_PACKAGES = ("datamimic_ce.domains",)
-# Referenced at all, not only called: an alias such as `write = open` or `__builtins__["open"]` reaches them too.
-# Also a name the library imports itself (`from re import compile`): `del` or a failed import falls back to the
-# builtin, so only the qualified form (`re.compile`) is admitted.
-REFUSED_NAMES = frozenset(
-    {"open", "exec", "eval", "compile", "__import__", "__builtins__", "globals", "locals", "vars"}
-    # Attribute access by computed name; no corpus library uses it, and aliases defeat any narrower rule.
-    | {"getattr", "setattr", "delattr"}
-)
-# Introspection that leads back to the builtins, the running code or the file loader, and the builtins
-# themselves reached as attributes of the builtins module (print.__self__.open). compile stays: re.compile.
-REFUSED_ATTRIBUTES = frozenset(
-    {"__builtins__", "__globals__", "__code__", "__subclasses__", "__loader__", "__spec__", "__getattribute__"}
-    | {"__self__", "__import__", "open", "exec", "eval"}
-)
+
+
+def _is_refused_name(name: object) -> bool:
+    # Aliases such as `write = open` reach builtins too. Even an imported `compile` can fall back to
+    # the builtin after `del` or a failed import, so only the qualified `re.compile` is admitted.
+    # Refuse computed attribute access too: aliases defeat a narrower rule.
+    return type(name) is str and name in {
+        "open",
+        "exec",
+        "eval",
+        "compile",
+        "__import__",
+        "__builtins__",
+        "globals",
+        "locals",
+        "vars",
+        "getattr",
+        "setattr",
+        "delattr",
+    }
+
+
+def _is_refused_attribute(name: object) -> bool:
+    # Introspection can lead back to the builtins, running code or the file loader. Builtins can also
+    # be reached as attributes of the builtins module (print.__self__.open). Keep re.compile admitted.
+    return type(name) is str and name in {
+        "__builtins__",
+        "__globals__",
+        "__code__",
+        "__subclasses__",
+        "__loader__",
+        "__spec__",
+        "__getattribute__",
+        "__self__",
+        "__import__",
+        "open",
+        "exec",
+        "eval",
+    }
+
+
+def _is_refused_constant(value: object) -> bool:
+    # Covers the literal key in module.__dict__["__builtins__"].
+    return type(value) is str and value in {"__builtins__"}
 
 
 class LibraryRefusalReason(StrEnum):
@@ -352,10 +382,9 @@ def python_library_refusal(source: str, *, seeded: bool) -> LibraryRefusal | Non
             elif seeded and id(node) in nested_imports:
                 refusals.append(LibraryRefusal(LibraryRefusalReason.IMPORT_INSIDE_BODY_UNDER_SEED, node.lineno))
         elif (
-            (isinstance(node, ast.Name) and node.id in REFUSED_NAMES)
-            or (isinstance(node, ast.Attribute) and node.attr in REFUSED_ATTRIBUTES)
-            # module.__dict__["__builtins__"] and getattr(module, "__dict__")["__builtins__"]
-            or (isinstance(node, ast.Constant) and node.value == "__builtins__")
+            (isinstance(node, ast.Name) and _is_refused_name(node.id))
+            or (isinstance(node, ast.Attribute) and _is_refused_attribute(node.attr))
+            or (isinstance(node, ast.Constant) and _is_refused_constant(node.value))
         ):
             refusals.append(LibraryRefusal(LibraryRefusalReason.FILE_OR_DYNAMIC_CODE_BUILTIN, node.lineno))
     return min(refusals, key=lambda refusal: refusal.line) if refusals else None
