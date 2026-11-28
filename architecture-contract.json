@@ -2075,6 +2075,28 @@
     }
   ],
   "declarations": {
+    "trojan_horse_reach": [
+      {
+        "id": "CE-RDBMS-TABLE-INSPECTION",
+        "module": "datamimic_ce.engine.io.clients.rdbms_client",
+        "name": "sqlalchemy.inspect",
+        "scope": "RdbmsClient._find_table_name",
+        "loads": [
+          "sqlalchemy",
+          "sqlite3",
+          "mysql.connector",
+          "oracledb",
+          "psycopg2",
+          "pymssql",
+          "pyodbc"
+        ],
+        "rationale": "SQLAlchemy dispatches table inspection at runtime through the dialect of the engine or connection. CE creates those engines with SQLite's standard-library driver or the supported MySQL, Oracle, PostgreSQL and SQL Server drivers listed here.",
+        "provenance": [
+          "datamimic_ce/engine/io/clients/rdbms_client.py",
+          "pyproject.toml"
+        ]
+      }
+    ],
     "premises": [
       {
         "id": "CE-STANDARD-LIBRARY-UNCHANGED",
