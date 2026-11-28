@@ -8,7 +8,8 @@ from pathlib import Path
 import pytest
 
 from datamimic_ce.authoring.adapters.linter import lint_source
-from datamimic_ce.engine.io.api import buffered_exporter_names, builtin_target_names
+from datamimic_ce.authoring.domain.rules.cross_statement import _STATIC_TARGETS
+from datamimic_ce.engine.io.api import buffered_exporter_names
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 _GENERATE = (
@@ -28,7 +29,7 @@ def _run(tmp_path: Path, client: str, target: str, monkeypatch: pytest.MonkeyPat
     DataMimicTest(tmp_path, "m.xml").test_with_timer()
 
 
-@pytest.mark.parametrize("client", ["CSV", "JSON", "ConsoleExporter"])
+@pytest.mark.parametrize("client", sorted(_STATIC_TARGETS | buffered_exporter_names()))
 def test_run_rejects_client_id_equal_to_builtin_exporter(
     tmp_path: Path, client: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -44,8 +45,13 @@ def test_run_creates_the_table_for_a_distinct_client_id(tmp_path: Path, monkeypa
         assert connection.execute("select count(*) from items").fetchone() == (2,)
 
 
-def test_lint_and_run_share_one_set_of_reserved_ids() -> None:
-    from datamimic_ce.authoring.domain.rules.cross_statement import _STATIC_TARGETS
-
-    assert builtin_target_names() == _STATIC_TARGETS | buffered_exporter_names()
+def test_lint_and_run_refuse_the_same_ids() -> None:
+    """Lint and the run each compose the reserved ids; every one of them is refused by both."""
+    for name in _STATIC_TARGETS | buffered_exporter_names():
+        assert any(
+            d.rule == "DM409"
+            for d in lint_source(
+                f'<setup rngSeed="1"><database id="{name}" dbms="sqlite" database="a"/></setup>'
+            ).diagnostics
+        ), name
     assert lint_source('<setup rngSeed="1"><database id="CSV" dbms="sqlite" database="a"/></setup>').diagnostics

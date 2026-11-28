@@ -60,16 +60,6 @@ def buffered_exporter_names() -> frozenset[str]:
     return frozenset(_BUFFERED_EXPORTERS)
 
 
-def builtin_target_names() -> frozenset[str]:
-    """Every bare target name that resolves to a built-in exporter, before any client or memstore id (#730)."""
-
-    return buffered_exporter_names() | {
-        EXPORTER_CONSOLE_EXPORTER,
-        EXPORTER_LOG_EXPORTER,
-        EXPORTER_TEST_RESULT_EXPORTER,
-    }
-
-
 def create_exporter_list(
     setup_context: ExporterContext,
     product_name: str,
