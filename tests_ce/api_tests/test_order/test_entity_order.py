@@ -94,7 +94,7 @@ class TestEntityOrder:
         self._check_order_data(order)
 
     def test_not_supported_dataset(self):
-        random_dataset = "XX"
+        random_dataset = "CN"
         # Fallback to US dataset with a single warning log; should not raise
         order_service = OrderService(dataset=random_dataset)
         order = order_service.generate()

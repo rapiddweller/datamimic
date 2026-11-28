@@ -1,0 +1,17 @@
+{
+  "title": "A City dataset that CE does not ship is refused, not read as US",
+  "proves": [
+    "a City with a shipped dataset gives rows",
+    "a dataset that no shipped file carries stops the run with E001 and names the dataset",
+    "a shipped dataset that only lacks the city file keeps the documented US fallback"
+  ],
+  "products": {"cities": 5},
+  "negatives": [
+    {"name": "unknown_dataset", "diagnostic": "child_execution",
+     "patch": {"file": "datamimic.xml", "old": "dataset=\"US\"", "new": "dataset=\"ZZ\""}}
+  ],
+  "equivalents": [
+    {"name": "shipped_dataset_without_city_file",
+     "patch": {"file": "datamimic.xml", "old": "dataset=\"US\"", "new": "dataset=\"CN\""}}
+  ]
+}

@@ -72,7 +72,7 @@ class TestEntityPerson:
         self._test_single_person(person)
 
     def test_not_supported_dataset(self):
-        dataset = "XX"
+        dataset = "CN"
         # Fallback to US dataset with a single warning log; should not raise
         person_service = PersonService(dataset=dataset)
         person = person_service.generate()

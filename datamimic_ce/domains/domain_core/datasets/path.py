@@ -5,6 +5,8 @@ import os
 import re
 from pathlib import Path
 
+from datamimic_ce.errors import invalid_dataset_error
+
 logger = logging.getLogger("DATAMIMIC")
 
 """
@@ -25,6 +27,24 @@ _DATA_OVERRIDE = "DATAMIMIC_DOMAIN_DATA"
 # This is process-global state: in a long-lived worker the once-per-code
 # suppression persists across runs.
 _logged_dataset_fallbacks: set[str] = set()
+
+
+_DATASET_SUFFIX = r"_(?P<cc>[A-Z]{2})\.[A-Za-z0-9._-]+$"
+
+
+_shipped_codes_by_root: dict[Path, frozenset[str]] = {}
+
+
+def _shipped_dataset_codes(root: Path) -> frozenset[str]:
+    """Dataset codes carried by at least one dataset-suffixed file under ``root`` (read once per root)."""
+    if root not in _shipped_codes_by_root:
+        _shipped_codes_by_root[root] = frozenset(
+            suffix.group("cc")
+            for _directory, _subdirectories, names in os.walk(root)
+            for name in names
+            if (suffix := re.search(_DATASET_SUFFIX, name))
+        )
+    return _shipped_codes_by_root[root]
 
 
 def is_strict_dataset_mode() -> bool:
@@ -132,6 +152,11 @@ def dataset_path(*relative: str | os.PathLike[str], start: Path | None = None) -
                 fallback_name = f"{m.group('stem')}_US{m.group('ext')}"
                 fallback_path = root.joinpath(*parts[:-1], fallback_name)
                 if fallback_path.exists():
+                    # A code no shipped file carries is a typo or an unsupported dataset: labelling
+                    # US rows with it would be silent wrong data. A shipped code that only lacks
+                    # this one file keeps the documented US fallback.
+                    if cc not in _shipped_dataset_codes(root):
+                        raise invalid_dataset_error(dataset=cc)
                     # Log once per dataset code to avoid flooding logs
                     if cc not in _logged_dataset_fallbacks:
                         logger.warning(

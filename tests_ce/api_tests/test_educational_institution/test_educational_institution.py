@@ -77,7 +77,7 @@ class TestEntityEducationalInstitution:
 
     def test_not_supported_dataset(self):
         # Fallback to US dataset with a single warning log; should not raise
-        educational_institution_service = EducationalInstitutionService(dataset="XX")
+        educational_institution_service = EducationalInstitutionService(dataset="CN")
         educational_institution = educational_institution_service.generate()
         assert isinstance(educational_institution.to_dict(), dict)
 

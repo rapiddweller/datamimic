@@ -106,7 +106,7 @@ class TestEntityCity:
         self._test_single_city(city)
 
     def test_not_supported_dataset(self):
-        random_dataset = "XX"
+        random_dataset = "CN"
         # Fallback to US dataset with a single warning log; should not raise
         city_service = CityService(dataset=random_dataset)
         city = city_service.generate()

@@ -43,13 +43,13 @@ def _empty_cache() -> None:
     module._street_files.clear()
 
 
-# "ZZ" has no street file: the loader falls back to the US file.
-@pytest.mark.parametrize("dataset", ["DE", "US", "ZZ"])
+# "CN" is a shipped dataset without a street file: the loader falls back to the US file.
+@pytest.mark.parametrize("dataset", ["DE", "US", "CN"])
 def test_seeded_street_names_match_the_uncached_reader(dataset: str) -> None:
     assert _new_street_names(dataset, 7, 25) == _old_street_names(dataset, 7, 25)
 
 
-@pytest.mark.parametrize("dataset", ["DE", "ZZ"])
+@pytest.mark.parametrize("dataset", ["DE", "CN"])
 def test_each_street_file_is_read_once_for_many_generators(dataset: str, monkeypatch: pytest.MonkeyPatch) -> None:
     reads: list[Path] = []
 

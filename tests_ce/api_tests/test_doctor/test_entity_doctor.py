@@ -102,7 +102,7 @@ class TestEntityDoctor:
         self._test_single_doctor(doctor)
 
     def test_not_supported_dataset(self):
-        random_dataset = "XX"
+        random_dataset = "CN"
         # Fallback to US dataset with a single warning log; should not raise
         doctor_service = DoctorService(dataset=random_dataset)
         doctor = doctor_service.generate()

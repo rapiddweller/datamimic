@@ -1,5 +1,3 @@
-import random
-import string
 
 import pytest
 
@@ -97,9 +95,7 @@ class TestEntityMedicalProcedure:
         assert "US" in codes and "DE" in codes
 
     def test_not_supported_dataset(self):
-        random_dataset = "".join(random.choices(string.ascii_uppercase, k=2))
-        while random_dataset in self._supported_datasets:
-            random_dataset = "".join(random.choices(string.ascii_uppercase, k=2))
+        random_dataset = "CN"
         # Fallback to US dataset with a single warning log; should not raise
         medical_procedure_service = MedicalProcedureService(dataset=random_dataset)
         medical_procedure = medical_procedure_service.generate()

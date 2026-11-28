@@ -1,0 +1,10 @@
+{
+  "version": "5.0",
+  "max_count": 5,
+  "product_roles": [
+    {"product": "cities", "field": "postal_code", "role": {"kind": "value"}}
+  ],
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "cities"}, "count": 5}
+  ]
+}

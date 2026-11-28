@@ -5,7 +5,7 @@ Scope
 
 Non‑negotiable rules
 - File naming: every localized file uses suffix `_CC.csv` (`CC` = ISO 3166‑1 alpha‑2, upper-case). No unsuffixed fallbacks in code.
-- Fallback: when a dataset-suffixed file is missing and strict mode is OFF, fall back to `_US` once per dataset code with a single warning log. When strict mode is ON, raise a `FileNotFoundError`.
+- Fallback: when a dataset-suffixed file is missing and strict mode is OFF, fall back to `_US` once per dataset code with a single warning log. This applies only to a code that some shipped file carries; any other code raises `InvalidDatasetError` (`E001`). When strict mode is ON, raise a `FileNotFoundError`.
 - Strict mode: controlled by env `DATAMIMIC_STRICT_DATASET`. Any truthy value other than `0/false/False` enables strict mode.
 - Paths: construct all dataset paths via `dataset_path(...)` from `datamimic_ce.domains.domain_core.datasets.path`. Do not reimplement `Path(__file__).parents[...]`.
 - Weights: for wgt-like CSVs without headers, last column is treated as the weight (non-numeric weights default to `1.0`). For headered CSVs, the weight column must be named `weight`.

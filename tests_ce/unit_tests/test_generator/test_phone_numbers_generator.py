@@ -37,11 +37,11 @@ class TestPhoneNumberGenerator:
             assert phone_number.startswith("+49-")
 
     def test_phone_number_generator_not_exist_dataset(self):
-        # if dataset not exist -> use US dataset (fallback)
-        phone_number = PhoneNumberGenerator(dataset="XX").generate()
+        # CN ships no city file -> the US city data fills in; the country prefix stays CN's own
+        phone_number = PhoneNumberGenerator(dataset="CN").generate()
         assert phone_number
         assert isinstance(phone_number, str)
-        assert phone_number.startswith("+1-")
+        assert phone_number.startswith("+86-")
 
     def test_phone_number_generator_none_country_code(self):
         # if dataset not exist -> use US dataset
