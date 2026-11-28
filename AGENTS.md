@@ -195,7 +195,8 @@ see `docs/mcp_quickstart.md` for registration details.
 - Before committing: the targeted test, `pytest tests_ce/scenarios`,
   `ruff check datamimic_ce` and `mypy datamimic_ce` (full package; single-file
   mypy disagrees with CI). When `datamimic_ce/` changed, also run
-  `make architecture-check`.
+  `make architecture-check`. ArchKeel rule FAIL fails the check; PASS and UNKNOWN
+  are reported. Measurements and UNKNOWN findings need no budget or review record.
 - Run `ruff format` only on the files you changed, never on a directory: it
   rewrites unrelated files.
 - State `LOCAL VERIFIED` and `CI-ONLY` as two separate lists in every report.
