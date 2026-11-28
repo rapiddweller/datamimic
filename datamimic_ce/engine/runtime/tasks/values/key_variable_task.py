@@ -51,6 +51,12 @@ from datamimic_ce.errors import (
 )
 
 
+def _builds_sequence_table(expression: str) -> bool:
+    """Whether a generator= expression names SequenceTableGenerator, which reserves in the database while built."""
+    class_name: str = expression.partition("(")[0]
+    return class_name.strip() == "SequenceTableGenerator"
+
+
 class KeyVariableTask(Task):
     class Mode(Enum):
         """How a <key>/<variable>/<element> produces its next value; fixed at construction, except that
@@ -139,11 +145,12 @@ class KeyVariableTask(Task):
             # (a seeded rng is injected), so it replays deterministically; the single-process policy
             # keeps that reproducible across machines. Without a seed it stays wall-clock random.
             # Outside the try below: a refused argument attribute must not wait for the lazy retry.
-            self._generator_expression = self._generator_call(ctx, self._statement.generator)
+            expression = self._generator_call(ctx, self._statement.generator)
+            self._generator_expression = expression
             # Try to init generator with or without args.
             try:
                 self._generator = GeneratorUtil(ctx).create_generator(
-                    self._generator_expression,
+                    expression,
                     self._statement,
                     self._pagination,
                     # full_name alone collides when same-named keys sit in different <condition>
@@ -161,7 +168,7 @@ class KeyVariableTask(Task):
             except UserErrorBase as error:
                 if not (
                     isinstance(error.__cause__, (NameError, AttributeError))
-                    or (isinstance(error, OperationError) and self._is_sequence_table_generator())
+                    or (isinstance(error, OperationError) and _builds_sequence_table(expression))
                 ):
                     raise
                 self._mode = self.Mode.LAZY_GENERATOR
@@ -208,9 +215,6 @@ class KeyVariableTask(Task):
             raise task_config_error(
                 code=IssueCode.TASK_GENERATION_MODE_UNKNOWN, element_tag=self._element_tag, name=self._statement.name
             )
-
-    def _is_sequence_table_generator(self) -> bool:
-        return (self._generator_expression or "").split("(", 1)[0].strip() == "SequenceTableGenerator"
 
     def _generator_call(self, ctx: SetupContext, generator: str) -> str:
         """``<key generator="IntegerGenerator" min="1" max="9"/>`` -> ``IntegerGenerator(min=1, max=9)``: the
