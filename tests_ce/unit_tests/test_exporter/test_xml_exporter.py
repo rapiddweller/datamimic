@@ -9,6 +9,7 @@ from pathlib import Path
 from lxml import etree
 
 from datamimic_ce.engine.io.exporters.core.exporter_state_manager import ExporterStateManager
+from datamimic_ce.engine.io.exporters.core.unified_buffered_exporter import ExporterError
 from datamimic_ce.engine.io.exporters.formats.xml_exporter import XMLExporter  # Adjust the import path as necessary
 from tests_ce.unit_tests.test_exporter.exporter_test_util import MockSetupContext, generate_mock_data, make_exporter
 
@@ -209,6 +210,11 @@ class TestXMLExporter(unittest.TestCase):
         )
         with self.assertRaises(etree.XMLSyntaxError):
             self.exporter.count_buffered_rows(1)
+
+    def test_xml_finalize_failure_is_the_core_exporter_error(self):
+        # Negative control for #724: a shadowing XML ExporterError would not match the core class.
+        with self.assertRaises(ExporterError):
+            self.exporter._finalize_buffer_file(self.tmp_dir_path / "missing.xml")
 
 
 if __name__ == "__main__":
