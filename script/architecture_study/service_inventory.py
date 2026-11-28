@@ -49,6 +49,11 @@ def build_report(
         if "external-service" in record["category"]
         and "non-descriptor" not in record["category"]
     ]
+    # Read each test source once; re-reading every source per descriptor cost ~190k file reads.
+    source_texts = [
+        (source.relative_to(REPO).as_posix(), source.read_text(encoding="utf-8", errors="replace"))
+        for source in test_sources
+    ]
     entries = []
     for record in descriptors:
         descriptor = REPO / record["path"]
@@ -61,11 +66,7 @@ def build_report(
             for element in root.iter()
             if element.tag.rsplit("}", 1)[-1].lower() in CLIENT_TAGS
         ]
-        candidates = sorted(
-            source.relative_to(REPO).as_posix()
-            for source in test_sources
-            if descriptor.name in source.read_text(encoding="utf-8", errors="replace")
-        )
+        candidates = sorted(relative for relative, text in source_texts if descriptor.name in text)
         entries.append(
             {
                 "path": record["path"],
