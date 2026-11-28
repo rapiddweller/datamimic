@@ -14,7 +14,7 @@ from .domain.capabilities import DslCatalogSnapshot
 from .domain.diagnostics import Diagnostic
 from .domain.dm_json import DmJsonCompilation, DmJsonDocumentV1
 from .domain.project_run import ExternalEffect, ProjectParam, ProjectRunExecution
-from .domain.reference import ReferenceResult
+from .domain.reference import ReferenceLookupResult
 from .domain.requests import (
     BoundedExecutionEvidence,
     BoundedExecutionRequest,
@@ -34,7 +34,7 @@ class DmJsonDescriptorContract(Protocol):
 
 class DslCatalog(Protocol):
     def snapshot(self) -> DslCatalogSnapshot: ...
-    def reference(self, request: ReferenceRequest) -> ReferenceResult: ...
+    def reference(self, request: ReferenceRequest) -> ReferenceLookupResult: ...
 
 
 class DescriptorValidator(Protocol):
