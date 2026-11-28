@@ -383,6 +383,20 @@ def test_stderr_excerpt_is_bounded_and_decoded_safely(tmp_path, content, expecte
     assert _stderr_excerpt(tmp_path / "missing.log") == ""
 
 
+@pytest.mark.parametrize(
+    "text",
+    ["", "plain", "\n\n  lead", "trail \n\x1b\n", "\x00\n \x7f\x9f", "in\x1bner\nkept", "\n a \x1b b \n", " nbsp"],
+    ids=["empty", "none", "leading", "trailing", "controls-only", "inner", "both-edges", "latin1-space"],
+)
+def test_grouped_edge_pattern_matches_the_ungrouped_one(text):
+    import re
+
+    from datamimic_ce.authoring.adapters.bounded_executor import _CONTROL_EDGES
+
+    ungrouped = r"\A[\x00-\x20\x7f-\x9f]+|[\x00-\x20\x7f-\x9f]+\Z"
+    assert re.sub(_CONTROL_EDGES, "", text) == re.sub(ungrouped, "", text)
+
+
 @pytest.mark.parametrize("descendant_still_alive", [False, True])
 def test_windows_process_cleanup_waits_for_descendants(monkeypatch, descendant_still_alive):
     from contextlib import nullcontext

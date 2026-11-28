@@ -73,7 +73,7 @@ _MAX_REPLY_BYTES = dryrun._MAX_WORKER_REPLY_BYTES
 _STDERR_READ_BYTES = 4096
 _STDERR_EXCERPT_CHARS = 800
 _CONTROL_RUNS = r"[\x00-\x1f\x7f-\x9f]+"
-_CONTROL_EDGES = r"\A[\x00-\x20\x7f-\x9f]+|[\x00-\x20\x7f-\x9f]+\Z"
+_CONTROL_EDGES = r"(?:\A[\x00-\x20\x7f-\x9f]+)|(?:[\x00-\x20\x7f-\x9f]+\Z)"
 
 
 def _stderr_excerpt(path: Path) -> str:
