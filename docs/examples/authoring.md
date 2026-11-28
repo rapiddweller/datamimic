@@ -184,6 +184,42 @@ the directory is a new task id for each run. The example above writes
 `output/order_report/order_report.json`. The complete project is
 `tests_ce/scenarios/s22_file_filter`.
 
+## Grouped totals and counts
+
+Build can check allocations against the product that declares the available
+stock. This entry in `acceptance/build.json`'s `expectations` array sums
+`quantity` from `allocations` by `lot_id` and requires that each total stay at
+or below the corresponding `lots.quantity`:
+
+```jsonc
+{
+  "kind": "group_sum",
+  "subject": {"kind": "product", "product": "allocations"},
+  "group_by": "lot_id",
+  "field": "quantity",
+  "reference": {
+    "subject": {"kind": "product", "product": "lots"},
+    "key": "lot_id",
+    "field": "quantity",
+    "comparison": "at_most"
+  }
+}
+```
+
+The reference must list each group once. An unallocated lot contributes a zero
+total; an allocation for an unlisted lot fails. Omit `comparison` to require
+equality, for example when matching payment allocations to payment amounts.
+Amounts add exactly, including decimal strings. Diagnostics name the fields
+and count failing groups without quoting keys or amounts.
+
+To compare two sums within a single product, replace `reference` with
+`"equals_field": "credit_cents"` and set `field` to `"debit_cents"`, for example.
+That form checks only observed groups and refuses a product with no groups.
+Use `group_count` for a reference product that declares an exact row count per
+group instead of an amount. See `s48_order_allocation`, `s49_ledger_postings`
+and `s47_course_timetable` under `tests_ce/scenarios`, and
+`datamimic authoring reference --topic expectations` for the live contract.
+
 ## Database sink table
 
 `createTable="true"` on a `<generate>` with a database target creates the table

@@ -76,6 +76,15 @@ def test_library_check_refuses_before_the_library_runs(tmp_path: Path, filename:
     assert diagnostic.location.script_line == (1 if filename == "library_indented.xml" else 2)
 
 
+@pytest.mark.integration
+def test_library_check_refuses_reserved_string_in_inline_python(tmp_path: Path) -> None:
+    result = _build(tmp_path, "library_reserved_name.xml")
+    assert result.outcome == "rejected"
+    [diagnostic] = [item for item in result.diagnostics if item.code is AuthoringRuleId.SIDE_EFFECT]
+    assert "Python library line 1 uses a file or dynamic-code builtin" in diagnostic.message
+    assert diagnostic.path == ("descriptor", "datamimic.xml")
+
+
 def _bounded_run(filename: str):
     workspace = AuthoringWorkspaceContext(_MODELS, PurePosixPath(filename))
     return CeBoundedExecutor(workspace).execute(
