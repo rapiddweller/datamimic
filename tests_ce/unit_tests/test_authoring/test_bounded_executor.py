@@ -385,17 +385,36 @@ def test_stderr_excerpt_is_bounded_and_decoded_safely(tmp_path, content, expecte
 
 @pytest.mark.parametrize(
     "text",
-    ["", "plain", "\n\n  lead", "trail \n\x1b\n", "\x00\n \x7f\x9f", "in\x1bner\nkept", "\n a \x1b b \n", " nbsp"],
-    ids=["empty", "none", "leading", "trailing", "controls-only", "inner", "both-edges", "latin1-space"],
+    [
+        "",
+        "plain",
+        "\n\n  lead",
+        "trail \n\x1b\n",
+        "\x00\n \x7f\x9f",
+        "in\x1bner\nkept",
+        "\n a \x1b b \n",
+        " nbsp",
+        "a" + "\x1b" * 4000 + "b",
+    ],
+    ids=[
+        "empty",
+        "none",
+        "leading",
+        "trailing",
+        "controls-only",
+        "inner",
+        "both-edges",
+        "latin1-space",
+        "long-inner-run",
+    ],
 )
-def test_grouped_edge_pattern_matches_the_ungrouped_one(text):
+def test_edge_strip_matches_the_original_anchored_alternation(text):
     import re
 
-    from datamimic_ce.authoring.adapters.bounded_executor import _CONTROL_LEADING, _CONTROL_TRAILING
+    from datamimic_ce.authoring.adapters.bounded_executor import _CONTROL_CHARACTERS
 
     alternation = r"\A[\x00-\x20\x7f-\x9f]+|[\x00-\x20\x7f-\x9f]+\Z"
-    split = re.sub(_CONTROL_TRAILING, "", re.sub(_CONTROL_LEADING, "", text))
-    assert split == re.sub(alternation, "", text)
+    assert text.strip(_CONTROL_CHARACTERS) == re.sub(alternation, "", text)
 
 
 @pytest.mark.parametrize("descendant_still_alive", [False, True])
