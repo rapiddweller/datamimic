@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 import sys
 from pathlib import Path, PurePosixPath
 from typing import Annotated
@@ -251,19 +250,17 @@ def run_project(
     Inspect action_required and fix the gaps before reporting a clean proof.
     """
     try:
-        pairs = [re.split("=", item, maxsplit=1) for item in params or []]
-        if any(len(pair) != 2 for pair in pairs):
-            raise ValueError("--param needs NAME=VALUE")
         request = ProjectRunRequest(
             allow_side_effects=allow_side_effects,
-            params=tuple(ProjectParam(name=pair[0], value=pair[1]) for pair in pairs),
+            params=tuple(ProjectParam.parse(item) for item in params or []),
             timeout_seconds=timeout,
         )
     except (ValueError, ValidationError):
+        # An invalid option value found before any work is a usage error: exit 2, as for `run` and `init`.
         emit_authoring(
             ProjectRunResult.from_input_error("Run options are invalid: check --param NAME=VALUE and --timeout."),
             output_format,
-            exit_code=1,
+            exit_code=2,
         )
     application = create_authoring_application(workspace_root=project, descriptor_path=PROJECT_ENTRY_PATH)
     result = application.run_project(request)
