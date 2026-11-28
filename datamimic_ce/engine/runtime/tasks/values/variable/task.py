@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from collections.abc import Iterator
-from typing import Final
 
 from datamimic_ce.engine.dsl.api import (
     ATTR_CONSTANT,
@@ -44,13 +43,6 @@ from datamimic_ce.errors import (
 
 class VariableTask(KeyVariableTask, CommonSubTask):
     _iterator: Iterator[object] | None
-    _ITERATOR_MODE: Final = "iterator"
-    _ENTITY_MODE: Final = "entity_builder"
-    _WEIGHTED_SOURCE_MODE: Final = "weighted_source"
-    _ITERATION_SELECTOR_MODE: Final = "iteration_selector"
-    _FULL_LOAD_MODE: Final = "full_load"
-    _LAZY_ITERATOR_MODE: Final = "lazy_iterator"
-    _STORAGE_MODE: Final = "storage"
 
     def __init__(
         self,
@@ -109,7 +101,7 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                 if plan.weighted_source is None:
                     raise RuntimeError("weighted variable source plan has no data source")
                 self._weighted_data_source = plan.weighted_source
-                self._mode = self._WEIGHTED_SOURCE_MODE
+                self._mode = self.Mode.WEIGHTED_SOURCE
             elif plan.kind is VariableSourcePlanKind.ITERATION_SELECTOR:
                 if plan.client is None or plan.selector is None:
                     raise RuntimeError("iteration-selector plan is incomplete")
@@ -117,22 +109,22 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                 self._selector = plan.selector
                 self._prefix = plan.prefix
                 self._suffix = plan.suffix
-                self._mode = self._ITERATION_SELECTOR_MODE
+                self._mode = self.Mode.ITERATION_SELECTOR
             elif plan.kind is VariableSourcePlanKind.LAZY:
                 self._iterator = None
-                self._mode = self._LAZY_ITERATOR_MODE
+                self._mode = self.Mode.LAZY_ITERATOR
             elif plan.kind is VariableSourcePlanKind.STORAGE:
                 self._data_list = list(plan.data) if plan.data is not None else []
                 if self._storage_mode == "data":
                     self._data_list = [DotableDict(row) if isinstance(row, dict) else row for row in self._data_list]
                 self._storage_row_counter = 0
-                self._mode = self._STORAGE_MODE
+                self._mode = self.Mode.STORAGE
             elif plan.kind is VariableSourcePlanKind.FULL_LOAD:
                 self._full_load_iterator = iter(plan.data) if plan.data is not None else None
-                self._mode = self._FULL_LOAD_MODE
+                self._mode = self.Mode.FULL_LOAD
             else:
                 self._iterator = iter(plan.data) if plan.data is not None else None
-                self._mode = self._ITERATOR_MODE
+                self._mode = self.Mode.ITERATOR
         elif statement.entity is not None:
             # Create entity builder
             dataset = statement.dataset or ctx.default_dataset
@@ -152,7 +144,7 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                     cause=type(error).__name__,
                 ) from error
 
-            self._mode = self._ENTITY_MODE
+            self._mode = self.Mode.ENTITY_BUILDER
         else:
             self._determine_generation_mode(ctx)
 
@@ -191,46 +183,42 @@ class VariableTask(KeyVariableTask, CommonSubTask):
         Generate data for element <variable>
         """
 
-        if self._mode == self._ITERATOR_MODE:
+        if self._mode == self.Mode.ITERATOR:
             value = next(self._iterator) if self._iterator is not None else None
-        elif self._mode == self._ENTITY_MODE:
+        elif self._mode == self.Mode.ENTITY_BUILDER:
             value = self._entity_generator.generate()
-        elif self._mode == self._WEIGHTED_SOURCE_MODE:
+        elif self._mode == self.Mode.WEIGHTED_SOURCE:
             value = self._weighted_data_source.generate()
-        elif self._mode == self._ITERATION_SELECTOR_MODE:
+        elif self._mode == self.Mode.ITERATION_SELECTOR:
             if self._selector is None:
                 raise ValueError(f"No selector value in statement: {self._statement.name}")
             value = load_variable_iteration_selector(ctx, self._client, self._selector, self._prefix, self._suffix)
-        elif self._mode == self._FULL_LOAD_MODE:
+        elif self._mode == self.Mode.FULL_LOAD:
             if self._full_load_iterator is None:
                 raise StopIteration(f"No more rows to iterate for statement: {self._statement.name}")
             value = next(self._full_load_iterator)
-        elif self._mode == self._STORAGE_MODE:
+        elif self._mode == self.Mode.STORAGE:
             value = self._compute_storage_value()
-        elif self._mode == self._LAZY_ITERATOR_MODE:
+        elif self._mode == self.Mode.LAZY_ITERATOR:
             if self._statement.source is None:
                 return None
             source_iterator = load_variable_lazy_source(ctx, self._statement, self._pagination)
             if self._statement.distribution.needs_whole_pool(self._statement.unique):
                 self._full_load_iterator = source_iterator
-                self._mode = self._FULL_LOAD_MODE
+                self._mode = self.Mode.FULL_LOAD
                 if self._full_load_iterator is None:
                     raise StopIteration("No more rows to iterate for statement: " + self._statement.name)
                 value = next(self._full_load_iterator)
             else:
                 self._iterator = source_iterator
-                self._mode = self._ITERATOR_MODE
+                self._mode = self.Mode.ITERATOR
                 value = next(self._iterator) if self._iterator is not None else None
         else:
             value = self._generate_value(ctx)
 
         # evaluate data with source script
         if self._source_script:
-            if self._mode in [
-                VariableTask._ITERATOR_MODE,
-                VariableTask._WEIGHTED_SOURCE_MODE,
-                VariableTask._FULL_LOAD_MODE,
-            ]:
+            if self._mode in (self.Mode.ITERATOR, self.Mode.WEIGHTED_SOURCE, self.Mode.FULL_LOAD):
                 # Default variable prefix and suffix
                 setup_ctx = ctx
                 while isinstance(setup_ctx, GenIterContext):
