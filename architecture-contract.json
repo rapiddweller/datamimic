@@ -2080,7 +2080,7 @@
         "id": "CE-RDBMS-TABLE-INSPECTION",
         "module": "datamimic_ce.engine.io.clients.rdbms_client",
         "name": "sqlalchemy.inspect",
-        "line": 717,
+        "scope": "RdbmsClient._find_table_name",
         "loads": [
           "sqlalchemy",
           "sqlite3",
