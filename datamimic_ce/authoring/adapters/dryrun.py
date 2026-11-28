@@ -1330,8 +1330,6 @@ def _validated_worker_success(message: _WorkerSuccess, max_count: int | None = N
         raise ValueError("inconsistent smoke-export counters")
     if not smoke.requested and (any(counters) or message.smoke_diagnostics):
         raise ValueError("unrequested smoke-export contains execution facts")
-    for diagnostic in message.smoke_diagnostics:
-        Diagnostic.model_validate(diagnostic)
     return message
 
 

@@ -13,7 +13,6 @@ from pydantic import ValidationError
 from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.adapters.workspace import init_project
 from datamimic_ce.authoring.domain.capabilities import CapabilityDomain
-from datamimic_ce.authoring.domain.diagnostics import DiagnosticPhase
 from datamimic_ce.authoring.domain.dm_json import DmJsonDocumentV1
 from datamimic_ce.authoring.domain.project_run import ProjectParam, ProjectRunRequest, ProjectRunResult
 from datamimic_ce.authoring.domain.project_scaffold import ProjectPattern
@@ -34,7 +33,6 @@ from datamimic_ce.authoring.domain.requests import (
     RunRequest,
     RunResult,
 )
-from datamimic_ce.authoring.domain.validation import validation_diagnostics
 from datamimic_ce.domains.api import get_datamimic_lib_version
 from datamimic_ce.interfaces.cli.presenter import NEXT_STEP_HINT, CliOutputFormat, build_exit_code, emit_authoring
 
@@ -151,10 +149,7 @@ def compile_document(
         request = CompileDocumentRequest(document=document, descriptor_path=PurePosixPath(descriptor_path))
     except ValidationError as error:
         emit_authoring(
-            RejectedCompileDocument(
-                phase=DiagnosticPhase.COMPILE,
-                diagnostics=validation_diagnostics(error, phase=DiagnosticPhase.COMPILE),
-            ),
+            RejectedCompileDocument.from_model_validation(error),
             output_format,
             exit_code=1,
         )
@@ -185,10 +180,7 @@ def decompile_document(
         request = DecompileDocumentRequest(xml=_read(source), descriptor_path=logical_path)
     except ValidationError as error:
         emit_authoring(
-            RejectedDecompileDocument(
-                phase=DiagnosticPhase.DECOMPILE,
-                diagnostics=validation_diagnostics(error, phase=DiagnosticPhase.DECOMPILE),
-            ),
+            RejectedDecompileDocument.from_model_validation(error),
             output_format,
             exit_code=1,
         )
@@ -318,7 +310,7 @@ def lint(
         )
     except ValidationError as error:
         emit_authoring(
-            LintResult(ok=False, diagnostics=validation_diagnostics(error)),
+            LintResult.from_model_validation(error),
             output_format,
             exit_code=1,
         )
@@ -357,7 +349,7 @@ def _run(
         )
     except ValidationError as error:
         emit_authoring(
-            RunResult(ok=False, phase=phase, diagnostics=validation_diagnostics(error)),
+            RunResult.from_model_validation(error, phase),
             output_format,
             exit_code=1,
         )

@@ -90,8 +90,9 @@ def test_library_check_refuses_reserved_string_in_inline_python(tmp_path: Path) 
     result = _build(tmp_path, "library_reserved_name.xml")
     assert result.outcome == "rejected"
     [diagnostic] = [item for item in result.diagnostics if item.code is AuthoringRuleId.SIDE_EFFECT]
-    assert "Python library line 1 uses a file or dynamic-code builtin" in diagnostic.message
+    assert "Bounded Python library uses a file or dynamic-code builtin" in diagnostic.message
     assert diagnostic.path == ("descriptor", "datamimic.xml")
+    assert diagnostic.location is not None and diagnostic.location.script_line == 1
 
 
 def _bounded_run(filename: str):

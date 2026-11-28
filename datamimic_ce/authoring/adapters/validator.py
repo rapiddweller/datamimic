@@ -109,11 +109,12 @@ class CeDescriptorValidator:
                         raise TypeError("parser validation location must contain only strings or integers") from error
                     # XML namespace URIs are values, while the local name identifies the attribute.
                     attribute = location[0] if len(location) == 1 else None
-                    if isinstance(attribute, str) and attribute.startswith("{"):
+                    if isinstance(attribute, str):
                         attribute = attribute.rpartition("}")[2]
                         location = (attribute,)
                     if (
-                        detail.get("type") in {"extra_forbidden", "missing"}
+                        "type" in detail
+                        and detail["type"] in ("extra_forbidden", "missing")
                         and isinstance(attribute, str)
                         and projected_location is not None
                         and projected_location.line is not None

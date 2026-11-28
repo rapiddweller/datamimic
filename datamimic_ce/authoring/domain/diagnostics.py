@@ -12,7 +12,7 @@ from typing import Annotated, Literal
 from pydantic import Field, JsonValue, StrictStr, model_validator
 
 from datamimic_ce.errors.catalog import get_issue_definition
-from datamimic_ce.errors.codes import IssueCode, IssueSeverity
+from datamimic_ce.errors.codes import IssueCode
 from datamimic_ce.errors.context import DescriptorLocation
 
 from .common import AuthoringModel, NonEmptyStrictStr
@@ -165,7 +165,7 @@ class Diagnostic(AuthoringModel):
             phase=phase,
             message=message or definition.cause,
             remediation=remediation or definition.resolution,
-            severity="warning" if definition.severity is IssueSeverity.WARNING else "error",
+            severity="warning" if definition.severity == "warning" else "error",
             path=path,
             location=location,
             expected=expected,

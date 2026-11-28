@@ -50,10 +50,10 @@ def _syntax_remediation(item: ErrorDetails, prefix: tuple[str | int, ...]) -> st
 
 
 def _syntax_location(item: ErrorDetails, prefix: tuple[str | int, ...]) -> DiagnosticLocation | None:
-    if item.get("type") != "json_invalid":
+    if item["type"] != "json_invalid":
         return None
-    # pydantic-core returns the parser position in ctx.error, not as separate fields.
-    match = re.search(r" at line (\d+) column (\d+)$", str((item.get("ctx") or {}).get("error", "")))
+    # pydantic-core renders the parser position at the end of the JSON syntax error.
+    match = re.search(r" at line (\d+) column (\d+)$", item["msg"])
     if match is None:
         return None
     return DiagnosticLocation(

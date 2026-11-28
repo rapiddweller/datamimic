@@ -200,9 +200,10 @@ class StatementParser(ABC):
             validation_errors: tuple[dict[str, object], ...] = tuple(
                 {"loc": tuple(detail["loc"]), "type": detail["type"], "msg": detail["msg"]} for detail in details
             )
+            line = self._element.sourceline if isinstance(self._element, XmlElement) else None
             raise parser_validation_error(
                 code=IssueCode.PARSER_VALIDATION_FAILED,
                 details=msg_err,
                 validation_errors=validation_errors,
-                location=DescriptorLocation(xml_tag(self._element), line=self._element.sourceline),
+                location=DescriptorLocation(xml_tag(self._element), line=line),
             ) from err

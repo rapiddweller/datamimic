@@ -13,15 +13,15 @@ from types import TracebackType
 _DESCRIPTOR_STACK: ContextVar[tuple[str, ...]] = ContextVar("dm_descriptor_stack", default=())
 
 
+def get_descriptor_stack() -> tuple[str, ...]:
+    """The active descriptor scopes, beginning with the entry."""
+    return _DESCRIPTOR_STACK.get()
+
+
 def get_descriptor_name() -> str | None:
     """Return the active descriptor name when in a descriptor scope."""
-    stack = _DESCRIPTOR_STACK.get()
+    stack = get_descriptor_stack()
     return stack[-1] if stack else None
-
-
-def get_include_chain() -> tuple[str, ...]:
-    """Descriptors containing the active descriptor, beginning with the entry."""
-    return _DESCRIPTOR_STACK.get()[:-1]
 
 
 class _DescriptorScope(AbstractContextManager[None]):
@@ -30,11 +30,12 @@ class _DescriptorScope(AbstractContextManager[None]):
         self._token: Token[tuple[str, ...]] | None = None
 
     def __enter__(self) -> None:
-        stack = _DESCRIPTOR_STACK.get()
+        stack = get_descriptor_stack()
         if self._name is None:
-            self._token = _DESCRIPTOR_STACK.set(())
-        elif self._name != get_descriptor_name():
-            self._token = _DESCRIPTOR_STACK.set((*stack, self._name))
+            stack = ()
+        elif not stack or self._name != stack[-1]:
+            stack = (*stack, self._name)
+        self._token = _DESCRIPTOR_STACK.set(stack)
 
     def __exit__(
         self,
