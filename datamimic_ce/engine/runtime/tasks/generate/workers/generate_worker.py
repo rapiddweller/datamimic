@@ -68,7 +68,7 @@ _KEY_TYPE_KINDS = {
 
 def _create_table_columns(stmt: GenerateStatement, rows: list[dict[str, object]]) -> tuple[tuple[str, ColumnKind], ...]:
     """The createTable columns: each field of the first written rows in first-seen order, typed by its key's type=,
-    else by its non-null values. Fails with I929 when a column has no type or mixed types, or a primary-key field is
+    else by its non-null values. Fails with I984 when a column has no type or mixed types, or a primary-key field is
     missing."""
     declared = {
         child.name: _KEY_TYPE_KINDS[child.type]
@@ -392,7 +392,7 @@ class GenerateWorker:
 
     @staticmethod
     def _assert_table_columns(stmt: GenerateStatement, table_columns: frozenset[str], rows: list[dict[str, object]]):
-        """Fail with I930 when a later page writes a field that the first page did not write: only the first page's
+        """Fail with I985 when a later page writes a field that the first page did not write: only the first page's
         fields were checked against the table (created or existing), so the later field is unproven."""
         extra = sorted({field for row in rows for field in row} - table_columns)
         if extra:

@@ -639,7 +639,7 @@ class RdbmsClient(DatabaseClient):
     ) -> None:
         """Create the table when no table of that name exists (createTable); never alter or drop one.
 
-        An existing table must have every written column and the same primary key, else the run fails with I930. The
+        An existing table must have every written column and the same primary key, else the run fails with I985. The
         table name lookup ignores case, as the row writes do; column names compare exactly. PostgreSQL runs
         serialize with other runs using this protocol; unrelated DDL does not take this lock."""
         with _normalize_database_errors("rdbms.create_table") as failures:

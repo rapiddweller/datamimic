@@ -318,12 +318,12 @@ is a plain alias of `<key>` as before. DM JSON now keeps the kind `id` (decompil
 failed with `table_not_found` until a hand-written DDL script ran outside the proof. The run creates the table once,
 before the first row, with SQLAlchemy for the client's dbms. It never alters or drops a table.
 
-- `I929` (`OPERATION_CREATE_TABLE_INVALID`): no `<id>` element, no database (RDBMS) target, a dbms
+- `I984` (`OPERATION_CREATE_TABLE_INVALID`): no `<id>` element, no database (RDBMS) target, a dbms
   other than `sqlite` or `postgresql` (their inferred TEXT keys and NUMERIC columns are invalid or rounded
   elsewhere), an `.update` or `.delete` target, a nested generate, or a column without a type (only null values, mixed value types such as `10` and `10.5`, or a value type other than `str`, `int`, `float`, `bool`,
   `Decimal`, `date`, `datetime`). Fix: write the primary-key field as `<id>`, add the database target, or set
   `type=` on the key. A `createTable` value other than `true` or `false` fails as a model error; `createTable` on `clear` or `drop` fails with `I928`.
-- `I930` (`OPERATION_TABLE_DRIFT`): the table exists without a column that the generate writes, or with another primary
+- `I985` (`OPERATION_TABLE_DRIFT`): the table exists without a column that the generate writes, or with another primary
   key. The message lists the missing columns and both primary keys. Names are compared exactly. Extra columns
   are allowed, and column types are not compared. A later page that writes a
   field the created table lacks fails too, instead of losing the field. Change the model, or migrate

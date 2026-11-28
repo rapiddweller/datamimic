@@ -21,7 +21,7 @@
     {
       "name": "no_id_element",
       "diagnostic": "child_execution",
-      "issue": "I929",
+      "issue": "I984",
       "patch": {
         "file": "datamimic.xml",
         "old": "<id name=\"invoice_id\"",
