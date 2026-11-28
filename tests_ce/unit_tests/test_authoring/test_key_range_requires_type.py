@@ -33,7 +33,7 @@ def test_lint_names_the_rule_and_exact_element(fixture: str, rule: str, line: in
         path.read_text(encoding="utf-8")
     )
     assert not result.ok
-    named = [item for item in result.diagnostics if item.code == rule]
+    named = [item for item in result.diagnostics if item.rule == rule]
     assert named and named[0].path[2:] == ("/setup/generate/key", "line", line)
 
 

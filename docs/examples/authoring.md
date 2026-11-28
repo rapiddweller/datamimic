@@ -7,6 +7,18 @@ them voids the proof. Expectations and roles live in `acceptance/build.json`, so
 survive edits to the XML. Use `datamimic authoring schema --name build_request_v5`
 for every acceptance field.
 
+## Read a diagnostic
+
+Use `code` to identify the defect. A catalog-backed error or warning uses its
+`Ixxx` or `Wxxx` code. A lint rule also reports its `DMxxx` ID in `rule`; a rule
+without a catalog issue uses `code: "validation"`. For example, a `<generate>`
+without its required `name` reports `code: "I605"` and `rule: "DM104"`.
+
+Read `location` for the file, line, column, and any `include_chain`, `path` for
+the affected model field, and `remediation` for the repair. The human-readable
+`message` does not append a copy of the position or exception. Treat
+`severity: "warning"` as advisory.
+
 ## Nested foreign keys
 
 Two parents, two child rows per parent. The child carries the real `parent.id`;
@@ -183,6 +195,42 @@ Build, `authoring run` and smoke export write no file into the project. Only
 the directory is a new task id for each run. The example above writes
 `output/order_report/order_report.json`. The complete project is
 `tests_ce/scenarios/s22_file_filter`.
+
+## Grouped totals and counts
+
+Build can check allocations against the product that declares the available
+stock. This entry in `acceptance/build.json`'s `expectations` array sums
+`quantity` from `allocations` by `lot_id` and requires that each total stay at
+or below the corresponding `lots.quantity`:
+
+```jsonc
+{
+  "kind": "group_sum",
+  "subject": {"kind": "product", "product": "allocations"},
+  "group_by": "lot_id",
+  "field": "quantity",
+  "reference": {
+    "subject": {"kind": "product", "product": "lots"},
+    "key": "lot_id",
+    "field": "quantity",
+    "comparison": "at_most"
+  }
+}
+```
+
+The reference must list each group once. An unallocated lot contributes a zero
+total; an allocation for an unlisted lot fails. Omit `comparison` to require
+equality, for example when matching payment allocations to payment amounts.
+Amounts add exactly, including decimal strings. Diagnostics name the fields
+and count failing groups without quoting keys or amounts.
+
+To compare two sums within a single product, replace `reference` with
+`"equals_field": "credit_cents"` and set `field` to `"debit_cents"`, for example.
+That form checks only observed groups and refuses a product with no groups.
+Use `group_count` for a reference product that declares an exact row count per
+group instead of an amount. See `s48_order_allocation`, `s49_ledger_postings`
+and `s47_course_timetable` under `tests_ce/scenarios`, and
+`datamimic authoring reference --topic expectations` for the live contract.
 
 ## Database sink table
 
