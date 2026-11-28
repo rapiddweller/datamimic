@@ -68,11 +68,23 @@ def _key(setup_context: SetupContext, **attributes: str) -> KeyTask:
         ({"values": "('a', 'b')"}, Mode.VALUES),
         ({"generator": "IntegerGenerator(min=1, max=3)"}, Mode.GENERATOR),
         ({"generator": "IntegerGenerator(min=1, max=this.n)"}, Mode.LAZY_GENERATOR),
+        ({"generator": "IntegerGenerator(min=1, max=this['n'])"}, Mode.LAZY_GENERATOR),
         ({"pattern": "[a-z]{3}"}, Mode.PATTERN),
         ({"type": "int", "min": "1", "max": "3"}, Mode.GENERATOR),
         ({"type": "string"}, Mode.RANDOM),
     ],
-    ids=["script", "constant", "string", "values", "generator", "lazy_generator", "pattern", "range", "random"],
+    ids=[
+        "script",
+        "constant",
+        "string",
+        "values",
+        "generator",
+        "lazy_generator",
+        "lazy_generator_mapping",
+        "pattern",
+        "range",
+        "random",
+    ],
 )
 def test_key_attributes_choose_the_mode(setup_context: SetupContext, attributes: dict[str, str], mode: Mode) -> None:
     assert _key(setup_context, **attributes)._mode is mode
@@ -101,3 +113,25 @@ def test_an_unknown_generator_class_stops_at_construction_with_its_typed_error(s
 def test_a_name_that_exists_only_per_row_is_built_on_the_first_row(setup_context: SetupContext) -> None:
     task = _key(setup_context, generator="IntegerGenerator(min=1, max=nosuchvariable)")
     assert task._mode is Mode.LAZY_GENERATOR
+
+
+class _RaisesInConstructor:
+    def __init__(self, kind: str = "attribute"):
+        if kind == "attribute":
+            self.missing_attribute  # noqa: B018
+        elif kind == "name":
+            missing_name  # type: ignore[name-defined]  # noqa: F821, B018
+        else:
+            {}["missing_key"]
+
+
+@pytest.mark.parametrize("kind", ["attribute", "name", "key"])
+def test_a_lookup_that_fails_inside_the_constructor_stops_at_construction(
+    setup_context: SetupContext, kind: str
+) -> None:
+    """Only a lookup the expression itself cannot resolve waits for a row; the same error type raised by the
+    constructor's own code is a real init error, also for a generate with no rows."""
+    setup_context.namespace["RaisesInConstructor"] = _RaisesInConstructor
+    with pytest.raises(TaskConfigError) as raised:
+        _key(setup_context, generator=f"RaisesInConstructor(kind='{kind}')")
+    assert raised.value.issue_code == IssueCode.TASK_EXPRESSION_EVAL_FAILED

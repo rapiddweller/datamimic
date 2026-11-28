@@ -33,7 +33,7 @@ from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFor
 from datamimic_ce.engine.io.api import DataSourcePagination, WeightedDataSource, unique_value_iter
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
-from datamimic_ce.engine.runtime.scripting.evaluation import interpolate_variables
+from datamimic_ce.engine.runtime.scripting.evaluation import interpolate_variables, is_unresolved_lookup
 from datamimic_ce.engine.runtime.tasks.base.task import Task
 from datamimic_ce.engine.runtime.tasks.values.construction.converters import create_converter_list
 from datamimic_ce.engine.runtime.tasks.values.construction.factory import (
@@ -161,13 +161,13 @@ class KeyVariableTask(Task):
             # Two cases wait for the first execution, where the row context binds them or the database may
             # answer again; every other init failure (bad argument, syntax, unknown class) surfaces now with
             # its own typed error:
-            # - a name that exists per row (generator="IntegerGenerator(max=this.n)") cannot resolve against
-            #   the setup context;
+            # - a name that exists per row (generator="IntegerGenerator(max=this.n)" or max=this['n']) cannot
+            #   resolve against the setup context; a lookup that fails inside the constructor is not that;
             # - SequenceTableGenerator reserves its block while it is built for a page, and a database failure
             #   there (OperationError) is retried once on the first row.
             except UserErrorBase as error:
                 if not (
-                    isinstance(error.__cause__, (NameError, AttributeError))
+                    is_unresolved_lookup(error)
                     or (isinstance(error, OperationError) and _builds_sequence_table(expression))
                 ):
                     raise

@@ -246,15 +246,36 @@ def _replaced_engine_names(
     )
 
 
+_EXPRESSION_FILE = "<expression>"
+
+
 def _compile(expression: str) -> types.CodeType:
     # eval() of a string drops leading spaces and tabs; compile() does not, so drop them here (script=" a + b").
-    return compile(expression.lstrip(" \t"), "<expression>", "eval")
+    return compile(expression.lstrip(" \t"), _EXPRESSION_FILE, "eval")
 
 
 # As in EE: the same expression text runs once per row, so compile it once.
 @lru_cache(maxsize=8192)
 def _compiled(expression: str) -> types.CodeType:
     return _compile(expression)
+
+
+def is_unresolved_lookup(error: BaseException) -> bool:
+    """Whether a TaskConfigError from ``evaluate_python`` stands for a name, ``row.x`` or ``row['x']`` that the
+    namespace cannot resolve (yet): the failing frame is the expression itself or a row accessor of this module.
+    A lookup that failed inside a call the expression made, such as a constructor, is not one."""
+    cause = error.__cause__
+    if not isinstance(cause, (NameError, AttributeError, KeyError)):
+        return False
+    in_expression = False
+    link = cause.__traceback__
+    while link is not None:
+        if link.tb_frame.f_code.co_filename == _EXPRESSION_FILE:
+            in_expression = True
+        elif in_expression and link.tb_frame.f_globals["__name__"] != __name__:
+            return False
+        link = link.tb_next
+    return in_expression
 
 
 def evaluate_python(
@@ -507,4 +528,5 @@ __all__ = [
     "evaluate_python",
     "evaluate_source_template",
     "interpolate_variables",
+    "is_unresolved_lookup",
 ]

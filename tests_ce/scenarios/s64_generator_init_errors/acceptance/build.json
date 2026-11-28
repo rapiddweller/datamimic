@@ -3,7 +3,8 @@
   "expectations": [
     {"kind": "exact_count", "subject": {"kind": "product", "product": "tickets"}, "count": 3},
     {"kind": "exact_count", "subject": {"kind": "product", "product": "idle"}, "count": 0},
-    {"kind": "range", "subject": {"kind": "product", "product": "tickets"}, "field": "seats", "minimum": 1, "maximum": 2}
+    {"kind": "range", "subject": {"kind": "product", "product": "tickets"}, "field": "seats", "minimum": 1, "maximum": 2},
+    {"kind": "range", "subject": {"kind": "product", "product": "tickets"}, "field": "berths", "minimum": 1, "maximum": 2}
   ],
   "product_roles": []
 }
