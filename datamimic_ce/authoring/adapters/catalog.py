@@ -45,6 +45,8 @@ from datamimic_ce.authoring.domain.reference import (
     AuthoringLearningReference,
     AuthoringVariantReference,
     ProjectStarter,
+    ReferenceLookupResult,
+    ReferenceNotFound,
     ReferenceResult,
 )
 from datamimic_ce.authoring.domain.requests import BuildRequestV5, ReferenceRequest, ReferenceTopic
@@ -246,7 +248,30 @@ class CeDslCatalog:
         document, acceptance = _example(name)
         return ProjectStarter(entry_xml=self._codec.compile(document).xml, acceptance=acceptance)
 
-    def reference(self, request: ReferenceRequest) -> ReferenceResult:
+    def reference(self, request: ReferenceRequest) -> ReferenceLookupResult:
+        if request.name is None:
+            return self._topic(request)
+        if request.topic == ReferenceTopic.OVERVIEW:
+            return ReferenceNotFound(
+                topic=request.topic,
+                name=request.name,
+                content="The overview topic has no named entries.",
+                available_names=(),
+            )
+        result = self._topic(request)
+        if result.rules if result.rules is not None else result.entries:
+            return result
+        listing = self._topic(ReferenceRequest(topic=request.topic))
+        available = (
+            tuple(str(rule.rule_id) for rule in listing.rules)
+            if listing.rules is not None
+            else tuple(entry.name for entry in listing.entries or ())
+        )
+        return ReferenceNotFound(
+            topic=request.topic, name=request.name, content=result.content, available_names=available
+        )
+
+    def _topic(self, request: ReferenceRequest) -> ReferenceResult:
         match request.topic:
             case ReferenceTopic.OVERVIEW:
                 return ReferenceResult(
