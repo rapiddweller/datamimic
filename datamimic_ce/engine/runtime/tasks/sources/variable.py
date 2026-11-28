@@ -62,8 +62,7 @@ def _variable_data_plan(
             kind=VariableSourcePlanKind.STORAGE if force_full_pool else VariableSourcePlanKind.ITERATOR
         )
 
-    loads_all = stmt.distribution.loads_all or bool(stmt.unique)
-    if not loads_all:
+    if not stmt.distribution.needs_whole_pool(stmt.unique):
         return VariableSourcePlan(
             kind=VariableSourcePlanKind.STORAGE if force_full_pool else VariableSourcePlanKind.ITERATOR,
             data=data,
@@ -104,7 +103,7 @@ def plan_variable_source(
     if source is None:
         raise task_config_error(code=IssueCode.TASK_VARIABLE_SOURCE_UNSUPPORTED, name=stmt.name, source=stmt.source)
 
-    loads_all = stmt.distribution.loads_all or bool(stmt.unique)
+    loads_all = stmt.distribution.needs_whole_pool(stmt.unique)
     source_format = source_file_format_for(EL_VARIABLE, source)
     separator = stmt.separator or context.default_separator
 
@@ -248,7 +247,7 @@ def load_variable_lazy_source(
     data = context.evaluate_python_expression(stmt.source)
     if not isinstance(data, Iterable):
         raise TypeError(f"Variable source for '{stmt.name}' must be iterable")
-    if stmt.distribution.loads_all or stmt.unique:
+    if stmt.distribution.needs_whole_pool(stmt.unique):
         seed = context.root.stable_distribution_seed(stmt.full_name)
         selected: Iterable[object] = (
             get_unique_data(data, pagination, seed, f"<variable> '{stmt.name}'")

@@ -54,11 +54,8 @@ def finalize_nested_key_source(
     data: object,
 ) -> object:
     """Apply nested-key source templating and distribution in one boundary owner."""
-    source_scripted = (
-        stmt.source_script if stmt.source_script is not None else bool(context.root.default_source_scripted)
-    )
     result = data
-    if source_scripted:
+    if context.root.source_scripted(stmt.source_script):
         prefix = stmt.variable_prefix or context.root.default_variable_prefix
         suffix = stmt.variable_suffix or context.root.default_variable_suffix
         evaluated = evaluate_source_template(context, result, prefix, suffix)
