@@ -135,6 +135,15 @@ AUTHORING_RULE_CATALOG: tuple[RuleCatalogEntry, ...] = (
         "count; a group without rows counts 0.",
     ),
     RuleCatalogEntry(
+        rule_id=ExpectationIntentKind.RUNNING_BALANCE,
+        category="expectation",
+        severity="error",
+        description="The exact running balance must meet its inclusive minimum after every posting.",
+        applicability="Explicit running-balance expectations on complete product captures.",
+        owner=RuleOwner.EXPECTATION,
+        remediation="Check the signed amounts and add order fields that distinguish all postings within each group.",
+    ),
+    RuleCatalogEntry(
         rule_id=AuthoringRuleId.MISSING_EXPECTATION,
         category="expectation",
         severity="error",
