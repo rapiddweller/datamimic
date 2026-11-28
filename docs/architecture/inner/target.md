@@ -420,9 +420,8 @@ Remaining limits are explicit:
   The operation-level splits above remain implementation acceptance work.
 
 `make architecture-definition-check` validates the recursive definition and its
-mapping, not current architecture conformance. `make architecture-check` remains
-strict and is expected to fail until the source reaches this target.
-Do not rewrite `known-violations.json` to absorb these newly exposed findings.
+mapping. `make architecture-check` also checks the current code against the
+contract: a rule FAIL fails the check; UNKNOWN remains visible in the report.
 The definition commit precedes production moves; descriptor inputs remain frozen.
 
 ## Delivery sequence and acceptance
