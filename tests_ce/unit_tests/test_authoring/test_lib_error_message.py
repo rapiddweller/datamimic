@@ -5,10 +5,9 @@
 """A project function that raises its own exception class shows the author's message in Build (#707)."""
 
 from datamimic_ce.authoring.adapters.bounded_executor import CeBoundedExecutor
-from datamimic_ce.authoring.domain.diagnostics import AuthoringSystemDiagnosticCode
 from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest
 from datamimic_ce.engine.io.failures import normalize_error_cause_for_transport
-from datamimic_ce.errors import ExternalFailureCause
+from datamimic_ce.errors import ExternalFailureCause, IssueCode
 
 _XML = """<setup rngSeed="1">
   <execute type="python">
@@ -40,7 +39,7 @@ def _failure(call: str):
 
 def test_a_class_the_project_defines_shows_its_message_and_does_not_crash_the_child() -> None:
     diagnostic = _failure("own")
-    assert diagnostic.code is AuthoringSystemDiagnosticCode.CHILD_EXECUTION
+    assert diagnostic.code is IssueCode.TASK_EXPRESSION_EVAL_FAILED
     assert "Infeasible: budget exhausted" in diagnostic.message
     assert "provides raised this error" in diagnostic.remediation
 

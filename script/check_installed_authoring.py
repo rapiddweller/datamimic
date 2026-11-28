@@ -215,7 +215,7 @@ def check_installed(with_mcp, checkout):
 
     invalid = '<setup><generate count="1"/></setup>'
     lint = application.lint(LintRequest(xml=invalid))
-    assert not lint.ok and any(item.ce_error is not None for item in lint.diagnostics), lint
+    assert not lint.ok and any(item.code == "I605" for item in lint.diagnostics), lint
     failed = application.dry_run(RunRequest(xml='<setup><generate name="rows" source="missing.csv"/></setup>'))
     assert not failed.ok and failed.diagnostics and not failed.products, failed
     (Path.cwd() / "rows.csv").write_text("id|name\n1|inside\n2|second\n", encoding="utf-8")

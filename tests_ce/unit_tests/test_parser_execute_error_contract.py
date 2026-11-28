@@ -107,7 +107,7 @@ def test_cli_lint_keeps_the_source_attribute_repair_location(tmp_path: Path) -> 
     result = CliRunner().invoke(app, ["authoring", "lint", str(path)])
     assert result.exit_code == 1
     diagnostic = json.loads(result.stdout)["diagnostics"][0]
-    assert diagnostic["ce_error"] == {"error_code": "E011", "issue_code": "I605"}
+    assert diagnostic["code"] == "I605"
     assert diagnostic["path"] == ["descriptor", "model.xml", "iterate", "attribute", "source"]
 
 

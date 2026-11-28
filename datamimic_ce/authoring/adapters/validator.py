@@ -25,14 +25,13 @@ from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
 from datamimic_ce.authoring.domain.diagnostics import (
     AuthoringRuleId,
     AuthoringSystemDiagnosticCode,
-    CeErrorIdentity,
     Diagnostic,
     DiagnosticLocation,
     DiagnosticPhase,
     diagnostic_location,
 )
 from datamimic_ce.authoring.domain.requests import IncludedDescriptor, IncludeGraphResult, LintResult
-from datamimic_ce.authoring.domain.rule_catalog import RuleSeverity, authoring_rule_definition
+from datamimic_ce.authoring.domain.rule_catalog import authoring_rule_definition
 from datamimic_ce.engine.dsl.api import (
     EL_DATABASE,
     EL_MONGODB,
@@ -43,7 +42,7 @@ from datamimic_ce.engine.dsl.api import (
 )
 from datamimic_ce.engine.dsl.parsers.base.client_config import ConnectionProfileLoader
 from datamimic_ce.errors import ATTRIBUTE_ESCAPE
-from datamimic_ce.errors.base import ParserValidationError, UserErrorBase
+from datamimic_ce.errors.base import MissingIncludeError, ParserValidationError, UserErrorBase
 from datamimic_ce.errors.codes import IssueCode
 
 # The parser reason may quote the descriptor, so the remediation names the two usual causes instead.
@@ -84,7 +83,6 @@ class CeDescriptorValidator:
                     logical_descriptor_path=logical_path.as_posix(),
                 )
         except UserErrorBase as error:
-            identity = CeErrorIdentity(error_code=error.code, issue_code=error.issue_code) if error.code else None
             prefix: tuple[str | int, ...] = ("descriptor", logical_path.as_posix())
             # I610 without a line is a forbidden DTD, not a syntax error, so the escape hint does not apply.
             if (
@@ -92,9 +90,7 @@ class CeDescriptorValidator:
                 and error.location is not None
                 and error.location.line is not None
             ):
-                return _not_well_formed(
-                    (*prefix, "line", error.location.line), identity, diagnostic_location(error.location)
-                )
+                return _not_well_formed((*prefix, "line", error.location.line), diagnostic_location(error.location))
             if error.location is not None:
                 prefix += (error.location.element_tag,)
                 if error.location.line is not None:
@@ -102,6 +98,8 @@ class CeDescriptorValidator:
                 if error.location.attribute is not None:
                     prefix += ("attribute", error.location.attribute)
             if isinstance(error, ParserValidationError) and error.validation_errors:
+                projected_location = diagnostic_location(error.location)
+                rules = _rule_diagnostics(parse_xml_source(xml), physical_path, logical_path)
                 diagnostics = []
                 for detail in error.validation_errors:
                     location = detail.get("loc", ())
@@ -109,17 +107,38 @@ class CeDescriptorValidator:
                         isinstance(part, str | int) for part in location
                     ):
                         raise TypeError("parser validation location must contain only strings or integers") from error
+                    # XML namespace URIs are values, while the local name identifies the attribute.
+                    attribute = location[0] if len(location) == 1 else None
+                    if isinstance(attribute, str):
+                        attribute = re.sub(r"^\{.*\}", "", attribute)
+                        location = (attribute,)
+                    if (
+                        "type" in detail
+                        and detail["type"] in ("extra_forbidden", "missing")
+                        and isinstance(attribute, str)
+                        and projected_location is not None
+                        and projected_location.line is not None
+                        and any(
+                            item.code is error.issue_code
+                            and item.location is not None
+                            and item.location.file == projected_location.file
+                            and item.location.element == projected_location.element
+                            and item.location.line == projected_location.line
+                            and item.location.attribute == attribute
+                            for item in rules
+                        )
+                    ):
+                        continue  # The lint rule already reports this exact attribute error.
                     diagnostics.append(
                         _diagnostic(
                             "Descriptor field failed parser validation.",
                             path=prefix + tuple(location),
-                            identity=identity,
-                            location=diagnostic_location(error.location),
+                            issue_code=error.issue_code,
+                            location=projected_location,
                         )
                     )
                 # The parser message may echo resolved (possibly secret) values; the static rule
                 # projection names the violated rule and the exact element, so its errors come first.
-                rules = _rule_diagnostics(parse_xml_source(xml), physical_path, logical_path)
                 errors = tuple(item for item in rules if item.severity == "error")
                 rest = tuple(item for item in rules if item.severity != "error")
                 return LintResult(ok=False, diagnostics=(*errors, *diagnostics, *rest))
@@ -131,7 +150,7 @@ class CeDescriptorValidator:
             refusal = _diagnostic(
                 "Descriptor failed parser validation.",
                 path=prefix,
-                identity=identity,
+                issue_code=error.issue_code,
                 location=diagnostic_location(error.location),
             )
             names_attribute = error.location is not None and error.location.attribute is not None
@@ -139,7 +158,6 @@ class CeDescriptorValidator:
         except etree.XMLSyntaxError as error:
             return _not_well_formed(
                 ("descriptor", logical_path.as_posix(), "line", error.position[0]),
-                None,
                 DiagnosticLocation(file=str(logical_path), line=error.position[0], column=error.position[1]),
             )
         except _IncludeBudgetExceeded as refusal:
@@ -187,14 +205,18 @@ class CeDescriptorValidator:
         try:
             physical_path = self._workspace_context.resolve_descriptor_path(logical_path)
             with resource_reader_scope(self._workspace_context.read_resource_bytes):
-                graph = literal_include_graph(parse_xml_source(xml), physical_path, chains=chains)
+                graph = literal_include_graph(
+                    parse_xml_source(xml), physical_path, logical_entry=str(logical_path), chains=chains
+                )
         except _BoundedPolicyRefusal as refusal:
             return _graph_refused(logical_path, str(refusal))  # static rule texts, no paths or values
         except _InvalidIncludedXml as error:
+            syntax = error.position[0] is not None
             return _graph_refused(
                 logical_path,
-                "An included step is not well-formed XML.",
-                _ESCAPE_HINT,
+                "An included step is not well-formed XML." if syntax else "An included step declares a DTD.",
+                _ESCAPE_HINT if syntax else "Remove the DOCTYPE declaration from the included step.",
+                issue_code=IssueCode.PARSER_DESCRIPTOR_INVALID_XML,
                 location=DiagnosticLocation(
                     file=error.chain[-1],
                     line=error.position[0],
@@ -203,8 +225,20 @@ class CeDescriptorValidator:
                     include_chain=(str(logical_path), *error.chain[:-1]),
                 ),
             )
+        except MissingIncludeError as error:
+            return _graph_refused(
+                logical_path,
+                "An included file is missing.",
+                issue_code=IssueCode.INCLUDE_FILE_NOT_FOUND,
+                location=diagnostic_location(error.location),
+            )
         except etree.XMLSyntaxError:
-            return _graph_refused(logical_path, "An included step is not well-formed XML.", _ESCAPE_HINT)
+            return _graph_refused(
+                logical_path,
+                "An included step is not well-formed XML.",
+                _ESCAPE_HINT,
+                issue_code=IssueCode.PARSER_DESCRIPTOR_INVALID_XML,
+            )
         except (ValueError, OSError):
             return _graph_refused(logical_path, "An included file is missing or lies outside the workspace.")
         steps: list[tuple[str, str, str]] = []
@@ -292,10 +326,9 @@ def _rule_diagnostics(
     ):
         definition = authoring_rule_definition(finding.rule)
         diagnostics.append(
-            Diagnostic(
-                code=finding.rule,
+            Diagnostic.from_rule(
+                definition,
                 phase=DiagnosticPhase.XML,
-                message=definition.explanation,
                 path=(
                     *location,
                     finding.path,
@@ -305,15 +338,12 @@ def _rule_diagnostics(
                     file=step_uri if step_uri is not None else str(logical_path),
                     line=finding.line,
                     element=finding.element,
+                    attribute=finding.attribute,
                     include_chain=include_chain,
                 ),
-                allowed_values=finding.allowed_names,
-                severity="error"
-                if finding.severity is RuleSeverity.ERROR
-                else ("warning" if finding.severity is RuleSeverity.WARNING else "info"),
-                remediation=definition.fix_hint
-                if finding.names_only_fix is None
-                else f"{definition.fix_hint} {finding.names_only_fix}",
+                allowed_names=finding.allowed_names,
+                severity=finding.severity,
+                names_only_fix=finding.names_only_fix,
             )
         )
     return tuple(diagnostics)
@@ -323,28 +353,40 @@ def _diagnostic(
     message: str,
     *,
     path: tuple[str | int, ...],
-    identity: CeErrorIdentity | None = None,
+    issue_code: IssueCode | None = None,
     location: DiagnosticLocation | None = None,
     remediation: str = "Repair the indicated descriptor field or its workspace-local resource configuration.",
 ) -> Diagnostic:
+    if issue_code is not None:
+        return Diagnostic.from_issue(
+            issue_code,
+            phase=DiagnosticPhase.XML,
+            message=message,
+            path=path,
+            location=location,
+            remediation=remediation,
+        )
     return Diagnostic(
         code=AuthoringSystemDiagnosticCode.DESCRIPTOR,
         phase=DiagnosticPhase.XML,
         message=message,
         path=path,
-        ce_error=identity,
         location=location,
         remediation=remediation,
     )
 
 
-def _not_well_formed(
-    path: tuple[str | int, ...], identity: CeErrorIdentity | None, location: DiagnosticLocation | None
-) -> LintResult:
+def _not_well_formed(path: tuple[str | int, ...], location: DiagnosticLocation | None) -> LintResult:
     return LintResult(
         ok=False,
         diagnostics=(
-            _diagnostic(_NOT_WELL_FORMED, path=path, identity=identity, location=location, remediation=_ESCAPE_HINT),
+            _diagnostic(
+                _NOT_WELL_FORMED,
+                path=path,
+                issue_code=IssueCode.PARSER_DESCRIPTOR_INVALID_XML,
+                location=location,
+                remediation=_ESCAPE_HINT,
+            ),
         ),
     )
 
@@ -406,20 +448,29 @@ def _graph_refused(
     remediation: str | None = None,
     *,
     location: DiagnosticLocation | None = None,
+    issue_code: IssueCode | None = None,
 ) -> IncludeGraphResult:
-    return IncludeGraphResult(
-        ok=False,
-        diagnostics=(
-            catalog_diagnostic(
-                AuthoringRuleId.INCLUDE,
-                message,
-                phase=DiagnosticPhase.POLICY,
-                path=("descriptor", str(path), "include"),
-                remediation=remediation,
-                location=location,
-            ),
-        ),
+    field_path = ("descriptor", str(path), "include")
+    diagnostic = (
+        Diagnostic.from_issue(
+            issue_code,
+            phase=DiagnosticPhase.XML,
+            message=message,
+            path=field_path,
+            remediation=remediation,
+            location=location,
+        )
+        if issue_code is not None
+        else catalog_diagnostic(
+            AuthoringRuleId.INCLUDE,
+            message,
+            phase=DiagnosticPhase.POLICY,
+            path=field_path,
+            remediation=remediation,
+            location=location,
+        )
     )
+    return IncludeGraphResult(ok=False, diagnostics=(diagnostic,))
 
 
 def _rejected(path: PurePosixPath, message: str) -> LintResult:

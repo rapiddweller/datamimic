@@ -4,7 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-"""Diagnostic contract ("diagnostics v1") shared by the CLI and the MCP tools."""
+"""Internal XML lint findings; the validator projects them to the public Authoring diagnostic."""
 
 from pydantic import BaseModel, Field
 
@@ -27,6 +27,7 @@ class Diagnostic(BaseModel):
     names_only_fix: str | None = Field(default=None, exclude=True)
     # The registered values of the attribute, shown by Build as allowed_values; the written value is never in it.
     allowed_names: tuple[str, ...] | None = Field(default=None, exclude=True)
+    attribute: str | None = Field(default=None, exclude=True)
 
 
 class LintResult(BaseModel):

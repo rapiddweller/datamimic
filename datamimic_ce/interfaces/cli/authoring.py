@@ -27,7 +27,6 @@ from datamimic_ce.authoring.domain.requests import (
     ReadyDecompileDocument,
     ReferenceRequest,
     ReferenceTopic,
-    RejectedBuild,
     RejectedCompileDocument,
     RejectedDecompileDocument,
     RunPhase,
@@ -74,14 +73,8 @@ def _read(source: str) -> str:
         raise _UnreadableInput(f"Input must be a readable UTF-8 file or '-': {Path(source).name}") from error
 
 
-def _input_message(error: Exception, fallback: str) -> str:
-    if isinstance(error, _UnreadableInput):
-        return str(error)
-    if isinstance(error, ValidationError):
-        # Reuse the Build request projection (location and reason, never the input value).
-        reasons = (item.message for item in RejectedBuild.from_model_validation(error).diagnostics[:3])
-        return " ".join((fallback, *reasons))
-    return fallback
+def _input_message(error: ValueError, fallback: str) -> str:
+    return str(error) if isinstance(error, _UnreadableInput) else fallback
 
 
 def _workspace(source: str, workspace_root: Path | None = None) -> Path:
@@ -155,7 +148,13 @@ def compile_document(
     try:
         document = DmJsonDocumentV1.model_validate_json(_read(source))
         request = CompileDocumentRequest(document=document, descriptor_path=PurePosixPath(descriptor_path))
-    except (ValueError, ValidationError) as error:
+    except ValidationError as error:
+        emit_authoring(
+            RejectedCompileDocument.from_model_validation(error),
+            output_format,
+            exit_code=1,
+        )
+    except ValueError as error:
         emit_authoring(
             RejectedCompileDocument.from_input_error(
                 _input_message(error, "Invalid DM JSON input or descriptor path.")
@@ -180,7 +179,13 @@ def decompile_document(
     try:
         logical_path = _descriptor_path(source, workspace_root, descriptor_path)
         request = DecompileDocumentRequest(xml=_read(source), descriptor_path=logical_path)
-    except (ValueError, ValidationError) as error:
+    except ValidationError as error:
+        emit_authoring(
+            RejectedDecompileDocument.from_model_validation(error),
+            output_format,
+            exit_code=1,
+        )
+    except ValueError as error:
         emit_authoring(
             RejectedDecompileDocument.from_input_error(_input_message(error, "Invalid XML input or descriptor path.")),
             output_format,
@@ -304,7 +309,13 @@ def lint(
         application = create_authoring_application(
             workspace_root=_workspace(source, workspace_root), descriptor_path=logical_path
         )
-    except (ValueError, ValidationError) as error:
+    except ValidationError as error:
+        emit_authoring(
+            LintResult.from_model_validation(error),
+            output_format,
+            exit_code=1,
+        )
+    except ValueError as error:
         emit_authoring(
             LintResult.from_input_error(_input_message(error, "Invalid or unreadable XML input or descriptor path.")),
             output_format,
@@ -326,6 +337,7 @@ def _run(
     *,
     dry: bool,
 ) -> None:
+    phase = RunPhase.DRY_RUN if dry else RunPhase.RUN
     try:
         logical_path = _descriptor_path(source, workspace_root, descriptor_path)
         request = RunRequest(
@@ -336,11 +348,17 @@ def _run(
             timeout_seconds=timeout,
             allow_side_effects=allow_side_effects,
         )
-    except (ValueError, ValidationError) as error:
+    except ValidationError as error:
+        emit_authoring(
+            RunResult.from_model_validation(error, phase),
+            output_format,
+            exit_code=1,
+        )
+    except ValueError as error:
         emit_authoring(
             RunResult.from_input_error(
                 _input_message(error, "Invalid XML input or bounded-run options."),
-                RunPhase.DRY_RUN if dry else RunPhase.RUN,
+                phase,
             ),
             output_format,
             exit_code=1,

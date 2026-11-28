@@ -488,7 +488,7 @@ class CeDslCatalog:
                         path="datamimic_ce/engine/dsl/model/flow/commands/assert_model.py",
                         description=(
                             "Use <assert> for a rule that must stop datamimic run. A failed condition stops the run "
-                            "with exit code 1 and the message, and Build rejects it with assert_failed. Build keeps "
+                            "with exit code 1 and the message, and Build rejects it with I895. Build keeps "
                             "the products that completed before the failed assert, evaluates their expectations and "
                             "lists the other checks as not_executed. An assert costs one expression for each row in "
                             "every run. It sees only the current row or the setup context. The products before it "
