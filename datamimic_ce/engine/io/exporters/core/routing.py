@@ -24,9 +24,10 @@ def resolve_target_entity_from_metadata(name: str, metadata: ExportMetadata | Ma
 
 
 def has_mongodb_upsert_target(targets: set[str], clients: ClientLookup) -> bool:
+    """Whether a target upserts into a MongoDB client; read as the exporter registry reads it, so ``mongo.upsert()``
+    counts as ``mongo.upsert``."""
     for target in targets:
-        if "." in target:
-            consumer, operation = target.split(".", 1)
-            if operation == ExportOperation.UPSERT.value and is_mongodb_client(clients.get(consumer)):
-                return True
+        parsed = ExportOperation.from_target(target)
+        if parsed is not None and parsed[1] is ExportOperation.UPSERT and is_mongodb_client(clients.get(parsed[0])):
+            return True
     return False

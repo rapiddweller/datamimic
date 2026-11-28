@@ -37,6 +37,22 @@ def test_compile_decompile_hashes_preserve_canonical_semantics(tmp_path):
     assert list(tmp_path.iterdir()) == []
 
 
+def test_canonical_hash_ignores_line_endings_of_the_source_xml(tmp_path):
+    codec = CeDmJsonCodec()
+    use_case = DecompileDocumentUseCase(codec, validator(tmp_path))
+    lf = (
+        '<setup rngSeed="7">\n    <generate name="rows" count="2">\n'
+        '        <key name="id" constant="1"/>\n    </generate>\n</setup>\n'
+    )
+    crlf = lf.replace("\n", "\r\n")
+    from_lf = use_case.execute(DecompileDocumentRequest(xml=lf))
+    from_crlf = use_case.execute(DecompileDocumentRequest(xml=crlf))
+    assert from_lf.outcome == from_crlf.outcome == "ready"
+    assert from_crlf.canonical_xml_sha256 == from_lf.canonical_xml_sha256
+    assert from_crlf.semantic_sha256 == from_lf.semantic_sha256
+    assert from_crlf.source_xml_sha256 != from_lf.source_xml_sha256
+
+
 def test_compile_codec_failure_and_parser_failure_have_distinct_phases(tmp_path):
     usecase = CompileDocumentUseCase(CeDmJsonCodec(), validator(tmp_path))
     unknown = DmJsonDocumentV1(root=DmJsonNodeV1(kind="setup", children=(DmJsonNodeV1(kind="unknown"),)))
@@ -47,7 +63,7 @@ def test_compile_codec_failure_and_parser_failure_have_distinct_phases(tmp_path)
     missing = CeDmJsonCodec().decompile('<setup><generate count="2"/></setup>')
     invalid = usecase.execute(CompileDocumentRequest(document=missing))
     assert invalid.phase == DiagnosticPhase.XML
-    assert any(item.ce_error is not None for item in invalid.diagnostics)
+    assert any(item.code == "I605" for item in invalid.diagnostics)
 
 
 def test_decompile_rejects_parser_valid_unrepresentable_comments(tmp_path):
@@ -106,8 +122,9 @@ def test_public_compile_and_build_property_diagnostics_omit_input_values(tmp_pat
     assert built.outcome == "rejected"
     assert built.phase is DiagnosticPhase.XML
     # The named rule comes first; the parser refusal still names the attribute.
-    [parser] = [item for item in built.diagnostics if item.ce_error is not None]
-    assert parser.path == ("descriptor", "datamimic.xml", "setup", "numProcess")
+    [parser] = [item for item in built.diagnostics if item.code == "I605" and item.rule is None]
+    assert parser.path == ("descriptor", "datamimic.xml", "setup", "line", 1, "numProcess")
+    assert parser.location is not None and parser.location.line == 1
     for result, finding in ((compiled, diagnostic), (built, parser)):
         assert secret not in result.model_dump_json()
         assert "input_value" not in result.model_dump_json()

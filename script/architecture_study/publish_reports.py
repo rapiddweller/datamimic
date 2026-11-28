@@ -1,6 +1,7 @@
 """Publish one development architecture snapshot; never execute artifact contents."""
 
 import argparse
+import hashlib
 import json
 import re
 import stat
@@ -10,17 +11,17 @@ from pathlib import Path
 FILES = {
     "architecture.json",
     "architecture.report.html",
-    "architecture.detail.html",
+    "archkeel-status.json",
     "validation.json",
     "metadata.json",
 }
 
 
-def configured_archkeel_version() -> str:
+def configured_archkeel_revision() -> str:
     makefile = Path(__file__).resolve().parents[2] / "Makefile"
-    pin = re.search(r"^ARCHKEEL_SOURCE := archkeel==(\S+)$", makefile.read_text(), re.MULTILINE)
+    pin = re.search(r"^ARCHKEEL_REVISION := ([0-9a-f]{40})$", makefile.read_text(), re.MULTILINE)
     if pin is None:
-        raise ValueError("Makefile must pin the approved ArchKeel version")
+        raise ValueError("Makefile must pin an ArchKeel commit")
     return pin[1]
 
 
@@ -55,7 +56,7 @@ def publish(archive: Path, site: Path, event: dict) -> None:
         "run_id": run["id"],
         "run_attempt": run["run_attempt"],
         "head_sha": run["head_sha"],
-        "archkeel_version": configured_archkeel_version(),
+        "archkeel_revision": configured_archkeel_revision(),
     }
     if any(metadata.get(key) != value for key, value in expected.items()):
         raise ValueError("Report identity does not match the triggering CI run")
@@ -64,15 +65,24 @@ def publish(archive: Path, site: Path, event: dict) -> None:
         raise ValueError("Missing scanned commit")
     report = json.loads(files["architecture.json"])
     validation = json.loads(files["validation.json"])
-    if not isinstance(report, dict) or report.get("source", {}).get("git_head") != scanned:
-        raise ValueError("Report and metadata identify different scans")
+    status = json.loads(files["archkeel-status.json"])
+    for name in ("architecture.json", "architecture.report.html", "validation.json", "archkeel-status.json"):
+        if metadata.get(name + "_sha256") != hashlib.sha256(files[name]).hexdigest():
+            raise ValueError("Report evidence does not match metadata")
     if scanned != run["head_sha"]:
         raise ValueError("Development report scanned a different commit")
-    if not isinstance(validation, dict) or validation.get("declared_rules") not in ("PASS", "FAIL", "UNKNOWN"):
+    if not isinstance(report, dict) or not isinstance(report.get("rules"), dict):
+        raise ValueError("Missing native architecture frame")
+    if not isinstance(validation, dict) or validation.get("status") not in ("PASS", "FAIL", "UNKNOWN"):
         raise ValueError("Missing native architecture verdict")
-    if any(
-        not files[name].decode("utf-8").strip() for name in ("architecture.report.html", "architecture.detail.html")
+    if (
+        not isinstance(status, dict)
+        or type(status.get("schemaVersion")) is not int
+        or status["schemaVersion"] != 1
+        or any(type(status.get(key)) is not int or status[key] < 0 for key in ("pass", "unknown", "fail"))
     ):
+        raise ValueError("Invalid architecture status")
+    if not files["architecture.report.html"].decode("utf-8").strip():
         raise ValueError("Empty HTML report")
     if site.exists() and any(site.iterdir()):
         raise ValueError("Publish into an empty site; historical reports must not be included")

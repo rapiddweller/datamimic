@@ -108,12 +108,10 @@ class CeBoundedExecutionPolicy:
                 targets = node.properties.get("target")
                 if not isinstance(targets, str) or not parse_consumer(targets):
                     diagnostics.append(
-                        Diagnostic(
-                            code=delivery_rule.id,
+                        Diagnostic.from_rule(
+                            delivery_rule,
                             phase=DiagnosticPhase.POLICY,
-                            message=delivery_rule.explanation,
                             path=path + ("properties", "target"),
-                            remediation=delivery_rule.fix_hint,
                         )
                     )
         return tuple(diagnostics)

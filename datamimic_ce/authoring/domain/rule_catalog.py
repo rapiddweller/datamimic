@@ -15,6 +15,7 @@ from enum import StrEnum
 from types import MappingProxyType
 
 from datamimic_ce.errors import GUIDANCE_LOOKUP_POINTER
+from datamimic_ce.errors.codes import IssueCode
 
 
 class RuleSeverity(StrEnum):
@@ -44,6 +45,7 @@ class RuleDefinition:
     invalid_example: str
     advisory_severity: RuleSeverity | None = None
     blocks_verification: bool = False
+    issue_code: IssueCode | None = None
 
     def __post_init__(self) -> None:
         if len(self.id) != 5 or not self.id.startswith("DM") or not self.id[2:].isdigit():
@@ -80,6 +82,8 @@ def _rule_definition(
     invalid_example: str,
     advisory_severity: RuleSeverity | None = None,
     blocks_verification: bool = False,
+    *,
+    issue_code: IssueCode | None = None,
 ) -> RuleDefinition:
     return RuleDefinition(
         id=rule_id,
@@ -92,6 +96,7 @@ def _rule_definition(
         invalid_example=invalid_example,
         advisory_severity=advisory_severity,
         blocks_verification=blocks_verification,
+        issue_code=issue_code,
     )
 
 
@@ -129,6 +134,7 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         "Pydantic runtime model field contract.",
         _MINIMAL_GENERATE_EXAMPLE,
         '<generate name="g" couunt="1"/>',
+        issue_code=IssueCode.PARSER_VALIDATION_FAILED,
     ),
     _rule_definition(
         "DM104",
@@ -139,6 +145,7 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         "Pydantic runtime model required-field contract.",
         _MINIMAL_GENERATE_EXAMPLE,
         '<generate count="1"/>',
+        issue_code=IssueCode.PARSER_VALIDATION_FAILED,
     ),
     _rule_definition(
         "DM105",
@@ -159,6 +166,7 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         "Setup parser root contract.",
         "<setup/>",
         _MINIMAL_GENERATE_EXAMPLE,
+        issue_code=IssueCode.PARSER_INVALID_TAG,
     ),
     _rule_definition(
         "DM107",
@@ -169,6 +177,7 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         "Element registry nesting contract.",
         '<key name="x" constant="1"/>',
         '<key name="x" constant="1"><value>1</value></key>',
+        issue_code=IssueCode.PARSER_NO_SUBELEMENTS_ALLOWED,
     ),
     _rule_definition(
         "DM201",
@@ -248,6 +257,7 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         "ModelUtil count parser contract.",
         '<generate name="g" count="{2 + 1}"/>',
         '<generate name="g" count="1 if n == 1 else 0"/>',
+        issue_code=IssueCode.PARSER_VALIDATION_FAILED,
     ),
     _rule_definition(
         "DM213",
@@ -269,6 +279,7 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         '<variable name="x" source="data/entity/rows.ent.csv" cyclic="true"/>',
         '<variable name="x" cyclic="true"/>',
         RuleSeverity.WARNING,
+        issue_code=IssueCode.PARSER_VALIDATION_FAILED,
     ),
     _rule_definition(
         "DM216",
@@ -301,6 +312,7 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         '<nestedKey name="x" script="{}"/>',
         '<nestedKey name="x" script="{}" type="dict"/>',
         RuleSeverity.WARNING,
+        issue_code=IssueCode.PARSER_VALIDATION_FAILED,
     ),
     _rule_definition(
         "DM219",
@@ -323,6 +335,7 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         '<key name="x" type="string" outDateFormat="%Y"/>',
         '<key name="x" type="int" outDateFormat="%Y"/>',
         RuleSeverity.WARNING,
+        issue_code=IssueCode.PARSER_VALIDATION_FAILED,
     ),
     _rule_definition(
         "DM221",
@@ -532,13 +545,16 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         "Include parser path-resolution contract.",
         '<include uri="existing.properties"/>',
         '<include uri="missing.properties"/>',
+        issue_code=IssueCode.INCLUDE_FILE_NOT_FOUND,
     ),
     _rule_definition(
         "DM409",
         RuleSeverity.ERROR,
         "Client and memstore share an id",
         "A <memstore> id equals a declared <database>/<mongodb> id; readers resolve the bare id as a "
-        "memstore or as a client in different orders, so the same id reads different data.",
+        "memstore or as a client in different orders, so the same id reads different data. "
+        "A client id equal to a built-in exporter name (CSV, JSON, ConsoleExporter) is refused too: a bare "
+        "target names the exporter, so the client is never written and createTable creates no table.",
         "Rename the memstore or the client so each id names one thing.",
         "Source and target id resolution contract.",
         '<setup><database id="db" dbms="sqlite" url="sqlite:///a.db"/><memstore id="mem"/></setup>',
