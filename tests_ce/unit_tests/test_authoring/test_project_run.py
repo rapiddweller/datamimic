@@ -23,6 +23,7 @@ from datamimic_ce.authoring.domain.project_run import (
     ProjectRunExecution,
     ProjectRunRecord,
     ProjectRunRequest,
+    ProjectRunResult,
     UnverifiedProjectRunResult,
 )
 from datamimic_ce.authoring.domain.requests import (
@@ -708,3 +709,49 @@ def test_a_mongodb_target_effect_names_the_collection(tmp_path: Path, target: st
         '<key name="id" constant="1"/></generate></setup>'
     )
     assert (ExternalEffectKind.TARGET, shown) in effects_of(tmp_path, xml)
+
+
+@pytest.mark.parametrize(
+    "confirm,allow,reason",
+    [
+        (False, True, "confirmation_required"),
+        (False, False, "confirmation_required"),
+        (True, False, "side_effects_not_allowed"),
+    ],
+)
+def test_unverified_refusal_names_its_cause(confirm: bool, allow: bool, reason: str) -> None:
+    runner = FakeRunner(execution())
+
+    def build() -> BuildResult:
+        raise AssertionError("the unverified run must not invoke Build")
+
+    result = ProjectRunWorkflow(build, FakeEffects(()), runner).execute_unverified(
+        ProjectRunRequest(allow_side_effects=allow), confirm
+    )
+
+    assert result.outcome == "not_run" and result.not_run_reason == reason
+    assert result.message.endswith("nothing was run.") and not runner.calls
+
+
+def test_unverified_result_ties_the_not_run_cause_to_the_outcome() -> None:
+    with pytest.raises(ValidationError):
+        UnverifiedProjectRunResult(outcome="not_run", message="m")
+    with pytest.raises(ValidationError):
+        UnverifiedProjectRunResult(outcome="not_run", not_run_reason="build_rejected", message="m")
+    with pytest.raises(ValidationError):
+        UnverifiedProjectRunResult(outcome="completed", not_run_reason="input", message="m", execution=execution())
+    assert UnverifiedProjectRunResult.from_input_error("bad").not_run_reason == "input"
+
+
+def test_a_verified_result_refuses_the_confirmation_cause() -> None:
+    with pytest.raises(ValidationError):
+        ProjectRunResult(outcome="not_run", not_run_reason="confirmation_required")
+
+
+def test_both_results_share_one_not_run_enum() -> None:
+    def reasons(model: type) -> list[str]:
+        options = model.model_json_schema()["properties"]["not_run_reason"]["anyOf"]
+        return next(option["enum"] for option in options if "enum" in option)
+
+    assert reasons(UnverifiedProjectRunResult) == reasons(ProjectRunResult)
+    assert "confirmation_required" in reasons(ProjectRunResult)

@@ -326,7 +326,8 @@ datamimic authoring run-project <project> [--allow-side-effects] [--param NAME=V
 
 Build runs first. A `not_run` result keeps the existing `outcome` and identifies
 its cause with `not_run_reason`: `input`, `build_rejected`, or
-`side_effects_not_allowed` (`null` when execution occurred). Build warning
+`side_effects_not_allowed` (the enum also holds `confirmation_required`, which only the
+MCP unverified run returns; `null` when execution occurred). Build warning
 diagnostics, including open coverage gaps, are retained in the result. Review
 `build_outcome` and `action_required` before reporting a successful run.
 

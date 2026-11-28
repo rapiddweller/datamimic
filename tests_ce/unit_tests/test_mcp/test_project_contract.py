@@ -228,3 +228,18 @@ async def test_every_tool_is_guarded(anyio_backend: str, tmp_path: Path, monkeyp
         for name, arguments in calls.items():
             with pytest.raises(Exception, match="result_too_large"):
                 await client.call_tool(name, arguments)
+
+
+@pytest.mark.anyio
+async def test_unverified_run_names_the_input_cause(anyio_backend: str, tmp_path: Path) -> None:
+    async with Client(create_server(enable_unverified_run=True)) as client:
+        for arguments in (
+            {"project": "relative/path"},
+            {"project": str(tmp_path), "confirm_unverified": True, "allow_side_effects": True, "timeout_seconds": 0},
+        ):
+            result = json.loads((await client.call_tool("datamimic_run_project_unverified", arguments)).content[0].text)
+            assert result["outcome"] == "not_run" and result["not_run_reason"] == "input", result
+        refused = json.loads(
+            (await client.call_tool("datamimic_run_project_unverified", {"project": str(tmp_path)})).content[0].text
+        )
+        assert refused["not_run_reason"] == "confirmation_required", refused

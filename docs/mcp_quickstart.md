@@ -83,6 +83,10 @@ only that the process exited successfully. Its `verification` is always
 `not_verified`. Check the actual effects independently.
 Failed or timed-out runs can leave partial effects. The execution log can contain
 project data; share it only with authorized recipients.
+A refused unverified run returns `outcome` `not_run` with the closed `not_run_reason`
+`confirmation_required` (`confirm_unverified` is not `true`), `side_effects_not_allowed`
+(`allow_side_effects` is not `true`) or `input` (invalid project or options), plus a
+human `message`; `not_run_reason` is `null` after a run.
 If the result is too large, `details_truncated` is true and log lines and artifact
 paths are omitted. The outcome and artifact count remain in the result.
 
@@ -121,7 +125,8 @@ for SSE. Stdio uses its owning process's access controls.
 
 A `datamimic_run_project` result keeps `outcome` and reports why no execution
 occurred in `not_run_reason` (`input`, `build_rejected`, or
-`side_effects_not_allowed`; `null` after a run). Build warning diagnostics remain
+`side_effects_not_allowed`; `null` after a run; the unverified tool adds
+`confirmation_required`). Build warning diagnostics remain
 in the result after execution. Like the [CLI result](api/cli.md#authoring-run-project---prove-then-run-a-project),
 it gives the Build outcome and input digests, output SHA-256 digests, and any
 Build file mismatches.
