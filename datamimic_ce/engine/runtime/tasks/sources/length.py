@@ -119,6 +119,13 @@ def refuse_weighted_entity_contract(stmt: GenerateStatement, source: str) -> Non
             _refuse_weighted_entity(stmt, source, f"draws by weight: the draw ignores {attribute}", attribute)
 
 
+def forget_written_source_lengths(root_ctx: SetupContext, written: set[str]) -> None:
+    """Drop the cached length of every source that a page export just wrote to (a table or a memstore): an inner
+    statement of the next page counts it again instead of keeping the length of the first row (#641)."""
+    for key in [key for key in root_ctx.data_source_len if key[1] in written]:
+        del root_ctx.data_source_len[key]
+
+
 def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) -> None:
     """
     Calculate length of data source then save into context
@@ -134,8 +141,13 @@ def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) 
 
     root_ctx = ctx.root
     source_id = data_source_cache_key(stmt)
-    # Check if data source length is already set
-    if root_ctx.data_source_len.get(source_id, None) is not None:
+    # An outermost statement reads its length when it runs: an entry left by an earlier statement with the same key
+    # (name, source, where) can predate a memstore write or name another entity (#641). An inner statement runs
+    # once per parent row and keeps the length counted for the first row.
+    if isinstance(ctx, SetupContext) and not ctx.within_generate:
+        if source_id in root_ctx.data_source_len:
+            del root_ctx.data_source_len[source_id]
+    elif root_ctx.data_source_len.get(source_id, None) is not None:
         return
 
     ds_len: int | None

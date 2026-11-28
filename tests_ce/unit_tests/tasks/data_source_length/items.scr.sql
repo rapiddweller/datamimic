@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS items; CREATE TABLE items (id INTEGER); INSERT INTO items (id) VALUES (1), (2);

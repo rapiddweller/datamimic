@@ -1,0 +1,8 @@
+<!-- Two reads share name and source but name another entity; the memstore holds 2 rows of "a" and 5 of "b". -->
+<setup rngSeed="1">
+    <memstore id="mem"/>
+    <generate name="a" count="2" target="mem"><key name="id" generator="IncrementGenerator"/></generate>
+    <generate name="rd" source="mem" sourceEntity="a" distribution="ordered"><key name="id" script="this.id"/></generate>
+    <generate name="b" count="5" target="mem"><key name="id" generator="IncrementGenerator"/></generate>
+    <generate name="rd" source="mem" sourceEntity="b" distribution="ordered"><key name="id" script="this.id"/></generate>
+</setup>
