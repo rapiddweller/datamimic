@@ -35,7 +35,6 @@ from datamimic_ce.engine.dsl.api import (
     ExportOperation,
 )
 from datamimic_ce.engine.dsl.parsers.input.target import parse_function_string
-from datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants import BUILTIN_TARGET_NAMES
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import (
     DynamicSourceKind,
     SourceFileFormat,
@@ -266,7 +265,7 @@ class ClientMemstoreIdCollision(Rule):
         # Reported on the client, which lives in the entry; the memstores come from the whole project, so a
         # memstore declared in an included step collides with it too.
         _, memstores = _declared_ids(ctx)
-        exporters = BUILTIN_TARGET_NAMES
+        exporters = _STATIC_TARGETS | ctx.buffered_exporter_names
         for element in ctx.iter(EL_DATABASE, EL_MONGODB):
             client_id = element.get("id")
             if client_id and client_id in exporters:

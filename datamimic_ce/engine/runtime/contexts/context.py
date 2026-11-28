@@ -29,14 +29,19 @@ from datamimic_ce.domains.api import (
     derive_child_seed,
     spawn_rng,
 )
-from datamimic_ce.engine.dsl.api import SetupStatement
-from datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants import BUILTIN_TARGET_NAMES
+from datamimic_ce.engine.dsl.api import (
+    EXPORTER_CONSOLE_EXPORTER,
+    EXPORTER_LOG_EXPORTER,
+    EXPORTER_TEST_RESULT_EXPORTER,
+    SetupStatement,
+)
 from datamimic_ce.engine.io.api import (
     ExportSession,
     MongoDBConnectionConfig,
     RdbmsConnectionConfig,
     RegisteredClient,
     TestResultExporter,
+    buffered_exporter_names,
 )
 from datamimic_ce.engine.runtime.contexts.demographic_context import DemographicContext
 from datamimic_ce.engine.runtime.contexts.products import TotalRowBudget
@@ -325,7 +330,7 @@ class SetupContext(Context):
         else:
             seed = self._run_seed.int_for(f"include|{step_key}")
         self._root_rng: Random | None = Random(seed) if self._run_seed.seeded else None
-        # Cached call-time rng — populated lazily on first ``.rng`` access.
+        # Cached call-time rng â€” populated lazily on first ``.rng`` access.
         self._call_rng: RandomSource | None = None
 
     def enter_step(self, uri: str, parent: SetupContext) -> None:
@@ -764,7 +769,12 @@ class SetupContext(Context):
     def register_client_config(self, client_id: str, config: ClientConfig) -> None:
         if not isinstance(config, RdbmsConnectionConfig | MongoDBConnectionConfig):
             raise TypeError("Descriptor client config must be a typed RDBMS or MongoDB config")
-        if client_id in BUILTIN_TARGET_NAMES:
+        builtin_targets = buffered_exporter_names() | {
+            EXPORTER_CONSOLE_EXPORTER,
+            EXPORTER_LOG_EXPORTER,
+            EXPORTER_TEST_RESULT_EXPORTER,
+        }
+        if client_id in builtin_targets:
             # Same rule as lint DM409: a bare target names the exporter first, so the client is never written (#730).
             raise client_config_error(
                 code=IssueCode.CLIENT_PREFLIGHT_INVALID_CONFIGURATION,
