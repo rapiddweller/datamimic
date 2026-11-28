@@ -311,7 +311,7 @@ class InterpolationInScript(Rule):
                 if token_match:
                     token = token_match.group()
                     # Agents import modules that scripts already have; the text is static, so Build may show it.
-                    imports = token == "__import__"
+                    imports = type(token) is str and token in {"__import__"}
                     yield ctx.diag(
                         type(self),
                         element,

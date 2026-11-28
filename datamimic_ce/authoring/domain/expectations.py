@@ -334,8 +334,38 @@ class RowConditionExpectation(AuthoringModel):
         return value
 
 
+class GroupSumReference(AuthoringModel):
+    """The expected total or upper limit for each group, declared by a reference product."""
+
+    subject: ProductRowsSubject = Field(
+        description="Product listing all expected groups, one row per group. An empty reference fails the check."
+    )
+    key: NonEmptyStrictStr = Field(description="Unique string or integer group key in the reference product.")
+    field: NonEmptyStrictStr = Field(description="Reference amount, under the same numeric rules as the summed field.")
+    comparison: Literal["equal", "at_most"] = Field(
+        default="equal",
+        description="Require an equal total or an inclusive upper bound. A listed group without subject rows sums "
+        "to zero; a subject group missing from the reference fails the check.",
+    )
+
+
 class GroupSumExpectation(AuthoringModel):
-    """Require two numeric fields to have equal sums in every observed group."""
+    """Check numeric sums per group against another sum or an amount declared by a reference product."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "oneOf": [
+                {
+                    "required": ["equals_field"],
+                    "properties": {"equals_field": {"type": "string"}, "reference": {"type": "null"}},
+                },
+                {
+                    "required": ["reference"],
+                    "properties": {"equals_field": {"type": "null"}, "reference": {"type": "object"}},
+                },
+            ]
+        }
+    )
 
     usage_example: ClassVar[dict[str, JsonValue]] = {
         "kind": "group_sum",
@@ -348,9 +378,10 @@ class GroupSumExpectation(AuthoringModel):
     kind: Literal[ExpectationIntentKind.GROUP_SUM] = Field(
         default=ExpectationIntentKind.GROUP_SUM, description="Expectation identity; must be 'group_sum'."
     )
-    subject: ProductRowsSubject = Field(description="Complete captured product rows containing all three fields.")
+    subject: ProductRowsSubject = Field(description="Complete captured product rows to sum.")
     group_by: NonEmptyStrictStr = Field(
-        description="Field containing a string or integer group key in each row. No observed groups fails the check."
+        description="Field containing a string or integer group key in each row. Without a reference, no observed "
+        "groups fails the check."
     )
     field: NonEmptyStrictStr = Field(
         description="Field to sum exactly. Finite numbers and decimal strings are accepted, including mixed numeric "
@@ -358,9 +389,18 @@ class GroupSumExpectation(AuthoringModel):
         f"Amounts have at most {MAX_STRING_LENGTH} coefficient digits, decimal strings are at most "
         f"{MAX_STRING_LENGTH} characters, and adjusted exponents must be within ±{MAX_DECIMAL_ADJUSTED_EXPONENT}."
     )
-    equals_field: NonEmptyStrictStr = Field(
-        description="Second numeric field summed under the same rules for equality."
+    equals_field: NonEmptyStrictStr | None = Field(
+        default=None, description="Second numeric field summed under the same rules for equality. Omit with reference."
     )
+    reference: GroupSumReference | None = Field(
+        default=None, description="Expected amounts keyed by group in another product. Omit with equals_field."
+    )
+
+    @model_validator(mode="after")
+    def one_comparison(self) -> GroupSumExpectation:
+        if (self.equals_field is None) == (self.reference is None):
+            raise ValueError("provide exactly one of equals_field or reference")
+        return self
 
 
 class GroupCountExpectation(AuthoringModel):
@@ -479,6 +519,8 @@ def expectation_subjects(expectation: ExpectationIntent) -> tuple[ExpectationSub
         return (expectation.child.subject, expectation.parent.subject)
     if isinstance(expectation, GroupCountExpectation):
         return (expectation.subject, expectation.reference)
+    if isinstance(expectation, GroupSumExpectation) and expectation.reference is not None:
+        return (expectation.subject, expectation.reference.subject)
     return (expectation.subject,)
 
 
@@ -533,6 +575,19 @@ def expectation_identity(expectation: ExpectationIntent) -> tuple[object, ...]:
     if isinstance(expectation, FieldPresentExpectation | FieldAbsentExpectation):
         return (expectation.kind, _subject_identity(expectation.subject), expectation.field)
     if isinstance(expectation, GroupSumExpectation):
+        reference = expectation.reference
+        if reference is not None:
+            return (
+                expectation.kind,
+                _subject_identity(expectation.subject),
+                expectation.group_by,
+                expectation.field,
+                _subject_identity(reference.subject),
+                reference.key,
+                reference.field,
+                reference.comparison,
+            )
+        assert expectation.equals_field is not None
         return (
             expectation.kind,
             _subject_identity(expectation.subject),
