@@ -343,6 +343,46 @@ def test_child_crash_is_typed_and_does_not_wait_for_timeout(tmp_path):
         assert "exit code 17" in result.diagnostics[0].message
 
 
+@pytest.mark.skipif(os.name == "nt", reason="Windows reports the cleanup diagnostic for a crashed child")
+def test_child_crash_names_what_the_child_wrote_to_stderr(monkeypatch):
+    import subprocess
+
+    from datamimic_ce.authoring.adapters import bounded_executor
+
+    # The child suppresses fd 2 while it runs a descriptor, so a crash outside that scope is simulated.
+    crash = "import sys; sys.stderr.write('boom: cannot open table\\n'); sys.exit(1)"
+    popen = subprocess.Popen
+    monkeypatch.setattr(
+        bounded_executor.subprocess, "Popen", lambda command, **kwargs: popen([sys.executable, "-c", crash], **kwargs)
+    )
+    result = CeBoundedExecutor().execute(BoundedExecutionRequest(xml=_XML))
+    assert result.diagnostics[0].code is AuthoringSystemDiagnosticCode.CHILD_CRASH
+    assert "boom: cannot open table" in result.diagnostics[0].message
+
+
+@pytest.mark.parametrize(
+    ("content", "expected"),
+    [
+        (b"", ""),
+        (b"short failure\n", "short failure"),
+        (b"first\n" + b"x" * 10_000 + b"\nlast line\n", "last line"),
+        (b"bad \xff\xfe byte\x1b[31m red\n", "bad"),
+    ],
+    ids=["empty", "short", "longer-than-limit", "non-utf8-and-control"],
+)
+def test_stderr_excerpt_is_bounded_and_decoded_safely(tmp_path, content, expected):
+    from datamimic_ce.authoring.adapters.bounded_executor import _STDERR_EXCERPT_CHARS, _stderr_excerpt
+
+    path = tmp_path / "stderr.log"
+    path.write_bytes(content)
+    excerpt = _stderr_excerpt(path)
+    assert expected in excerpt
+    assert len(excerpt) < _STDERR_EXCERPT_CHARS + 100
+    assert "\x1b" not in excerpt
+    assert "first" not in excerpt
+    assert _stderr_excerpt(tmp_path / "missing.log") == ""
+
+
 @pytest.mark.parametrize("descendant_still_alive", [False, True])
 def test_windows_process_cleanup_waits_for_descendants(monkeypatch, descendant_still_alive):
     from contextlib import nullcontext
