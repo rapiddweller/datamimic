@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import keyword
 import logging
 import os
 import platform
@@ -12,6 +11,7 @@ from pathlib import Path
 import toml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from datamimic_ce.authoring.domain.project_run import ProjectParam
 from datamimic_ce.domains.api import get_datamimic_lib_version
 from datamimic_ce.engine.runtime.api import load_descriptor_properties, run
 from datamimic_ce.engine.runtime.contracts import PlatformConfiguration, RunRequest
@@ -134,11 +134,11 @@ def _runtime_parameters(params: list[str] | None, params_env: list[str] | None) 
     properties: dict[str, str] = {}
     for option, entries in (("--param", params), ("--param-env", params_env)):
         for entry in entries or []:
-            name, separator, value = entry.partition("=")
-            if not separator:
-                cli_presenter.fail(f"{option} requires NAME={'ENV_NAME' if option == '--param-env' else 'VALUE'}")
-            if not name.isidentifier() or keyword.iskeyword(name):
-                cli_presenter.fail(f"{option} requires a valid Python property name")
+            try:
+                param = ProjectParam.parse(entry, "ENV_NAME" if option == "--param-env" else "VALUE")
+            except ValueError as error:
+                cli_presenter.fail(f"{option} {error}")
+            name, value = param.name, param.value
             if name in properties:
                 cli_presenter.fail(f"Duplicate runtime property: {name}")
             if option == "--param-env":
