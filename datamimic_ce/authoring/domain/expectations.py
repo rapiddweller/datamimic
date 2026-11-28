@@ -60,6 +60,7 @@ class ExpectationIntentKind(StrEnum):
     ROW_CONDITION = "row_condition"
     GROUP_SUM = "group_sum"
     GROUP_COUNT = "group_count"
+    RUNNING_BALANCE = "running_balance"
 
 
 class ExpectationSubjectKind(StrEnum):
@@ -437,6 +438,61 @@ class GroupCountExpectation(AuthoringModel):
     )
 
 
+class RunningBalanceExpectation(AuthoringModel):
+    """Require the signed balance after each posting to meet an inclusive minimum."""
+
+    usage_example: ClassVar[dict[str, JsonValue]] = {
+        "kind": "running_balance",
+        "subject": {"kind": "product", "product": "ledger_lines"},
+        "field": "signed_cents",
+        "order_by": ["posted_on", "posting_rank", "line_id"],
+        "group_by": "account_id",
+        "minimum": "0",
+    }
+
+    kind: Literal[ExpectationIntentKind.RUNNING_BALANCE] = Field(
+        default=ExpectationIntentKind.RUNNING_BALANCE,
+        description="Expectation identity; must be 'running_balance'.",
+    )
+    subject: ProductRowsSubject = Field(description="Complete captured product rows. An empty product fails.")
+    field: NonEmptyStrictStr = Field(
+        description="Signed amount added exactly at each posting. Finite numbers and decimal strings are accepted; "
+        "missing amounts, nulls and booleans fail. Amounts use the same numeric bounds as group_sum."
+    )
+    order_by: tuple[NonEmptyStrictStr, ...] = Field(
+        min_length=1,
+        json_schema_extra={"uniqueItems": True},
+        description="Ascending order fields, from first sort key to final tie-breaker. Each field must contain only "
+        "one comparable family: finite numbers, strings, dates or naive datetimes. Missing values, nulls, booleans "
+        "and ties on all order fields within a group fail.",
+    )
+    group_by: NonEmptyStrictStr | None = Field(
+        default=None,
+        description="Optional string or integer group key. Each group starts at zero; omit to use a single balance.",
+    )
+    minimum: Decimal = Field(
+        description="Inclusive minimum after each posting, not applied to the starting zero. "
+        f"At most {MAX_STRING_LENGTH} coefficient digits and adjusted exponent within ±{MAX_DECIMAL_ADJUSTED_EXPONENT}."
+    )
+
+    @field_validator("order_by")
+    @classmethod
+    def distinct_order_fields(cls, fields: tuple[str, ...]) -> tuple[str, ...]:
+        if len(set(fields)) != len(fields):
+            raise ValueError("order_by must list distinct fields")
+        return fields
+
+    @field_validator("minimum")
+    @classmethod
+    def bounded_minimum(cls, minimum: Decimal) -> Decimal:
+        if (
+            abs(Decimal.adjusted(minimum)) > MAX_DECIMAL_ADJUSTED_EXPONENT
+            or len(Decimal.as_tuple(minimum).digits) > MAX_STRING_LENGTH
+        ):
+            raise ValueError("minimum exceeds the numeric bounds")
+        return minimum
+
+
 ExpectationIntent = Annotated[
     ExactCountExpectation
     | PerParentCountExpectation
@@ -449,7 +505,8 @@ ExpectationIntent = Annotated[
     | FieldAbsentExpectation
     | RowConditionExpectation
     | GroupSumExpectation
-    | GroupCountExpectation,
+    | GroupCountExpectation
+    | RunningBalanceExpectation,
     Field(discriminator="kind"),
 ]
 ExpectationSubject = ProductRowsSubject | PerParentRowsSubject | DeclaredSinkRowsSubject
@@ -501,7 +558,11 @@ def expectation_repair(location: tuple[str | int, ...]) -> str | None:
             for name in model.model_fields:
                 field = model.model_fields[name]
                 extra = field.json_schema_extra
-                aliases = extra[INTENT_REPAIR_ALIASES_SCHEMA_KEY] if isinstance(extra, dict) else None
+                aliases = (
+                    extra[INTENT_REPAIR_ALIASES_SCHEMA_KEY]
+                    if isinstance(extra, dict) and INTENT_REPAIR_ALIASES_SCHEMA_KEY in extra
+                    else None
+                )
                 alias = field.validation_alias
                 if isinstance(alias, AliasChoices) and wrong != name and wrong in alias.choices:
                     # An accepted spelling is extra only beside the field name.
@@ -602,6 +663,15 @@ def expectation_identity(expectation: ExpectationIntent) -> tuple[object, ...]:
             _subject_identity(expectation.reference),
             expectation.reference_key,
             expectation.count_field,
+        )
+    if isinstance(expectation, RunningBalanceExpectation):
+        return (
+            expectation.kind,
+            _subject_identity(expectation.subject),
+            expectation.field,
+            expectation.order_by,
+            expectation.group_by,
+            expectation.minimum,
         )
     if isinstance(expectation, RowConditionExpectation):
         return (
