@@ -17,11 +17,11 @@ FILES = {
 }
 
 
-def configured_archkeel_version() -> str:
+def configured_archkeel_revision() -> str:
     makefile = Path(__file__).resolve().parents[2] / "Makefile"
-    pin = re.search(r"^ARCHKEEL_VERSION := (\S+)$", makefile.read_text(), re.MULTILINE)
+    pin = re.search(r"^ARCHKEEL_REVISION := ([0-9a-f]{40})$", makefile.read_text(), re.MULTILINE)
     if pin is None:
-        raise ValueError("Makefile must pin the approved ArchKeel version")
+        raise ValueError("Makefile must pin an ArchKeel commit")
     return pin[1]
 
 
@@ -56,7 +56,7 @@ def publish(archive: Path, site: Path, event: dict) -> None:
         "run_id": run["id"],
         "run_attempt": run["run_attempt"],
         "head_sha": run["head_sha"],
-        "archkeel_version": configured_archkeel_version(),
+        "archkeel_revision": configured_archkeel_revision(),
     }
     if any(metadata.get(key) != value for key, value in expected.items()):
         raise ValueError("Report identity does not match the triggering CI run")

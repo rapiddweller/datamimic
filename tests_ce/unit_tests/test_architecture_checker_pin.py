@@ -14,8 +14,21 @@ pytestmark = pytest.mark.skipif(os.name == "nt", reason="Exercises the Ubuntu Ba
 
 ROOT = Path(__file__).resolve().parents[2]
 REPORT_DIR = Path("test-artifacts/architecture/ce-recursive-target")
-ALTERNATE_VERSION = "9.8.7"
-NATIVE_RECEIPT = '{"declared_rules":"FAIL","observation_complete":"UNKNOWN","exit_code":3}\n'
+ALTERNATE_REVISION = "a" * 40
+
+
+def receipt(verdict, exit_code):
+    return (
+        json.dumps(
+            {
+                "outcome": "verdict",
+                "status": verdict,
+                "exit_code": exit_code,
+                "frame": {"rules": {"example": ["kind", verdict]}, "violations": {}},
+            }
+        )
+        + "\n"
+    )
 
 
 def step_run(name):
@@ -29,6 +42,9 @@ def step_run(name):
 def checker(tmp_path):
     shutil.copyfile(ROOT / "Makefile", tmp_path / "Makefile")
     (tmp_path / "datamimic_ce").mkdir()
+    script = Path("script/architecture_study/archkeel_status.py")
+    (tmp_path / script.parent).mkdir(parents=True)
+    shutil.copyfile(ROOT / script, tmp_path / script)
     stub = tmp_path / "uvx"
     stub.write_text(
         f"#!{sys.executable}\n"
@@ -38,7 +54,6 @@ def checker(tmp_path):
             import os
             import sys
             from pathlib import Path
-            from urllib.parse import unquote
 
             args = sys.argv[1:]
             with Path("calls.jsonl").open("a") as log:
@@ -46,18 +61,15 @@ def checker(tmp_path):
             if "archkeel" not in args:
                 sys.exit(0)
             source = args[args.index("--from") + 1]
-            version = os.environ.get("STUB_VERSION", unquote(source).rsplit("/", 1)[-1].split("-")[1])
-            if "--version" in args:
-                print("archkeel " + version)
-            elif "report" in args:
+            if "report" in args:
                 if os.environ.get("REPORT_REFUSE") != "1":
                     output = Path(args[args.index("--output") + 1])
                     output.parent.mkdir(parents=True, exist_ok=True)
-                    output.write_text(json.dumps({"producer_version": version}))
+                    output.write_text(json.dumps({"producer_source": source}))
                 sys.exit(int(os.environ.get("REPORT_EXIT", "0")))
             elif "validate" in args:
                 print(os.environ["NATIVE_RECEIPT"], end="")
-                sys.exit(int(os.environ.get("VALIDATION_EXIT", "3")))
+                sys.exit(int(os.environ["VALIDATION_EXIT"]))
             else:
                 sys.exit(99)
             """
@@ -69,9 +81,9 @@ def checker(tmp_path):
     env = {
         **os.environ,
         "PATH": str(tmp_path) + os.pathsep + os.environ["PATH"],
-        "MAKEFLAGS": f"ARCHKEEL_VERSION={ALTERNATE_VERSION}",
-        "GITHUB_ENV": str(tmp_path / "github.env"),
-        "NATIVE_RECEIPT": NATIVE_RECEIPT,
+        "MAKEFLAGS": f"ARCHKEEL_REVISION={ALTERNATE_REVISION}",
+        "NATIVE_RECEIPT": receipt("UNKNOWN", 2),
+        "VALIDATION_EXIT": "2",
         "REPOSITORY": "rapiddweller/datamimic",
         "RUN_ID": "10",
         "RUN_ATTEMPT": "1",
@@ -89,52 +101,39 @@ def checker(tmp_path):
 
 def test_alternate_pin_reaches_ci_metadata_report_and_native_validation(checker):
     directory, env = checker
-    confirmed = subprocess.run(
-        ["bash", "-e", "-c", step_run("Confirm pinned ArchKeel version")],
-        cwd=directory,
-        env=env,
-        capture_output=True,
-        text=True,
-    )
-    assert confirmed.returncode == 0, confirmed.stderr
-    assert (directory / "github.env").read_text() == f"ARCHKEEL_VERSION={ALTERNATE_VERSION}\n"
-    env.update(line.split("=", 1) for line in (directory / "github.env").read_text().splitlines())
     for name in ("Write report metadata", "Generate architecture report", "Capture native validation receipt"):
         result = subprocess.run(["bash", "-e", "-c", step_run(name)], cwd=directory, env=env, capture_output=True)
-        assert result.returncode == (2 if name == "Capture native validation receipt" else 0), result.stderr
+        assert result.returncode == 0, result.stderr
     output = directory / REPORT_DIR
-    assert json.loads((output / "metadata.json").read_text())["archkeel_version"] == ALTERNATE_VERSION
-    assert json.loads((output / "architecture.json").read_text())["producer_version"] == ALTERNATE_VERSION
-    assert (output / "validation.json").read_text() == NATIVE_RECEIPT
+    source = f"git+https://github.com/rapiddweller/archkeel@{ALTERNATE_REVISION}"
+    assert json.loads((output / "metadata.json").read_text())["archkeel_revision"] == ALTERNATE_REVISION
+    assert json.loads((output / "architecture.json").read_text())["producer_source"] == source
+    assert (output / "validation.json").read_text() == env["NATIVE_RECEIPT"]
     gate = subprocess.run(["make", "architecture-check"], cwd=directory, env=env, capture_output=True)
-    assert gate.returncode != 0
+    assert gate.returncode == 0, gate.stderr
     calls = [json.loads(line) for line in (directory / "calls.jsonl").read_text().splitlines()]
     checker_calls = [args for args in calls if "archkeel" in args]
-    assert len(checker_calls) == 5
-    assert all(f"archkeel-{ALTERNATE_VERSION}-py3-none-" in args[args.index("--from") + 1] for args in checker_calls)
+    assert len(checker_calls) == 4
+    assert all(args[args.index("--from") + 1] == source for args in checker_calls)
+    assert all("--baseline" not in args for args in checker_calls)
     assert sum("validate" in args for args in checker_calls) == 2
-    workflow = (ROOT / ".github/workflows/main.yml").read_text(encoding="utf-8")
-    assert "ARCHKEEL_VERSION:" not in workflow
-    assert "archkeel==" not in workflow
 
 
-def test_stale_producer_cannot_write_checked_version_metadata(checker):
+@pytest.mark.parametrize(
+    "native_receipt,exit_code,passes",
+    [(receipt("PASS", 0), 0, True), (receipt("FAIL", 1), 1, False), ('{"outcome":"refusal"}', 2, False)],
+)
+def test_gate_uses_rules_and_rejects_a_refusal(checker, native_receipt, exit_code, passes):
     directory, env = checker
-    env["STUB_VERSION"] = "0.0.1"
-    result = subprocess.run(
-        ["bash", "-e", "-c", step_run("Confirm pinned ArchKeel version")],
-        cwd=directory,
-        env=env,
-        capture_output=True,
-    )
-    assert result.returncode != 0
-    assert not (directory / "github.env").exists()
-    assert not (directory / REPORT_DIR / "metadata.json").exists()
+    env.update(NATIVE_RECEIPT=native_receipt, VALIDATION_EXIT=str(exit_code))
+    result = subprocess.run(["make", "architecture-check"], cwd=directory, env=env, capture_output=True)
+    assert (result.returncode == 0) is passes, result.stderr
 
 
-def test_exit_two_preserves_reports_and_validation(checker):
+@pytest.mark.parametrize("verdict,exit_code", [("FAIL", 1), ("UNKNOWN", 2)])
+def test_nonpassing_verdict_preserves_reports_and_validation(checker, verdict, exit_code):
     directory, env = checker
-    env.update(REPORT_EXIT="2", VALIDATION_EXIT="2")
+    env.update(REPORT_EXIT=str(exit_code), VALIDATION_EXIT=str(exit_code), NATIVE_RECEIPT=receipt(verdict, exit_code))
     result = subprocess.run(
         ["make", "architecture-report", "architecture-validation-receipt"],
         cwd=directory,
@@ -146,7 +145,7 @@ def test_exit_two_preserves_reports_and_validation(checker):
     output = directory / REPORT_DIR
     assert (output / "architecture.json").exists()
     assert (output / "architecture.report.html").exists()
-    assert (output / "validation.json").read_text() == NATIVE_RECEIPT
+    assert (output / "validation.json").read_text() == env["NATIVE_RECEIPT"]
 
 
 def test_refused_report_with_exit_two_cannot_pass_on_fresh_or_stale_files(checker):

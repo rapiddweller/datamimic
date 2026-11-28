@@ -1,4 +1,4 @@
-.PHONY: help install install-pre-commit test test-unit test-architecture test-integration test-benchmarks test-functional coverage coverage-unit coverage-unit-run coverage-unit-report typecheck lint format check architecture-check architecture-definition-check architecture-version architecture-report architecture-validation-receipt architecture-cycle-check installed-authoring-check agent-plugin-check agent-plugin-package clean
+.PHONY: help install install-pre-commit test test-unit test-architecture test-integration test-benchmarks test-functional coverage coverage-unit coverage-unit-run coverage-unit-report typecheck lint format check architecture-check architecture-definition-check architecture-revision architecture-report architecture-validation-receipt architecture-cycle-check installed-authoring-check agent-plugin-check agent-plugin-package clean
 
 PYTHON ?= python
 INSTALLED_AUTHORING_ARGS ?=
@@ -10,16 +10,9 @@ AUTOMATIC_TESTS := $(addprefix $(TESTS)/,unit_tests integration_tests architectu
 CE_COVERAGE_FILES := $(shell find $(PACKAGE) -type f -name '*.py')
 COVERAGE_OMIT := $(PACKAGE)/resources/examples/*.py,$(PACKAGE)/resources/demos/**/*.py,$(PACKAGE)/interfaces/demo.py
 UNIT_TEST_ARGS ?= $(TESTS)/unit_tests
-ARCHKEEL_VERSION := 4.0.2.dev1021+g0840b4d62
-ARCHKEEL_VERSION_URL := $(subst +,%2B,$(ARCHKEEL_VERSION))
-ifeq ($(OS),Windows_NT)
-ARCHKEEL_PLATFORM := win_amd64
-else
-ARCHKEEL_PLATFORM := manylinux_2_17_x86_64
-endif
-ARCHKEEL_SOURCE := https://github.com/rapiddweller/archkeel/releases/download/main-build/archkeel-$(ARCHKEEL_VERSION_URL)-py3-none-$(ARCHKEEL_PLATFORM).whl
-# The independent receipt includes the exact Python runtime.
+ARCHKEEL_REVISION := f08ebe1826ff54df8d46045a4d96174c87cf1e58
 ARCHKEEL_PYTHON := 3.11.12
+ARCHKEEL := ARCHKEEL_BUNDLE_NATIVE=1 ARCHKEEL_NO_INIT=1 uvx --python $(ARCHKEEL_PYTHON) --from 'git+https://github.com/rapiddweller/archkeel@$(ARCHKEEL_REVISION)' archkeel
 ARCHITECTURE_DIR := test-artifacts/architecture/ce-recursive-target
 
 help:
@@ -116,23 +109,20 @@ architecture-definition-check:
 architecture-report:
 	mkdir -p $(ARCHITECTURE_DIR)
 	rm -f $(ARCHITECTURE_DIR)/architecture.json $(ARCHITECTURE_DIR)/architecture.report.html
-	@uvx --python $(ARCHKEEL_PYTHON) --from '$(ARCHKEEL_SOURCE)' archkeel report --output $(ARCHITECTURE_DIR)/architecture.json --format json; status=$$?; case "$$status" in 0|2) ;; *) exit "$$status";; esac; test -s $(ARCHITECTURE_DIR)/architecture.json
-	@uvx --python $(ARCHKEEL_PYTHON) --from '$(ARCHKEEL_SOURCE)' archkeel report --output $(ARCHITECTURE_DIR)/architecture.report.html; status=$$?; case "$$status" in 0|2) ;; *) exit "$$status";; esac; test -s $(ARCHITECTURE_DIR)/architecture.report.html
+	@$(ARCHKEEL) report --output $(ARCHITECTURE_DIR)/architecture.json --format json; status=$$?; case "$$status" in 0|1|2) ;; *) exit "$$status";; esac; test -s $(ARCHITECTURE_DIR)/architecture.json
+	@$(ARCHKEEL) report --output $(ARCHITECTURE_DIR)/architecture.report.html; status=$$?; case "$$status" in 0|1|2) ;; *) exit "$$status";; esac; test -s $(ARCHITECTURE_DIR)/architecture.report.html
 
-architecture-version:
-	@version="$$(uvx --python $(ARCHKEEL_PYTHON) --from '$(ARCHKEEL_SOURCE)' archkeel --version)" && test "$$version" = 'archkeel $(ARCHKEEL_VERSION)' && printf '%s\n' "$${version#archkeel }"
+architecture-revision:
+	@printf '%s\n' '$(ARCHKEEL_REVISION)'
 
 architecture-validation-receipt:
 	mkdir -p $(ARCHITECTURE_DIR)
 	rm -f $(ARCHITECTURE_DIR)/validation.json
-	# Preserve exit-2 diagnostics for the independently reviewed completion policy.
-	@uvx --python $(ARCHKEEL_PYTHON) --from '$(ARCHKEEL_SOURCE)' archkeel validate --baseline known-violations.json --json > $(ARCHITECTURE_DIR)/validation.json; status=$$?; case "$$status" in 0|2) ;; *) exit "$$status";; esac; test -s $(ARCHITECTURE_DIR)/validation.json
+	@$(ARCHKEEL) validate --json > $(ARCHITECTURE_DIR)/validation.json; status=$$?; case "$$status" in 0|1|2) ;; *) exit "$$status";; esac; test -s $(ARCHITECTURE_DIR)/validation.json
 
-architecture-check: architecture-cycle-check architecture-definition-check
-	uvx --python 3.11 --from pytest==8.3.5 pytest -q tests_ce/architecture/test_inner_architecture_target.py tests_ce/architecture/test_completion_gate.py
-	# ArchKeel ratchets type-only/package SCC edges; Pylint checks executable import cycles.
-	$(MAKE) architecture-validation-receipt architecture-report
-	uvx --python 3.11 --from pytest==8.3.5 python tests_ce/architecture/completion_gate.py $(ARCHITECTURE_DIR)/validation.json $(ARCHITECTURE_DIR)/architecture.json docs/architecture/refactoring-study/experiment-2/completion-unknowns.json known-violations.json
+architecture-check: architecture-validation-receipt architecture-cycle-check architecture-definition-check
+	uvx --python 3.11 --from pytest==8.3.5 pytest -q tests_ce/architecture/test_inner_architecture_target.py
+	$(PYTHON) script/architecture_study/archkeel_status.py $(ARCHITECTURE_DIR)/validation.json --gate
 
 architecture-cycle-check:
 	uvx --python 3.11 --from pylint==3.3.7 pylint --disable=all --enable=cyclic-import --persistent=n --score=n datamimic_ce

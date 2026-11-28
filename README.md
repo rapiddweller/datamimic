@@ -29,8 +29,6 @@
   <a href="https://rapiddweller.github.io/datamimic/"><img alt="ArchKeel architecture status" src="https://img.shields.io/endpoint?url=https%3A%2F%2Frapiddweller.github.io%2Fdatamimic%2Farchkeel-status.json"></a>
 </p>
 
-ArchKeel UNKNOWN results are valid and remain visible in the architecture status.
-
 Independent random values do not agree with each other: an order points to a customer that does not exist, a postal code does not belong to its city, and the next run gives different rows.
 
 **DATAMIMIC Community Edition (CE) is an open-source Python library and command line tool, made by rapiddweller and released under the MIT license, that generates connected test data from one XML model.** Records reference each other, domain values come from data files, and the same seed gives the same rows again. CE can also replace personal data in an existing export.
@@ -202,7 +200,7 @@ More: [agent plugin guide](https://github.com/rapiddweller/datamimic/blob/develo
 
 ## Engineering you can check
 
-- **The architecture contract is checked in public.** In each CI run, ArchKeel compares the observed structure of the code with the declared target contracts. The job `archkeel_check` must pass before a release. The [report](https://rapiddweller.github.io/datamimic/) is public. The budgets for accepted violations are ratchets: a raise needs an argued and verified amendment. A change to a contract needs an independent architecture review, recorded in a review note or in an approving review on the pull request ([how](https://github.com/rapiddweller/datamimic/blob/development/CONTRIBUTING.md)). There are 25 contract files, for example [`architecture-contract.json`](https://github.com/rapiddweller/datamimic/blob/development/architecture-contract.json), and the list of accepted violations in [`known-violations.json`](https://github.com/rapiddweller/datamimic/blob/development/known-violations.json) is empty.
+- **The architecture contract is checked in public.** ArchKeel compares the code with the declared [architecture contracts](https://github.com/rapiddweller/datamimic/blob/development/architecture-contract.json). A rule FAIL fails CI; the [development report](https://rapiddweller.github.io/datamimic/) shows PASS, UNKNOWN, and FAIL counts and diagnostics.
 - **The DSL is specified by checked-in projects.** Each of the 56 [scenarios](https://github.com/rapiddweller/datamimic/tree/development/tests_ce/scenarios) is a real `datamimic.xml` with an `acceptance/build.json`, a list of what it proves, and negatives that must fail. CI builds every scenario with `datamimic authoring build`.
 - **CE and Enterprise compatibility is recorded.** The [parity matrix](https://github.com/rapiddweller/datamimic/blob/development/docs/architecture/inner/ce-ee-parity.md) lists each difference between the two editions with its status. CE runs the 8 shared [conformance cases](https://github.com/rapiddweller/datamimic/tree/development/tests_ce/conformance/cases) in CI; the Enterprise Core runner follows.
 - **Seeded output is measured.** CI compares seeded output on 8 configurations: Linux with Python 3.11 (UTC, Los Angeles, lowest permitted dependency versions), 3.12, 3.13 and 3.14 (UTC), and Windows with Python 3.11 (UTC, Pacific). See the job [`runtime_determinism_matrix`](https://github.com/rapiddweller/datamimic/blob/development/.github/workflows/main.yml).

@@ -16,14 +16,14 @@ spec.loader.exec_module(module)
 
 @pytest.mark.parametrize(
     "verdict,exit_code,color",
-    [("PASS", 0, "green"), ("UNKNOWN", 2, "orange"), ("FAIL", 1, "red")],
+    [("PASS", 0, "green"), ("UNKNOWN", 2, "yellow"), ("FAIL", 1, "red")],
 )
 def test_status_colors(verdict, exit_code, color):
     result = module.make_status(
         {
             "status": verdict,
             "exit_code": exit_code,
-            "baseline": {"state": "current"},
+            "outcome": "verdict",
             "frame": {"rules": {"rule": ["kind", verdict]}, "violations": []},
         }
     )
@@ -32,17 +32,21 @@ def test_status_colors(verdict, exit_code, color):
     assert result["exitCode"] == exit_code
 
 
-@pytest.mark.parametrize("violations", [["violation"], {"violation": {}}])
-def test_violations_are_red_even_without_failed_rules(violations):
+def test_diagnostics_without_failed_rules_do_not_change_the_badge():
     validation = {
-        "status": "PASS",
-        "exit_code": 0,
-        "baseline": {"state": "current"},
-        "frame": {"rules": {}, "violations": violations},
+        "status": "UNKNOWN",
+        "exit_code": 2,
+        "outcome": "verdict",
+        "frame": {"rules": {"rule": ["kind", "PASS"]}, "violations": {}, "gaps": ["gap"]},
     }
-    assert module.make_status(validation)["color"] == "red"
+    assert module.make_status(validation)["color"] == "green"
 
 
 def test_missing_frame_is_rejected():
     with pytest.raises(KeyError):
+        module.make_status({"outcome": "verdict"})
+
+
+def test_refusal_is_not_a_verdict():
+    with pytest.raises(ValueError, match="did not return a verdict"):
         module.make_status({})

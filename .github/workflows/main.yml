@@ -102,8 +102,21 @@ jobs:
           python-version: '3.11'
       - name: Install uv
         uses: astral-sh/setup-uv@v8.1.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: Makefile
+      - name: Set up ArchKeel native build tools
+        run: |
+          rustup toolchain install 1.97.0 --profile minimal
+          cargo +1.97.0 install --locked cargo-auditable@0.7.7
       - name: Validate architecture contract
         run: make architecture-check
+      - name: Upload architecture diagnostics
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: architecture-validation-${{ github.run_attempt }}
+          path: test-artifacts/architecture/ce-recursive-target/validation.json
 
   architecture_report:
     name: Architecture review report
@@ -124,12 +137,13 @@ jobs:
 
       - name: Install uv
         uses: astral-sh/setup-uv@v8.1.0
-
-      - name: Confirm pinned ArchKeel version
+        with:
+          enable-cache: true
+          cache-dependency-glob: Makefile
+      - name: Set up ArchKeel native build tools
         run: |
-          version="$(make --no-print-directory --silent architecture-version)"
-          echo "ARCHKEEL_VERSION=$version" >> "$GITHUB_ENV"
-          echo "archkeel $version"
+          rustup toolchain install 1.97.0 --profile minimal
+          cargo +1.97.0 install --locked cargo-auditable@0.7.7
 
       - name: Write report metadata
         env:
@@ -152,7 +166,9 @@ jobs:
               "run_attempt": int(os.environ["RUN_ATTEMPT"]),
               "head_sha": os.environ["HEAD_SHA"],
               "scanned_sha": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
-              "archkeel_version": os.environ["ARCHKEEL_VERSION"],
+              "archkeel_revision": subprocess.check_output(
+                  ["make", "--no-print-directory", "--silent", "architecture-revision"], text=True
+              ).strip(),
           }
           (report_dir / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
           PY
@@ -167,7 +183,7 @@ jobs:
       - name: Generate ArchKeel status
         if: ${{ !cancelled() }}
         run: |
-          python script/architecture_study/archkeel_status.py test-artifacts/architecture/ce-recursive-target/validation.json test-artifacts/architecture/ce-recursive-target/archkeel-status.json
+          python script/architecture_study/archkeel_status.py test-artifacts/architecture/ce-recursive-target/validation.json --output test-artifacts/architecture/ce-recursive-target/archkeel-status.json
           python - <<'PY'
           import hashlib
           import json
@@ -207,7 +223,7 @@ jobs:
           from pathlib import Path
 
           status = json.loads(Path("test-artifacts/architecture/ce-recursive-target/archkeel-status.json").read_text())
-          message = f"{status['pass']} pass · {status['unknown']} unknown · {status['fail']} fail"
+          message = status["message"]
           with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
               summary.write(f"ArchKeel: {message}\n\n")
           if status["unknown"] > 0 or status["fail"] > 0 or status["violations"] > 0:
