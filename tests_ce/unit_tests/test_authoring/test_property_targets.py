@@ -38,7 +38,7 @@ def test_an_undefined_placeholder_is_still_rejected_at_the_step_element(tmp_path
     root = _project(tmp_path, None)
     result = build_project(root, _entry(sink=None), version="5.0", expectations=[_COUNT])
     assert result.outcome == "rejected"
-    assert [item.path for item in result.diagnostics if item.code == "DM401"] == [
+    assert [item.path for item in result.diagnostics if item.rule == "DM401"] == [
         ("include", "delivery/90_export.xml", "/setup/generate", "line", 1)
     ], result.diagnostics
 
@@ -48,7 +48,7 @@ def test_a_property_naming_an_undeclared_target_is_rejected_without_echoing_its_
     (root / "conf" / "base.properties").write_text("sink=secret_sink_name\n", encoding="utf-8")
     result = build_project(root, _entry(sink="x"), version="5.0", expectations=[_COUNT])
     assert result.outcome == "rejected"
-    assert any(item.code == "DM401" for item in result.diagnostics), result.diagnostics
+    assert any(item.rule == "DM401" for item in result.diagnostics), result.diagnostics
     assert "secret_sink_name" not in result.model_dump_json()
 
 
@@ -67,7 +67,7 @@ def test_a_properties_include_after_the_step_does_not_resolve_the_step(tmp_path:
     entry = '<setup rngSeed="1"><include uri="delivery/90_export.xml"/><include uri="conf/base.properties"/></setup>'
     result = build_project(root, entry, version="5.0", expectations=[_COUNT])
     assert result.outcome == "rejected"
-    assert any(item.code == "DM401" for item in result.diagnostics), result.diagnostics
+    assert any(item.rule == "DM401" for item in result.diagnostics), result.diagnostics
 
 
 def test_a_generate_before_the_properties_include_is_not_resolved(tmp_path: Path) -> None:
@@ -78,7 +78,7 @@ def test_a_generate_before_the_properties_include_is_not_resolved(tmp_path: Path
     )
     result = build_project(root, entry, version="5.0", expectations=[_COUNT])
     assert result.outcome == "rejected"
-    assert any(item.code == "DM401" for item in result.diagnostics), result.diagnostics
+    assert any(item.rule == "DM401" for item in result.diagnostics), result.diagnostics
 
 
 def test_a_generate_after_the_properties_include_is_resolved(tmp_path: Path) -> None:

@@ -117,10 +117,11 @@ AUTHORING_RULE_CATALOG: tuple[RuleCatalogEntry, ...] = (
         rule_id=ExpectationIntentKind.GROUP_SUM,
         category="expectation",
         severity="error",
-        description="Two captured numeric fields must sum to the same total in every observed group.",
-        applicability="Explicit group-sum expectations on a complete product capture.",
+        description="Each group total must equal another field's sum, or equal or stay at or below an amount declared "
+        "by a reference product.",
+        applicability="Explicit group-sum expectations on complete product captures.",
         owner=RuleOwner.EXPECTATION,
-        remediation="Check the group key and amount fields, then correct the postings so each group balances.",
+        remediation="Check the group key and amount fields, then correct the rows so each group meets its comparison.",
     ),
     RuleCatalogEntry(
         rule_id=ExpectationIntentKind.GROUP_COUNT,
@@ -250,7 +251,7 @@ def catalog_diagnostic(
     """A catalog finding; ``remediation`` replaces the rule's generic fix when the caller knows the specific one."""
     rule = _RULES_BY_ID[rule_id]
     return Diagnostic(
-        code=rule.rule_id,
+        code=rule_id,
         message=message,
         phase=phase,
         path=path,
