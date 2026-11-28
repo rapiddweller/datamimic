@@ -92,22 +92,14 @@ remain part of the appropriate physical lane.
 
 ## 🏛️ Architecture Check
 
-One check applies to everybody: `make architecture-check`. Run it before you open a pull request.
+Run `make architecture-check` before opening a pull request. A cold install builds the pinned
+ArchKeel Git commit with Rust and `cargo-auditable` (`cargo install --locked cargo-auditable@0.7.7`).
+An ArchKeel rule verdict of FAIL fails CI. PASS and UNKNOWN are reported in the
+[development architecture report](https://rapiddweller.github.io/datamimic/) with diagnostics.
+Measurement changes and UNKNOWN findings do not require a baseline update or a review record.
 
-The check fails when one of these is true:
-
-- The code has an architecture violation, or the baseline in `known-violations.json` drifts.
-- A measurement budget is exceeded, or the report is incomplete.
-- The set of UNKNOWN findings differs from the set the review record assesses.
-- A budget or a baseline entry in `known-violations.json` differs from the one the review record names.
-
-A code change that does none of this, and changes neither the architecture contract nor the analyzer, needs no review record. Do not edit `docs/architecture/refactoring-study/experiment-2/completion-unknowns.json`.
-
-A maintainer records a review only when the set of UNKNOWN findings, the validation diagnostics, the contract, the analyzer, or `known-violations.json` changes. If your change causes that, the maintainer adds the record to your branch.
-
-A budget or baseline change in `known-violations.json` needs a `measurement_amendment` entry and the new `known_violations_digest` in the same pull request. A maintainer can still raise a ratchet budget when the raise is argued and verified.
-
-The independent architecture review stays a required process step. It is recorded as a review note under `docs/architecture/refactoring-study/experiment-2/`, or as an approving review on the pull request, not as a digest.
+Record the independent architecture review for changes to the contracts or under
+`datamimic_ce/` as a review note or an approving review on the pull request.
 
 ---
 
