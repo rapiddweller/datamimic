@@ -63,22 +63,11 @@ class BuildCoverage(AuthoringModel):
 
     @property
     def has_gaps(self) -> bool:
-        return bool(
-            self.products_without_expectation
-            or self.unread_data_files
-            or self.unchecked_declared_sinks
-            or not self.seeded
-        )
+        return bool(self.open_gaps)
 
     @property
     def open_gaps(self) -> tuple[CoverageGapKind, ...]:
-        flags = (
-            (CoverageGapKind.PRODUCTS_WITHOUT_EXPECTATION, bool(self.products_without_expectation)),
-            (CoverageGapKind.UNREAD_DATA_FILES, bool(self.unread_data_files)),
-            (CoverageGapKind.UNCHECKED_DECLARED_SINKS, bool(self.unchecked_declared_sinks)),
-            (CoverageGapKind.SEEDED, not self.seeded),
-        )
-        return tuple(kind for kind, open_ in flags if open_)
+        return tuple(kind for kind, _ in self._gaps())
 
     def action_required(self) -> str | None:
         """The one line that stops an agent from reporting success on a Ready with open gaps."""
@@ -94,42 +83,51 @@ class BuildCoverage(AuthoringModel):
 
     def warnings(self) -> tuple[Diagnostic, ...]:
         """One warning for each gap, with counted facts in `actual`."""
-        found: list[Diagnostic] = []
+        return tuple(warning for _, warning in self._gaps())
+
+    def _gaps(self) -> tuple[tuple[CoverageGapKind, Diagnostic], ...]:
+        """The one place that decides which gaps are open: each open gap with its warning, in declared order."""
+        found: list[tuple[CoverageGapKind, Diagnostic]] = []
+
+        def gap(kind: CoverageGapKind, message: str, actual: tuple[str, ...] | None, remediation: str) -> None:
+            listed: JsonValue = None if actual is None else list(actual)
+            warning = catalog_diagnostic(
+                AuthoringRuleId.COVERAGE_GAP,
+                message,
+                phase=DiagnosticPhase.EVIDENCE,
+                path=("coverage", kind.value),
+                actual=listed,
+                remediation=remediation,
+            )
+            found.append((kind, warning))
+
         if self.products_without_expectation:
-            found.append(
-                _warning(
-                    "Some products have no expectation, so their values are not checked.",
-                    ("coverage", "products_without_expectation"),
-                    self.products_without_expectation,
-                    "Add an expectation for each listed product in acceptance/build.json.",
-                )
+            gap(
+                CoverageGapKind.PRODUCTS_WITHOUT_EXPECTATION,
+                "Some products have no expectation, so their values are not checked.",
+                self.products_without_expectation,
+                "Add an expectation for each listed product in acceptance/build.json.",
             )
         if self.unread_data_files:
-            found.append(
-                _warning(
-                    "Some project data files were never read by the run, so the model does not use them.",
-                    ("coverage", "unread_data_files"),
-                    tuple(str(path) for path in self.unread_data_files),
-                    "Read each listed file with a source in the model, move it to docs/, or delete it.",
-                )
+            gap(
+                CoverageGapKind.UNREAD_DATA_FILES,
+                "Some project data files were never read by the run, so the model does not use them.",
+                tuple(str(path) for path in self.unread_data_files),
+                "Read each listed file with a source in the model, move it to docs/, or delete it.",
             )
         if self.unchecked_declared_sinks:
-            found.append(
-                _warning(
-                    "Some declared sinks have no expectation on the sink.",
-                    ("coverage", "unchecked_declared_sinks"),
-                    tuple(f"{sink.kind}:{sink.environment}:{sink.entity}" for sink in self.unchecked_declared_sinks),
-                    "Add an expectation whose subject is the declared sink.",
-                )
+            gap(
+                CoverageGapKind.UNCHECKED_DECLARED_SINKS,
+                "Some declared sinks have no expectation on the sink.",
+                tuple(f"{sink.kind}:{sink.environment}:{sink.entity}" for sink in self.unchecked_declared_sinks),
+                "Add an expectation whose subject is the declared sink.",
             )
         if not self.seeded:
-            found.append(
-                _warning(
-                    "The project sets no rngSeed, so Build ran it once and did not replay it.",
-                    ("coverage", "seeded"),
-                    None,
-                    "Set rngSeed on the setup element.",
-                )
+            gap(
+                CoverageGapKind.SEEDED,
+                "The project sets no rngSeed, so Build ran it once and did not replay it.",
+                None,
+                "Set rngSeed on the setup element.",
             )
         return tuple(found)
 
@@ -158,18 +156,6 @@ def unread_data_files(
     """
     used = {*read_paths, *parent_read}
     return tuple(sorted(path for path in workspace_files if _is_project_data(path) and path not in used))
-
-
-def _warning(message: str, path: tuple[str, ...], actual: tuple[str, ...] | None, remediation: str) -> Diagnostic:
-    listed: JsonValue = None if actual is None else list(actual)
-    return catalog_diagnostic(
-        AuthoringRuleId.COVERAGE_GAP,
-        message,
-        phase=DiagnosticPhase.EVIDENCE,
-        path=path,
-        actual=listed,
-        remediation=remediation,
-    )
 
 
 # The MCP server refuses a result over 60 000 characters; one item of this list needs 150 to 210 of them.
