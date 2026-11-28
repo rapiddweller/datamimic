@@ -74,6 +74,7 @@ from datamimic_ce.engine.io.exporters.lifecycle import (
 )
 from datamimic_ce.engine.io.exporters.registry import (
     buffered_exporter_names,
+    builtin_target_names,
     capture_test_results,
     consume_memstore_target,
     smoke_export,
@@ -117,6 +118,7 @@ __all__ = [
     "WeightedDataSource",
     "WeightedEntityDataSource",
     "buffered_exporter_names",
+    "builtin_target_names",
     "publish_exported_artifacts",
     "count_query_length",
     "count_source",
