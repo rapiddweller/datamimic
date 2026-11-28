@@ -343,19 +343,23 @@ def _check_group_count(
 
 
 def _check_group_sum(
-    rows: tuple[Mapping[str, object], ...] | None, expectation: GroupSumExpectation
+    rows: tuple[Mapping[str, object], ...] | None,
+    reference_rows: tuple[Mapping[str, object], ...] | None,
+    expectation: GroupSumExpectation,
 ) -> _ExpectationFailure | None:
     label = _subject_label(expectation.subject)
-    if not rows:
+    equals_field = expectation.equals_field
+    if rows is None or (equals_field is not None and not rows):
         return _ExpectationFailure(f"{label} has no groups captured by '{expectation.group_by}'", {})
     keys = _values(rows, expectation.group_by)
     left = _values(rows, expectation.field)
-    right = _values(rows, expectation.equals_field)
+    right = _values(rows, equals_field) if equals_field is not None else (0,) * len(rows)
+    amount_fields = f"'{expectation.field}'"
+    if equals_field is not None:
+        amount_fields += f" and '{equals_field}'"
     if keys is None or left is None or right is None:
         return _ExpectationFailure(
-            f"{label} is missing a group_sum field: '{expectation.group_by}', "
-            f"'{expectation.field}' or '{expectation.equals_field}'",
-            {},
+            f"{label} is missing a group_sum field: '{expectation.group_by}', {amount_fields}", {}
         )
     balances: dict[str | int, Fraction] = {}
     for key, left_value, right_value in zip(keys, left, right, strict=True):
@@ -366,15 +370,15 @@ def _check_group_sum(
         left_amount, right_amount = _decimal(left_value, bounded=True), _decimal(right_value, bounded=True)
         if left_amount is None or right_amount is None:
             return _ExpectationFailure(
-                f"{label} requires bounded finite numbers or decimal strings in "
-                f"'{expectation.field}' and '{expectation.equals_field}'",
-                {},
+                f"{label} requires bounded finite numbers or decimal strings in {amount_fields}", {}
             )
         # Summing the exact difference avoids Decimal context rounding and retains a zero balance for each group.
         delta = Fraction(left_amount) - Fraction(right_amount)
         if key in balances:
             delta += balances[key]
         balances[key] = delta
+    if equals_field is None:
+        return _check_group_sum_reference(balances, reference_rows, expectation)
     mismatches = sum(balances[key] != 0 for key in balances)
     if mismatches:
         return _ExpectationFailure(
@@ -385,13 +389,62 @@ def _check_group_sum(
     return None
 
 
+def _check_group_sum_reference(
+    totals: dict[str | int, Fraction],
+    rows: tuple[Mapping[str, object], ...] | None,
+    expectation: GroupSumExpectation,
+) -> _ExpectationFailure | None:
+    reference = expectation.reference
+    assert reference is not None
+    label = _subject_label(expectation.subject)
+    reference_label = _subject_label(reference.subject)
+    if not rows:
+        return _ExpectationFailure(f"{reference_label} lists no captured groups for '{expectation.group_by}'", {})
+    keys = _values(rows, reference.key)
+    amounts = _values(rows, reference.field)
+    if keys is None or amounts is None:
+        return _ExpectationFailure(
+            f"{reference_label} is missing a group_sum reference field: '{reference.key}' or '{reference.field}'",
+            {},
+        )
+    seen: set[str | int] = set()
+    mismatches = 0
+    for key, value in zip(keys, amounts, strict=True):
+        if not isinstance(key, str | int) or isinstance(key, bool) or key in seen:
+            return _ExpectationFailure(
+                f"{reference_label} requires a unique string or integer group key in '{reference.key}'", {}
+            )
+        target = _decimal(value, bounded=True)
+        if target is None:
+            return _ExpectationFailure(
+                f"{reference_label} requires a bounded finite number or decimal string in '{reference.field}'", {}
+            )
+        seen.add(key)
+        total = totals.get(key, 0)
+        mismatches += total != target if reference.comparison == "equal" else total > target
+    unexpected = sum(key not in seen for key in totals)
+    if mismatches or unexpected:
+        return _ExpectationFailure(
+            f"{label} has {mismatches} group(s) whose sum of '{expectation.field}' fails the '{reference.comparison}' "
+            f"comparison against '{reference.field}' of {reference_label}, and {unexpected} group(s) "
+            f"that {reference_label} does not list, by '{expectation.group_by}'",
+            {"actual": mismatches + unexpected},
+        )
+    return None
+
+
 def _check_expectation(
     spec: AcceptanceSpecV1,
     captured: CapturedRows,
     expectation: ExpectationIntent,
 ) -> _ExpectationFailure | None:
     if isinstance(expectation, GroupSumExpectation):
-        return _check_group_sum(_subject_rows(spec, captured, expectation.subject), expectation)
+        reference = expectation.reference
+        return _check_group_sum(
+            _subject_rows(spec, captured, expectation.subject),
+            _subject_rows(spec, captured, reference.subject) if reference is not None else None,
+            expectation,
+        )
     if isinstance(expectation, GroupCountExpectation):
         return _check_group_count(
             _subject_rows(spec, captured, expectation.subject),
