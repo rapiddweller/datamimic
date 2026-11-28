@@ -48,10 +48,11 @@ def write_project(root: Path, entry: DmJsonDocumentV1 | str, **acceptance: objec
     """``entry`` is the datamimic.xml text, or a DM JSON document compiled to it; ``acceptance`` holds the
     BuildRequestV5 fields written to acceptance/build.json."""
     xml = entry if isinstance(entry, str) else CeDmJsonCodec().compile(entry).xml
-    (root / PROJECT_ENTRY_PATH).write_text(xml, encoding="utf-8")
+    # newline="\n": Build digests file bytes, so a Windows text-mode write (CRLF) must not change what the test proves.
+    (root / PROJECT_ENTRY_PATH).write_text(xml, encoding="utf-8", newline="\n")
     path = root / PROJECT_ACCEPTANCE_PATH
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(BuildRequestV5.model_validate(acceptance).model_dump_json(), encoding="utf-8")
+    path.write_text(BuildRequestV5.model_validate(acceptance).model_dump_json(), encoding="utf-8", newline="\n")
     return root
 
 
