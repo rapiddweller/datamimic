@@ -33,7 +33,7 @@ from datamimic_ce.authoring.domain.project_run import (
     UnverifiedProjectRunResult,
 )
 from datamimic_ce.authoring.domain.project_scaffold import ProjectInitResult, ProjectPattern
-from datamimic_ce.authoring.domain.reference import ReferenceResult
+from datamimic_ce.authoring.domain.reference import ReferenceLookupResult
 from datamimic_ce.authoring.domain.requests import (
     DEFAULT_AUTHORING_DESCRIPTOR_PATH,
     PROJECT_ENTRY_PATH,
@@ -224,8 +224,8 @@ def create_server(
         "Set name to read one named contract instead of the whole topic.",
         flat_example='{"topic": "assembly", "name": "starter"}',
     )
-    async def datamimic_reference(request: ReferenceRequest) -> ReferenceResult:
-        """Read one model-derived reference topic or named contract."""
+    async def datamimic_reference(request: ReferenceRequest) -> ReferenceLookupResult:
+        """Read one model-derived reference topic or named contract, or its typed not-found result."""
         return await to_thread.run_sync(catalog_application().reference, request)
 
     @tool(
