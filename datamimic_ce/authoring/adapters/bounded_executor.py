@@ -73,7 +73,17 @@ _MAX_REPLY_BYTES = dryrun._MAX_WORKER_REPLY_BYTES
 _STDERR_READ_BYTES = 4096
 _STDERR_EXCERPT_CHARS = 800
 _CONTROL_RUNS = r"[\x00-\x1f\x7f-\x9f]+"
-_CONTROL_EDGES = r"\A[\x00-\x20\x7f-\x9f]+|[\x00-\x20\x7f-\x9f]+\Z"
+# \x00-\x20 and \x7f-\x9f: the characters trimmed from both ends of the excerpt.
+_CONTROL_CHARACTERS = (
+    "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f"
+    "\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f\x20"
+    "\x7f\x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8a\x8b\x8c\x8d\x8e\x8f"
+    "\x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\x9a\x9b\x9c\x9d\x9e\x9f"
+)
+
+
+def _trim_control_edges(value: str) -> str:
+    return value.strip(_CONTROL_CHARACTERS)
 
 
 def _stderr_excerpt(path: Path) -> str:
@@ -96,7 +106,8 @@ def _stderr_excerpt(path: Path) -> str:
         os.close(descriptor)
     text = str(data, "utf-8", "replace")
     # Runs of line breaks and control characters become one " | " separator, so the excerpt is one line.
-    trimmed = re.sub(_CONTROL_EDGES, "", text)
+    # No anchored regex for the edges: an alternation trips Sonar S5850, a grouped one S6395, a trailing run S8786.
+    trimmed = _trim_control_edges(text)
     excerpt = re.sub(_CONTROL_RUNS, " | ", trimmed)
     if len(excerpt) > _STDERR_EXCERPT_CHARS:
         excerpt = "..." + excerpt[-_STDERR_EXCERPT_CHARS:]
