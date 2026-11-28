@@ -262,8 +262,17 @@ def _compiled(expression: str) -> types.CodeType:
 
 def is_unresolved_lookup(error: BaseException) -> bool:
     """Whether a TaskConfigError from ``evaluate_python`` stands for a name, ``row.x`` or ``row['x']`` that the
-    namespace cannot resolve (yet): the failing frame is the expression itself or a row accessor of this module.
-    A lookup that failed inside a call the expression made, such as a constructor, is not one."""
+    namespace cannot resolve (yet), as opposed to a lookup that failed inside a call the expression made, such as a
+    generator's constructor. A caller uses it to wait for a row context that binds the name.
+
+    The decision reads the traceback of the original error and relies on exactly three facts of this module:
+    1. every expression is compiled by ``_compile`` under the file name ``_EXPRESSION_FILE``, on the main path
+       and on the colon-rewrite fallback alike;
+    2. the only frames of this module below that expression frame are the row accessors of ``DotableDict``
+       (``__getattr__`` and ``__getitem__``);
+    3. ``evaluate_python`` wraps the original error as ``__cause__``.
+    Any other frame below the expression frame belongs to code the expression called, so the failure is not an
+    unresolved lookup. ``test_unresolved_lookup.py`` fails when one of these facts changes."""
     cause = error.__cause__
     if not isinstance(cause, (NameError, AttributeError, KeyError)):
         return False
@@ -401,7 +410,9 @@ def evaluate_python(
             return updated
 
         try:
-            return normalized_result(eval(expression, single_namespace(replace_colons(local_namespace))), diagnostic)
+            return normalized_result(
+                eval(_compile(expression), single_namespace(replace_colons(local_namespace))), diagnostic
+            )
         except (UserErrorBase, DomainError):
             raise
         except Exception as retry_error:

@@ -1,7 +1,7 @@
 {
   "title": "A generator that cannot be built stops at construction, even for a generate with no rows",
   "proves": [
-    "a generator whose argument names a per-row value (max=this.limit or max=this['limit']) cannot resolve at construction and is built on the first row: the deferral is kept for exactly that case",
+    "a generator whose argument names a per-row value (max=this.limit, max=this['limit'] or a colon name such as max=this.ns:cap) cannot resolve at construction and is built on the first row: the deferral is kept for exactly that case",
     "a generator with an unknown argument or a syntax error stops with I832 before any row is generated, so a generate with count=0 no longer hides it"
   ],
   "products": {"tickets": 3, "idle": 0},
