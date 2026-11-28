@@ -11,8 +11,6 @@
         <key name="same_product" script="{row.order_id: row.product_id for row in orders}[order_id] == {row.lot_id: row.product_id for row in lots}[lot_id]"/>
         <!-- A1: the ship date and the expiry date, from the orders and the lots, not from the eligibility step. -->
         <key name="days_to_expiry" script="({row.lot_id: row.expires_on for row in lots}[lot_id] - {row.order_id: row.ship_on for row in orders}[order_id]).days"/>
-        <key name="lot_quantity" script="{row.lot_id: row.quantity for row in lots}[lot_id]"/>
-        <key name="lot_allocated" script="sum(row.quantity for row in allocations if row.lot_id == lot_id)"/>
         <key name="lots_of_order" script="len({row.lot_id for row in allocations if row.order_id == order_id})"/>
         <!-- A5: the limit is the policy value, not a number in this file. -->
         <key name="max_lots" script="policy[0].max_lots_per_order"/>

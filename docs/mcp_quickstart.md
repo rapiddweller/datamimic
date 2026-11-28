@@ -29,11 +29,18 @@ which projects a call may name; without it any project can be named. A project's
 Pass tool arguments directly, for example
 `{"project": "/absolute/project", "xml": "<setup/>"}` for `datamimic_lint`.
 For one transition release, `reference`, `compile`, `decompile`, `lint`,
-`dry_run` and `run` also accept the old `request` wrapper. Keep `project` at
+`dry_run` and `run` also accept the old `request` wrapper, which is deprecated. Keep `project` at
 the top level: `{"project": "/absolute/project", "request": {"xml": "<setup/>"}}`.
 Use one form per call. With an older server, follow its advertised input schema.
 MCP argument schemas come from `tools/list`; `datamimic authoring export-contract`
-exports the DSL and Authoring contracts, whose payload shapes are unchanged.
+exports the live DSL and Authoring contracts.
+
+MCP and CLI JSON use the same diagnostics. `code` is an `Ixxx` error or `Wxxx`
+warning when the defect is catalogued. Uncatalogued failures use a transport or
+authoring code such as `child_execution` or `validation`. When a lint/check rule
+finds a defect, `rule` carries its `DMxxx` ID; otherwise it is null or omitted.
+Use `location` for the file position and include chain, and `remediation` for the
+repair. Do not parse positions from `message`.
 
 | MCP tool | CLI equivalent |
 |---|---|

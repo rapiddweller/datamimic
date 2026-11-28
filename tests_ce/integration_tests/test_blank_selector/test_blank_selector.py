@@ -87,7 +87,7 @@ def test_dry_run_and_build_report_the_same_code(tmp_path, descriptor, element, a
     dry_run = create_authoring_application(tmp_path, descriptor_path=path).dry_run(
         RunRequest(xml=xml, descriptor_path=path)
     )
-    assert [(d.ce_error.issue_code, d.path[-2:]) for d in dry_run.diagnostics if d.ce_error is not None] == [
+    assert [(d.code, d.path[-2:]) for d in dry_run.diagnostics if isinstance(d.code, IssueCode)] == [
         (IssueCode.SOURCE_SELECTOR_BLANK, (element, attribute))
     ]
 
@@ -99,7 +99,7 @@ def test_dry_run_and_build_report_the_same_code(tmp_path, descriptor, element, a
         expectations=[{"kind": "exact_count", "subject": {"kind": "product", "product": product}, "count": 2}],
     )
     assert isinstance(built, RejectedBuild)
-    assert [(d.ce_error.issue_code, d.path[-2:]) for d in built.diagnostics if d.ce_error is not None] == [
+    assert [(d.code, d.path[-2:]) for d in built.diagnostics if isinstance(d.code, IssueCode)] == [
         (IssueCode.SOURCE_SELECTOR_BLANK, (element, attribute))
     ]
 

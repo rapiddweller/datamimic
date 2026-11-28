@@ -47,7 +47,7 @@ def test_compile_codec_failure_and_parser_failure_have_distinct_phases(tmp_path)
     missing = CeDmJsonCodec().decompile('<setup><generate count="2"/></setup>')
     invalid = usecase.execute(CompileDocumentRequest(document=missing))
     assert invalid.phase == DiagnosticPhase.XML
-    assert any(item.ce_error is not None for item in invalid.diagnostics)
+    assert any(item.code == "I605" for item in invalid.diagnostics)
 
 
 def test_decompile_rejects_parser_valid_unrepresentable_comments(tmp_path):
@@ -106,8 +106,9 @@ def test_public_compile_and_build_property_diagnostics_omit_input_values(tmp_pat
     assert built.outcome == "rejected"
     assert built.phase is DiagnosticPhase.XML
     # The named rule comes first; the parser refusal still names the attribute.
-    [parser] = [item for item in built.diagnostics if item.ce_error is not None]
-    assert parser.path == ("descriptor", "datamimic.xml", "setup", "numProcess")
+    [parser] = [item for item in built.diagnostics if item.code == "I605" and item.rule is None]
+    assert parser.path == ("descriptor", "datamimic.xml", "setup", "line", 1, "numProcess")
+    assert parser.location is not None and parser.location.line == 1
     for result, finding in ((compiled, diagnostic), (built, parser)):
         assert secret not in result.model_dump_json()
         assert "input_value" not in result.model_dump_json()
