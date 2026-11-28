@@ -18,6 +18,7 @@ from datamimic_ce.engine.dsl.statements.setup.setup_statement import SetupStatem
 from datamimic_ce.errors import IssueCode, parser_validation_error
 from datamimic_ce.errors.base import ParserValidationError, UserErrorBase
 from datamimic_ce.errors.context import DescriptorLocation
+from datamimic_ce.errors.context.descriptor_identity import get_descriptor_name
 
 
 class DescriptorParser:
@@ -47,7 +48,7 @@ class DescriptorParser:
                 location=DescriptorLocation("setup", descriptor_path=descriptor_file_path.name),
             ) from error
         except (etree.XMLSyntaxError, DTDForbiddenError) as error:
-            raise _invalid_xml(error, descriptor_file_path.name) from error
+            raise _invalid_xml(error, get_descriptor_name() or descriptor_file_path.name) from error
 
         setup_parser = SetupParser(root, properties, runtime_environment)
         return setup_parser.parse(descriptor_file_path.parent, profile_loader=profile_loader)

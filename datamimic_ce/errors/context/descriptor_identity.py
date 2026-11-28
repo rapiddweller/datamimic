@@ -10,21 +10,32 @@ from contextvars import ContextVar, Token
 from pathlib import PurePosixPath, PureWindowsPath
 from types import TracebackType
 
-_DESCRIPTOR_NAME: ContextVar[str | None] = ContextVar("dm_descriptor_name", default=None)
+_DESCRIPTOR_STACK: ContextVar[tuple[str, ...]] = ContextVar("dm_descriptor_stack", default=())
+
+
+def get_descriptor_stack() -> tuple[str, ...]:
+    """The active descriptor scopes, beginning with the entry."""
+    return _DESCRIPTOR_STACK.get()
 
 
 def get_descriptor_name() -> str | None:
     """Return the active descriptor name when in a descriptor scope."""
-    return _DESCRIPTOR_NAME.get()
+    stack = get_descriptor_stack()
+    return stack[-1] if stack else None
 
 
 class _DescriptorScope(AbstractContextManager[None]):
     def __init__(self, name: str | None) -> None:
         self._name = logical_descriptor_name(name)
-        self._token: Token[str | None] | None = None
+        self._token: Token[tuple[str, ...]] | None = None
 
     def __enter__(self) -> None:
-        self._token = _DESCRIPTOR_NAME.set(self._name)
+        stack = get_descriptor_stack()
+        if self._name is None:
+            stack = ()
+        elif not stack or self._name != stack[-1]:
+            stack = (*stack, self._name)
+        self._token = _DESCRIPTOR_STACK.set(stack)
 
     def __exit__(
         self,
@@ -33,7 +44,7 @@ class _DescriptorScope(AbstractContextManager[None]):
         traceback: TracebackType | None,
     ) -> None:
         if self._token is not None:
-            _DESCRIPTOR_NAME.reset(self._token)
+            _DESCRIPTOR_STACK.reset(self._token)
             self._token = None
 
 

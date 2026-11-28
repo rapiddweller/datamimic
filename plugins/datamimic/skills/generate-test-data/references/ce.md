@@ -83,7 +83,10 @@ declared total (at most 2000). For a file source without count, a script count o
 (`minCount`/`maxCount`), set it to the total rows of all products.
 Never inject or change a runtime count just to satisfy the proof budget.
 
-Inspect `outcome`, `phase`, diagnostics and complete acceptance/evidence. On a
+Inspect `outcome`, `phase`, diagnostics and complete acceptance/evidence. A
+diagnostic `code` identifies the catalog issue (`Ixxx` or `Wxxx`) or an
+uncatalogued failure. `rule` identifies the `DMxxx` lint/check when present.
+Follow `location`, `path` and `remediation` to repair the reported defect. On a
 rejection, repair its reported path using the code/remediation; preserve the
 original requirements and relative resource paths. `outcome: "ready"` is the
 stopping condition. `artifact.files` lists every project file the proof read

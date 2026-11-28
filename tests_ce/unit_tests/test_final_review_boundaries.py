@@ -366,6 +366,6 @@ def test_real_bounded_run_keeps_owner_identity_without_native_values(tmp_path, m
         )
     )
     assert not result.ok
-    assert result.diagnostics[0].ce_error.issue_code is issue
+    assert result.diagnostics[0].code is issue
     assert result.diagnostics[0].remediation
     assert SENTINEL not in result.model_dump_json()

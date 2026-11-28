@@ -88,7 +88,7 @@ def test_the_error_keeps_its_type_and_dry_run_its_code(tmp_path: Path, model: st
     dry_run = CliRunner().invoke(app, ["authoring", "dry-run", str(project / f"{model}.xml")])
     assert _HOST not in dry_run.output
     (diagnostic,) = json.loads(dry_run.stdout)["diagnostics"]
-    assert diagnostic["ce_error"]["issue_code"] == code.value
+    assert diagnostic["code"] == code.value
 
 
 def _rows(project: Path, model: str) -> list[dict]:
