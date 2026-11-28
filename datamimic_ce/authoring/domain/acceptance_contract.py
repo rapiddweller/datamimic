@@ -271,7 +271,9 @@ def validate_acceptance_subject(
 def validate_acceptance_check(spec: AcceptanceSpecV1, check: AcceptanceCheckV1) -> None:
     expectation = check.expectation
     subjects = (
-        (expectation.subject,) if isinstance(expectation, GroupCountExpectation) else expectation_subjects(expectation)
+        (expectation.subject,)
+        if isinstance(expectation, GroupCountExpectation | GroupSumExpectation)
+        else expectation_subjects(expectation)
     )
     for subject in subjects:
         validate_acceptance_subject(spec, subject, check.path + ("subject",))
@@ -290,9 +292,17 @@ def validate_acceptance_check(spec: AcceptanceSpecV1, check: AcceptanceCheckV1) 
         for key, field in (
             ("group_by", expectation.group_by),
             ("field", expectation.field),
-            ("equals_field", expectation.equals_field),
         ):
             validate_acceptance_subject(spec, expectation.subject, check.path, field, field_key=key)
+        if expectation.equals_field is not None:
+            validate_acceptance_subject(
+                spec, expectation.subject, check.path, expectation.equals_field, field_key="equals_field"
+            )
+        if (reference := expectation.reference) is not None:
+            reference_path = check.path + ("reference",)
+            validate_acceptance_subject(spec, reference.subject, reference_path + ("subject",))
+            validate_acceptance_subject(spec, reference.subject, reference_path, reference.key, field_key="key")
+            validate_acceptance_subject(spec, reference.subject, reference_path, reference.field, field_key="field")
     elif isinstance(expectation, RowConditionExpectation):
         tree = parse_row_condition(expectation.condition)
         call_functions = {id(node.func) for node in ast.walk(tree) if isinstance(node, ast.Call)}

@@ -4,6 +4,7 @@
 
 """A Python library loaded by <execute> reaches Ready through Build when it passes the library check (#332)."""
 
+import ast
 import pickle
 import shutil
 from pathlib import Path, PurePosixPath
@@ -75,11 +76,41 @@ def test_execute_outside_a_setup_level_python_library_is_refused_by_policy(tmp_p
         ),
         ("class Row:\n    def as_dict(self):\n        return dict(self.__dict__)\n", False, None),
         ("def broken(:\n", False, None),
+        ("VALUE = '__builtins__'\n", False, Reason.FILE_OR_DYNAMIC_CODE_BUILTIN),
+        ("VALUE = '__globals__'\n", False, None),
+        ("VALUE = '__Builtins__'\n", False, None),
+        ("VALUE = ''\n", False, None),
+        ("VALUE = b'__builtins__'\n", False, None),
     ],
 )
 def test_python_library_refusal(source: str, seeded: bool, reason: Reason | None) -> None:
     refusal = python_library_refusal(source, seeded=seeded)
     assert (refusal.reason if refusal else None) is reason
+
+
+@pytest.mark.parametrize(("expression", "field"), [("name", "id"), ("obj.attr", "attr"), ("'text'", "value")])
+def test_library_check_does_not_compare_or_hash_non_string_ast_fields(
+    monkeypatch: pytest.MonkeyPatch, expression: str, field: str
+) -> None:
+    comparisons: list[str] = []
+
+    class NonString:
+        def __eq__(self, other: object) -> bool:
+            comparisons.append("eq")
+            return True
+
+        def __hash__(self) -> int:
+            comparisons.append("hash")
+            return 0
+
+    tree = ast.parse(expression, mode="eval")
+    setattr(tree.body, field, NonString())
+    with monkeypatch.context() as patch:
+        patch.setattr(ast, "parse", lambda source: tree)
+        refusal = python_library_refusal(expression, seeded=False)
+
+    assert comparisons == []
+    assert refusal is None
 
 
 def test_refusal_names_the_earliest_line_and_no_source_text() -> None:
