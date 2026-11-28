@@ -1,0 +1,5 @@
+﻿<setup multiprocessing="0">
+    <generate name="rows" count="5" target="XLSX(chunk_size=2)">
+        <key name="id" generator="IncrementGenerator"/>
+    </generate>
+</setup>
