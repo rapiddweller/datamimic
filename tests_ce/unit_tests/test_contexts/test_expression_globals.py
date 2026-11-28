@@ -10,6 +10,7 @@ than DSL because each rejected source aborts a run; the positive replay is cover
 tests_ce/integration_tests/test_determinism_seed_scenarios/script_globals_seeded.xml."""
 
 import pickle
+import sys
 from decimal import Decimal
 from random import Random
 from types import SimpleNamespace
@@ -211,6 +212,38 @@ def test_every_public_random_member_imported_by_name_is_rebound() -> None:
     namespace: dict[str, object] = {name: vars(random)[name] for name in random.__all__}
     rebind_seeded_script_names(namespace, Random(7), Faker)
     assert [name for name in random.__all__ if namespace[name] is vars(random)[name]] == []
+
+
+@pytest.mark.parametrize("library", ["pandas", "numpy"])
+@pytest.mark.parametrize("loaded", [True, False])
+@pytest.mark.parametrize("identical", [True, False])
+def test_a_script_name_bound_to_a_loaded_library_is_rebound_and_a_lookup_never_imports(
+    monkeypatch: pytest.MonkeyPatch, library: str, loaded: bool, identical: bool
+) -> None:
+    """Characterizes the pandas/numpy branch of the rebinding: only the module object registered in sys.modules is
+    replaced, an absent library stays absent (the lookup must not import it, #443) and another object is untouched."""
+    import types
+
+    from datamimic_ce.engine.runtime.scripting.expression_globals import rebind_seeded_script_names
+
+    registered = types.ModuleType(library)
+    other = types.ModuleType(library)
+    if loaded:
+        monkeypatch.setitem(sys.modules, library, registered)
+    else:
+        monkeypatch.delitem(sys.modules, library, raising=False)
+    before = set(sys.modules)
+    value = registered if identical else other
+    namespace: dict[str, object] = {"script_alias": value}
+
+    rebind_seeded_script_names(namespace, Random(7), Faker)
+
+    if loaded and identical:
+        assert namespace["script_alias"] is not value
+        assert namespace["script_alias"] is namespace[{"pandas": "pd", "numpy": "np"}[library]]
+    else:
+        assert namespace["script_alias"] is value
+    assert set(sys.modules) == before
 
 
 def test_an_unpickled_uncontrolled_name_still_refuses_use() -> None:
