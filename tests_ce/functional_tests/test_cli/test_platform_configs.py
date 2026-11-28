@@ -82,8 +82,16 @@ def test_invalid_option_precedes_missing_descriptor(tmp_path: Path) -> None:
     assert "Invalid platform configuration JSON" in result.stderr
 
 
-def test_missing_descriptor_is_an_operation_failure(tmp_path: Path) -> None:
-    result = CliRunner().invoke(app, ["run", str(tmp_path / "missing.xml")])
+@pytest.mark.parametrize(
+    "target",
+    [
+        pytest.param(lambda tmp: tmp / "missing.xml", id="missing-file"),
+        pytest.param(lambda tmp: tmp, id="directory-not-file"),
+    ],
+)
+def test_missing_descriptor_is_an_operation_failure(tmp_path: Path, target) -> None:
+    result = CliRunner().invoke(app, ["run", str(target(tmp_path))])
 
     assert result.exit_code == 1
-    assert "Invalid descriptor file path" in result.stderr
+    assert result.stderr.startswith("Error: [E011/I609] ")
+    assert "not found" in result.stderr
