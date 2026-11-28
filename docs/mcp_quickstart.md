@@ -29,7 +29,7 @@ which projects a call may name; without it any project can be named. A project's
 Pass tool arguments directly, for example
 `{"project": "/absolute/project", "xml": "<setup/>"}` for `datamimic_lint`.
 For one transition release, `reference`, `compile`, `decompile`, `lint`,
-`dry_run` and `run` also accept the old `request` wrapper. Keep `project` at
+`dry_run` and `run` also accept the old `request` wrapper, which is deprecated. Keep `project` at
 the top level: `{"project": "/absolute/project", "request": {"xml": "<setup/>"}}`.
 Use one form per call. With an older server, follow its advertised input schema.
 MCP argument schemas come from `tools/list`; `datamimic authoring export-contract`

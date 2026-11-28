@@ -1,7 +1,7 @@
 {
   "title": "Group sums compare decimals exactly and keep entries separate",
-  "proves": ["An observed group can have one row or many. Integer, float and decimal-string amounts sum exactly."],
-  "products": {"postings": 5},
+  "proves": ["An observed group can have one row or many. Integer, float and decimal-string amounts sum exactly.", "Reference amounts compare exactly with the group totals. A listed group with no rows sums to zero, including when the entire subject is empty."],
+  "products": {"postings": 5, "expected_totals": 4, "empty_postings": 0, "zero_totals": 1},
   "negatives": [
     {"name": "opposite_imbalances_do_not_cancel", "diagnostic": "group_sum", "message": "2 unbalanced group(s)", "patch": {"file": "datamimic.xml", "old": "(0, '0.30', 0.5, '4.5', '0.10')", "new": "(0, '0.31', 0.5, '4.49', '0.10')"}},
     {"name": "no_groups", "diagnostic": "group_sum", "message": "no groups captured", "patch": {"file": "datamimic.xml", "old": "count=\"5\"", "new": "count=\"0\""}},
@@ -9,6 +9,9 @@
     {"name": "mixed_numeric_and_text_amounts", "diagnostic": "group_sum", "message": "requires bounded finite numbers or decimal strings", "patch": {"file": "datamimic.xml", "old": "'0.30'", "new": "'not an amount'"}},
     {"name": "null_amount", "diagnostic": "group_sum", "message": "requires bounded finite numbers or decimal strings", "patch": {"file": "datamimic.xml", "old": "'0.30'", "new": "None"}},
     {"name": "invalid_group_key", "diagnostic": "group_sum", "message": "requires a string or integer group key", "patch": {"file": "datamimic.xml", "old": "'single'", "new": "True"}},
-    {"name": "outside_decimal_budget", "diagnostic": "group_sum", "message": "requires bounded finite numbers or decimal strings", "patch": {"file": "datamimic.xml", "old": "'0.30'", "new": "'1e129'"}}
+    {"name": "outside_decimal_budget", "diagnostic": "group_sum", "message": "requires bounded finite numbers or decimal strings", "patch": {"file": "datamimic.xml", "old": "'0.30'", "new": "'1e129'"}},
+    {"name": "empty_reference", "diagnostic": "group_sum", "message": "product 'expected_totals' lists no captured groups", "patch": {"file": "datamimic.xml", "old": "name=\"expected_totals\" count=\"4\"", "new": "name=\"expected_totals\" count=\"0\""}},
+    {"name": "missing_group_with_nonzero_target", "diagnostic": "group_sum", "message": "1 group(s) whose sum of 'debit' fails the 'equal' comparison", "patch": {"file": "datamimic.xml", "old": "'0.000'", "new": "'0.010'"}},
+    {"name": "wrong_decimal_reference", "diagnostic": "group_sum", "message": "1 group(s) whose sum of 'debit' fails the 'equal' comparison", "patch": {"file": "datamimic.xml", "old": "'0.300'", "new": "'0.301'"}}
   ]
 }
