@@ -254,7 +254,7 @@ def test_every_transferred_issue_has_a_ce_caller_with_matching_template_fields()
     for path in root.rglob("*.py"):
         if "errors" in path.relative_to(root).parts:
             continue
-        for node in ast.walk(ast.parse(path.read_text())):
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
             if not isinstance(node, ast.Call):
                 continue
             issue = next((keyword.value for keyword in node.keywords if keyword.arg == "code"), None)
