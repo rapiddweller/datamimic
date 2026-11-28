@@ -107,7 +107,8 @@ def _collect_callsites(tree: ast.AST) -> list[tuple[int, str]]:
 def test_no_raw_random_module_in_production(module_path: Path) -> None:
     """Every CE production module draws randomness through a resolved RNG
     or is on the explicit allow-list."""
-    rel = str(module_path.relative_to(PROD_ROOT.parent))
+    # POSIX form so the ALLOWLIST (written with "/") matches on Windows too.
+    rel = module_path.relative_to(PROD_ROOT.parent).as_posix()
     source = module_path.read_text(encoding="utf-8")
     tree = ast.parse(source, filename=str(module_path))
     hits = _collect_callsites(tree)

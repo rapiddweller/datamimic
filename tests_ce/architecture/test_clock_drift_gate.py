@@ -109,7 +109,8 @@ def _looks_like_datetime(node: ast.AST) -> bool:
 def test_no_raw_wall_clock_in_production(module_path: Path) -> None:
     """Every CE production module either uses now_utc_naive() / resolve_clock()
     or is on the explicit allow-list."""
-    rel = str(module_path.relative_to(PROD_ROOT.parent))
+    # POSIX form so the ALLOWLIST (written with "/") matches on Windows too.
+    rel = module_path.relative_to(PROD_ROOT.parent).as_posix()
     source = module_path.read_text(encoding="utf-8")
     tree = ast.parse(source, filename=str(module_path))
     hits = _collect_callsites(tree)
