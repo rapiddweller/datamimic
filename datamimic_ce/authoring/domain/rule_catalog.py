@@ -534,6 +534,17 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         '<include uri="missing.properties"/>',
     ),
     _rule_definition(
+        "DM409",
+        RuleSeverity.ERROR,
+        "Client and memstore share an id",
+        "A <memstore> id equals a declared <database>/<mongodb> id; readers resolve the bare id as a "
+        "memstore or as a client in different orders, so the same id reads different data.",
+        "Rename the memstore or the client so each id names one thing.",
+        "Source and target id resolution contract.",
+        '<setup><database id="db" dbms="sqlite" url="sqlite:///a.db"/><memstore id="mem"/></setup>',
+        '<setup><database id="x" dbms="sqlite" url="sqlite:///a.db"/><memstore id="x"/></setup>',
+    ),
+    _rule_definition(
         "DM407",
         RuleSeverity.WARNING,
         "Product has no delivery target",
