@@ -126,7 +126,7 @@ class LibraryRefusal:
     line: int
 
     def message(self) -> str:
-        """Static text: names the rule and the line, never source text or values."""
+        """Static text that identifies the violated rule."""
         match self.reason:
             case LibraryRefusalReason.IMPORT_NOT_ADMITTED:
                 rule = "imports a module outside the bounded library modules"
@@ -134,7 +134,7 @@ class LibraryRefusal:
                 rule = "uses a file or dynamic-code builtin (open, exec, eval, compile, __import__, getattr, ...)"
             case LibraryRefusalReason.IMPORT_INSIDE_BODY_UNDER_SEED:
                 rule = "imports inside a function or class body, which <setup rngSeed> cannot seed"
-        return f"Python library line {self.line} {rule}"
+        return f"Bounded Python library {rule}."
 
     def remediation(self) -> str:
         match self.reason:

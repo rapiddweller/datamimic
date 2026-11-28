@@ -39,7 +39,9 @@ XML is the persisted executable model. Expectations and identifier/FK declaratio
 live in the project's `acceptance/build.json`, so they survive edits to the XML.
 DM JSON is a transient agent view of one XML file.
 
-Repair structured diagnostic codes, paths and remediations, then retry with a
+Use diagnostic `code` for the catalog issue (`Ixxx` or `Wxxx`) or an uncatalogued
+failure, and `rule` for any `DMxxx` lint/check ID. Read `location` for the file
+position or include chain, then use `path` and `remediation` to repair and retry with a
 changed candidate. If the requested behavior is unsupported or a failure repeats
 without a justified repair, report the blocker with the diagnostic and preserve
 the user's requirements.
