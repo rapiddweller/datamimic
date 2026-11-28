@@ -333,6 +333,29 @@ def test_dm409_rejects_one_id_declared_as_client_and_memstore(declarations: str,
         assert 'id="x"' in found[0].message and "Rename" in found[0].fix_hint
 
 
+@pytest.mark.parametrize(
+    ("declaration", "fires"),
+    [
+        pytest.param(_DB.format(id="CSV"), True, id="database-named-like-buffered-exporter"),
+        pytest.param(_MONGO.format(id="JSON"), True, id="mongodb-named-like-buffered-exporter"),
+        pytest.param(_DB.format(id="ConsoleExporter"), True, id="database-named-like-diagnostic-exporter"),
+        pytest.param(_DB.format(id="csv"), False, id="lowercase-name-is-not-an-exporter"),
+        pytest.param(_DB.format(id="CSVdb"), False, id="distinct-name"),
+    ],
+)
+def test_dm409_rejects_client_id_equal_to_builtin_exporter(declaration: str, fires: bool) -> None:
+    """#730: a bare target resolves a built-in exporter before a client, so createTable on that client made no table."""
+    from datamimic_ce.authoring.adapters.linter import lint_source
+
+    xml = (
+        f'<setup rngSeed="1">{declaration}<generate name="g" count="1"><key name="k" constant="1"/></generate></setup>'
+    )
+    found = [d for d in lint_source(xml).diagnostics if d.rule == "DM409"]
+    assert bool(found) is fires
+    if fires:
+        assert "exporter" in found[0].message and "Rename" in found[0].fix_hint
+
+
 def test_dm401_uses_adapter_exporter_names_and_reports_parse_errors() -> None:
     from datamimic_ce.authoring.adapters.linter import lint_source
     from datamimic_ce.engine.io.api import buffered_exporter_names

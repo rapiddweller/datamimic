@@ -552,7 +552,9 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         RuleSeverity.ERROR,
         "Client and memstore share an id",
         "A <memstore> id equals a declared <database>/<mongodb> id; readers resolve the bare id as a "
-        "memstore or as a client in different orders, so the same id reads different data.",
+        "memstore or as a client in different orders, so the same id reads different data. "
+        "A client id equal to a built-in exporter name (CSV, JSON, ConsoleExporter) is refused too: a bare "
+        "target names the exporter, so the client is never written and createTable creates no table.",
         "Rename the memstore or the client so each id names one thing.",
         "Source and target id resolution contract.",
         '<setup><database id="db" dbms="sqlite" url="sqlite:///a.db"/><memstore id="mem"/></setup>',

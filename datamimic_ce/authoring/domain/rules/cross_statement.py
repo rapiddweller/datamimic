@@ -265,9 +265,18 @@ class ClientMemstoreIdCollision(Rule):
         # Reported on the client, which lives in the entry; the memstores come from the whole project, so a
         # memstore declared in an included step collides with it too.
         _, memstores = _declared_ids(ctx)
+        exporters = _STATIC_TARGETS | ctx.buffered_exporter_names
         for element in ctx.iter(EL_DATABASE, EL_MONGODB):
             client_id = element.get("id")
-            if client_id and client_id in memstores:
+            if client_id and client_id in exporters:
+                # A bare target names the built-in exporter first, so the client is never the one written (#730).
+                yield ctx.diag(
+                    ClientMemstoreIdCollision,
+                    element,
+                    evidence=f'<{etree.QName(element).localname} id="{client_id}"> reuses a built-in exporter name',
+                    fix_context=f'Rename the client: "{client_id}" already names the {client_id} exporter.',
+                )
+            elif client_id and client_id in memstores:
                 yield ctx.diag(
                     ClientMemstoreIdCollision,
                     element,
