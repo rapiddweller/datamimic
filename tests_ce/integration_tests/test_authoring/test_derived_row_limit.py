@@ -95,8 +95,7 @@ def test_runtime_total_overrun_names_the_limit_without_capture_noise(tmp_path: P
 
     assert isinstance(result, RejectedBuild)
     [diagnostic] = result.diagnostics
-    assert diagnostic.ce_error is not None
-    assert diagnostic.ce_error.issue_code is IssueCode.TASK_TOTAL_ROW_BUDGET_EXCEEDED
+    assert diagnostic.code is IssueCode.TASK_TOTAL_ROW_BUDGET_EXCEEDED
     assert diagnostic.expected == 10
     assert "all products together" in diagnostic.message
     # No number is known here, so the remediation names which total to count and why Build could not derive it.

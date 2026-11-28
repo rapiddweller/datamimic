@@ -11,7 +11,7 @@ from datamimic_ce.authoring.domain.capabilities import (
     CapabilityLookupResult,
     CapabilityNotFound,
 )
-from datamimic_ce.authoring.domain.reference import AuthoringExampleReference, ProjectStarter
+from datamimic_ce.authoring.domain.reference import AuthoringExampleReference, ProjectStarter, ReferenceNotFound
 from datamimic_ce.authoring.domain.requests import BuildResult, ReferenceRequest, ReferenceTopic
 from tests_ce.authoring_project import build_project
 
@@ -138,7 +138,8 @@ def test_unknown_named_reference_does_not_return_another_entry():
         ReferenceTopic.LEARNING,
     ):
         result = catalog.reference(ReferenceRequest(topic=topic, name="missing"))
-        assert result.entries == ()
+        assert isinstance(result, ReferenceNotFound)
+        assert result.name == "missing" and "missing" not in result.available_names
 
 
 def test_every_published_self_contained_example_builds(tmp_path):

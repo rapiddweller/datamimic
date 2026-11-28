@@ -45,6 +45,8 @@ from datamimic_ce.authoring.domain.reference import (
     AuthoringLearningReference,
     AuthoringVariantReference,
     ProjectStarter,
+    ReferenceLookupResult,
+    ReferenceNotFound,
     ReferenceResult,
 )
 from datamimic_ce.authoring.domain.requests import BuildRequestV5, ReferenceRequest, ReferenceTopic
@@ -246,7 +248,30 @@ class CeDslCatalog:
         document, acceptance = _example(name)
         return ProjectStarter(entry_xml=self._codec.compile(document).xml, acceptance=acceptance)
 
-    def reference(self, request: ReferenceRequest) -> ReferenceResult:
+    def reference(self, request: ReferenceRequest) -> ReferenceLookupResult:
+        if request.name is None:
+            return self._topic(request)
+        if request.topic == ReferenceTopic.OVERVIEW:
+            return ReferenceNotFound(
+                topic=request.topic,
+                name=request.name,
+                content="The overview topic has no named entries.",
+                available_names=(),
+            )
+        result = self._topic(request)
+        if result.rules if result.rules is not None else result.entries:
+            return result
+        listing = self._topic(ReferenceRequest(topic=request.topic))
+        available = (
+            tuple(str(rule.rule_id) for rule in listing.rules)
+            if listing.rules is not None
+            else tuple(entry.name for entry in listing.entries or ())
+        )
+        return ReferenceNotFound(
+            topic=request.topic, name=request.name, content=result.content, available_names=available
+        )
+
+    def _topic(self, request: ReferenceRequest) -> ReferenceResult:
         match request.topic:
             case ReferenceTopic.OVERVIEW:
                 return ReferenceResult(
@@ -463,7 +488,7 @@ class CeDslCatalog:
                         path="datamimic_ce/engine/dsl/model/flow/commands/assert_model.py",
                         description=(
                             "Use <assert> for a rule that must stop datamimic run. A failed condition stops the run "
-                            "with exit code 1 and the message, and Build rejects it with assert_failed. Build keeps "
+                            "with exit code 1 and the message, and Build rejects it with I895. Build keeps "
                             "the products that completed before the failed assert, evaluates their expectations and "
                             "lists the other checks as not_executed. An assert costs one expression for each row in "
                             "every run. It sees only the current row or the setup context. The products before it "

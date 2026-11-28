@@ -112,20 +112,6 @@ ADMITTED_IMPORT_ROOTS = frozenset(
     }
 )
 ADMITTED_PACKAGES = ("datamimic_ce.domains",)
-# Referenced at all, not only called: an alias such as `write = open` or `__builtins__["open"]` reaches them too.
-# Also a name the library imports itself (`from re import compile`): `del` or a failed import falls back to the
-# builtin, so only the qualified form (`re.compile`) is admitted.
-REFUSED_NAMES = frozenset(
-    {"open", "exec", "eval", "compile", "__import__", "__builtins__", "globals", "locals", "vars"}
-    # Attribute access by computed name; no corpus library uses it, and aliases defeat any narrower rule.
-    | {"getattr", "setattr", "delattr"}
-)
-# Introspection that leads back to the builtins, the running code or the file loader, and the builtins
-# themselves reached as attributes of the builtins module (print.__self__.open). compile stays: re.compile.
-REFUSED_ATTRIBUTES = frozenset(
-    {"__builtins__", "__globals__", "__code__", "__subclasses__", "__loader__", "__spec__", "__getattribute__"}
-    | {"__self__", "__import__", "open", "exec", "eval"}
-)
 
 
 class LibraryRefusalReason(StrEnum):
@@ -140,7 +126,7 @@ class LibraryRefusal:
     line: int
 
     def message(self) -> str:
-        """Static text: names the rule and the line, never source text or values."""
+        """Static text that identifies the violated rule."""
         match self.reason:
             case LibraryRefusalReason.IMPORT_NOT_ADMITTED:
                 rule = "imports a module outside the bounded library modules"
@@ -148,7 +134,7 @@ class LibraryRefusal:
                 rule = "uses a file or dynamic-code builtin (open, exec, eval, compile, __import__, getattr, ...)"
             case LibraryRefusalReason.IMPORT_INSIDE_BODY_UNDER_SEED:
                 rule = "imports inside a function or class body, which <setup rngSeed> cannot seed"
-        return f"Python library line {self.line} {rule}"
+        return f"Bounded Python library {rule}."
 
     def remediation(self) -> str:
         match self.reason:
@@ -351,11 +337,50 @@ def python_library_refusal(source: str, *, seeded: bool) -> LibraryRefusal | Non
                 refusals.append(LibraryRefusal(LibraryRefusalReason.IMPORT_NOT_ADMITTED, node.lineno))
             elif seeded and id(node) in nested_imports:
                 refusals.append(LibraryRefusal(LibraryRefusalReason.IMPORT_INSIDE_BODY_UNDER_SEED, node.lineno))
-        elif (
-            (isinstance(node, ast.Name) and node.id in REFUSED_NAMES)
-            or (isinstance(node, ast.Attribute) and node.attr in REFUSED_ATTRIBUTES)
-            # module.__dict__["__builtins__"] and getattr(module, "__dict__")["__builtins__"]
-            or (isinstance(node, ast.Constant) and node.value == "__builtins__")
-        ):
+            continue
+        if isinstance(node, ast.Name):
+            # Aliases reach builtins too. Even an imported `compile` can fall back to the builtin
+            # after `del` or a failed import, so only the qualified `re.compile` is admitted.
+            # Refuse computed attribute access too: aliases defeat a narrower rule.
+            name = node.id
+            refused = type(name) is str and name in {
+                "open",
+                "exec",
+                "eval",
+                "compile",
+                "__import__",
+                "__builtins__",
+                "globals",
+                "locals",
+                "vars",
+                "getattr",
+                "setattr",
+                "delattr",
+            }
+        elif isinstance(node, ast.Attribute):
+            # Introspection can reach the builtins, running code or the file loader.
+            # Builtins can also be reached as attributes (print.__self__.open). Keep re.compile admitted.
+            name = node.attr
+            refused = type(name) is str and name in {
+                "__builtins__",
+                "__globals__",
+                "__code__",
+                "__subclasses__",
+                "__loader__",
+                "__spec__",
+                "__getattribute__",
+                "__self__",
+                "__import__",
+                "open",
+                "exec",
+                "eval",
+            }
+        elif isinstance(node, ast.Constant):
+            # Covers the literal key in module.__dict__["__builtins__"].
+            value = node.value
+            refused = type(value) is str and value in {"__builtins__"}
+        else:
+            continue
+        if refused:
             refusals.append(LibraryRefusal(LibraryRefusalReason.FILE_OR_DYNAMIC_CODE_BUILTIN, node.lineno))
     return min(refusals, key=lambda refusal: refusal.line) if refusals else None

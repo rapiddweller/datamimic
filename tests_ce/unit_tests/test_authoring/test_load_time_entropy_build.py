@@ -22,7 +22,11 @@ from tests_ce.authoring_project import build_project
 
 _CORPUS = Path(__file__).resolve().parents[2] / "functional_tests" / "test_seeded_load_time_entropy"
 _ROWS = [{"kind": "exact_count", "subject": {"kind": "product", "product": "rows"}, "count": 3}]
-_W008 = ("Seeded Script Draws Entropy While It Loads: script 'leaky.scr.py', line 3.", "W008")
+_W008 = (
+    "Under <setup rngSeed> a script's names are rebound to the seeded stand-ins after its body has run, so "
+    "a draw in the module body, a default argument, or an import inside a function body is not seeded.",
+    "W008",
+)
 
 
 def _build(tmp_path: Path, model: str):
@@ -38,9 +42,9 @@ def _build(tmp_path: Path, model: str):
 
 def _warnings(diagnostics) -> list[tuple[str, str]]:
     return [
-        (item.message, str(item.ce_error.issue_code))
+        (item.message, str(item.code))
         for item in diagnostics
-        if str(item.code) == "engine_warning" and item.ce_error is not None
+        if isinstance(item.code, IssueCode) and item.severity == "warning"
     ]
 
 
@@ -69,11 +73,11 @@ def test_dry_run_and_run_show_the_warning_and_stay_ok(tmp_path: Path, phase: str
 
     assert result.ok, result.diagnostics
     assert _warnings(result.diagnostics) == [_W008]
-    warning = next(item for item in result.diagnostics if str(item.code) == "engine_warning")
+    warning = next(item for item in result.diagnostics if item.code is IssueCode.EXECUTE_SEEDED_LOAD_TIME_ENTROPY)
     assert warning.severity == "warning"
     assert warning.path == ("script", "leaky.scr.py", "line", 3)
-    assert warning.ce_error is not None and warning.ce_error.error_code is None
-    assert warning.ce_error.issue_code is IssueCode.EXECUTE_SEEDED_LOAD_TIME_ENTROPY
+    assert warning.location is not None
+    assert (warning.location.script_file, warning.location.script_line) == ("leaky.scr.py", 3)
     assert warning.remediation is not None and warning.remediation.startswith("Move the draw into a function")
 
 
@@ -84,7 +88,11 @@ _ROW = '<generate name="rows" count="1"><key name="id" constant="1"/></generate>
     ("statement", "allow_side_effects", "shown"),
     [
         # W007: bounded execution refuses bash, so only a run with side effects reaches it.
-        ('<execute type="bash">echo hi</execute>', True, [("Bash Execution Is Not Deterministic.", "W007")]),
+        (
+            '<execute type="bash">echo hi</execute>',
+            True,
+            [("A descriptor executes a shell command outside deterministic data generation.", "W007")],
+        ),
         # W002 renders the <echo> text, which can hold a property value: authoring does not show it.
         ("<echo>value {missing_name}</echo>", False, []),
     ],

@@ -25,10 +25,11 @@ The id starts with `s`, a two-digit number and a short name, for example `s02_pa
 | `negatives` | A list of `{"name": "<name>", "patch": {"file": "<path>", "old": "<text>", "new": "<text>"}, "diagnostic": "<code>", "expected": "<text>"}`. The patch replaces one text in one file of a copy of the project. The old text must occur exactly once. The file must stay inside the copy. `expected` is optional. Use it when one code covers several rules (for example `row_condition`): it is the `expected` text of the diagnostic, which names the rule. |
 | `equivalents` | Optional. A list of `{"name": "<name>", "patch": {...}}` with the same patch rules. Each patch writes one part of the project in a second spelling that must mean the same. |
 
-A negative `diagnostic` is a code that Build reports, for example `exact_count` or `DM315`.
+A negative `diagnostic` identifies a finding, for example `exact_count` in `code` or `DM315` in `rule`.
 Build must reject the variant, and the code must be in the list of diagnostics.
 A negative can also give `issue`: the catalog code of a runtime refusal, for example `I199`.
-Build reports it as the `ce_error` of the diagnostic with the code `diagnostic`, usually `child_execution`.
+Build reports it directly in `code`. Older scenario cases use names such as
+`child_execution` to select a class of runtime failures when they do not specify an exact issue.
 A negative can also give `remediation`: a text that the remediation of a diagnostic with the code `diagnostic` contains.
 Use it when the scenario proves the fix that the agent reads, not only the rejection.
 A negative can also give `message`: a text that the message of a diagnostic with the code `diagnostic` contains.

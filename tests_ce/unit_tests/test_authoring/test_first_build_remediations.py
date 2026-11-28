@@ -144,7 +144,7 @@ def test_step_rule_location_names_only_includers(tmp_path: Path, nested: bool) -
         (tmp_path / "outer.xml").write_text('<setup><include uri="step.xml"/></setup>', encoding="utf-8")
     entry = "outer.xml" if nested else "step.xml"
     errors = _errors(tmp_path, f'<setup rngSeed="1"><include uri="{entry}"/></setup>')
-    [finding] = [item for item in errors if item.code == "DM204"]
+    [finding] = [item for item in errors if item.rule == "DM204"]
     assert finding.location is not None
     assert finding.location.file == "step.xml"
     assert finding.location.line == 2
@@ -173,7 +173,7 @@ def test_rule_location_never_exposes_element_name(tmp_path: Path) -> None:
     )
     app = create_authoring_application(tmp_path, descriptor_path=PROJECT_ENTRY_PATH)
     result = app.lint(LintRequest(xml=xml))
-    findings = [item for item in result.diagnostics if item.code == "DM204"]
+    findings = [item for item in result.diagnostics if item.rule == "DM204"]
     assert findings
     for item in findings:
         assert item.location is not None
@@ -203,7 +203,7 @@ def test_unique_on_a_typed_key_names_a_pool_a_key_accepts(tmp_path: Path) -> Non
         '<key name="title" type="string" minLength="8" maxLength="40" unique="true"/></generate></setup>'
     )
 
-    remediations = [str(item.remediation) for item in _errors(tmp_path, xml) if str(item.code) == "DM204"]
+    remediations = [str(item.remediation) for item in _errors(tmp_path, xml) if item.rule == "DM204"]
 
     assert remediations and all('generator="StringGenerator" unique="true"' in text for text in remediations)
     assert all("without unique=" in text for text in remediations)
@@ -215,7 +215,7 @@ def test_an_import_in_a_script_names_the_datetime_module_scripts_have(tmp_path: 
         '<key name="d" script="__import__(\'datetime\').date(2026, 1, 1)"/></generate></setup>'
     )
 
-    [remediation] = [str(item.remediation) for item in _errors(tmp_path, xml) if str(item.code) == "DM314"]
+    [remediation] = [str(item.remediation) for item in _errors(tmp_path, xml) if item.rule == "DM314"]
 
     assert "datetime.date(" in remediation and "import.field" not in remediation
 
@@ -369,7 +369,7 @@ def test_a_distribution_on_a_weighted_key_says_the_file_weights_apply(tmp_path: 
         '<key name="function" source="functions.wgt.csv" distribution="weighted"/></generate></setup>'
     )
 
-    remediations = [str(item.remediation) for item in _errors(tmp_path, xml) if str(item.code) == "DM105"]
+    remediations = [str(item.remediation) for item in _errors(tmp_path, xml) if item.rule == "DM105"]
 
     assert remediations and all("remove distribution=" in text for text in remediations), remediations
 

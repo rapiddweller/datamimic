@@ -32,9 +32,7 @@
         <variable name="gross_of" script="{row.invoice_id: row.gross_cents for row in invoice_amounts}"/>
         <key name="allocation_id" script="allocation_id"/>
         <key name="amount_cents" script="amount_cents"/>
-        <key name="payment_allocated" script="sum(row.amount_cents for row in allocations if row.payment_id == payment_id)"/>
         <key name="payment_amount" script="{row.payment_id: row.amount_cents for row in payments}[payment_id]"/>
-        <key name="invoice_allocated" script="sum(row.amount_cents for row in allocations if row.invoice_id == invoice_id)"/>
         <key name="invoice_gross" script="gross_of[invoice_id]"/>
         <key name="days_after_invoice" script="({row.payment_id: row.paid_on for row in payments}[payment_id] - {row.invoice_id: row.invoice_date for row in invoice_amounts}[invoice_id]).days"/>
         <key name="same_customer" script="{row.payment_id: row.customer_id for row in payments}[payment_id] == {row.invoice_id: row.customer_id for row in invoice_amounts}[invoice_id]"/>

@@ -284,7 +284,7 @@ def test_missing_memstore_product_remains_keyerror_and_structured_across_child(t
     xml = '<setup><memstore id="mem"/><generate name="rows" source="mem" type="missing" count="1"/></setup>'
     result = CeBoundedExecutor(AuthoringWorkspaceContext(tmp_path)).execute(BoundedExecutionRequest(xml=xml))
     assert not result.ok
-    assert result.diagnostics[0].ce_error.error_code is ErrorCode.INVALID_SOURCE
+    assert result.diagnostics[0].code is AuthoringSystemDiagnosticCode.CHILD_EXECUTION
     assert "missing" not in result.diagnostics[0].message
 
 
@@ -311,7 +311,7 @@ def test_bounded_transformer_forces_read_only_after_profile_resolution(tmp_path)
 
 def test_real_sqlite_source_failure_keeps_ce_identity_in_private_child(tmp_path):
     import sqlite3
-    from datamimic_ce.errors.codes import ErrorCode, IssueCode
+    from datamimic_ce.errors.codes import IssueCode
 
     (tmp_path / "db").mkdir()
     connection = sqlite3.connect(tmp_path / "db" / "database.sqlite")
@@ -320,9 +320,7 @@ def test_real_sqlite_source_failure_keeps_ce_identity_in_private_child(tmp_path)
     xml = '<setup><database id="db" dbms="sqlite" database="database"/><generate name="rows" source="db" count="1" selector="SELECT private_column FROM absent"/></setup>'
     result = CeBoundedExecutor(AuthoringWorkspaceContext(tmp_path)).execute(BoundedExecutionRequest(xml=xml))
     assert not result.ok
-    assert result.diagnostics[0].code is AuthoringSystemDiagnosticCode.CHILD_EXECUTION
-    assert result.diagnostics[0].ce_error.error_code is ErrorCode.OPERATION_ERROR
-    assert result.diagnostics[0].ce_error.issue_code is IssueCode.OPERATION_EXECUTION_FAILED
+    assert result.diagnostics[0].code is IssueCode.OPERATION_EXECUTION_FAILED
     assert "private_column" not in result.diagnostics[0].message
     assert str(tmp_path) not in result.diagnostics[0].message
 
@@ -340,7 +338,7 @@ def test_child_crash_is_typed_and_does_not_wait_for_timeout(tmp_path):
     expected = AuthoringSystemDiagnosticCode.CLEANUP if os.name == "nt" else AuthoringSystemDiagnosticCode.CHILD_CRASH
     assert result.diagnostics[0].code is expected
     if os.name != "nt":
-        assert "exit code 17" in result.diagnostics[0].message
+        assert result.diagnostics[0].actual["exit_code"] == 17
 
 
 @pytest.mark.skipif(os.name == "nt", reason="Windows reports the cleanup diagnostic for a crashed child")
@@ -357,7 +355,7 @@ def test_child_crash_names_what_the_child_wrote_to_stderr(monkeypatch):
     )
     result = CeBoundedExecutor().execute(BoundedExecutionRequest(xml=_XML))
     assert result.diagnostics[0].code is AuthoringSystemDiagnosticCode.CHILD_CRASH
-    assert "boom: cannot open table" in result.diagnostics[0].message
+    assert "boom: cannot open table" in result.diagnostics[0].actual["stderr_tail"]
 
 
 @pytest.mark.parametrize(
@@ -499,15 +497,14 @@ def test_workspace_cleanup_failure_names_the_locked_path_and_the_os_error(monkey
     result = CeBoundedExecutor().execute(BoundedExecutionRequest(xml=_XML))
     for name in created:
         shutil.rmtree(name, ignore_errors=True)
-    message = result.diagnostics[0].message
-    assert result.diagnostics[0].code is AuthoringSystemDiagnosticCode.CLEANUP
-    assert "locked.txt" in message
-    assert "PermissionError: The process cannot access the file" in message
+    [diagnostic] = result.diagnostics
+    assert diagnostic.code is AuthoringSystemDiagnosticCode.CLEANUP
+    assert diagnostic.location is not None and diagnostic.location.file == "locked.txt"
+    assert diagnostic.actual == {"errno": 13, "type": "PermissionError", "reason": "The process cannot access the file"}
 
 
 def test_unique_reference_exhaustion_keeps_category_in_private_child(tmp_path):
     import sqlite3
-    from datamimic_ce.errors import ErrorCode
 
     (tmp_path / "db").mkdir()
     with sqlite3.connect(tmp_path / "db" / "database.sqlite") as connection:
@@ -523,9 +520,6 @@ def test_unique_reference_exhaustion_keeps_category_in_private_child(tmp_path):
     assert not result.ok
     diagnostic = result.diagnostics[0]
     assert diagnostic.code is AuthoringSystemDiagnosticCode.CHILD_EXECUTION
-    assert diagnostic.ce_error is not None
-    assert diagnostic.ce_error.error_code is ErrorCode.TASK_CONFIG
-    assert diagnostic.ce_error.issue_code is None
 
 
 @pytest.mark.parametrize("primary", [RuntimeError("primary failure"), KeyboardInterrupt()])
