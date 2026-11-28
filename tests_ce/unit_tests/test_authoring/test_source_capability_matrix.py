@@ -93,7 +93,7 @@ def test_variable_xml_is_rejected_by_lint_before_runtime(tmp_path) -> None:
         RunRequest(xml='<setup><variable name="row" source="rows.xml"/></setup>')
     )
     assert result.phase is RunPhase.LINT
-    assert [diagnostic.code for diagnostic in result.diagnostics if diagnostic.severity == "error"] == ["DM402"]
+    assert [diagnostic.rule for diagnostic in result.diagnostics if diagnostic.severity == "error"] == ["DM402"]
 
 
 def test_source_capabilities_project_identically_to_canonical_discovery() -> None:

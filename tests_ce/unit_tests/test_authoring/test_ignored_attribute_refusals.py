@@ -39,7 +39,7 @@ def _lint_codes(tmp_path: Path, body: str) -> set[str]:
     result = CeDescriptorValidator(workspace, profile_loader=workspace.load_connection_profile).validate(
         path.read_text(encoding="utf-8")
     )
-    return {item.code for item in result.diagnostics}
+    return {item.rule or item.code for item in result.diagnostics}
 
 
 @pytest.mark.parametrize(

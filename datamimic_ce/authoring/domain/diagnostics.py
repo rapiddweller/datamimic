@@ -11,11 +11,13 @@ from typing import Annotated, Literal
 
 from pydantic import Field, JsonValue, StrictStr, model_validator
 
-from datamimic_ce.errors.codes import ErrorCode, IssueCode
+from datamimic_ce.errors.catalog import get_issue_definition
+from datamimic_ce.errors.codes import IssueCode
 from datamimic_ce.errors.context import DescriptorLocation
 
 from .common import AuthoringModel, NonEmptyStrictStr
 from .expectations import ExpectationIntentKind
+from .rule_catalog import RuleDefinition, RuleSeverity
 
 
 class DiagnosticPhase(StrEnum):
@@ -65,8 +67,6 @@ class AuthoringSystemDiagnosticCode(StrEnum):
     SERIALIZATION = "serialization"
     TIMEOUT = "timeout"
     NOT_EXECUTED = "not_executed"
-    ASSERT_FAILED = "assert_failed"
-    ENGINE_WARNING = "engine_warning"
 
 
 class AuthoringBuildDiagnosticCode(StrEnum):
@@ -89,7 +89,7 @@ class AuthoringCodecDiagnosticCode(StrEnum):
     DECOMPILE_UNSUPPORTED = "authoring_decompile_unsupported"
 
 
-RawXmlDiagnosticCode = Annotated[StrictStr, Field(pattern=r"^DM[0-9]{3}$")]
+DmRuleId = Annotated[StrictStr, Field(pattern=r"^DM[0-9]{3}$")]
 
 
 DiagnosticCode = (
@@ -98,15 +98,8 @@ DiagnosticCode = (
     | AuthoringSystemDiagnosticCode
     | AuthoringBuildDiagnosticCode
     | AuthoringCodecDiagnosticCode
-    | RawXmlDiagnosticCode
+    | IssueCode
 )
-
-
-class CeErrorIdentity(AuthoringModel):
-    """Machine-readable identity of one catalog-backed CE error, or of one catalog warning (no error code)."""
-
-    error_code: ErrorCode | None
-    issue_code: IssueCode | None = None
 
 
 class DiagnosticLocation(AuthoringModel):
@@ -135,11 +128,13 @@ def diagnostic_location(location: DescriptorLocation | None) -> DiagnosticLocati
         column=location.column,
         element=location.element_tag,
         attribute=location.attribute,
+        include_chain=location.include_chain,
     )
 
 
 class Diagnostic(AuthoringModel):
     code: DiagnosticCode
+    rule: DmRuleId | None = None
     message: NonEmptyStrictStr
     phase: DiagnosticPhase
     path: tuple[str | int, ...] = ()
@@ -149,7 +144,61 @@ class Diagnostic(AuthoringModel):
     allowed_values: tuple[JsonValue, ...] | None = None
     severity: Literal["error", "warning", "info"] = "error"
     remediation: NonEmptyStrictStr | None = None
-    ce_error: CeErrorIdentity | None = None
+
+    @staticmethod
+    def from_issue(
+        code: IssueCode,
+        *,
+        phase: DiagnosticPhase,
+        message: str | None = None,
+        remediation: str | None = None,
+        path: tuple[str | int, ...] = (),
+        location: DiagnosticLocation | None = None,
+        expected: JsonValue | None = None,
+        actual: JsonValue | None = None,
+    ) -> Diagnostic:
+        """Project a catalog issue without rendering exception text or location into the message."""
+        definition = get_issue_definition(code)
+        return Diagnostic(
+            code=code,
+            phase=phase,
+            message=message or definition.cause,
+            remediation=remediation or definition.resolution,
+            severity="warning" if definition.severity == "warning" else "error",
+            path=path,
+            location=location,
+            expected=expected,
+            actual=actual,
+        )
+
+    @staticmethod
+    def from_rule(
+        definition: RuleDefinition,
+        *,
+        phase: DiagnosticPhase,
+        path: tuple[str | int, ...],
+        location: DiagnosticLocation | None = None,
+        severity: RuleSeverity | None = None,
+        names_only_fix: str | None = None,
+        allowed_names: tuple[str, ...] | None = None,
+    ) -> Diagnostic:
+        """Project a DM rule, using the engine issue identity when it owns the same defect."""
+        severity = severity or definition.severity
+        return Diagnostic(
+            code=definition.issue_code
+            if definition.issue_code and severity is RuleSeverity.ERROR
+            else AuthoringRuleId.VALIDATION,
+            rule=definition.id,
+            phase=phase,
+            message=definition.explanation,
+            path=path,
+            location=location,
+            severity="error"
+            if severity is RuleSeverity.ERROR
+            else ("warning" if severity is RuleSeverity.WARNING else "info"),
+            remediation=f"{definition.fix_hint} {names_only_fix}" if names_only_fix else definition.fix_hint,
+            allowed_values=allowed_names,
+        )
 
     def relocated(self, path: tuple[str | int, ...]) -> Diagnostic:
         """The same finding at another path, e.g. inside an included step."""
@@ -163,7 +212,7 @@ class Diagnostic(AuthoringModel):
 
 
 class RuleCatalogEntry(AuthoringModel):
-    rule_id: AuthoringRuleId | ExpectationIntentKind | RawXmlDiagnosticCode
+    rule_id: AuthoringRuleId | ExpectationIntentKind | DmRuleId
     category: NonEmptyStrictStr
     severity: Literal["error", "warning", "info"]
     description: NonEmptyStrictStr
