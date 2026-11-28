@@ -20,7 +20,6 @@ class Settings(BaseSettings):
 
     LIB_EDITION: str = "CE"
 
-    RAY_DEBUG: bool = False
     model_config = SettingsConfigDict(case_sensitive=True, extra="ignore")
 
 

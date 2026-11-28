@@ -6,9 +6,6 @@ import logging
 import os
 import uuid
 
-# Must be set before importing Ray through runtime tasks.
-os.environ["RAY_DEDUP_LOGS"] = "0"
-
 from datamimic_ce.engine.dsl.api import DescriptorParser, SetupStatement, find_generate_statement_by_name
 from datamimic_ce.engine.io.api import TestResultExporter, load_connection_profile
 from datamimic_ce.engine.runtime.contracts import FactoryConfig, RunRequest, RunResult
@@ -106,7 +103,6 @@ class RuntimeRunSession:
                     test_result_storage=self._test_result_storage,
                     descriptor_dir=request.descriptor_path.parent,
                     runtime_environment=settings.RUNTIME_ENVIRONMENT,
-                    ray_debug=settings.RAY_DEBUG,
                     included_statement_transformer=request.included_statement_transformer,
                     profile_loader=request.profile_loader,
                     total_row_limit=request.total_row_limit,

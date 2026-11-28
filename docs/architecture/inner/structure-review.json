@@ -2334,6 +2334,10 @@
       "reason": "Unused empty model; the registry and parser construct the else statement without it."
     },
     {
+      "source": "engine/runtime/tasks/generate/workers/ray_generate_worker.py",
+      "reason": "The optional Ray backend of mpPlatform is removed in 5.0 (#400); mpPlatform accepts only multiprocessing."
+    },
+    {
       "source": "factory/factory_config.py",
       "reason": "Forwarding only; import runtime/contracts.py directly."
     },

@@ -434,7 +434,6 @@ class GenerateWorker:
         unique_cursors: dict,
     ) -> GenerationResult:
         """
-        (IMPORTANT: Only to be used as Ray multiprocessing function)
         This function is used to generate data for a single process, includes steps:
         1. Build sub-tasks in GenIterStatement
         2. Load data source (if any)

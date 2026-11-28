@@ -1,0 +1,22 @@
+{
+  "title": "mpPlatform accepts only multiprocessing",
+  "proves": [
+    "omitting mpPlatform and writing mpPlatform=\"multiprocessing\" give the same rows",
+    "mpPlatform=\"ray\" is rejected: the ray backend was removed in 5.0",
+    "an unknown mpPlatform spelling is rejected the same way"
+  ],
+  "products": {
+    "tickets": 6
+  },
+  "negatives": [
+    {"name": "ray_backend_removed", "diagnostic": "DM219",
+     "patch": {"file": "datamimic.xml", "old": "<generate name=\"tickets\" count=\"6\">", "new": "<generate name=\"tickets\" count=\"6\" mpPlatform=\"ray\">"}},
+    {"name": "unknown_platform_spelling", "diagnostic": "DM219",
+     "patch": {"file": "datamimic.xml", "old": "<generate name=\"tickets\" count=\"6\">", "new": "<generate name=\"tickets\" count=\"6\" mpPlatform=\"Multiprocessing\">"}}
+  ],
+  "equivalents": [
+    {"name": "explicit_multiprocessing",
+     "patch": {"file": "datamimic.xml", "old": "<generate name=\"tickets\" count=\"6\">", "new": "<generate name=\"tickets\" count=\"6\" mpPlatform=\"multiprocessing\">"}}
+  ]
+}
+

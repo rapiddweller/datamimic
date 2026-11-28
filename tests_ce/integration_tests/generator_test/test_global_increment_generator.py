@@ -86,10 +86,9 @@ def _global_fields(nested):
     </if></condition>'''
 
 
-@pytest.mark.parametrize("platform", ["multiprocessing", "ray"])
 @pytest.mark.parametrize("nested", [False, True])
-def test_requested_workers_keep_global_ids_unique(tmp_path, platform, nested):
-    captured = _run_descriptor(tmp_path, platform, _global_fields(nested))
+def test_requested_workers_keep_global_ids_unique(tmp_path, nested):
+    captured = _run_descriptor(tmp_path, "multiprocessing", _global_fields(nested))
     assert captured is not None
     product, count = ("children", 24) if nested else ("rows", 8)
     ids = [row["id"] for row in captured[product]]
@@ -111,7 +110,7 @@ def test_ordinary_increment_keeps_backend_workers(tmp_path):
 def test_global_increment_seeded_nested_replay_and_fresh_run(tmp_path):
     fields = _global_fields(True)
     first = _run_descriptor(tmp_path, "multiprocessing", fields, seed=17)
-    assert first == _run_descriptor(tmp_path, "ray", fields, seed=17)
+    assert first == _run_descriptor(tmp_path, "multiprocessing", fields, seed=17)
     assert first == _run_descriptor(tmp_path, "multiprocessing", fields, seed=17, workers=1)
     assert [row["id"] for row in first["children"]] == list(range(1, 25))
 

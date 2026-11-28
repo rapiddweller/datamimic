@@ -84,7 +84,7 @@ def test_generate_source_unique_with_cyclic_rejected():
         _run("generate_unique_cyclic.xml")
 
 
-# --- multiprocessing: unique must hold across ray workers (with input duplicates) ---
+# --- multiprocessing: unique must hold across worker processes (with input duplicates) ---
 
 
 def test_generate_source_unique_holds_across_workers():

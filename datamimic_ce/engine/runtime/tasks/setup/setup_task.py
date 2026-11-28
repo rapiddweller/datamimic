@@ -42,7 +42,6 @@ class SetupTask:
         test_result_storage: TestResultExporter,
         descriptor_dir: Path,
         runtime_environment: Literal["development", "production"] = "production",
-        ray_debug: bool = False,
         included_statement_transformer: StatementTransformer | None = None,
         profile_loader: Callable[[Path, str], dict[str, str]] | None = None,
         total_row_limit: int | None = None,
@@ -56,7 +55,6 @@ class SetupTask:
         self._test_mode = test_mode
         self._test_result_storage = test_result_storage
         self._runtime_environment = runtime_environment
-        self._ray_debug = ray_debug
         self._included_statement_transformer = included_statement_transformer
         self._profile_loader = profile_loader
         self._total_row_limit = total_row_limit
@@ -89,7 +87,6 @@ class SetupTask:
             report_logging=self._setup_stmt.report_logging in (True, None),  # default value is True
             run_seed=RunSeed.create(self._setup_stmt.rng_seed),
             runtime_environment=self._runtime_environment,
-            ray_debug=self._ray_debug,
             included_statement_transformer=self._included_statement_transformer,
             profile_loader=self._profile_loader,
             total_row_limit=self._total_row_limit,

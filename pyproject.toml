@@ -51,11 +51,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Optional dependency group for Ray-based parallel processing
-ray = [
-    "ray>=2.40.0",
-]
-
 # Optional dependency group for MCP server surface
 mcp = [
     "fastmcp==4.2.0",  # tested MCP server and client API (#658)

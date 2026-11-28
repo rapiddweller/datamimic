@@ -345,7 +345,7 @@ buffered exporter names to its rule context; pure authoring rules do not import 
   Remove the current `domain_core → shared` permission; do not replace it with
   an injection framework or a reverse facade.
 - Move ordered task bindings into `tasks/registry.py`. Retain one explicit import
-  in `tasks/__init__.py`: cold multiprocessing/Ray workers enter below Lifecycle.
+  in `tasks/__init__.py`: cold multiprocessing workers enter below Lifecycle.
   Dispatch primitives do not import concrete task implementations. Parser registry
   composition instead belongs to DescriptorParser.
 - Keep lazy domain entities distinct from passive types: services compose entities

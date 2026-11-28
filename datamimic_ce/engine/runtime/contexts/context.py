@@ -245,7 +245,6 @@ class SetupContext(Context):
         run_seed: RunSeed | None = None,
         domain_identifier_registry: IdentifierRegistry | None = None,
         runtime_environment: Literal["development", "production"] = "production",
-        ray_debug: bool = False,
         included_statement_transformer: StatementTransformer | None = None,
         profile_loader: Callable[[Path, str], dict[str, str]] | None = None,
         total_row_limit: int | None = None,
@@ -299,7 +298,6 @@ class SetupContext(Context):
         self._demographic_context = demographic_context
         self._run_seed = run_seed if run_seed is not None else RunSeed.create(None)
         self.runtime_environment = runtime_environment
-        self.ray_debug = ray_debug
         self.included_statement_transformer = included_statement_transformer
         self.profile_loader = profile_loader
         self._total_row_budget = TotalRowBudget(total_row_limit) if total_row_limit is not None else None
@@ -406,7 +404,6 @@ class SetupContext(Context):
             run_seed=self._run_seed,
             domain_identifier_registry=copy.deepcopy(self._domain_identifier_registry, memo),
             runtime_environment=self.runtime_environment,
-            ray_debug=self.ray_debug,
             included_statement_transformer=self.included_statement_transformer,
             profile_loader=self.profile_loader,
             total_row_limit=self._total_row_budget.limit if self._total_row_budget is not None else None,

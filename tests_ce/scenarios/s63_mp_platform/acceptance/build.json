@@ -1,0 +1,12 @@
+{
+  "version": "5.0",
+  "max_count": 6,
+  "product_roles": [
+    {"product": "tickets", "field": "ticket_id", "role": {"kind": "identifier"}}
+  ],
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "tickets"}, "count": 6},
+    {"kind": "unique", "subject": {"kind": "product", "product": "tickets"}, "field": "ticket_id"},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "tickets"}, "field": "queue", "values": ["billing", "support"]}
+  ]
+}

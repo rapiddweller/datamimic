@@ -55,6 +55,7 @@ from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import (
     ATTR_MIN,
     ATTR_MIN_COUNT,
     ATTR_MIN_LENGTH,
+    ATTR_MP_PLATFORM,
     ATTR_NULL_QUOTA,
     ATTR_OFFSET,
     ATTR_OUT_DATE_FORMAT,
@@ -679,6 +680,11 @@ EXECUTE_SCRIPT_REQUIRES_TYPE = Requires(
     message="script= on <execute> requires type=",
 )
 
+MP_PLATFORM_VALUES = ValidValues(
+    ATTR_MP_PLATFORM,
+    ("multiprocessing",),
+    message="'mpPlatform' must be 'multiprocessing' (or omitted): the 'ray' backend was removed in 5.0",
+)
 GENERATE_UNIQUE_REQUIRES_SOURCE = Requires(
     ATTR_UNIQUE,
     frozenset((ATTR_SOURCE,)),
@@ -703,6 +709,7 @@ _GENERATE_RULES: tuple[Constraint, ...] = (
     GENERATE_OFFSET_REQUIRES_SOURCE,
     *GENERATE_ROW_SELECTION_CONSTRAINTS,
     SOURCE_DISTRIBUTION_VALUES,
+    MP_PLATFORM_VALUES,
 )
 _KEY_RULES: tuple[Constraint, ...] = (
     WEIGHTS_REQUIRE_VALUES,

@@ -5,8 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import math
-from collections.abc import Callable
-from typing import Protocol
 from uuid import uuid4
 
 from datamimic_ce.engine.dsl.api import ATTR_WHERE, CompositeStatement, GenerateStatement, KeyStatement, Statement
@@ -23,7 +21,7 @@ from datamimic_ce.engine.io.api import (
     publish_exported_artifacts,
     rdbms_client_dbms,
 )
-from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext, WorkerContextPayload
+from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.contexts.products import ExecutedExport, GenerationResult, TotalRowBudget
 from datamimic_ce.engine.runtime.logging import gen_timer, logger
@@ -212,7 +210,7 @@ class GenerateTask(CommonSubTask):
 
     @staticmethod
     def _determine_num_workers(context: GenIterContext | SetupContext, stmt: GenerateStatement) -> int:
-        """Number of Ray workers. 1 for inner gen_stmt; otherwise the requested count unless a
+        """Number of worker processes. 1 for inner gen_stmt; otherwise the requested count unless a
         single-process policy (unique/composite/delete — see single_process_policy) overrides it."""
         # Do not apply multiprocessing for inner gen_stmt
         if not GenerateTask.is_outermost(context):
@@ -327,10 +325,6 @@ class GenerateTask(CommonSubTask):
         previous_plan = self.statement.generation_plan
         with gen_timer("process", context.root.report_logging, self.statement.full_name, not outermost) as timer_result:
             try:
-                # Mark Ray initialization status for shutdown at the end of execution
-                # Ray is optional; only import/initialize if explicitly requested.
-                _stop_ray: Callable[[], None] | None = None  # set only when this call started Ray
-
                 # Determine count of generate process
                 count = self._determine_count(context)
                 timer_result["records_count"] = count
@@ -362,7 +356,7 @@ class GenerateTask(CommonSubTask):
                 # Execute generate task by page in multiprocessing
                 if outermost and isinstance(context, SetupContext) and num_workers > 1:
                     self._reject_positional_sequences_under_mp()
-                    # Serialize context for Ray multiprocessing
+                    # Serialize context for the worker processes
                     copied_context = GenerateWorker.serialize_worker_context(context)
 
                     # Determine chunk data indices based on chunk size and required data count
@@ -373,48 +367,19 @@ class GenerateTask(CommonSubTask):
 
                     # Determine multiprocessing platform and process data in parallel
                     mp_platform = self._statement.mp_platform or "multiprocessing"
-
-                    # unify worker types for mypy. Both worker classes expose `mp_process` with the same signature.
-                    class _MpWorker(Protocol):
-                        def mp_process(
-                            self,
-                            copied_context: WorkerContextPayload,
-                            statement: GenerateStatement,
-                            chunks: list[tuple[int, int]],
-                            page_size: int,
-                        ) -> dict[str, list]: ...
-
-                    mp_worker: _MpWorker
-                    if mp_platform == "multiprocessing":
-                        from datamimic_ce.engine.runtime.tasks.generate.workers.multiprocessing_generate_worker import (
-                            MultiprocessingGenerateWorker,
-                        )
-
-                        mp_worker = MultiprocessingGenerateWorker()
-                    elif mp_platform == "ray":
-                        # Ray is optional; import lazily and raise a clear error if missing.
-                        try:
-                            from datamimic_ce.engine.runtime.tasks.generate.workers.ray_generate_worker import (
-                                RayGenerateWorker,
-                            )
-                        except ImportError as e:  # WHY: allow install without ray, fail only when asked to use it
-                            raise RuntimeError(
-                                "Ray not installed. Install with 'pip install datamimic-ce[ray]' "
-                                "or set mp_platform='multiprocessing'."
-                            ) from e
-
-                        mp_worker = RayGenerateWorker()
-                        # A Ray the caller already started is theirs: use it, never shut it down.
-                        if RayGenerateWorker.start_ray(context.root.ray_debug):
-                            _stop_ray = RayGenerateWorker.stop_ray
-                    else:
+                    if mp_platform != "multiprocessing":
                         raise task_config_error(
                             code=IssueCode.TASK_MP_PLATFORM_UNSUPPORTED,
                             mp_platform=mp_platform,
                             stmt_name=self.statement.full_name,
                         )
-                    # Execute generate task by page in multiprocessing using Ray or multiprocessing
-                    merged_result = mp_worker.mp_process(copied_context, self._statement, chunks, page_size)
+                    from datamimic_ce.engine.runtime.tasks.generate.workers.multiprocessing_generate_worker import (
+                        MultiprocessingGenerateWorker,
+                    )
+
+                    merged_result = MultiprocessingGenerateWorker().mp_process(
+                        copied_context, self._statement, chunks, page_size
+                    )
 
                 # Execute generate task by page in single process
                 else:
@@ -458,9 +423,6 @@ class GenerateTask(CommonSubTask):
                 if outermost:
                     context.root.export_session = None
                     cleanup_exporter_chunks(context.root.descriptor_dir, context.root.task_id)
-                # Shut down only a Ray this call started
-                if _stop_ray is not None:
-                    _stop_ray()
 
     @staticmethod
     def export_memstore(setup_context: SetupContext, current_stmt: GenerateStatement, merged_result: dict[str, list]):
