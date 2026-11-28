@@ -50,6 +50,7 @@ from datamimic_ce.authoring.domain.expectations import (
     ProductRowsSubject,
     RangeExpectation,
     RowConditionExpectation,
+    RunningBalanceExpectation,
     UniqueExpectation,
     expectation_field,
     expectation_subjects,
@@ -433,11 +434,86 @@ def _check_group_sum_reference(
     return None
 
 
+_PostingOrder = tuple[Decimal | str | date, ...]
+
+
+def _posting_order(
+    rows: tuple[Mapping[str, object], ...], expectation: RunningBalanceExpectation
+) -> tuple[_PostingOrder, ...] | _ExpectationFailure:
+    columns: list[list[Decimal | str | date]] = []
+    for field in expectation.order_by:
+        column: list[Decimal | str | date] = []
+        for value in _values(rows, field) or ():
+            if isinstance(value, str | date) and not (isinstance(value, datetime) and value.tzinfo is not None):
+                column.append(value)
+            elif isinstance(value, int | float | Decimal) and (number := _decimal(value, bounded=True)) is not None:
+                column.append(number)
+            else:
+                break
+        if len(column) != len(rows) or len({type(value) for value in column}) != 1:
+            return _ExpectationFailure(
+                f"{_subject_label(expectation.subject)} requires comparable values of one kind in order field "
+                f"'{field}': bounded finite numbers, strings, dates or naive datetimes",
+                {},
+            )
+        columns.append(column)
+    return tuple(zip(*columns, strict=True))
+
+
+def _check_running_balance(
+    rows: tuple[Mapping[str, object], ...] | None, expectation: RunningBalanceExpectation
+) -> _ExpectationFailure | None:
+    label = _subject_label(expectation.subject)
+    if not rows:
+        return _ExpectationFailure(f"{label} has no captured postings for '{expectation.field}'", {})
+    order = _posting_order(rows, expectation)
+    if isinstance(order, _ExpectationFailure):
+        return order
+
+    postings: list[tuple[_PostingOrder, str | int | None, Fraction]] = []
+    group_by = expectation.group_by
+    for row, key in zip(rows, order, strict=True):
+        group = row.get(group_by) if group_by is not None else None
+        if not isinstance(group, str | int) or isinstance(group, bool):
+            if group_by is not None:
+                return _ExpectationFailure(f"{label} requires a string or integer group key in '{group_by}'", {})
+            group = None
+        amount = _decimal(row.get(expectation.field), bounded=True)
+        if amount is None:
+            return _ExpectationFailure(
+                f"{label} requires bounded finite numbers or decimal strings in amount field '{expectation.field}'",
+                {},
+            )
+        postings.append((key, group, Fraction(amount)))
+
+    order_fields = ", ".join(expectation.order_by)
+    group_label = f" by '{group_by}'" if group_by is not None else ""
+    previous: dict[str | int | None, _PostingOrder] = {}
+    balances: dict[str | int | None, Fraction] = {}
+    below_minimum = 0
+    for key, group_key, change in sorted(postings, key=lambda posting: posting[0]):
+        if previous.get(group_key) == key:
+            return _ExpectationFailure(f"{label} has tied order keys for ({order_fields}){group_label}", {})
+        previous[group_key] = key
+        balance = balances.get(group_key, 0) + change
+        balances[group_key] = balance
+        below_minimum += balance < expectation.minimum
+    if below_minimum:
+        return _ExpectationFailure(
+            f"{label} has {below_minimum} posting(s) below the minimum for '{expectation.field}', "
+            f"ordered by ({order_fields}){group_label}",
+            {"actual": below_minimum},
+        )
+    return None
+
+
 def _check_expectation(
     spec: AcceptanceSpecV1,
     captured: CapturedRows,
     expectation: ExpectationIntent,
 ) -> _ExpectationFailure | None:
+    if isinstance(expectation, RunningBalanceExpectation):
+        return _check_running_balance(_subject_rows(spec, captured, expectation.subject), expectation)
     if isinstance(expectation, GroupSumExpectation):
         reference = expectation.reference
         return _check_group_sum(

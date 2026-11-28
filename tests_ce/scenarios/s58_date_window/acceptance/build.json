@@ -16,6 +16,9 @@
     {"kind": "row_condition", "subject": {"kind": "product", "product": "edges"}, "condition": "at_max > '1936-11-22' and at_max < '2008-11-23'"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "edges"}, "condition": "at_in >= '2000-06-15T13:45:10' and at_in <= '2000-06-15 13:45:10.000000'"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "edges"}, "condition": "'1936-11-22' < day_min < '2008-11-23'"},
-    {"kind": "row_condition", "subject": {"kind": "product", "product": "edges"}, "condition": "at_text >= '2000-06-15 13:45:10' and at_text < '2000-06-15 13:45:11'"}
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "edges"}, "condition": "at_text >= '2000-06-15 13:45:10' and at_text < '2000-06-15 13:45:11'"},
+    {"kind": "running_balance", "subject": {"kind": "product", "product": "edges"}, "field": "amount", "order_by": ["at_in"], "minimum": "0.10"},
+    {"kind": "running_balance", "subject": {"kind": "product", "product": "postings"}, "field": "amount", "order_by": ["sequence"], "minimum": "0"},
+    {"kind": "running_balance", "subject": {"kind": "product", "product": "postings"}, "field": "amount", "order_by": ["rank"], "group_by": "account", "minimum": "0"}
   ]
 }

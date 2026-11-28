@@ -5,13 +5,63 @@
     "the window after 1936-11-22 and before 2008-11-23 holds at min (the day after the start), max (the last day before the end), and for a datetime just after midnight and just before the next midnight",
     "a chained comparison and a literal on the left work; a text capture still compares as text",
     "seeded BirthdateGenerator(min_age=18, max_age=90) draws between 1934-01-02 and 2007-01-01: the anchor is 2025-01-01, not today",
-    "a date outside the window, a non-ISO literal, an offset or Z, a date field with a datetime literal, a datetime with a time zone and an absent field are refused"
+    "a date outside the window, a non-ISO literal, an offset or Z, a date field with a datetime literal, a datetime with a time zone and an absent field are refused",
+    "running_balance accepts one datetime-ordered posting exactly at a nonzero minimum; an ungrouped decimal balance follows explicit numeric order and reaches zero exactly; two groups can share the same ordering key"
   ],
   "products": {
     "people": 200,
-    "edges": 1
+    "edges": 1,
+    "postings": 4
   },
   "negatives": [
+    {
+      "name": "running_balance_empty_product",
+      "diagnostic": "running_balance",
+      "message": "no captured postings",
+      "patch": {"file": "datamimic.xml", "old": "name=\"postings\" count=\"4\"", "new": "name=\"postings\" count=\"0\""}
+    },
+    {
+      "name": "running_balance_mixed_order_types",
+      "diagnostic": "running_balance",
+      "message": "requires comparable values of one kind in order field 'sequence'",
+      "patch": {"file": "datamimic.xml", "old": "(3, 1, 2.0, 4)", "new": "(3, 1, '2', 4)"}
+    },
+    {
+      "name": "running_balance_unknown_order_field",
+      "diagnostic": "input",
+      "message": "unknown field",
+      "patch": {"file": "acceptance/build.json", "old": "[\"sequence\"]", "new": "[\"position\"]"}
+    },
+    {
+      "name": "running_balance_duplicate_order_fields",
+      "diagnostic": "validation",
+      "message": "order_by must list distinct fields",
+      "patch": {"file": "acceptance/build.json", "old": "[\"sequence\"]", "new": "[\"sequence\", \"sequence\"]"}
+    },
+    {
+      "name": "running_balance_empty_order_fields",
+      "diagnostic": "validation",
+      "message": "at least 1 item",
+      "patch": {"file": "acceptance/build.json", "old": "[\"sequence\"]", "new": "[]"}
+    },
+    {
+      "name": "running_balance_invalid_group_key",
+      "diagnostic": "running_balance",
+      "message": "requires a string or integer group key in 'account'",
+      "patch": {"file": "datamimic.xml", "old": "('main', 'main', 'main', 2)", "new": "('main', 'main', 'main', True)"}
+    },
+    {
+      "name": "running_balance_one_cent_below_minimum",
+      "diagnostic": "running_balance",
+      "message": "1 posting(s) below the minimum for 'amount'",
+      "patch": {"file": "acceptance/build.json", "old": "[\"at_in\"], \"minimum\": \"0.10\"", "new": "[\"at_in\"], \"minimum\": \"0.11\""}
+    },
+    {
+      "name": "running_balance_minimum_outside_decimal_budget",
+      "diagnostic": "validation",
+      "message": "minimum exceeds the numeric bounds",
+      "patch": {"file": "acceptance/build.json", "old": "[\"at_in\"], \"minimum\": \"0.10\"", "new": "[\"at_in\"], \"minimum\": \"1e129\""}
+    },
     {
       "name": "min_minus_1_day_fails",
       "diagnostic": "row_condition",
