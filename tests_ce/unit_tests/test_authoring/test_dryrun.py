@@ -177,14 +177,13 @@ def test_dry_run_keeps_properties_include(tmp_path: Path) -> None:
     assert result.ok
 
 
-def test_dry_run_maps_runtime_error_to_dm002() -> None:
-    # lints clean (source file simply missing at runtime) -> DM002 with hint
+def test_dry_run_keeps_catalog_identity_for_a_missing_source() -> None:
     xml = """<setup rngSeed="1">
         <generate name="a" count="3" source="missing.csv" distribution="ordered" target="ConsoleExporter"/>
     </setup>"""
     result = _execute_source(xml)
     assert not result.ok
-    assert [d.code for d in result.diagnostics] == [AuthoringSystemDiagnosticCode.CHILD_EXECUTION]
+    assert [d.code for d in result.diagnostics] == ["I101"]
     assert result.diagnostics[0].remediation
 
 
@@ -422,7 +421,8 @@ def test_smoke_export_compares_buffered_exporter_row_count(tmp_path, monkeypatch
     negative = _capture_here(xml, smoke_export=True)
     assert isinstance(negative, dryrun_module._WorkerSuccess)
     assert negative.smoke_export.failed_exporters == 1
-    assert "wrote 2 of 3 captured rows" in negative.smoke_diagnostics[0]["message"]
+    [diagnostic] = negative.smoke_diagnostics
+    assert (diagnostic["expected"], diagnostic["actual"]) == (3, 2)
     assert not list(tmp_path.iterdir())
 
 

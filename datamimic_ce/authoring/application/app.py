@@ -29,7 +29,11 @@ from datamimic_ce.authoring.domain.capabilities import (
 )
 from datamimic_ce.authoring.domain.project_run import ProjectRunRequest, ProjectRunResult, UnverifiedProjectRunResult
 from datamimic_ce.authoring.domain.project_scaffold import ProjectPattern, ProjectScaffold
-from datamimic_ce.authoring.domain.reference import AuthoringAssemblyReference, ReferenceResult
+from datamimic_ce.authoring.domain.reference import (
+    AuthoringAssemblyReference,
+    ReferenceLookupResult,
+    ReferenceResult,
+)
 from datamimic_ce.authoring.domain.requests import (
     BUILD_PROTOCOL,
     AuthoringSchemaId,
@@ -145,12 +149,14 @@ class AuthoringApplication:
         commit = _git_commit(direct_url)
         return RuntimeVersion(**facts) if commit is None else GitRuntimeVersion(**facts, commit=commit)
 
-    def reference(self, request: ReferenceRequest) -> ReferenceResult:
+    def reference(self, request: ReferenceRequest) -> ReferenceLookupResult:
         return self._catalog.reference(request)
 
     def reference_names(self, topic: ReferenceTopic) -> tuple[str, ...]:
         """Every name addressable via ``reference(topic, name)`` for the topic."""
         result = self.reference(ReferenceRequest(topic=topic))
+        if not isinstance(result, ReferenceResult):
+            raise LookupError(f"the catalog has no {topic} topic listing")
         if result.rules is not None:
             return tuple(str(rule.rule_id) for rule in result.rules)
         return tuple(entry.name for entry in result.entries or ())
@@ -161,7 +167,7 @@ class AuthoringApplication:
             case ProjectPattern.FLAT:
                 name = "starter"
         result = self._catalog.reference(ReferenceRequest(topic=ReferenceTopic.ASSEMBLY, name=name))
-        for entry in result.entries or ():
+        for entry in (result.entries or ()) if isinstance(result, ReferenceResult) else ():
             if isinstance(entry, AuthoringAssemblyReference) and entry.starter is not None:
                 return ProjectScaffold.from_starter(pattern, entry.starter.entry_xml, entry.starter.acceptance)
         raise LookupError(f"the catalog has no {name} starter project")

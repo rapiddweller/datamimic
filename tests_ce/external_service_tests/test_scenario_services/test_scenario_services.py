@@ -35,6 +35,7 @@ from datamimic_ce.engine.dsl.api import parse_properties
 from datamimic_ce.engine.runtime.lifecycle.config import get_settings
 from datamimic_ce.errors.base import OperationError, TaskConfigError
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
+from tests_ce.authoring_project import matches_scenario_diagnostic
 
 _ROOT = Path(__file__).resolve().parent
 _PROJECTS = sorted(path.parent for path in _ROOT.glob("*/scenario.json"))
@@ -302,10 +303,16 @@ def test_negative_is_rejected_with_named_diagnostic(project: Path, negative: dic
 
     rejected = _build(project)
     assert isinstance(rejected, RejectedBuild), "Build accepted a variant that must be rejected"
-    codes = [str(item.code) for item in rejected.diagnostics]
-    assert negative["diagnostic"] in codes, f"expected {negative['diagnostic']}, Build reported {codes}"
+    findings = [
+        item
+        for item in rejected.diagnostics
+        if matches_scenario_diagnostic(item, negative["diagnostic"], negative.get("issue"))
+    ]
+    assert findings, (
+        f"expected {negative['diagnostic']}, Build reported {[(d.code, d.rule) for d in rejected.diagnostics]}"
+    )
     if "expected" in negative:
-        named = [str(item.expected) for item in rejected.diagnostics if str(item.code) == negative["diagnostic"]]
+        named = [str(item.expected) for item in findings]
         assert negative["expected"] in named, f"expected {negative['expected']!r}, Build reported {named}"
     if "run_error" in negative:  # the variant must also stop a normal run, with the message of its <assert>
         with pytest.raises(TaskConfigError, match=re.escape(negative["run_error"])):

@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
   workflow_run:
     workflows: [Github Datamimic CE CI]
+    branches: [development]
     types: [completed]
 
 permissions:
@@ -106,3 +107,4 @@ jobs:
           PAGE_URL: ${{ steps.deployment.outputs.page_url }}
         run: |
           echo "Current development architecture: $PAGE_URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "ArchKeel badge endpoint: ${PAGE_URL%/}/archkeel-status.json" >> "$GITHUB_STEP_SUMMARY"

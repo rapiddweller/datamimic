@@ -40,7 +40,7 @@ private crossings. All 303 raw UNKNOWN records and all 20 validation diagnostics
 match the previous receipt, including the raw UNKNOWN digest. Classifications,
 contract, analyzer and approved ceilings remain unchanged.
 
-[The receipt](completion-unknowns.json) binds source digest
+The review receipt at the time bound source digest
 `198f3c582b683d172af8284228ba49ce9bbe06faa997919ff478687f1ec0e66e` and the fresh
 validation to that unchanged uncertainty. It does not certify complete resolution
 of inherited surfaces, external/generic types, reexport routes or dynamic contexts.
