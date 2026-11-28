@@ -43,6 +43,7 @@ from datamimic_ce.errors.codes import ErrorCode
 from datamimic_ce.errors.context import DescriptorLocation
 from datamimic_ce.errors.descriptor_contracts import DescriptorCarrierLike
 from datamimic_ce.errors.formatters import (
+    _format_issue,
     client_config_message,
     condition_evaluation_message,
     dataset_message,
@@ -55,6 +56,7 @@ from datamimic_ce.errors.formatters import (
     include_message,
     invalid_locale_message,
     invalid_source_message,
+    issue_text,
     operation_message,
     parser_validation_message,
     rule_error_message,
@@ -409,7 +411,7 @@ def task_config_error(
     msg = plain if script_error else _append_descriptor_hint(plain, ctx, descriptor_name)
     error = TaskConfigError(msg, issue_code=code, location=location)
     if shown_in_build:
-        error.build_reason = plain
+        error.build_reason = _format_issue(issue_text(code, **kwargs))
     return error
 
 

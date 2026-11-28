@@ -52,17 +52,26 @@ def test_seeded_library_loads_once_and_build_replays_it_unrequested(tmp_path: Pa
 
 @pytest.mark.integration
 @pytest.mark.parametrize(
-    ("filename", "message"),
+    ("filename", "script", "line", "message"),
     [
         (
             "library_import_in_function.xml",
-            "import_in_function.scr.py: Python library line 2 imports inside a function or class body",
+            "import_in_function.scr.py",
+            2,
+            "Bounded Python library imports inside a function or class body",
         ),
-        ("library_reads_file.xml", "reads_file.scr.py: Python library line 2 uses a file or dynamic-code builtin"),
-        ("library_indented.xml", "indented_import.scr.py: Python library line 1 imports a module outside"),
+        (
+            "library_reads_file.xml",
+            "reads_file.scr.py",
+            2,
+            "Bounded Python library uses a file or dynamic-code builtin",
+        ),
+        ("library_indented.xml", "indented_import.scr.py", 1, "Bounded Python library imports a module outside"),
     ],
 )
-def test_library_check_refuses_before_the_library_runs(tmp_path: Path, filename: str, message: str) -> None:
+def test_library_check_refuses_before_the_library_runs(
+    tmp_path: Path, filename: str, script: str, line: int, message: str
+) -> None:
     result = _build(tmp_path, filename)
     assert result.outcome == "rejected"
     [diagnostic] = [
@@ -72,8 +81,8 @@ def test_library_check_refuses_before_the_library_runs(tmp_path: Path, filename:
     ]
     assert diagnostic.path == ("descriptor", "datamimic.xml")
     assert diagnostic.location is not None
-    assert diagnostic.location.script_file == f"lib/{message.split(':', 1)[0]}"
-    assert diagnostic.location.script_line == (1 if filename == "library_indented.xml" else 2)
+    assert diagnostic.location.script_file == f"lib/{script}"
+    assert diagnostic.location.script_line == line
 
 
 @pytest.mark.integration
@@ -107,8 +116,7 @@ def test_included_library_is_checked_against_the_entry_seed() -> None:
     result = _bounded_run("library_included_refused.xml")
     assert not result.ok
     assert any(
-        item.code is AuthoringRuleId.SIDE_EFFECT
-        and item.message.startswith("import_in_function.scr.py: Python library line 2 imports inside")
+        item.code is AuthoringRuleId.SIDE_EFFECT and item.message.startswith("Bounded Python library imports inside")
         for item in result.diagnostics
     ), result.diagnostics
     [diagnostic] = [item for item in result.diagnostics if item.code is AuthoringRuleId.SIDE_EFFECT]

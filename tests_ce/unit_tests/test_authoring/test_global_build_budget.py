@@ -37,10 +37,7 @@ def test_separate_products_share_one_total_budget(tmp_path: Path) -> None:
     )
 
     assert result.outcome == "rejected"
-    assert any(
-        diagnostic.ce_error is not None and diagnostic.ce_error.issue_code is IssueCode.TASK_TOTAL_ROW_BUDGET_EXCEEDED
-        for diagnostic in result.diagnostics
-    )
+    assert any(diagnostic.code is IssueCode.TASK_TOTAL_ROW_BUDGET_EXCEEDED for diagnostic in result.diagnostics)
 
 
 def test_static_products_over_the_total_budget_are_refused_before_execution(tmp_path: Path) -> None:

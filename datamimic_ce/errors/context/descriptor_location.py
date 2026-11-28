@@ -7,7 +7,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from datamimic_ce.errors.context.descriptor_identity import get_descriptor_name, logical_descriptor_name
+from datamimic_ce.errors.context.descriptor_identity import (
+    get_descriptor_name,
+    get_include_chain,
+    logical_descriptor_name,
+)
 
 
 @dataclass(frozen=True)
@@ -19,11 +23,14 @@ class DescriptorLocation:
     descriptor_path: str | None = None
     line: int | None = None
     column: int | None = None
+    include_chain: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
-        object.__setattr__(
-            self, "descriptor_path", logical_descriptor_name(self.descriptor_path or get_descriptor_name())
-        )
+        active = get_descriptor_name()
+        name = logical_descriptor_name(self.descriptor_path or active)
+        object.__setattr__(self, "descriptor_path", name)
+        if not self.include_chain and name == active:
+            object.__setattr__(self, "include_chain", get_include_chain())
 
     def format(self) -> str:
         """Render only truthful context currently available from the parser seam."""

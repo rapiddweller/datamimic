@@ -198,12 +198,11 @@ class StatementParser(ABC):
                 new_msg = f"\n - {msg}" if loc in (None, "__root__") else f"\n - {loc}: {msg}"
                 msg_err = msg_err + new_msg
             validation_errors: tuple[dict[str, object], ...] = tuple(
-                {"loc": tuple(detail["loc"]), "type": detail["type"], "msg": detail["msg"]}
-                for detail in details
+                {"loc": tuple(detail["loc"]), "type": detail["type"], "msg": detail["msg"]} for detail in details
             )
             raise parser_validation_error(
                 code=IssueCode.PARSER_VALIDATION_FAILED,
                 details=msg_err,
                 validation_errors=validation_errors,
-                location=DescriptorLocation(xml_tag(self._element)),
+                location=DescriptorLocation(xml_tag(self._element), line=self._element.sourceline),
             ) from err
