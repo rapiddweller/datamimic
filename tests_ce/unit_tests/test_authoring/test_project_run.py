@@ -325,7 +325,7 @@ def test_cli_run_project_matches_the_application(tmp_path: Path) -> None:
     assert refused.exit_code == 1
     assert json.loads(refused.stdout)["outcome"] == "not_run"
     bad = CliRunner().invoke(app, ["authoring", "run-project", str(root), "--param", "novalue"])
-    assert bad.exit_code == 1
+    assert bad.exit_code == 2
     assert json.loads(bad.stdout)["diagnostics"][0]["code"] == "input"
 
 

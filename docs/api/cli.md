@@ -324,6 +324,9 @@ datamimic run ./demo-condition/datamimic.xml
 datamimic authoring run-project <project> [--allow-side-effects] [--param NAME=VALUE]
 ```
 
+`--param` follows the same rule as `run`: the first `=` separates, the name is a non-keyword Python identifier and
+must not repeat. An invalid `--param` or `--timeout` exits `2` with a `not_run` result (`not_run_reason: input`).
+
 Build runs first. A `not_run` result keeps the existing `outcome` and identifies
 its cause with `not_run_reason`: `input`, `build_rejected`, or
 `side_effects_not_allowed` (the enum also holds `confirmation_required`, which only the

@@ -6,11 +6,11 @@
 
 from __future__ import annotations
 
-import re
+import keyword
 from enum import StrEnum
 from typing import Annotated, Literal
 
-from pydantic import Field, StrictBool, StrictInt, StrictStr, model_validator
+from pydantic import AfterValidator, Field, StrictBool, StrictInt, StrictStr, model_validator
 
 from .build_rules import catalog_diagnostic
 from .common import AuthoringModel, NonEmptyStrictStr, NonNegativeStrictInt
@@ -21,7 +21,7 @@ from .requests import BuildArtifact, RejectedBuild
 MAX_PROJECT_RUN_SECONDS = 840
 MAX_LISTED_ARTIFACTS = 200
 LOG_TAIL_LINES = 50
-_PARAM_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+INVALID_PROPERTY_NAME = "requires a valid Python property name"
 
 
 def run_outcome(exit_code: int | None) -> Literal["completed", "failed", "timeout"]:
@@ -55,17 +55,50 @@ class ProjectArtifact(AuthoringModel):
     )
 
 
+def _is_property_name(name: str) -> bool:
+    return name.isidentifier() and not keyword.iskeyword(name)
+
+
+def _checked_property_name(name: str) -> str:
+    if not _is_property_name(name):
+        raise ValueError(INVALID_PROPERTY_NAME)
+    return name
+
+
 class ProjectParam(AuthoringModel):
     """One runtime property NAME=VALUE handed to the run."""
 
-    name: Annotated[StrictStr, Field(pattern=_PARAM_NAME.pattern)]
+    name: Annotated[StrictStr, AfterValidator(_checked_property_name)]
     value: StrictStr
+
+    @classmethod
+    def parse(cls, entry: str, value_label: str = "VALUE") -> ProjectParam:
+        """The one owner of the NAME=VALUE syntax and the property-name rule of `--param` and `--param-env`.
+
+        The first '=' separates; the value may hold more of them or be empty. The name is a Python identifier that is
+        not a keyword, because scripts read it as a bare name. The caller prefixes the option it reports.
+        """
+        name, separator, value = entry.partition("=")
+        if not separator:
+            raise ValueError(f"requires NAME={value_label}")
+        if not _is_property_name(name):
+            raise ValueError(INVALID_PROPERTY_NAME)
+        return cls(name=name, value=value)
 
 
 class ProjectRunRequest(AuthoringModel):
     allow_side_effects: StrictBool = False
     params: tuple[ProjectParam, ...] = ()
     timeout_seconds: Annotated[StrictInt, Field(ge=1, le=MAX_PROJECT_RUN_SECONDS)] = 600
+
+    @model_validator(mode="after")
+    def unique_param_names(self) -> ProjectRunRequest:
+        seen: set[str] = set()
+        for param in self.params:
+            if param.name in seen:
+                raise ValueError(f"Duplicate runtime property: {param.name}")
+            seen.add(param.name)
+        return self
 
 
 ProjectRunBuild = Annotated[
