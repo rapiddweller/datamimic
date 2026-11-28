@@ -9,10 +9,10 @@ Delivered source: `384b7723d950d8b312b1080d23ffd89a5343c9b0`.
 The initial checker was ArchKeel 0.6.0; final acceptance used published 2.0.0.
 Counts across those instruments are not directly comparable.
 
-The architect's final completion rule is zero violations, complete observation
-and independent assessment of every remaining UNKNOWN. The machine-bound
-assessment is [completion-unknowns.json](completion-unknowns.json). UNKNOWN is
-not PASS. Budgets and the violation baseline were not raised for this acceptance.
+The experiment required zero violations, complete observation and an independent
+assessment of remaining UNKNOWNs. The archived evidence preserves the assessment.
+Current CI fails on an ArchKeel rule FAIL and reports UNKNOWNs and diagnostics
+without a baseline or a review receipt.
 
 The current [target](target-architecture.md), root and nested architecture
 contracts retain component ownership, public surfaces and dependency decisions.

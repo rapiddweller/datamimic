@@ -1,4 +1,6 @@
-Independent architecture review: link to the review note or approving review (required for changes under `datamimic_ce/`).
+Independent architecture review: link to the review note or approving review (required for contract changes or changes under `datamimic_ce/`).
+
+Architecture check: `make architecture-check` fails on ArchKeel rule FAIL and reports UNKNOWN.
 
 Equivalence classes: list the input classes and boundary values of the changed behavior (valid, invalid, empty, missing, duplicate, min-1, min, max, max+1). Name each class you leave out and say why.
 

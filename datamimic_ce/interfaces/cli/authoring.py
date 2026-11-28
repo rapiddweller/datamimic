@@ -133,7 +133,8 @@ def reference(
         request = ReferenceRequest(topic=topic, name=name)
     except ValidationError:
         emit_authoring({"ok": False, "error": "Invalid reference request."}, output_format, exit_code=1)
-    emit_authoring(create_authoring_application().reference(request), output_format)
+    result = create_authoring_application().reference(request)
+    emit_authoring(result, output_format, exit_code=0 if result.ok else 1)
 
 
 @app.command("compile", help="Compile a DM JSON document to XML; this does not prove the project.")
