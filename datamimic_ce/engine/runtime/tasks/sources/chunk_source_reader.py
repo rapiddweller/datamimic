@@ -27,9 +27,7 @@ class ChunkSourceReader:
         self._chunk_start = chunk_start
         self._chunk_end = chunk_end
         root = context.root
-        self._source_scripted = (
-            stmt.source_script if stmt.source_script is not None else bool(root.default_source_scripted)
-        )
+        self._source_scripted = root.source_scripted(stmt.source_script)
         self._separator = stmt.separator or root.default_separator
         # A where= condition runs once per chunk on the whole file, not once per page.
         self._weight_column = (
@@ -38,10 +36,7 @@ class ChunkSourceReader:
             else None
         )
         self._loads_all = (
-            stmt.distribution.loads_all
-            or bool(stmt.unique)
-            or stmt.where is not None
-            or self._weight_column is not None
+            stmt.distribution.needs_whole_pool(stmt.unique) or stmt.where is not None or self._weight_column is not None
         )
         self._window: ChunkSourceWindow | None = None
         self._build_from_source = True

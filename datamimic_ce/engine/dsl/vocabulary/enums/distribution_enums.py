@@ -65,6 +65,11 @@ class SourceDistribution(StrEnum):
         must load ALL rows first. Single source of truth for the load-vs-paginate decision."""
         return self is not SourceDistribution.ORDERED
 
+    def needs_whole_pool(self, unique: bool | None) -> bool:
+        """unique= also draws from the whole pool. <generate> adds where= and a weight column on top of this;
+        <variable> has neither."""
+        return self.loads_all or bool(unique)
+
     @classmethod
     def coerce(cls, value: "str | None") -> "SourceDistribution":
         """Normalize a parsed distribution string to a member; absent = RANDOM (load-all

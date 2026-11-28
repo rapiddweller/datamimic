@@ -54,7 +54,7 @@ def data_source_cache_key(stmt: Statement) -> tuple[str | None, str | None, str 
 
 
 def refuse_row_selection(
-    stmt: GenerateStatement, source: str, *, memstore: bool, client: bool, default_scripted: bool
+    stmt: GenerateStatement, source: str, *, memstore: bool, client: bool, root: SetupContext
 ) -> None:
     """where= and columns= select file rows only. The length pass reads every source first, so the refusal comes
     before any count, row condition or page."""
@@ -70,7 +70,7 @@ def refuse_row_selection(
             source_str=source,
             location=DescriptorLocation(EL_GENERATE, attribute=ATTR_SOURCE),
         )
-    if stmt.source_script if stmt.source_script is not None else default_scripted:
+    if root.source_scripted(stmt.source_script):
         raise invalid_source_error(
             code=IssueCode.GENERATE_ROW_SELECTION_SOURCE_SCRIPTED,
             stmt_name=stmt.full_name,
@@ -111,6 +111,7 @@ def refuse_weighted_entity_contract(stmt: GenerateStatement, source: str) -> Non
         (ATTR_OFFSET, bool(stmt.offset)),
         (ATTR_WHERE, stmt.where is not None),
         (ATTR_COLUMNS, stmt.columns is not None),
+        # Only an explicit sourceScripted is refused: the setup-wide default must not break a weighted source.
         (ATTR_SOURCE_SCRIPTED, bool(stmt.source_script)),
     )
     for attribute, is_set in ignored:
@@ -179,8 +180,7 @@ def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) 
         source_format = source_file_format_for(source_element, source_str, stmt.type)
         memstore = (
             root_ctx.memstore_manager.get_memstore(source_str)
-            if source_format is None
-            and root_ctx.memstore_manager.contain(source_str)
+            if source_format is None and root_ctx.memstore_manager.contain(source_str)
             else None
         )
         client = None
@@ -203,12 +203,10 @@ def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) 
                 source_str,
                 memstore=memstore is not None,
                 client=client is not None,
-                default_scripted=bool(root_ctx.default_source_scripted),
+                root=root_ctx,
             )
         selector = (
-            stmt.selector
-            if client is not None and isinstance(stmt, GenerateStatement | VariableStatement)
-            else None
+            stmt.selector if client is not None and isinstance(stmt, GenerateStatement | VariableStatement) else None
         )
         iteration_selector = (
             stmt.iteration_selector if client is not None and isinstance(stmt, VariableStatement) else None
