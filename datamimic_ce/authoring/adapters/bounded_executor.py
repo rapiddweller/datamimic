@@ -73,7 +73,8 @@ _MAX_REPLY_BYTES = dryrun._MAX_WORKER_REPLY_BYTES
 _STDERR_READ_BYTES = 4096
 _STDERR_EXCERPT_CHARS = 800
 _CONTROL_RUNS = r"[\x00-\x1f\x7f-\x9f]+"
-_CONTROL_EDGES = r"(?:\A[\x00-\x20\x7f-\x9f]+)|(?:[\x00-\x20\x7f-\x9f]+\Z)"
+_CONTROL_LEADING = r"\A[\x00-\x20\x7f-\x9f]+"
+_CONTROL_TRAILING = r"[\x00-\x20\x7f-\x9f]+\Z"
 
 
 def _stderr_excerpt(path: Path) -> str:
@@ -96,7 +97,9 @@ def _stderr_excerpt(path: Path) -> str:
         os.close(descriptor)
     text = str(data, "utf-8", "replace")
     # Runs of line breaks and control characters become one " | " separator, so the excerpt is one line.
-    trimmed = re.sub(_CONTROL_EDGES, "", text)
+    # Two patterns, one anchor each: an anchored alternation trips Sonar S5850, and grouping it trips S6395.
+    without_leading = re.sub(_CONTROL_LEADING, "", text)
+    trimmed = re.sub(_CONTROL_TRAILING, "", without_leading)
     excerpt = re.sub(_CONTROL_RUNS, " | ", trimmed)
     if len(excerpt) > _STDERR_EXCERPT_CHARS:
         excerpt = "..." + excerpt[-_STDERR_EXCERPT_CHARS:]
