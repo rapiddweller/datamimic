@@ -15,7 +15,7 @@ class GlobalIncrementGenerator(BaseLiteralGenerator):
     Nested parents and page rebuilds continue the same counter; distinct qualified
     fields have separate counters starting at 1. Includes share the counter of the
     run that contains them. CE executes a containing generate
-    in one process, overriding multiprocessing/Ray requests to prevent repeats.
+    in one process, overriding multiprocessing requests to prevent repeats.
     """
 
     def __init__(self, qualified_key: str, context: Context) -> None:

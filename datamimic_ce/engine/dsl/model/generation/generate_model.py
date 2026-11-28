@@ -13,6 +13,7 @@ from datamimic_ce.engine.dsl.model.constraints import (
     GENERATE_OFFSET_REQUIRES_SOURCE,
     GENERATE_ROW_SELECTION_CONSTRAINTS,
     GENERATE_UNIQUE_CONSTRAINTS,
+    MP_PLATFORM_VALUES,
     SOURCE_DISTRIBUTION_VALUES,
     TIMESERIES_ALL_OR_NONE,
     Constraint,
@@ -283,8 +284,8 @@ class GenerateModel(BaseModel):
     mp_platform: str | None = Field(
         None,
         alias=ATTR_MP_PLATFORM,
-        description="Multiprocessing start method override (advanced).",
-        examples=["fork", "spawn"],
+        description="Multiprocessing platform. Only 'multiprocessing' is accepted; omit it for the default.",
+        examples=["multiprocessing"],
     )
     # Time-series iterator (ISO 8601 start/end/interval). See _TIMESERIES_ATTRS.
     start: str | None = Field(
@@ -354,7 +355,9 @@ class GenerateModel(BaseModel):
     @classmethod
     def validate_offset_requires_source(cls, values: dict):
         # Enforce the declared fact (static message lives on the fact).
-        return check_constraints(values, (GENERATE_OFFSET_REQUIRES_SOURCE, *GENERATE_ROW_SELECTION_CONSTRAINTS))
+        return check_constraints(
+            values, (GENERATE_OFFSET_REQUIRES_SOURCE, *GENERATE_ROW_SELECTION_CONSTRAINTS, MP_PLATFORM_VALUES)
+        )
 
     @staticmethod
     def column_names(columns: str) -> tuple[str, ...]:

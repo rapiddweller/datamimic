@@ -21,10 +21,6 @@
       {
         "path": "datamimic_ce/engine/runtime/tasks/generate/workers/multiprocessing_generate_worker.py",
         "responsibility": "This module runs generate chunks in local multiprocessing processes."
-      },
-      {
-        "path": "datamimic_ce/engine/runtime/tasks/generate/workers/ray_generate_worker.py",
-        "responsibility": "This module runs generate chunks through the optional Ray runtime."
       }
     ]
   },
@@ -89,8 +85,7 @@
       ],
       "public": [
         "datamimic_ce.engine.runtime.tasks.generate.workers.generate_worker:GenerateWorker",
-        "datamimic_ce.engine.runtime.tasks.generate.workers.multiprocessing_generate_worker:MultiprocessingGenerateWorker",
-        "datamimic_ce.engine.runtime.tasks.generate.workers.ray_generate_worker:RayGenerateWorker"
+        "datamimic_ce.engine.runtime.tasks.generate.workers.multiprocessing_generate_worker:MultiprocessingGenerateWorker"
       ],
       "decided_by": "agent"
     },
@@ -198,8 +193,7 @@
       "root": "datamimic_ce.engine.runtime.tasks.generate.workers",
       "allowed_children": [
         "datamimic_ce.engine.runtime.tasks.generate.workers.generate_worker",
-        "datamimic_ce.engine.runtime.tasks.generate.workers.multiprocessing_generate_worker",
-        "datamimic_ce.engine.runtime.tasks.generate.workers.ray_generate_worker"
+        "datamimic_ce.engine.runtime.tasks.generate.workers.multiprocessing_generate_worker"
       ],
       "rationale": "Worker execution and process handoff. Exact reviewed target children; no hidden extra modules.",
       "provenance": [

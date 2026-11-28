@@ -72,7 +72,7 @@ field.
 
 CE executes a generate containing this generator in one process, including when
 it appears in nested generates, conditions, nested keys or XML attributes. This
-overrides both multiprocessing and Ray worker requests before workers start.
+overrides a multiprocessing worker request before workers start.
 The process-local registry cannot reserve safe disjoint ranges for arbitrary
 nested row counts. Explicitly referenced named global-increment instances in
 the setup registry use the same serial policy. An unrelated or unused generator

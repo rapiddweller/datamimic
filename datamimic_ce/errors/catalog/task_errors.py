@@ -422,7 +422,7 @@ ISSUES: list[IssueDefinition] = [
         title="Task MP Platform Unsupported",
         template="Multiprocessing platform '{mp_platform}' of <generate> '{stmt_name}' is not supported",
         cause="The mpPlatform value is not supported by the runtime.",
-        resolution="Use multiprocessing or ray (or omit to use multiprocessing).",
+        resolution="Use multiprocessing (or omit to use multiprocessing).",
     ),
     IssueDefinition(
         code=IssueCode.TASK_EXECUTE_CLIENT_NOT_FOUND,

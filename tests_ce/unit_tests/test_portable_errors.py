@@ -396,7 +396,7 @@ def test_buffered_finalize_failure_is_coded_and_keeps_specific_cause(monkeypatch
 
 def test_multiprocessing_platform_guidance_uses_actual_ce_backends():
     definition = next(item for item in ISSUE_DEFINITIONS if item.code is IssueCode.TASK_MP_PLATFORM_UNSUPPORTED)
-    assert definition.resolution == "Use multiprocessing or ray (or omit to use multiprocessing)."
+    assert definition.resolution == "Use multiprocessing (or omit to use multiprocessing)."
 
 
 def test_pickle_keeps_every_known_user_error_metadata_field():

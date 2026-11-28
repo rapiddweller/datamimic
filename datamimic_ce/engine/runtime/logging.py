@@ -63,7 +63,6 @@ def control_value(text: str) -> str:
 def setup_logger(logger_name: str, worker_name: str, level=logging.INFO):
     current_logger = logging.getLogger(logger_name)
 
-    # TODO: check if ray support this configuration with PR https://github.com/ray-project/ray/pull/48742
     if worker_name == "MAIN":
         formatter = _SingleLineFormatter(
             f"{_TIMESTAMP} | %(levelname)-5s | %(name)-9s | {worker_name}    | %(message)s",
