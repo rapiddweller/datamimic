@@ -246,15 +246,45 @@ def _replaced_engine_names(
     )
 
 
+_EXPRESSION_FILE = "<expression>"
+
+
 def _compile(expression: str) -> types.CodeType:
     # eval() of a string drops leading spaces and tabs; compile() does not, so drop them here (script=" a + b").
-    return compile(expression.lstrip(" \t"), "<expression>", "eval")
+    return compile(expression.lstrip(" \t"), _EXPRESSION_FILE, "eval")
 
 
 # As in EE: the same expression text runs once per row, so compile it once.
 @lru_cache(maxsize=8192)
 def _compiled(expression: str) -> types.CodeType:
     return _compile(expression)
+
+
+def is_unresolved_lookup(error: BaseException) -> bool:
+    """Whether a TaskConfigError from ``evaluate_python`` stands for a name, ``row.x`` or ``row['x']`` that the
+    namespace cannot resolve (yet), as opposed to a lookup that failed inside a call the expression made, such as a
+    generator's constructor. A caller uses it to wait for a row context that binds the name.
+
+    The decision reads the traceback of the original error and relies on exactly three facts of this module:
+    1. every expression is compiled by ``_compile`` under the file name ``_EXPRESSION_FILE``, on the main path
+       and on the colon-rewrite fallback alike;
+    2. the only frames of this module below that expression frame are the row accessors of ``DotableDict``
+       (``__getattr__`` and ``__getitem__``);
+    3. ``evaluate_python`` wraps the original error as ``__cause__``.
+    Any other frame below the expression frame belongs to code the expression called, so the failure is not an
+    unresolved lookup. ``test_unresolved_lookup.py`` fails when one of these facts changes."""
+    cause = error.__cause__
+    if not isinstance(cause, (NameError, AttributeError, KeyError)):
+        return False
+    in_expression = False
+    link = cause.__traceback__
+    while link is not None:
+        if link.tb_frame.f_code.co_filename == _EXPRESSION_FILE:
+            in_expression = True
+        elif in_expression and link.tb_frame.f_globals["__name__"] != __name__:
+            return False
+        link = link.tb_next
+    return in_expression
 
 
 def evaluate_python(
@@ -380,7 +410,9 @@ def evaluate_python(
             return updated
 
         try:
-            return normalized_result(eval(expression, single_namespace(replace_colons(local_namespace))), diagnostic)
+            return normalized_result(
+                eval(_compile(expression), single_namespace(replace_colons(local_namespace))), diagnostic
+            )
         except (UserErrorBase, DomainError):
             raise
         except Exception as retry_error:
@@ -507,4 +539,5 @@ __all__ = [
     "evaluate_python",
     "evaluate_source_template",
     "interpolate_variables",
+    "is_unresolved_lookup",
 ]

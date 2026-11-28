@@ -109,7 +109,8 @@ def _collect_callsites(tree: ast.AST) -> list[tuple[int, str]]:
 
 @pytest.mark.parametrize("module_path", production_modules(), ids=lambda p: p.relative_to(PROD_ROOT.parent).as_posix())
 def test_text_io_declares_encoding(module_path: Path) -> None:
-    rel = str(module_path.relative_to(PROD_ROOT.parent))
+    # POSIX form keeps the report key identical on every OS.
+    rel = module_path.relative_to(PROD_ROOT.parent).as_posix()
     hits = _collect_callsites(ast.parse(module_path.read_text(encoding="utf-8"), filename=str(module_path)))
     if not hits:
         return

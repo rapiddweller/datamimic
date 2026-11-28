@@ -10,6 +10,7 @@ from abc import abstractmethod
 from collections.abc import Iterable, Iterator
 from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation, localcontext
+from enum import Enum
 from random import Random
 
 from datamimic_ce.domains.api import StringGenerator, from_epoch_utc, to_epoch_utc
@@ -32,7 +33,7 @@ from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFor
 from datamimic_ce.engine.io.api import DataSourcePagination, WeightedDataSource, unique_value_iter
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
-from datamimic_ce.engine.runtime.scripting.evaluation import interpolate_variables
+from datamimic_ce.engine.runtime.scripting.evaluation import interpolate_variables, is_unresolved_lookup
 from datamimic_ce.engine.runtime.tasks.base.task import Task
 from datamimic_ce.engine.runtime.tasks.values.construction.converters import create_converter_list
 from datamimic_ce.engine.runtime.tasks.values.construction.factory import (
@@ -42,6 +43,7 @@ from datamimic_ce.engine.runtime.tasks.values.construction.factory import (
 from datamimic_ce.errors import (
     DescriptorLocation,
     IssueCode,
+    OperationError,
     UserErrorBase,
     datetime_conversion_error,
     is_user_error,
@@ -49,16 +51,33 @@ from datamimic_ce.errors import (
 )
 
 
+def _builds_sequence_table(expression: str) -> bool:
+    """Whether a generator= expression names SequenceTableGenerator, which reserves in the database while built."""
+    class_name: str = expression.partition("(")[0]
+    return class_name.strip() == "SequenceTableGenerator"
+
+
 class KeyVariableTask(Task):
-    # Specify which mode Attribute and Variable Task will use
-    _SCRIPT_MODE = "script"
-    _CONSTANT_MODE = "constant"
-    _VALUES_MODE = "values"
-    _GENERATOR_MODE = "generator"
-    _LAZY_GENERATOR_MODE = "lazy_generator"
-    _PATTERN_MODE = "pattern"
-    _RANDOM_MODE = "random"
-    _STRING_MODE = "string"
+    class Mode(Enum):
+        """How a <key>/<variable>/<element> produces its next value; fixed at construction, except that
+        LAZY_GENERATOR and LAZY_ITERATOR become GENERATOR and ITERATOR/FULL_LOAD on first execution."""
+
+        SCRIPT = "script"
+        CONSTANT = "constant"
+        VALUES = "values"
+        GENERATOR = "generator"
+        LAZY_GENERATOR = "lazy_generator"
+        PATTERN = "pattern"
+        RANDOM = "random"
+        STRING = "string"
+        # <variable> only
+        ITERATOR = "iterator"
+        ENTITY_BUILDER = "entity_builder"
+        WEIGHTED_SOURCE = "weighted_source"
+        ITERATION_SELECTOR = "iteration_selector"
+        FULL_LOAD = "full_load"
+        LAZY_ITERATOR = "lazy_iterator"
+        STORAGE = "storage"
 
     def __init__(
         self,
@@ -79,7 +98,7 @@ class KeyVariableTask(Task):
         self._pagination = pagination
         self._converter_list = create_converter_list(ctx, statement.converter)
 
-        self._mode: str | None = None
+        self._mode: KeyVariableTask.Mode | None = None
         # Lazily-built distinct-value iterator for unique="true" (sampling without replacement).
         self._unique_iter: Iterator[object] | None = None
         self._simple_type_set = {
@@ -102,11 +121,11 @@ class KeyVariableTask(Task):
         :return:
         """
         if self._statement.script is not None:
-            self._mode = self._SCRIPT_MODE
+            self._mode = self.Mode.SCRIPT
         elif self._statement.constant is not None:
-            self._mode = self._CONSTANT_MODE
+            self._mode = self.Mode.CONSTANT
         elif self._statement.string is not None:
-            self._mode = self._STRING_MODE
+            self._mode = self.Mode.STRING
         elif self._statement.values is not None:
             # evaluate input values first to handle some list like input, e.g.: values="'1,2,3,4', '1,2,3', '1,2'"
             try:
@@ -120,27 +139,39 @@ class KeyVariableTask(Task):
                     values=self._statement.values,
                 ) from None
             self._weights = self._parse_weights(self._values)
-            self._mode = self._VALUES_MODE
+            self._mode = self.Mode.VALUES
         elif self._statement.generator is not None:
             # A literal <key generator="..."> is bound to <setup rngSeed> inside create_generator
             # (a seeded rng is injected), so it replays deterministically; the single-process policy
             # keeps that reproducible across machines. Without a seed it stays wall-clock random.
             # Outside the try below: a refused argument attribute must not wait for the lazy retry.
-            self._generator_expression = self._generator_call(ctx, self._statement.generator)
+            expression = self._generator_call(ctx, self._statement.generator)
+            self._generator_expression = expression
             # Try to init generator with or without args.
             try:
                 self._generator = GeneratorUtil(ctx).create_generator(
-                    self._generator_expression,
+                    expression,
                     self._statement,
                     self._pagination,
                     # full_name alone collides when same-named keys sit in different <condition>
                     # branches with different generators - include the generator expression.
                     key=f"{self._statement.full_name}|{self._generator_expression}",
                 )
-                self._mode = self._GENERATOR_MODE
-            # If init generator failed while creating task, try to lazy-init in the first task execution
-            except:  # noqa: E722
-                self._mode = self._LAZY_GENERATOR_MODE
+                self._mode = self.Mode.GENERATOR
+            # Two cases wait for the first execution, where the row context binds them or the database may
+            # answer again; every other init failure (bad argument, syntax, unknown class) surfaces now with
+            # its own typed error:
+            # - a name that exists per row (generator="IntegerGenerator(max=this.n)" or max=this['n']) cannot
+            #   resolve against the setup context; a lookup that fails inside the constructor is not that;
+            # - SequenceTableGenerator reserves its block while it is built for a page, and a database failure
+            #   there (OperationError) is retried once on the first row.
+            except UserErrorBase as error:
+                if not (
+                    is_unresolved_lookup(error)
+                    or (isinstance(error, OperationError) and _builds_sequence_table(expression))
+                ):
+                    raise
+                self._mode = self.Mode.LAZY_GENERATOR
         elif self._statement.source is not None:
             source = self._statement.source
             if self._statement.unique:
@@ -162,9 +193,9 @@ class KeyVariableTask(Task):
                 separator=separator,
                 rng=seeded if seeded is not None else Random(),
             )
-            self._mode = self._GENERATOR_MODE
+            self._mode = self.Mode.GENERATOR
         elif self._statement.pattern is not None:
-            self._mode = self._PATTERN_MODE
+            self._mode = self.Mode.PATTERN
         elif (range_gen := self._range_generator()) is not None:
             # native min/max[/granularity] or minLength/maxLength on a typed <key> -> synthesize the literal
             # generator and reuse create_generator's seeding + caching (instead of a generator="..." string)
@@ -175,11 +206,11 @@ class KeyVariableTask(Task):
                 self._pagination,
                 key=f"{self._statement.full_name}|{range_gen}",
             )
-            self._mode = self._GENERATOR_MODE
+            self._mode = self.Mode.GENERATOR
         # IMPORTANT: always put this condition at the end
         # because this mode should only be active after checking all other ones
         elif self._statement.type is not None:
-            self._mode = self._RANDOM_MODE
+            self._mode = self.Mode.RANDOM
         else:
             raise task_config_error(
                 code=IssueCode.TASK_GENERATION_MODE_UNKNOWN, element_tag=self._element_tag, name=self._statement.name
@@ -243,7 +274,7 @@ class KeyVariableTask(Task):
         Generate data based on generation mode
         :param ctx:
         """
-        if self._mode == self._SCRIPT_MODE:
+        if self._mode == self.Mode.SCRIPT:
             try:
                 if self._statement.script is not None:
                     value = ctx.evaluate_python_expression(self._statement.script)
@@ -282,13 +313,13 @@ class KeyVariableTask(Task):
                     value_type=type(value).__name__,
                     location=DescriptorLocation(self._element_tag, attribute="script"),
                 )
-        elif self._mode == self._CONSTANT_MODE:
+        elif self._mode == self.Mode.CONSTANT:
             value = self._statement.constant
-        elif self._mode == self._STRING_MODE:
+        elif self._mode == self.Mode.STRING:
             self._prefix = self.statement.variable_prefix or ctx.root.default_variable_prefix
             self._suffix = self.statement.variable_suffix or ctx.root.default_variable_suffix
             value = interpolate_variables(ctx, self.statement.string or "", self._prefix, self._suffix)
-        elif self._mode == self._VALUES_MODE:
+        elif self._mode == self.Mode.VALUES:
             # None if no values; unique = distinct per row (no replacement); weighted pick
             # when 'weights' given; otherwise a uniform random pick.
             if self._values is None:
@@ -299,7 +330,7 @@ class KeyVariableTask(Task):
                 value = ctx.rng.choices(self._values, weights=self._weights, k=1)[0]
             else:
                 value = ctx.rng.choice(self._values)
-        elif self._mode == self._LAZY_GENERATOR_MODE:
+        elif self._mode == self.Mode.LAZY_GENERATOR:
             # Try to init generator again in first task execution
             self._generator = (
                 GeneratorUtil(ctx).create_generator(
@@ -312,9 +343,9 @@ class KeyVariableTask(Task):
                 else None
             )
             # Switch mode to GENERATE_MODE for next task execution
-            self._mode = self._GENERATOR_MODE
+            self._mode = self.Mode.GENERATOR
             value = self._generator.generate() if self._generator is not None else None
-        elif self._mode == self._GENERATOR_MODE:
+        elif self._mode == self.Mode.GENERATOR:
             if self._generator_expression is not None and self._generator is None:
                 self._generator = GeneratorUtil(ctx).create_generator(
                     self._generator_expression,
@@ -334,13 +365,13 @@ class KeyVariableTask(Task):
 
                 if isinstance(value, bool_):
                     value = bool(value)
-        elif self._mode == self._PATTERN_MODE:
+        elif self._mode == self.Mode.PATTERN:
             if self._statement.pattern is None:
                 raise task_config_error(
                     code=IssueCode.TASK_PATTERN_MISSING, element_tag=self._element_tag, name=self._statement.name
                 )
             value = StringGenerator.rnd_str_from_regex(self._statement.pattern, rng=ctx.rng)
-        elif self._mode == self._RANDOM_MODE:
+        elif self._mode == self.Mode.RANDOM:
             value = generate_random_value_based_on_type(self._statement.type, rng=ctx.rng)
         else:
             raise task_config_error(
@@ -499,7 +530,7 @@ class KeyVariableTask(Task):
         :return:
         """
         # Set default datatype in mode pattern
-        if data_type is None and self._mode == self._PATTERN_MODE:
+        if data_type is None and self._mode == self.Mode.PATTERN:
             data_type = "string"
 
         # Not convert if value is None
