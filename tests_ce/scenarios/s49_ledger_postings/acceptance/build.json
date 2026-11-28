@@ -55,7 +55,7 @@
     {"kind": "row_condition", "subject": {"kind": "product", "product": "line_checks"}, "condition": "days_since_open >= 0"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "line_checks"}, "condition": "days_to_close == None or days_to_close >= 0"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "line_checks"}, "condition": "currency_matches"},
-    {"kind": "row_condition", "subject": {"kind": "product", "product": "line_checks"}, "condition": "allow_negative == 'yes' or balance_after >= 0"},
+    {"kind": "running_balance", "subject": {"kind": "product", "product": "line_checks"}, "field": "signed_cents", "order_by": ["posted_on", "posting_rank", "line_id"], "group_by": "account_id", "minimum": "0"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "line_checks"}, "condition": "days_to_period_close >= 0"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "invoice_amount_checks"}, "condition": "tax_error_tenth_basis <= 5000"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "invoice_amount_checks"}, "condition": "gross_is_net_plus_tax"},
