@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -21,9 +22,10 @@ from tests_ce.authoring_project import write_project
 
 
 def _console_script() -> Path:
-    script = Path(sys.executable).with_name("datamimic")
-    assert script.is_file(), f"DATAMIMIC console script not installed next to {sys.executable}"
-    return script
+    # shutil.which applies PATHEXT on Windows, so "datamimic" resolves to datamimic.exe there.
+    found = shutil.which("datamimic", path=str(Path(sys.executable).parent))
+    assert found is not None, f"DATAMIMIC console script not installed next to {sys.executable}"
+    return Path(found)
 
 
 def _run_cli(
