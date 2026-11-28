@@ -220,6 +220,38 @@ group instead of an amount. See `s48_order_allocation`, `s49_ledger_postings`
 and `s47_course_timetable` under `tests_ce/scenarios`, and
 `datamimic authoring reference --topic expectations` for the live contract.
 
+## Running balances
+
+Use `running_balance` when a total must stay at or above a floor after every posting.
+This entry in `acceptance/build.json`'s `expectations` array starts each account
+at zero, adds its signed amounts in posting order, and allows a balance of
+exactly zero:
+
+```jsonc
+{
+  "kind": "running_balance",
+  "subject": {"kind": "product", "product": "line_checks"},
+  "field": "signed_cents",
+  "order_by": ["posted_on", "posting_rank", "line_id"],
+  "group_by": "account_id",
+  "minimum": "0"
+}
+```
+
+Omit `group_by` for one balance across the product. Build sorts by the listed
+fields, ascending from the first key to the last. Within a group, rows may
+share a date or rank; the complete order key must be unique. A field must use
+one comparable family across the product: numbers, strings, dates, or naive
+datetimes. Numeric text in an order field sorts as text.
+
+Amounts may be finite numbers or decimal strings, and the sum is exact. A
+missing or null amount, an invalid order key, or an empty product fails.
+The minimum applies after each posting, so an account that goes below its
+minimum still fails if it recovers later. Diagnostics name fields and count
+failing postings without exposing captured values. See
+`tests_ce/scenarios/s49_ledger_postings` and
+`datamimic authoring reference --topic expectations --name running_balance`.
+
 ## Database sink table
 
 `createTable="true"` on a `<generate>` with a database target creates the table

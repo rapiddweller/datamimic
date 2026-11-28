@@ -29,6 +29,7 @@ from .expectations import (
     PerParentRowsSubject,
     ProductRowsSubject,
     RowConditionExpectation,
+    RunningBalanceExpectation,
     expectation_subjects,
 )
 from .proof import AcceptanceOrigin
@@ -303,6 +304,14 @@ def validate_acceptance_check(spec: AcceptanceSpecV1, check: AcceptanceCheckV1) 
             validate_acceptance_subject(spec, reference.subject, reference_path + ("subject",))
             validate_acceptance_subject(spec, reference.subject, reference_path, reference.key, field_key="key")
             validate_acceptance_subject(spec, reference.subject, reference_path, reference.field, field_key="field")
+    elif isinstance(expectation, RunningBalanceExpectation):
+        validate_acceptance_subject(spec, expectation.subject, check.path, expectation.field)
+        for index, field in enumerate(expectation.order_by):
+            validate_acceptance_subject(spec, expectation.subject, check.path + ("order_by", index), field)
+        if expectation.group_by is not None:
+            validate_acceptance_subject(
+                spec, expectation.subject, check.path, expectation.group_by, field_key="group_by"
+            )
     elif isinstance(expectation, RowConditionExpectation):
         tree = parse_row_condition(expectation.condition)
         call_functions = {id(node.func) for node in ast.walk(tree) if isinstance(node, ast.Call)}
