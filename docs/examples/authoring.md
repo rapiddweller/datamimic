@@ -187,10 +187,11 @@ the directory is a new task id for each run. The example above writes
 ## Grouped totals and counts
 
 Build can check allocations against the product that declares the available
-stock. This expectation sums `quantity` from `allocations` by `lot_id` and
-requires that each total stay at or below the corresponding `lots.quantity`:
+stock. This entry in `acceptance/build.json`'s `expectations` array sums
+`quantity` from `allocations` by `lot_id` and requires that each total stay at
+or below the corresponding `lots.quantity`:
 
-```json
+```jsonc
 {
   "kind": "group_sum",
   "subject": {"kind": "product", "product": "allocations"},
