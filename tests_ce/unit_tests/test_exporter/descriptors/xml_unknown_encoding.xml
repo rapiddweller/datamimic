@@ -1,0 +1,5 @@
+<setup>
+    <generate name="rows" count="2" target="XML(encoding='no-such-codec')">
+        <key name="a" type="int" min="1" max="2"/>
+    </generate>
+</setup>

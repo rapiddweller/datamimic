@@ -9,8 +9,9 @@ from pathlib import Path
 from lxml import etree
 
 from datamimic_ce.engine.io.exporters.core.exporter_state_manager import ExporterStateManager
-from datamimic_ce.engine.io.exporters.core.unified_buffered_exporter import ExporterError
+from datamimic_ce.engine.io.exporters.core.unified_buffered_exporter import BufferFileError, ExporterError
 from datamimic_ce.engine.io.exporters.formats.xml_exporter import XMLExporter  # Adjust the import path as necessary
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 from tests_ce.unit_tests.test_exporter.exporter_test_util import MockSetupContext, generate_mock_data, make_exporter
 
 
@@ -215,6 +216,20 @@ class TestXMLExporter(unittest.TestCase):
         # Negative control for #724: a shadowing XML ExporterError would not match the core class.
         with self.assertRaises(ExporterError):
             self.exporter._finalize_buffer_file(self.tmp_dir_path / "missing.xml")
+
+    def test_descriptor_unknown_encoding_keeps_the_core_error_chain(self):
+        # Checked-in descriptor: the XML write path raises the core ExporterError; the runtime wraps it.
+        descriptor = Path(__file__).parent / "descriptors" / "xml_unknown_encoding.xml"
+        with tempfile.TemporaryDirectory() as work:
+            Path(work, "descriptor.xml").write_text(descriptor.read_text(encoding="utf-8"), encoding="utf-8")
+            engine = DataMimicTest(test_dir=Path(work), filename="descriptor.xml", capture_test_result=True)
+            with self.assertRaises(ValueError) as caught:
+                engine.test_with_timer()
+        buffer_error = caught.exception.__cause__
+        self.assertIs(type(buffer_error), BufferFileError)
+        exporter_error = buffer_error.__cause__
+        self.assertIs(type(exporter_error), ExporterError)
+        self.assertIsInstance(exporter_error.__cause__, LookupError)
 
 
 if __name__ == "__main__":
