@@ -54,7 +54,7 @@ directory for each run.
 | L2 the account is open on the posting day; the closing day is open | step 40 and `accounts.ent.csv` | `days_since_open >= 0`, `days_to_close == None or days_to_close >= 0` |
 | L3 a line has one positive side | step 40 | `one_sided` |
 | L4 the currency of a line is the currency of its account; an invoice has a currency | `invoices.ent.csv` and step 40 | `currency_matches` |
-| L5 the balance of an account is not below zero on its normal side; on one day the invoices post before the payments | `posting_rank` of the lines (1 invoice, 2 payment) | `allow_negative == 'yes' or balance_after >= 0`, with the lines in order day, `posting_rank`, line id |
+| L5 the balance of an account is not below zero on its normal side; on one day the invoices post before the payments | `posting_rank` of the lines (1 invoice, 2 payment) | `running_balance` on `line_checks`: add `signed_cents` by `account_id` in ascending `posted_on`, `posting_rank`, `line_id` order and check the minimum of zero after each posting. Accounts that allow overdrafts contribute zero to this check. |
 | L6 a payment is split in proportion to the open amounts, to the cent; it pays only invoices dated on or before it | `allocate_payments` | `group_sum` on `allocations`: totals equal the payment amount by `payment_id` and stay at or below the invoice gross by `invoice_id`; on `allocation_checks`: `days_after_invoice >= 0`, `same_customer`, `proportion_error < due_total`, and the remainder-cent pins |
 | L7 the tax is rounded to the nearest cent, half up; gross is net plus tax | step 20 | `tax_error_tenth_basis <= 5000`, `gross_is_net_plus_tax`; the pin `tax_cents == 200` for I1 |
 | L8 no line after the period close; the close day is open | step 40 and `conf/policy.properties` | `days_to_period_close >= 0` |
@@ -88,7 +88,6 @@ There is no search budget: the split is a closed form and has no backtracking, s
 - `group_sum` checks each entry and the allocation totals directly. The trial balance still uses `ledger_checks`.
 - The date checks in this scenario measure days so the caller can pin the day-zero boundaries.
 - A `row_condition` has no functions such as `str`. The checks use arithmetic.
-- No expectation reads a running order. `balance_after` sums the earlier lines of the account in each row.
 - No composite uniqueness of `(entry_id, line_no)`; `line_id` holds both and is unique.
 
 ## Negatives
@@ -102,7 +101,9 @@ Each negative is one text patch in `scenario.json`. Build rejects the variant wi
 | `l2_account_not_yet_open` | A200 opens on 2026-03-05; I1 posts to it on 03-02. |
 | `l3_line_on_both_sides` | The revenue line has a debit of 1 and a credit. |
 | `l4_payment_currency_differs`, `l4_invoice_currency_differs` | P3 or I2 is in USD; the accounts are in EUR. |
-| `l5_payments_post_before_invoices` | The invoice lines get `posting_rank` 3, after the payment lines: on 2026-03-31 the receivable goes below zero. |
+| `l5_payments_post_before_invoices` | The invoice lines get `posting_rank` 3. On 2026-03-31 the payment takes the receivable below zero before the invoice restores it. The ending balance is unchanged; `running_balance` still fails. |
+| `l5_order_tie_without_line_id` | Two lines of a split payment share an account, date and rank. Without `line_id`, Build refuses the tied order. |
+| `l5_null_amount` | A posting's signed amount is null. Build refuses it rather than treating it as zero. |
 | `l6_remainder_cents_dropped` | The left cents go to nobody: P1 allocates 2999 of 3000, and `group_sum` rejects the total. |
 | `l6_payment_before_invoice_date` | The allocation ignores the invoice date: P1 pays I3 before it exists. |
 | `l6_extra_cent_to_smallest_remainder` | The extra cent goes to the smallest fraction: AL01 is 718, not 719. |
