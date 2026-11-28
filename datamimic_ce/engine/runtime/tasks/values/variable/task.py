@@ -59,9 +59,7 @@ class VariableTask(KeyVariableTask, CommonSubTask):
         pagination: DataSourcePagination | None,
     ):
         super().__init__(ctx, statement, pagination)
-        self._source_script = (
-            statement.source_script if statement.source_script is not None else bool(ctx.default_source_scripted)
-        )
+        self._source_script = ctx.source_scripted(statement.source_script)
         self._statement: VariableStatement = statement
         self._full_load_iterator = None
 
@@ -210,14 +208,10 @@ class VariableTask(KeyVariableTask, CommonSubTask):
         elif self._mode == self._STORAGE_MODE:
             value = self._compute_storage_value()
         elif self._mode == self._LAZY_ITERATOR_MODE:
-            if isinstance(self._statement, VariableStatement):
-                loads_all = self._statement.distribution.loads_all
-            else:
-                loads_all = False
             if self._statement.source is None:
                 return None
             source_iterator = load_variable_lazy_source(ctx, self._statement, self._pagination)
-            if loads_all:
+            if self._statement.distribution.needs_whole_pool(self._statement.unique):
                 self._full_load_iterator = source_iterator
                 self._mode = self._FULL_LOAD_MODE
                 if self._full_load_iterator is None:
