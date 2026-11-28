@@ -1,0 +1,13 @@
+<setup rngSeed="3">
+    <generate name="tickets" count="3">
+        <key name="ticket_id" generator="IncrementGenerator"/>
+        <key name="limit" type="int" min="2" max="2"/>
+        <key name="seats" generator="IntegerGenerator(min=1, max=this.limit)"/>
+        <key name="berths" generator="IntegerGenerator(min=1, max=this['limit'])"/>
+        <key name="ns:cap" type="int" min="2" max="2"/>
+        <key name="bunks" generator="IntegerGenerator(min=1, max=this.ns:cap)"/>
+    </generate>
+    <generate name="idle" count="0">
+        <key name="idle_id" generator="IntegerGenerator(min=1, max=3)"/>
+    </generate>
+</setup>
