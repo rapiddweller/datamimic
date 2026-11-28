@@ -260,7 +260,7 @@ def catalog_diagnostic(
     """A catalog finding; ``remediation`` replaces the rule's generic fix when the caller knows the specific one."""
     rule = _RULES_BY_ID[rule_id]
     return Diagnostic(
-        code=rule.rule_id,
+        code=rule_id,
         message=message,
         phase=phase,
         path=path,

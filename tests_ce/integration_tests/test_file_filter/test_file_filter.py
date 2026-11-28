@@ -265,12 +265,11 @@ def test_build_refuses_kept_rows_above_the_limit_with_the_count_rule(
     built = create_authoring_application(_project(tmp_path, statement), descriptor_path=PROJECT_ENTRY_PATH).build()
     assert isinstance(built, RejectedBuild)
     (diagnostic,) = built.diagnostics
-    assert (
-        diagnostic.ce_error is not None and diagnostic.ce_error.issue_code is IssueCode.TASK_COUNT_ABOVE_BOUNDED_LIMIT
-    )
-    assert diagnostic.model_dump(mode="json", exclude={"ce_error"}) == {
-        "code": "child_execution",
-        "message": f"Task Count Above Bounded Limit at descriptor/datamimic.xml/generate/{attribute}.",
+    assert diagnostic.code is IssueCode.TASK_COUNT_ABOVE_BOUNDED_LIMIT
+    assert diagnostic.model_dump(mode="json") == {
+        "code": IssueCode.TASK_COUNT_ABOVE_BOUNDED_LIMIT.value,
+        "rule": None,
+        "message": "A runtime count exceeded the per-invocation limit of bounded Authoring execution.",
         "phase": "evidence",
         "path": ["descriptor", "datamimic.xml", "generate", attribute],
         "severity": "error",
@@ -331,9 +330,7 @@ def test_dry_run_and_build_report_the_same_catalog_code(tmp_path: Path, attribut
     built = app.build()
     assert isinstance(built, RejectedBuild)
     for diagnostics in (dry.diagnostics, built.diagnostics):
-        assert [(str(d.code), d.ce_error.issue_code if d.ce_error else None) for d in diagnostics] == [
-            ("child_execution", code)
-        ]
+        assert [d.code for d in diagnostics] == [code]
 
 
 @pytest.mark.parametrize(
@@ -355,8 +352,10 @@ def test_lint_refuses_the_static_row_selection_rules(tmp_path: Path, attributes:
     result = create_authoring_application(_DIR).lint(LintRequest(xml=xml))
     assert not result.ok
     # A field rule has no lint id: the parser reports the descriptor field by its attribute path.
-    found = [str(item.code) for item in result.diagnostics] + [
-        str(item.path[-1]) for item in result.diagnostics if str(item.code) == "descriptor"
+    found = [item.rule for item in result.diagnostics] + [
+        str(item.path[-1])
+        for item in result.diagnostics
+        if item.code is IssueCode.PARSER_VALIDATION_FAILED and item.rule is None
     ]
     assert rule in found, result.diagnostics
 
@@ -378,7 +377,7 @@ def test_lint_scans_where_like_a_script(where: str, rules: set[str]) -> None:
         '<setup rngSeed="1"><iterate name="rows" source="data/fixtures/orders.ent.csv" '
         f'where="{where}" target="ConsoleExporter"/></setup>'
     )
-    codes = {str(item.code) for item in create_authoring_application(_DIR).lint(LintRequest(xml=xml)).diagnostics}
+    codes = {item.rule for item in create_authoring_application(_DIR).lint(LintRequest(xml=xml)).diagnostics}
     assert codes & {"DM314", "DM319"} == rules
 
 

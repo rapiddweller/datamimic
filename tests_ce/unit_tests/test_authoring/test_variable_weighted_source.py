@@ -17,10 +17,9 @@ def test_scalar_weighted_source_does_not_silently_ignore_pool_options(tmp_path, 
         '<key name="value" script="choice"/></generate></setup>',
     )
     assert result.outcome == "rejected", result
-    assert any(
-        diagnostic.ce_error is not None and diagnostic.ce_error.issue_code is IssueCode.TASK_VARIABLE_SOURCE_UNSUPPORTED
-        for diagnostic in result.diagnostics
-    ), result
+    assert any(diagnostic.code is IssueCode.TASK_VARIABLE_SOURCE_UNSUPPORTED for diagnostic in result.diagnostics), (
+        result
+    )
 
 
 def test_a_weighted_variable_gets_no_order_advice(tmp_path):
@@ -35,4 +34,4 @@ def test_a_weighted_variable_gets_no_order_advice(tmp_path):
     result = build_project(tmp_path, xml)
 
     assert isinstance(result, ReadyBuild), result
-    assert not {"DM301", "DM302"} & {str(item.code) for item in result.diagnostics}
+    assert not {"DM301", "DM302"} & {item.rule for item in result.diagnostics}

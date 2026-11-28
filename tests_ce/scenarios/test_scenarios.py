@@ -23,6 +23,7 @@ from datamimic_ce.authoring.domain.requests import (
 )
 from datamimic_ce.errors.base import OperationError, TaskConfigError
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
+from tests_ce.authoring_project import matches_scenario_diagnostic
 
 _ROOT = Path(__file__).resolve().parent
 
@@ -44,7 +45,7 @@ class Negative(BaseModel):
     patch: Patch
     diagnostic: StrictStr
     expected: StrictStr | None = None
-    # The catalog issue code of a runtime refusal, which Build reports as the diagnostic's ce_error.
+    # The catalog issue code, when the case specifies an exact identity.
     issue: StrictStr | None = None
     # A text that the remediation of the named diagnostic contains: the fix the agent reads.
     remediation: StrictStr | None = None
@@ -195,28 +196,30 @@ def test_negative_is_rejected_with_named_diagnostic(
     _apply(negative.patch, project)
     rejected = _build(project)
     assert isinstance(rejected, RejectedBuild), "Build accepted a variant that must be rejected"
-    codes = [str(item.code) for item in rejected.diagnostics]
-    assert negative.diagnostic in codes, f"expected {negative.diagnostic}, Build reported {codes}"
-    if negative.expected is not None:  # one code covers many rules; the expectation text names the rule
-        named = [str(item.expected) for item in rejected.diagnostics if str(item.code) == negative.diagnostic]
+    findings = [
+        item for item in rejected.diagnostics if matches_scenario_diagnostic(item, negative.diagnostic, negative.issue)
+    ]
+    assert findings, (
+        f"expected {negative.issue or negative.diagnostic}, "
+        f"Build reported {[(item.code, item.rule) for item in rejected.diagnostics]}"
+    )
+    if negative.expected is not None:
+        named = [str(item.expected) for item in findings]
         assert negative.expected in named, f"expected {negative.expected!r}, Build reported {named}"
-    if negative.issue is not None:
-        issues = [
-            str(item.ce_error.issue_code)
-            for item in rejected.diagnostics
-            if str(item.code) == negative.diagnostic and item.ce_error is not None
-        ]
-        assert negative.issue in issues, f"expected issue {negative.issue}, Build reported {issues}"
     if negative.remediation is not None:
-        texts = [
-            item.remediation
-            for item in rejected.diagnostics
-            if str(item.code) == negative.diagnostic and item.remediation is not None
-        ]
+        texts = [item.remediation for item in findings if item.remediation is not None]
         assert any(negative.remediation in text for text in texts), f"expected {negative.remediation!r} in {texts}"
     if negative.message is not None:
-        messages = [item.message for item in rejected.diagnostics if str(item.code) == negative.diagnostic]
-        assert any(negative.message in text for text in messages), f"expected {negative.message!r} in {messages}"
+        position = re.fullmatch(r"script '([^']+)', line (\d+)\.", negative.message)
+        if negative.diagnostic == "engine_warning" and position is not None:
+            assert any(
+                item.location is not None
+                and (item.location.script_file, item.location.script_line) == (position[1], int(position[2]))
+                for item in findings
+            ), f"expected warning at {negative.message!r}"
+        else:
+            messages = [item.message for item in findings]
+            assert any(negative.message in text for text in messages), f"expected {negative.message!r} in {messages}"
     if negative.run_error is not None:
         monkeypatch.chdir(project)
         with pytest.raises(TaskConfigError, match=re.escape(negative.run_error)):

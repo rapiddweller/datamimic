@@ -7,6 +7,18 @@ them voids the proof. Expectations and roles live in `acceptance/build.json`, so
 survive edits to the XML. Use `datamimic authoring schema --name build_request_v5`
 for every acceptance field.
 
+## Read a diagnostic
+
+Use `code` to identify the defect. A catalog-backed error or warning uses its
+`Ixxx` or `Wxxx` code. A lint rule also reports its `DMxxx` ID in `rule`; a rule
+without a catalog issue uses `code: "validation"`. For example, a `<generate>`
+without its required `name` reports `code: "I605"` and `rule: "DM104"`.
+
+Read `location` for the file, line, column, and any `include_chain`, `path` for
+the affected model field, and `remediation` for the repair. The human-readable
+`message` does not append a copy of the position or exception. Treat
+`severity: "warning"` as advisory.
+
 ## Nested foreign keys
 
 Two parents, two child rows per parent. The child carries the real `parent.id`;

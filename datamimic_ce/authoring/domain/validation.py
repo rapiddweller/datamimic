@@ -6,10 +6,12 @@
 
 from __future__ import annotations
 
+import re
+
 from pydantic import JsonValue, ValidationError
 from pydantic_core import ErrorDetails
 
-from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId, Diagnostic, DiagnosticPhase
+from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId, Diagnostic, DiagnosticLocation, DiagnosticPhase
 from datamimic_ce.authoring.domain.expectations import expectation_repair
 
 
@@ -29,6 +31,7 @@ def validation_diagnostics(
                 phase=phase,
                 message=_validation_message(item),
                 path=path,
+                location=_syntax_location(item, prefix),
                 expected=_expected(item),
                 actual=_actual(item),
                 allowed_values=_allowed_values(item),
@@ -40,23 +43,34 @@ def validation_diagnostics(
 
 
 def _syntax_remediation(item: ErrorDetails, prefix: tuple[str | int, ...]) -> str | None:
-    """A JSON syntax error has no field path; it names the file and keeps the line and column in the message."""
     if item.get("type") != "json_invalid":
         return None
     source = f" of {prefix[0]}" if prefix else ""
-    return f"Fix the JSON syntax{source} at the line and column in the message."
+    return f"Fix the JSON syntax{source} at the reported position."
+
+
+def _syntax_location(item: ErrorDetails, prefix: tuple[str | int, ...]) -> DiagnosticLocation | None:
+    if item["type"] != "json_invalid":
+        return None
+    # pydantic-core renders the parser position at the end of the JSON syntax error.
+    match = re.search(r" at line (\d+) column (\d+)$", item["msg"])
+    if match is None:
+        return None
+    return DiagnosticLocation(
+        file=prefix[0] if prefix and isinstance(prefix[0], str) else None,
+        line=int(match[1]),
+        column=int(match[2]),
+    )
 
 
 def _validation_message(item: ErrorDetails) -> str:
-    """Front the field location in the message so an agent can repair without parsing `path`."""
-    loc = item.get("loc", ())
-    message = (
-        "Input has an unsupported discriminator."
-        if item.get("type") == "union_tag_invalid"
-        else str(item.get("msg", "invalid authoring intent"))
-    )
-    location = ".".join(str(part) for part in loc)
-    return f"{location}: {message}" if location else message
+    match item.get("type"):
+        case "union_tag_invalid":
+            return "Input has an unsupported discriminator."
+        case "json_invalid":
+            return "Input is not valid JSON."
+        case _:
+            return str(item.get("msg", "Invalid authoring intent."))
 
 
 def _path_part(value: object) -> str | int:

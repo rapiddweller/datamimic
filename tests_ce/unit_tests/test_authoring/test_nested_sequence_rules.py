@@ -44,7 +44,7 @@ def test_dm317_stops_dry_run_before_runtime_execution(tmp_path) -> None:
     result = create_authoring_application(tmp_path).dry_run(RunRequest(xml=_nested_model("step")))
     assert result.phase is RunPhase.LINT
     assert not result.products
-    assert any(diag.code == "DM317" for diag in result.diagnostics)
+    assert any(diag.rule == "DM317" for diag in result.diagnostics)
 
 
 @pytest.mark.parametrize(
