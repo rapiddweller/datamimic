@@ -1,0 +1,5 @@
+<setup>
+    <generate name="rows" count="2" target="">
+        <key name="id" generator="GlobalIncrementGenerator"/>
+    </generate>
+</setup>
