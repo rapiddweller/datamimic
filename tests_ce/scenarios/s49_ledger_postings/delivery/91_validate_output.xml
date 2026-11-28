@@ -1,7 +1,6 @@
 <setup>
     <!-- Validate output: measure the postings against every rule again, from the data; Build compares the values. -->
     <generate name="line_checks" source="mem" sourceEntity="ledger_lines" distribution="ordered" target="CSV">
-        <variable name="lines" source="mem" sourceEntity="ledger_lines" storage="data" distribution="ordered"/>
         <variable name="accounts" source="mem" sourceEntity="accounts" storage="data" distribution="ordered"/>
         <variable name="policy" source="mem" sourceEntity="policy" storage="data" distribution="ordered"/>
         <variable name="account" script="{row.account_id: row for row in accounts}[account_id]"/>
@@ -13,9 +12,10 @@
         <key name="days_to_close" script="None if account.closed_on is None else (account.closed_on - posted_on).days"/>
         <key name="days_to_period_close" script="(policy[0].period_close - posted_on).days"/>
         <key name="currency_matches" script="currency == account.currency"/>
-        <key name="allow_negative" script="account.allow_negative"/>
-        <!-- The balance of the account after this line, on its normal side. Posting order: day, then posting_rank (invoices before payments), then line id. -->
-        <key name="balance_after" script="sum((row.debit_cents - row.credit_cents) * (1 if account.normal_side == 'debit' else -1) for row in lines if row.account_id == account_id and (row.posted_on, row.posting_rank, row.line_id) &lt;= (posted_on, posting_rank, line_id))"/>
+        <key name="posted_on" script="posted_on"/>
+        <key name="posting_rank" script="posting_rank"/>
+        <!-- Use the account's normal side. Accounts that allow overdrafts contribute zero to this check. -->
+        <key name="signed_cents" script="0 if account.allow_negative == 'yes' else (debit_cents - credit_cents) * (1 if account.normal_side == 'debit' else -1)"/>
     </generate>
     <generate name="invoice_amount_checks" source="mem" sourceEntity="invoice_amounts" distribution="ordered" target="CSV">
         <variable name="invoices" source="mem" sourceEntity="invoices" storage="data" distribution="ordered"/>
