@@ -2075,6 +2075,16 @@
     }
   ],
   "declarations": {
+    "premises": [
+      {
+        "id": "CE-STANDARD-LIBRARY-UNCHANGED",
+        "name": "standard_library_unchanged",
+        "rationale": "The boundary-type rules describe CE on a supported Python installation whose launcher and other code outside this repository leave the standard library unchanged.",
+        "provenance": [
+          "docs/architecture/inner/target.md"
+        ]
+      }
+    ],
     "public_api": [
       "datamimic_ce.interfaces.python.datamimic:DataMimic",
       "datamimic_ce.interfaces.python.data_mimic_test:DataMimicTest",

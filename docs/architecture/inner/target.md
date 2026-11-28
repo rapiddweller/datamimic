@@ -424,6 +424,30 @@ mapping. `make architecture-check` also checks the current code against the
 contract: a rule FAIL fails the check; UNKNOWN remains visible in the report.
 The definition commit precedes production moves; descriptor inputs remain frozen.
 
+### Dynamic Python and contract premises
+
+Boundary-type checks assume that code outside the repository leaves the Python
+standard library unchanged. This premise lets ArchKeel recognize supported
+standard-library types and decorators where the scan can establish their
+identity. It does not resolve changes seen inside the repository or establish
+the reach of dynamically executed code. When a rule relies on a premise, read
+its qualified verdict in the report.
+
+| Owner | Dynamic boundary | What the contract can say today |
+| --- | --- | --- |
+| Runtime Scripting | Descriptor expressions in `engine/runtime/scripting/evaluation.py` and descriptor-supplied Python in `engine/runtime/scripting/plugins/` | Expressions can call runtime-bound objects; plugin source runs as Python. Neither has a finite module reach. An independently bounded contract would need a closed expression interface or an execution host with a data-only interface. |
+| Runtime Generate | `engine/runtime/tasks/generate/workers/generate_worker.py` transfers the context, namespace and generator graph to workers using dill. | Persistent IDs restrict the client-reference path. They do not enumerate all classes and reducers reachable through the serialized graph. A bound would require explicit worker inputs and registered reconstruction. |
+| IO | `engine/io/failures.py` tests exception transport with a pickle round trip. | The exception and reconstruction may come from a driver or extension. A versioned failure record could carry the error facts without reconstructing the driver exception. |
+| Authoring Adapters | `authoring/adapters/dryrun.py` resolves bounded worker reply globals through an allowlist of already imported objects. | The resolver does not import the named modules. Its collector hold is not evidence of a dynamic import. A data-only reply could remove the remaining pickle dependency at this boundary. |
+
+The MCP CLI checks the availability of a fixed pair of optional packages with
+`find_spec`; it does not load the packages at that site. The Resources API
+uses a fixed package anchor with `importlib.resources.files`. ArchKeel's
+declared-load prefixes include descendants, so declaring the resource anchor as
+a load would also name demos and examples. These sites and the remaining
+receiver and literal precision gaps are tracked in
+[#834](https://github.com/rapiddweller/datamimic/issues/834).
+
 ## Delivery sequence and acceptance
 
 ### S3G7 ownership amendment
