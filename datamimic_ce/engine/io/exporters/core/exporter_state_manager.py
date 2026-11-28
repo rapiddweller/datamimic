@@ -20,7 +20,7 @@ class ExporterStateManager:
 
     def get_storage(self, key: str):
         if key not in self._storage_dict:
-            self._storage_dict[key] = ExporterStateStorage(None)
+            self._storage_dict[key] = ExporterStateStorage()
         return self._storage_dict[key]
 
     def rotate_chunk(self, key: str):
@@ -41,11 +41,10 @@ class ExporterStateStorage:
     Stores the state of an exporter for a worker.
     """
 
-    def __init__(self, chunk_size: int | None):
+    def __init__(self):
         self._global_counter = 0
         self._current_counter = 0
         self._chunk_index = 0
-        self._chunk_size = chunk_size
 
     @property
     def global_counter(self):
@@ -62,10 +61,6 @@ class ExporterStateStorage:
     @current_counter.setter
     def current_counter(self, value):
         self._current_counter = value
-
-    @property
-    def chunk_size(self):
-        return self._chunk_size
 
     @property
     def chunk_index(self):

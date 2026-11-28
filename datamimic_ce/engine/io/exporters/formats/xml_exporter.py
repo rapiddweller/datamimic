@@ -14,15 +14,9 @@ import xmltodict
 from lxml import etree
 
 from datamimic_ce.engine.io.exporters.core.exporter_config import ExporterConfig
-from datamimic_ce.engine.io.exporters.core.unified_buffered_exporter import UnifiedBufferedExporter
+from datamimic_ce.engine.io.exporters.core.unified_buffered_exporter import ExporterError, UnifiedBufferedExporter
 
 logger = logging.getLogger("DATAMIMIC")
-
-
-class ExporterError(Exception):
-    """Custom exception class for exporter errors."""
-
-    pass
 
 
 class XMLExporter(UnifiedBufferedExporter):

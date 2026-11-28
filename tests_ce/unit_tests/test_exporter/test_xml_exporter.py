@@ -9,7 +9,9 @@ from pathlib import Path
 from lxml import etree
 
 from datamimic_ce.engine.io.exporters.core.exporter_state_manager import ExporterStateManager
+from datamimic_ce.engine.io.exporters.core.unified_buffered_exporter import BufferFileError, ExporterError
 from datamimic_ce.engine.io.exporters.formats.xml_exporter import XMLExporter  # Adjust the import path as necessary
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 from tests_ce.unit_tests.test_exporter.exporter_test_util import MockSetupContext, generate_mock_data, make_exporter
 
 
@@ -209,6 +211,20 @@ class TestXMLExporter(unittest.TestCase):
         )
         with self.assertRaises(etree.XMLSyntaxError):
             self.exporter.count_buffered_rows(1)
+
+    def test_descriptor_unknown_encoding_keeps_the_core_error_chain(self):
+        # Checked-in descriptor; the core ExporterError is the cause the runtime wraps (NEGATIVE CONTROL: #724).
+        with tempfile.TemporaryDirectory() as work:
+            Path(work, "descriptor.xml").write_bytes(
+                (Path(__file__).parent / "descriptors" / "xml_unknown_encoding.xml").read_bytes()
+            )
+            with self.assertRaises(ValueError) as caught:
+                DataMimicTest(
+                    test_dir=Path(work), filename="descriptor.xml", capture_test_result=True
+                ).test_with_timer()
+        self.assertIs(type(caught.exception.__cause__), BufferFileError)
+        self.assertIs(type(caught.exception.__cause__.__cause__), ExporterError)
+        self.assertIsInstance(caught.exception.__cause__.__cause__.__cause__, LookupError)
 
 
 if __name__ == "__main__":
