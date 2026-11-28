@@ -5,12 +5,14 @@
 """Public authoring diagnostics retain one identity and structured repair details."""
 
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 import pytest
 from fastmcp.client import Client
 from typer.testing import CliRunner
 
+from datamimic_ce.authoring.adapters.validator import CeDescriptorValidator
+from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
 from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH
 from datamimic_ce.interfaces.cli import app
 from datamimic_ce.interfaces.mcp.server import create_server
@@ -88,6 +90,19 @@ def test_live_schema_exposes_the_rule_and_catalog_code() -> None:
     assert "ce_error" not in fields
     assert fields["rule"]["anyOf"][0]["pattern"] == r"^DM[0-9]{3}$"
     assert {"I605", "W008"} <= set(definitions["IssueCode"]["enum"])
+
+
+def test_include_graph_keeps_the_nested_entry_path(tmp_path: Path) -> None:
+    xml = '<setup>\n<include uri="missing.xml"/>\n</setup>'
+    logical_path = PurePosixPath("models/main.xml")
+    (tmp_path / "models").mkdir()
+    workspace = AuthoringWorkspaceContext(tmp_path, logical_path)
+    validator = CeDescriptorValidator(workspace, profile_loader=workspace.load_connection_profile)
+    [item] = validator.include_graph(xml).diagnostics
+    assert item.code == "I201"
+    assert item.location is not None
+    assert item.location.file == "models/main.xml"
+    assert item.location.line == 2
 
 
 def test_cli_compile_keeps_a_json_syntax_position_out_of_the_message() -> None:

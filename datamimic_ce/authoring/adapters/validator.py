@@ -205,7 +205,9 @@ class CeDescriptorValidator:
         try:
             physical_path = self._workspace_context.resolve_descriptor_path(logical_path)
             with resource_reader_scope(self._workspace_context.read_resource_bytes):
-                graph = literal_include_graph(parse_xml_source(xml), physical_path, chains=chains)
+                graph = literal_include_graph(
+                    parse_xml_source(xml), physical_path, logical_entry=str(logical_path), chains=chains
+                )
         except _BoundedPolicyRefusal as refusal:
             return _graph_refused(logical_path, str(refusal))  # static rule texts, no paths or values
         except _InvalidIncludedXml as error:

@@ -464,7 +464,11 @@ _MAX_INCLUDE_GRAPH_BYTES = 64 * 1024 * 1024
 
 
 def literal_include_graph(
-    entry: etree._Element, entry_path: Path, *, chains: list[tuple[str, ...]] | None = None
+    entry: etree._Element,
+    entry_path: Path,
+    *,
+    logical_entry: str | None = None,
+    chains: list[tuple[str, ...]] | None = None,
 ) -> tuple[tuple[str, bytes], ...]:
     """The entry's literal include graph in execution order: (workspace-relative uri, file bytes) per ``.xml``
     step; ``.properties`` files are read for containment but not retained. Nested uris resolve against the entry
@@ -501,7 +505,7 @@ def literal_include_graph(
             try:
                 data = read_resource_bytes(dependency)
             except FileNotFoundError as error:
-                root = get_descriptor_name() or entry_path.name
+                root = logical_entry or get_descriptor_name() or entry_path.name
                 raise include_error(
                     code=IssueCode.INCLUDE_FILE_NOT_FOUND,
                     uri=dependency.name,
